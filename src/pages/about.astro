@@ -1,0 +1,144 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+import ContactCTA from '../components/ContactCTA.astro';
+import Hero from '../components/Hero.astro';
+---
+
+<BaseLayout title="About | Anass EZ-ZOUAINE" description="About Anass EZ-ZOUAINE Lorem Ipsum">
+    <div class="stack gap-20">
+        <main class="wrapper about">
+            <Hero
+                    title="About"
+                    tagline="Thanks for stopping by. Read below to learn more about myself and my background."
+            >
+                <img
+                        width="1553"
+                        height="873"
+                        src="/assets/at-work.gif"
+                        alt="Anass EZ-ZOUAINE at work with a colleague"
+                />
+            </Hero>
+
+            <section>
+                <h2 class="section-title">Background</h2>
+                <div class="content">
+                    <p>
+                        I am a passionate web developer with experience in PHP Laravel and JavaScript VueJs ecosystems.
+                        I write clean, readable, scalable, and maintainable code that adheres to the latest coding
+                        practices and standards. I work well in teams using Scrum methodology and understand the
+                        importance of effective communication and collaboration. I am committed to continuous learning
+                        and staying up-to-date with web development trends and technologies.
+                    </p>
+                    <p>
+                        I prefer working remotely and am able to manage my time effectively to deliver high-quality work
+                        on
+                        schedule. I am dedicated to delivering exceptional results and ensuring the satisfaction of my
+                        clients. I am excited about the opportunity to work on challenging and exciting projects that
+                        will
+                        allow me to continue developing my skills and expertise. I am always looking for opportunities
+                        to
+                        learn and grow in my career. I take responsibility for my own personal development and
+                        prioritize
+                        learning as an essential part of my career.
+                    </p>
+                    <p>
+                        I am interested in any opportunity to improve my understanding of web technologies further. I am
+                        a reliable and dedicated web developer committed to delivering exceptional work that meets the
+                        needs of my clients. I am excited about the opportunity to work with you and bring your vision
+                        to life.
+                    </p>
+                </div>
+            </section>
+            <section>
+                <h2 class="section-title">TOP Skills</h2>
+                <div class="content">
+                    <ul>
+                        <li>Expertise in the PHP Laravel framework</li>
+                        <li>Proficient in front-end web technologies: HTML, CSS, and JavaScript, as well as the Vue.js
+                            ecosystem.
+                        </li>
+                        <li>Familiarity with NodeJs ecosystem.</li>
+                        <li>Familiarity with Shopify development.</li>
+                        <li>Experience with containerization using Docker.</li>
+                        <li>Familiarity with cloud platforms like Google Cloud, AWS, and DigitalOcean.</li>
+                        <li>Proficiency in version control with Git.</li>
+                        <li>Experience working with relational databases, including MySQL, Oracle, and PostgreSQL, as
+                            well as in-memory data stores like Redis and Memcached.
+                        </li>
+                        <li>Knowledge of LAMP and LEMP stack.</li>
+                        <li>Familiarity with designing and developing APIs, including REST, GraphQL, and gRPC.</li>
+                        <li>Experience with testing and implementing CI/CD pipelines.</li>
+                        <li>Strong understanding of software design and development principles.</li>
+                        <li>Strong analytical and problem-solving skills.</li>
+                        <li>Passionate about software development.</li>
+                        <li>Excellent team player.</li>
+                        <li>Proficient in debugging complex code.</li>
+                        <li>Strong interpersonal skills.</li>
+                        <li>Ability to learn, adapt, and grow with emerging technologies.</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <ContactCTA/>
+    </div>
+</BaseLayout>
+
+<style>
+    .about {
+        display: flex;
+        flex-direction: column;
+        gap: 3.5rem;
+    }
+
+    img {
+        margin-top: 1.5rem;
+        border-radius: 1.5rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        color: var(--gray-200);
+    }
+
+    .section-title {
+        grid-column-start: 1;
+        font-size: var(--text-xl);
+        color: var(--gray-0);
+    }
+
+    .content {
+        grid-column: 2 / 4;
+    }
+
+    .content :global(a) {
+        text-decoration: 1px solid underline transparent;
+        text-underline-offset: 0.25em;
+        transition: text-decoration-color var(--theme-transition);
+    }
+
+    .content :global(a:hover),
+    .content :global(a:focus) {
+        text-decoration-color: currentColor;
+    }
+
+    @media (min-width: 50em) {
+        .about {
+            display: grid;
+            grid-template-columns: 1fr 60% 1fr;
+        }
+
+        .about > :global(:first-child) {
+            grid-column-start: 2;
+        }
+
+        section {
+            display: contents;
+            font-size: var(--text-lg);
+        }
+    }
+</style>
