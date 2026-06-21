@@ -67,7 +67,7 @@ If your retrieval step is what's failing, you can still send the user's prompt t
 
 ## Building it in Laravel
 
-Since I spend a lot of time in the Laravel ecosystem, I often use tools that make this easy to implement. You don't need to write the state machine from scratch. Packages like `spatie/resilience` or even building a custom wrapper around the `illuminate/http` client can get the job done.
+Since I spend a lot of time in the Laravel ecosystem, I lean on patterns that make this easy to implement. You don't need to write the state machine from scratch. A community package like `ackintosh/ganesha` (a PHP circuit breaker), or a small custom wrapper around the `illuminate/http` client with a Redis-backed failure counter, gets the job done.
 
 The goal is to wrap your API calls in a block that understands these states. Here is a simplified look at how that logic looks in practice.
 

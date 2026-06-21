@@ -35,7 +35,7 @@ When you drop Octane into your project, you have to choose between two primary e
 
 ### Swoole
 
-Swoole is a C++ extension for PHP. It's essentially a high-performance networking engine that allows PHP to handle asynchronous tasks, coroutines, and long-lived connections.
+Swoole is a C extension for PHP. It's essentially a high-performance networking engine that allows PHP to handle asynchronous tasks, coroutines, and long-lived connections.
 
 - **Pros** — it is incredibly fast. Because it lives as an extension, it has deep access to PHP's internals. It also gives you access to the "Octane cache," an in-memory store that's significantly faster than Redis for local data.
 - **Cons** — it can be a bit of a nightmare to install and debug. Because it's a binary extension, you have to compile it or find the right package for your OS. Xdebug doesn't always play nice with it, and it can be picky about your environment.

@@ -64,7 +64,7 @@ A practical answer is **Reciprocal Rank Fusion (RRF)**. It is simple, reliable, 
 **The logic breakdown:**
 
 1. **Assign a score.** For every document returned by either search method, calculate a new rank-based score.
-2. **The formula.** `score = 1 / (rank + k)`. The `k` value (often 60) prevents lower-ranked items from contributing too aggressively.
+2. **The formula.** `score = 1 / (k + rank)`, where `rank` is the item's 1-based position in each result list (so the code below adds `1` to a 0-based index). The `k` constant (often 60) prevents top-ranked items from dominating too aggressively.
 3. **Sum it up.** If a document appears in both the vector and BM25 result sets, its scores are added together.
 4. **Sort.** The documents with the highest combined scores are passed to the LLM.
 

@@ -36,7 +36,7 @@ Standard caching relies on exact matches. If a user asks "How do I reset my pass
 In a modern RAG stack, I use a two-tier approach.
 
 1. **Exact cache** — a simple key-value store in Redis. I normalize the query (lowercase, trim, strip punctuation) and hash it. It's your first line of defense. It costs almost nothing and has zero false positives.
-2. **Semantic cache** — if the exact cache misses, I embed the query and look for "near enough" matches in a Redis vector index. If I find a previous question with a similarity score of 0.95 or higher, I serve that cached response instead of hitting the LLM.
+2. **Semantic cache** — if the exact cache misses, I embed the query and look for "near enough" matches in a Redis vector index. If I find a previous question close enough (roughly 0.9+ cosine similarity, i.e. a cosine distance of 0.1 or less), I serve that cached response instead of hitting the LLM.
 
 This architecture ensures that you never do the heavy lifting twice for the same intent.
 

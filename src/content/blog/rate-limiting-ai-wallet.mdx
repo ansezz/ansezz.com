@@ -69,7 +69,7 @@ Inside a single tenant, you still need limits. You don't want one single employe
 
 ## Implementation: the token bucket algorithm
 
-For most of my builds, I use a "token bucket" or "leaky bucket" algorithm backed by Redis. It's the gold standard for handling bursty traffic while maintaining a steady flow.
+For most of my builds, I use a **token bucket** algorithm backed by Redis. It refills tokens at a steady rate and lets a request through only if a token is available — which absorbs short bursts while capping the sustained rate. (For the difference between token bucket and leaky bucket, see [rate limiting vs throttling](/blog/rate-limiting-vs-throttling/).)
 
 Here is the logic: each user has a "bucket" of tokens. Every time they send a prompt, we estimate the total cost (input tokens + expected `max_tokens`). If the bucket has enough, they proceed and the tokens are deducted. The bucket refills at a constant rate over time.
 

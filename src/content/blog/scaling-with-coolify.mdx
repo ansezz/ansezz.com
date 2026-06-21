@@ -93,7 +93,8 @@ jobs:
     steps:
       - name: trigger coolify webhook
         run: |
-          curl -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}"
+          curl --fail -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
 ```
 
 It's simple, direct, and ensures that broken code never reaches your servers. It keeps your development cycle clean and your mental health intact.

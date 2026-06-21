@@ -55,7 +55,7 @@ One of the biggest pains in [custom web development](/) is handling "noisy neigh
 
 With RabbitMQ, those 100,000 rows become 100,000 individual messages in a queue. Your workers will chew through them at a steady pace. If the queue gets too long, you don't need to scale your entire application — you just spin up more worker instances.
 
-This is called **horizontal scaling**. Since the workers are decoupled from the web server, you can scale them independently based on the specific load. If you use modern tools like Laravel and Vue, you can easily manage these background jobs using built-in queue drivers that talk directly to RabbitMQ.
+This is called **horizontal scaling**. Since the workers are decoupled from the web server, you can scale them independently based on the specific load. In Laravel, you manage these background jobs through its queue system — and while Laravel ships drivers for Redis, SQS, and the database, talking directly to RabbitMQ uses a community package like `vladimir-yuldashev/laravel-queue-rabbitmq`.
 
 ## How to move from sync to async
 

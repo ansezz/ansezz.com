@@ -57,7 +57,7 @@ The confusion often arises because modern tools like Nginx, HAProxy, and Traefik
 | **Health Checks**   | Basic (is the backend up?)             | Advanced (latency, error rates, load)    |
 | **OSI Layer**       | Mostly Layer 7 (Application)           | Layer 4 (Transport) or Layer 7           |
 
-A load balancer is essentially a reverse proxy with a "spread" algorithm. Conversely, a reverse proxy is a load balancer that focuses on the "transformation" of the request. In a sophisticated [API gateway](/blog/api-gateway-ai-stack/), these roles are merged into a single entry point that manages both the security and the distribution of traffic across your microservices.
+Both are really reverse-proxy roles wearing different hats: a load balancer emphasizes _distribution_ (spreading traffic across a pool), while a reverse proxy emphasizes _transformation_ (SSL, caching, routing, security). The same tool — Nginx, HAProxy, Traefik — can do both. In a sophisticated [API gateway](/blog/api-gateway-ai-stack/), these roles are merged into a single entry point that manages both the security and the distribution of traffic across your microservices.
 
 ## Real-world implementation in Laravel and Shopify
 
