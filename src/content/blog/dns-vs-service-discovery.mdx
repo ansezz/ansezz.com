@@ -1,0 +1,95 @@
+---
+title: "DNS vs Service Discovery"
+description: "DNS was built for servers that live for years; microservices live for minutes. Why service discovery beats stale DNS records for high-churn infrastructure — and when to use each."
+publishDate: 2026-06-22
+category: devops
+tags: [dns, service-discovery, kubernetes, microservices, consul, devops, infrastructure]
+featured: false
+heroImage:
+  url: "/blog/dns-vs-service-discovery/hero.webp"
+  alt: "Pop-art comic-style comparison between a digital directory for DNS and a live heartbeat monitor for Service Discovery"
+---
+
+You deploy a new version of your microservice and the old containers are killed instantly. You update your internal DNS records to point to the new IP addresses. However, for the next five minutes, your API gateway continues to send 40 percent of your traffic to the dead containers. Your logs are filled with connection timeouts and your error rate is spiking. This is the classic DNS staleness trap that plagues modern distributed systems.
+
+The problem lies in the fundamental design of how we locate resources. Traditional DNS was built for a world where servers lived for years. In a modern cloud environment, servers might only live for minutes. Relying on static naming systems to manage high-churn infrastructure creates a gap between where your traffic is going and where your healthy services actually live.
+
+This article explores the technical differences between **DNS vs Service Discovery**, why the distinction matters for your uptime, and how to choose the right strategy for your [DevOps architecture](/blog/category/devops/).
+
+## DNS vs Service Discovery: Defining the Map and the Radar
+
+At its core, DNS is a distributed, hierarchical naming system. It acts like the Yellow Pages for the internet. You give it a hostname, and it returns an IP address. It is incredibly efficient and globally ubiquitous. Every programming language and operating system knows how to talk to it.
+
+Service Discovery is a more specialized control plane. Instead of just a static map, it acts like a live radar system. It tracks the dynamic state of every service instance in your cluster. While DNS tells you where a service _should_ be, Service Discovery tells you where it _is_ right now.
+
+![Pop-art comic-style Bento Grid comparing a simple DNS record to a rich Service Discovery entry with health status and tags](/blog/dns-vs-service-discovery/catalog-comparison.webp)
+
+A Service Discovery system like Consul or the internal registry in Kubernetes maintains a "Service Catalog." This catalog is a live database of every running instance. When a new container starts, it registers itself with the catalog. When it shuts down, it is removed. This happens in milliseconds, far faster than traditional DNS propagation.
+
+## The TTL Problem and DNS Caching
+
+The biggest hurdle in using DNS for microservices is Time-To-Live (TTL). DNS relies heavily on caching to prevent every single request from hammering the root name servers. Your operating system caches the result. Your browser caches the result. Your [API gateway](/blog/api-gateway-ai-stack/) caches the result.
+
+If you set a high TTL, your service changes are slow to propagate. If you set a very low TTL (like 0 or 1 second), you might overwhelm your DNS server with lookups. Even worse, many client libraries ignore low TTL values and cache the result indefinitely until the process restarts.
+
+| Feature              | DNS                       | Service Discovery            |
+| :------------------- | :------------------------ | :--------------------------- |
+| **Primary Goal**     | Human-readable name to IP | Dynamic instance tracking    |
+| **Propagation**      | Slow (TTL dependent)      | Near-instant (Gossip/Streaming) |
+| **Metadata**         | Very limited (TXT records) | Rich (tags, version, region) |
+| **Client Support**   | Native in all OS          | Often requires API/Agent     |
+| **Health Awareness** | None (Static)             | Active monitoring            |
+
+Service Discovery solves this by moving away from deep-level caching. Clients or load balancers often maintain a streaming connection to the registry. When a service instance moves, the registry pushes a notification to all subscribers. There is no waiting for a cache to expire. The system converges on the new state almost instantly.
+
+## Health Awareness: The Core Differentiator
+
+A standard DNS server is oblivious to the health of the IP addresses it returns. If a server rack loses power, the DNS record still points to those IPs. You have to manually update the record or run a custom script to change it.
+
+![Comic-style scene showing the DNS caching problem where a client tries to reach a dead server because of a stale record](/blog/dns-vs-service-discovery/dns-caching-problem.webp)
+
+Service Discovery systems treat health as a first-class citizen. They perform active health checks on every registered instance. These checks can be as simple as a TCP ping or as complex as a custom HTTP endpoint that checks database connectivity.
+
+If a health check fails, the instance is automatically marked as "unhealthy" in the registry. The discovery system then stops returning that IP address to clients. This provides a level of self-healing that is impossible with vanilla DNS. If you are [hosting a SaaS on Docker](/blog/coolify-docker-saas-hosting/), having this automated health-aware routing is the difference between a minor blip and a major outage.
+
+## Metadata and Rich Discovery
+
+DNS is built to return a single type of data: an IP address. While you can use SRV records to include port numbers or TXT records for strings, the interface is clunky. It does not support complex queries.
+
+Service Discovery allows for metadata-driven routing. You can ask the registry for "all healthy instances of the 'orders' service that are running version 2.1 in the 'us-east-1' region." This allows for advanced deployment patterns like:
+
+1.  **Canary Deployments**: Routing only 5 percent of traffic to a specific version tag.
+2.  **Blue/Green Deployments**: Swapping traffic between service sets by changing a metadata flag.
+3.  **Locality-Aware Routing**: Directing traffic to the instance physically closest to the requester to reduce latency.
+
+This level of granularity is essential for scaling complex systems where simple round-robin load balancing is not enough.
+
+## How Modern Orchestrators Bridge the Gap
+
+You might notice that in Kubernetes, you still use DNS names to talk to services. You might call `http://order-service.default.svc.cluster.local`. Does this mean Kubernetes just uses DNS?
+
+Not exactly. Kubernetes uses a hybrid approach. It runs a service called CoreDNS, but CoreDNS is not backed by static zone files. It is plugged directly into the Kubernetes API. When a Pod starts or dies, the Kubernetes control plane updates the Service and Endpoint objects. CoreDNS watches these objects and updates its responses in real-time.
+
+![Bento card showing a clean code snippet for a Service Discovery health check configuration](/blog/dns-vs-service-discovery/health-check-code.webp)
+
+In this model, DNS is just the "wire protocol." It is the interface that the application uses because it is easy and standard. However, the backend is a fully dynamic Service Discovery engine. This gives you the best of both worlds: the simplicity of DNS and the speed of Service Discovery.
+
+## Implementation Strategies: When to Use Which?
+
+Choosing between **DNS vs Service Discovery** depends on your infrastructure scale and churn rate.
+
+If you are running a monolithic application on a few virtual machines that rarely change, DNS is perfectly fine. You can manage your records with simple automation or even manually. The complexity of a dedicated discovery system would outweigh the benefits.
+
+However, if you are using containers, serverless functions, or microservices, you need a dynamic solution. If your IPs change every time you deploy or scale, DNS will eventually break your traffic flow.
+
+For many developers, the best path is to use a tool that provides a DNS interface on top of a dynamic registry. HashiCorp Consul is a popular choice for this. It allows you to query the registry via a standard DNS lookup, but it handles the health checking and registration logic behind the scenes.
+
+## Takeaways
+
+1.  **DNS is for stability**: Use it for external traffic, long-lived resources, and cross-company communication where caching is an advantage.
+2.  **Service Discovery is for churn**: Use it for internal microservices, containers, and autoscaling groups where instances appear and disappear frequently.
+3.  **Mind the Cache**: Never rely on vanilla DNS for sub-minute failover because client-side caching will almost always outlive your records.
+4.  **Health is Binary**: Without active health checks, your discovery system is just a list of guesses. Always integrate automated liveness and readiness probes.
+5.  **Hybrid is Best**: Use a discovery engine (like Kubernetes or Consul) that exposes a DNS interface. This simplifies your application code while keeping your infrastructure dynamic.
+
+When was the last time a stale DNS record caused a production incident in your environment? If you're untangling service routing for a high-churn stack, [here's how I help teams ship it](/services/).

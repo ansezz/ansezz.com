@@ -1,0 +1,93 @@
+---
+title: "Replication vs Backup: Why Your Laravel App Needs Both"
+description: "Replication protects you from hardware failure; backups protect you from your own mistakes. How read/write splitting, point-in-time recovery, and Shopify sync engines fit into a resilient Laravel infrastructure."
+publishDate: 2026-06-21
+category: devops
+tags: [database, laravel, shopify, cloud-infrastructure, high-availability, backup, replication]
+featured: false
+heroImage:
+  url: "/blog/replication-vs-backup-laravel/hero.webp"
+  alt: "Two-panel pop-art comic — left, replication mirrors data in real time between servers; right, backup creates dated point-in-time snapshots"
+---
+
+You deploy a breaking database migration that drops a critical column. Your production database has real-time replication set up to three different nodes across two regions. Within milliseconds, that destructive change propagates across every single one of your "safety" copies. You have zero downtime, but you have no data left. This is the moment you realize that replication is not a backup.
+
+Engineering teams often conflate high availability with data durability. While both are pillars of a robust infrastructure, they solve fundamentally different problems. Replication protects you from hardware failure and latency. Backups protect you from logic errors, corruption, and human mistakes. If you are building a Laravel application or a high-volume Shopify Plus integration, understanding where one ends and the other begins is the difference between a minor incident and a company-ending event.
+
+## The fundamental trade-off: speed vs history
+
+Replication is about continuity. Its primary goal is to ensure that if your main database server vanishes, a secondary node is ready to take over immediately. This is measured in Recovery Time Objective (RTO). In a well-tuned system, failover happens in seconds. You are mirroring every `INSERT`, `UPDATE`, and `DELETE` as they happen.
+
+Backups are about recovery. Their goal is to provide a safe version of your data from a specific point in history. If a bug corrupts your inventory levels at 2:00 PM, a backup from 1:00 PM is your only lifeline. Backups are usually stored as compressed snapshots on detached storage like Amazon S3 or Google Cloud Storage.
+
+| Feature | Replication | Backup |
+| :--- | :--- | :--- |
+| **Primary Goal** | High Availability (HA) | Disaster Recovery (DR) |
+| **Data State** | Real-time / Live | Historical / Snapshot |
+| **Propagation** | Immediate (including errors) | None (isolated from live changes) |
+| **Storage Cost** | High (hot, identical hardware) | Low (cold, compressed snapshots) |
+| **Recovery Speed** | Seconds to Minutes | Minutes to Hours |
+
+## Why replication faithfully mirrors your mistakes
+
+The greatest strength of replication is its greatest weakness. It is designed to be a mirror. If you execute a `truncate` command on your primary database, the replication protocol assumes this was intentional. It will purge that data from your replicas before you can even hit "Ctrl+C" on your terminal.
+
+I have seen developers rely solely on RDS Read Replicas as their "safety net." When a rogue queue job began overwriting customer email addresses with null values, the replicas updated instantly. Without a point-in-time backup, those original emails were gone forever. Replication provides infrastructure resilience, not data integrity.
+
+For a production-grade [Coolify self-hosted SaaS](/blog/coolify-self-hosted-saas/), you must separate your concerns. Use replication to scale your reads and handle node failures. Use automated, encrypted backups to ensure you can roll back to a known-good state.
+
+![Bento grid in pop-art comic style — an RTO clock and green active checkmark for replication, a history calendar and yellow archive icon for backup](/blog/replication-vs-backup-laravel/recovery-tradeoffs.webp)
+
+## Implementing replication in Laravel
+
+Laravel makes it remarkably easy to handle database replication through its native configuration. By defining `read` and `write` connections in your `config/database.php`, the framework automatically routes `SELECT` statements to your replicas while sending `INSERT` and `UPDATE` statements to the primary.
+
+```php
+'mysql' => [
+    'read' => [
+        'host' => [
+            '192.168.1.10', // Replica 1
+            '192.168.1.11', // Replica 2
+        ],
+    ],
+    'write' => [
+        'host' => [
+            '192.168.1.1', // Primary
+        ],
+    ],
+    'sticky' => true,
+    'driver' => 'mysql',
+    // ... other settings
+],
+```
+
+The `sticky` option is critical here. It ensures that if you write a record during a request, any subsequent reads during that same request will come from the primary. This avoids the "read-after-write" lag where a replica might be a few milliseconds behind the primary, causing your application to appear as if the data vanished.
+
+## Shopify Plus and the sync fallacy
+
+In the world of Shopify Plus, many developers build "replication-style" sync engines. They listen for `orders/create` or `products/update` webhooks and mirror that data into a local Laravel database. This is a powerful pattern for building custom reporting or complex [agentic commerce workflows](/blog/agentic-commerce-shopify/).
+
+However, this local database is often mistaken for a backup. If an admin user deletes a collection of products in the Shopify admin panel, Shopify fires a webhook. Your Laravel app receives that webhook and promptly deletes those products from your local DB to stay "in sync."
+
+If you do not have a separate backup strategy that creates daily snapshots of your local DB, your local data is just as ephemeral as the live Shopify data. To build true resilience, you must store historical JSON payloads of those Shopify resources in a versioned storage system like S3. This allows you to reconstruct your state even if the live sync deletes everything.
+
+![Technical architecture diagram in pop-art comic style — a Laravel core connected to a red primary database and two blue read replicas, with a yellow S3 bucket storing periodic snapshots](/blog/replication-vs-backup-laravel/architecture.webp)
+
+## Cloud infrastructure and the cost of availability
+
+Managing replication manually is a DevOps nightmare. For most Laravel applications, using managed services like AWS RDS or Google Cloud SQL is the correct move. These services handle the binary log replication, failover orchestration, and monitoring out of the box.
+
+When configuring your cloud DB, you will encounter "Multi-AZ" (AWS) or "High Availability" (GCP) settings. This is essentially synchronous replication. It doubles your database cost because you are running a standby instance that does nothing but wait for the primary to die.
+
+Backups, by contrast, are extremely cheap. Storing 500GB of compressed database dumps on S3 Glacier costs pennies. The cost of a backup is not in the storage; it is in the testing. A backup that has never been restored is just a collection of random bits. You must automate your restore tests. I recommend using [Coolify and Docker](/blog/coolify-docker-saas-hosting/) to spin up ephemeral environments where you can periodically test your backup restoration process without touching production.
+
+## Takeaways
+
+- **Replication is for uptime.** It allows your app to stay online during hardware failures or network partitions.
+- **Backups are for survival.** They are your only defense against data corruption, malicious attacks, and developer errors.
+- **Replication propagates bugs.** If your code breaks the data, the replica will break just as fast.
+- **Laravel supports read/write splitting.** Use the `sticky` configuration to prevent consistency issues during web requests.
+- **Shopify webhooks are not backups.** A synchronized local database is a replica, not a historical record.
+- **Test your restores.** Automate a process to verify that your backup snapshots actually work.
+
+If you had to choose between a system with 99.99% uptime but no backups, and a system with 95% uptime but hourly backups, which one would keep you from losing your business? If you're architecting that resilience layer for production, [here's how I help teams ship it](/services/).

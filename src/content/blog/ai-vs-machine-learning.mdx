@@ -1,0 +1,114 @@
+---
+title: "AI vs Machine Learning: an engineering deep dive"
+description: "AI is the umbrella; Machine Learning is the engine. How the distinction shapes your RAG pipelines, agentic systems, and Laravel/Shopify architecture — and when to pick rules over a learned model."
+publishDate: 2026-06-22
+category: ai
+tags: [ai, machine-learning, rag, agentic-systems, laravel, shopify]
+featured: false
+heroImage:
+  url: "/blog/ai-vs-machine-learning/hero.webp"
+  alt: "Pop-art comic-style technical workstation with a bento grid interface"
+---
+
+The tech industry often treats the terms "AI" and "Machine Learning" as interchangeable synonyms. This semantic confusion leads to massive architectural debt when businesses try to implement intelligent features without understanding the underlying mechanics. You might find your team struggling to build a predictive engine using static rule-based systems or, conversely, over-engineering a simple logical decision tree with a complex neural network.
+
+Misidentifying the right tool for the job results in bloated cloud bills, slow performance, and systems that fail to generalize to real-world data. When you confuse the umbrella field of Artificial Intelligence with the specific mechanics of Machine Learning, you lose the ability to choose the most efficient path for your product development.
+
+This guide provides a technical roadmap to distinguish these concepts. We will explore how they manifest in modern engineering stacks like Laravel and Shopify, specifically focusing on RAG and agentic systems. By the end of this article, you will have a clear framework for deciding when to use rule-based logic and when to deploy a learned model.
+
+## The AI umbrella: broad intelligent systems
+
+Artificial Intelligence (AI) is the broad field of creating systems capable of performing tasks that typically require human intelligence. This is the "umbrella" term. It encompasses everything from simple "if-then" logic to the most complex large language models (LLMs).
+
+In engineering terms, AI is about the system's behavior. If a software system can reason, plan, or solve problems, it is an AI system. This does not mean it has to "learn." Early AI systems, often referred to as symbolic AI or expert systems, relied on hardcoded rules and logic gates. These systems are highly predictable and easy to debug because every decision path is explicitly defined.
+
+For example, a sophisticated shipping calculator in a Shopify Plus store that adjusts prices based on complex regional taxes and carrier API responses is a form of narrow AI. It mimics human decision-making based on a set of logical parameters. However, it is not Machine Learning because it does not improve its performance based on past data unless a developer manually updates the code.
+
+![Vibrant Pop-Art technical diagram showing the relationship between AI, Machine Learning, and Deep Learning](/blog/ai-vs-machine-learning/ai-ml-deep-learning.webp)
+
+## Machine Learning: the engine of pattern recognition
+
+Machine Learning (ML) is a subset of AI that focuses on the development of algorithms that allow computers to learn from and make predictions based on data. Instead of being explicitly programmed to perform a task, an ML model is "trained" on a dataset to find patterns and hidden structures.
+
+When you are building a product that needs to handle high-dimensional data where rules are too complex to write by hand, ML is the solution. Think about image recognition or fraud detection. You cannot write enough "if" statements to account for every possible pixel arrangement in a photo of a cat. Instead, you feed an ML model thousands of images, and it learns the statistical representation of a "cat."
+
+In a production environment, ML involves a lifecycle that is distinct from traditional software development. It requires data collection, cleaning, feature engineering, model training, and evaluation. You can read more about how this differs from standard workflows in our post on [AI vs traditional development](/blog/ai-vs-traditional-development/).
+
+## Engineering context: AI vs Machine Learning in RAG systems
+
+The distinction becomes critical when you move into modern AI Engineering, particularly with Retrieval-Augmented Generation (RAG). A RAG system is a perfect example of an AI system that incorporates multiple ML components to achieve a goal.
+
+In a RAG pipeline, the system behavior is the AI part. The orchestration of how a user query is received, how a search is performed against a vector database, and how the results are fed into a prompt is a design problem. The components doing the heavy lifting, however, are ML models.
+
+### Embedding models and vector databases
+
+The "retrieval" part of RAG relies on embedding models. These are ML models (specifically deep learning models) that transform text into high-dimensional vectors. When you store these vectors in a tool like pgvector or a dedicated vector database, you are using the output of a Machine Learning process.
+
+### The generator (LLM)
+
+The "generation" part is handled by a Large Language Model. This is a massive ML model trained on petabytes of data. While you interact with it via an API or a local deployment, the model itself is a static file of weights learned through intensive training.
+
+When you refine your RAG system, you are often doing AI engineering by changing the chunking strategy or the system prompt. You are only doing ML engineering if you decide to fine-tune the embedding model or the LLM itself on your specific domain data. Understanding these layers helps prevent [common RAG mistakes in production](/blog/7-rag-mistakes-production/).
+
+![A vibrant Pop-Art comic-style illustration of a RAG architecture showing documents, a vector db, and an LLM module](/blog/ai-vs-machine-learning/rag-architecture.webp)
+
+## Agentic systems and autonomous workflows
+
+Agentic systems take the AI vs Machine Learning comparison a step further. An "agent" is an AI system that uses an ML model as its "brain" to determine a sequence of actions to reach a goal.
+
+In an agentic workflow, the ML model (the LLM) is just one tool in the agent's belt. The agent might also have access to a search engine, a calculator, or a database. The logic that handles the "loop" (Observe -> Think -> Act) is the AI system design.
+
+For developers working with Shopify, [agentic commerce](/blog/agentic-commerce-shopify/) allows for autonomous customer service or inventory management. The agent uses Machine Learning to understand the customer's intent (NLP) but uses traditional software APIs to execute a refund or check stock levels.
+
+```php
+// A conceptual example of an AI Agent 'thought' process in a Laravel controller
+public function handleAgentRequest(Request $request)
+{
+    $userInput = $request->input('query');
+
+    // ML Component: Identify intent using an LLM
+    $intent = $this->llmService->identifyIntent($userInput);
+
+    // AI System Logic: Choose the tool based on intent
+    if ($intent === 'check_order_status') {
+        return $this->orderService->getStatus($request->user());
+    }
+
+    // AI System Logic: Fallback to RAG if intent is informational
+    return $this->ragService->queryKnowledgeBase($userInput);
+}
+```
+
+## Practical implementation: Laravel and Shopify contexts
+
+Integrating AI and ML into existing frameworks like Laravel or Shopify requires a clear understanding of where the data lives and how the models are served.
+
+### Laravel and ML
+
+Laravel is an excellent framework for building the "AI system" around an ML model. You can use Laravel's robust queue system to handle long-running ML tasks or use its HTTP client to communicate with Python-based ML microservices. Many developers use Laravel to manage the "human-in-the-loop" aspects of AI, such as reviewing model outputs before they are published.
+
+### Shopify and AI
+
+Shopify has integrated AI features directly into its platform via Shopify Magic. However, for custom Shopify Plus builds, you might implement your own ML-driven product recommendation engine. This involves capturing user behavior data, training a model (likely off-platform on Google Cloud or AWS), and serving those recommendations via a custom app or a Liquid block.
+
+## Cloud infrastructure for AI and Machine Learning
+
+Deploying these systems requires different infrastructure strategies. AI systems (the orchestration code) can usually run on standard web servers or serverless functions. Machine Learning models, especially for training or high-throughput inference, often require GPUs or specialized hardware.
+
+Using Docker and tools like Coolify can simplify the deployment of these modular systems. You might host your Laravel application on a standard VPS while your vector database and ML inference server run in separate containers. For more on this, check out our guide on [Coolify and Docker for SaaS hosting](/blog/coolify-docker-saas-hosting/).
+
+Monitoring is also different. For an AI system, you monitor latency and error rates. For an ML model, you monitor "drift" (when the real-world data starts to look different from the training data) and accuracy.
+
+![Vibrant Pop-Art UI screenshot of a SaaS dashboard monitoring AI and ML metrics](/blog/ai-vs-machine-learning/monitoring-dashboard.webp)
+
+## Takeaways
+
+Distinguishing between AI and Machine Learning is not just about semantics. It is about choosing the right architecture and team skill sets for your project.
+
+- **AI is the "what":** It describes the goal of creating intelligent behavior. It includes both hardcoded logic and learned models.
+- **Machine Learning is the "how":** It is a specific method for achieving AI by training models on data.
+- **RAG and agents are hybrid systems:** They use ML components (LLMs, embeddings) inside an AI system designed with code and prompts.
+- **Framework integration matters:** Laravel is great for AI orchestration, while Shopify Plus provides a robust environment for ML-driven commerce.
+- **Infrastructure needs differ:** AI code is lightweight. ML models require specialized environments for training and inference.
+
+Are you building a system that needs to follow strict regulatory rules, or one that needs to adapt to unpredictable user behavior?
