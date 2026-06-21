@@ -47,7 +47,10 @@ const {
 const prevHref = prev ? new URL(prev, Astro.site).href : undefined;
 const nextHref = next ? new URL(next, Astro.site).href : undefined;
 
-const fullTitle = title === SITE.TITLE ? title : `${title} — ${SITE.TITLE}`;
+// Use the short brand as the title suffix so per-page titles stay under
+// the ~60-char SERP limit instead of being truncated by the long site title.
+const fullTitle =
+  title === SITE.TITLE ? title : `${title} — ${SITE.SHORT_TITLE}`;
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
 const ogImage = new URL(image, Astro.site).href;
 const isDefaultOg = image === "/og.webp";
