@@ -39,7 +39,7 @@ A well-built headless stack using Hydrogen and Oxygen can push performance much 
 
 But this is where the hype needs a reality check. Headless does not automatically mean faster. It only gets faster when the frontend architecture is actually good.
 
-If the team over-fetches GraphQL data, hydrates too much JavaScript, or ships a bloated component tree, the custom storefront can end up slower than a decent Liquid theme. That happens more often than people admit.
+If the team over-fetches GraphQL data, hydrates too much JavaScript, or ships a bloated component tree, the custom storefront can end up slower than a decent Liquid theme. That happens more often than people admit. There is also a middle path worth knowing about: dropping in [Shopify storefront web components](/blog/shopify-storefront-web-components/) lets you add dynamic, framework-light interactivity without committing to a full headless rebuild.
 
 So yes, headless can be a performance win. But only if the implementation is disciplined.
 
@@ -53,7 +53,7 @@ That sounds clean on paper. In practice, it means you now own two systems instea
 
 You need to manage hosting, deployments, caching, GraphQL queries, error handling, observability, and integration behavior across services. Every app in the stack has to be checked for API compatibility. If an app only works by injecting snippets into a theme, that convenience is gone.
 
-This is the part that catches teams off guard. In Liquid, many features feel plug-and-play. In headless, the same features often become custom integration work. Reviews, loyalty, search, subscriptions, personalization, analytics. All of it may need extra engineering.
+This is the part that catches teams off guard. In Liquid, many features feel plug-and-play. In headless, the same features often become custom integration work. Reviews, loyalty, search, subscriptions, personalization, analytics. All of it may need extra engineering. The same calculus applies to newer surfaces like [agentic commerce on Shopify](/blog/agentic-commerce-shopify/), where the storefront has to expose clean, machine-readable APIs no matter which stack you pick.
 
 The easiest way to think about it is this: Liquid is renting a well-equipped shop. Headless is designing your own building. You get more freedom, but now plumbing, wiring, and maintenance are your problem too.
 
@@ -80,7 +80,7 @@ I like to reduce this decision to a few practical questions.
 3. **Are the integration requirements genuinely complex?** If the storefront needs to combine Shopify with custom product logic, external systems, or a bespoke application layer, headless starts to make more sense.
 4. **Is performance a code problem or an architecture problem?** Many slow stores do not need headless. They need script cleanup, better image handling, less app bloat, and tighter theme code.
 
-The simplest stack that solves the real bottleneck is usually the best stack. Building a spaceship to cross the street is still a bad decision.
+The simplest stack that solves the real bottleneck is usually the best stack. Building a spaceship to cross the street is still a bad decision. You can see how this framework plays out across [real Shopify builds I've shipped](/work/).
 
 ## Practical takeaways for your next move
 

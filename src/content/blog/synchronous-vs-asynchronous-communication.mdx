@@ -81,13 +81,13 @@ For cross-service communication, GCP Cloud Tasks is a powerful alternative to tr
 
 Choosing the right pattern depends on the user's expectations and the reliability of the task.
 
-| Feature              | Synchronous                  | Asynchronous                     |
-| :------------------- | :--------------------------- | :------------------------------- |
-| **User Experience**  | Immediate feedback required. | Background processing is okay.    |
-| **Data Integrity**   | Result needed for next step. | Eventual consistency is okay.     |
-| **Reliability**      | Fails if the connection breaks. | Retries automatically on failure. |
-| **Complexity**       | Simple code structure.       | Requires queue management and workers. |
-| **Example Use Case** | Login validation, viewing a cart. | Order fulfillment, image processing. |
+| Feature              | Synchronous                       | Asynchronous                           |
+| :------------------- | :-------------------------------- | :------------------------------------- |
+| **User Experience**  | Immediate feedback required.      | Background processing is okay.         |
+| **Data Integrity**   | Result needed for next step.      | Eventual consistency is okay.          |
+| **Reliability**      | Fails if the connection breaks.   | Retries automatically on failure.      |
+| **Complexity**       | Simple code structure.            | Requires queue management and workers. |
+| **Example Use Case** | Login validation, viewing a cart. | Order fulfillment, image processing.   |
 
 ### Use synchronous when:
 

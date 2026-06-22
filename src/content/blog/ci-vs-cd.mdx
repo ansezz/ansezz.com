@@ -3,8 +3,7 @@ title: "CI vs CD: automating quality and delivery"
 description: "Continuous Integration vs Continuous Delivery explained. How to automate the path from commit to production for Laravel backends and Shopify storefronts."
 publishDate: 2026-06-21
 category: devops
-tags:
-  [devops, ci-cd, laravel, shopify, automation]
+tags: [devops, ci-cd, laravel, shopify, automation]
 featured: false
 heroImage:
   url: "/blog/ci-vs-cd/hero.webp"
@@ -44,12 +43,12 @@ For developers using [Coolify for self-hosted SaaS](/blog/coolify-self-hosted-sa
 
 The primary difference lies in the scope and the ultimate goal. CI is about the developer's experience and code integrity. CD is about the user's experience and the release process.
 
-| Feature           | Continuous Integration (CI)            | Continuous Delivery (CD)                          |
-| :---------------- | :------------------------------------- | :------------------------------------------------ |
-| **Primary goal**  | Detect bugs and integration issues early. | Ensure code is always in a releasable state.   |
-| **Trigger**       | Triggered by every code commit or push. | Triggered after CI passes successfully.          |
-| **Key output**    | A validated code base and test reports. | A deployable artifact (Docker image, ZIP, etc.). |
-| **Manual step**   | Fully automated process.               | Manual approval (Delivery) or fully automated (Deployment). |
+| Feature          | Continuous Integration (CI)               | Continuous Delivery (CD)                                    |
+| :--------------- | :---------------------------------------- | :---------------------------------------------------------- |
+| **Primary goal** | Detect bugs and integration issues early. | Ensure code is always in a releasable state.                |
+| **Trigger**      | Triggered by every code commit or push.   | Triggered after CI passes successfully.                     |
+| **Key output**   | A validated code base and test reports.   | A deployable artifact (Docker image, ZIP, etc.).            |
+| **Manual step**  | Fully automated process.                  | Manual approval (Delivery) or fully automated (Deployment). |
 
 In 2026, the lines are blurring as tools become more integrated. Most teams treat them as a single, fluid pipeline where code flows from a developer's IDE directly into a staging or production environment.
 
@@ -84,7 +83,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: "8.3"
       - name: Install Dependencies
         run: composer install --prefer-dist --no-interaction
       - name: Execute Tests

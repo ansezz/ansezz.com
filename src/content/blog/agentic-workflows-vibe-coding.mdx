@@ -14,7 +14,7 @@ I've spent the last decade building Laravel applications, managing Docker cluste
 
 But recently, the ground has shifted. We're moving away from the era of "writing code" and into the era of "orchestrating intent."
 
-This transition — often playfully called **vibe coding** — is more than just a meme. It represents a fundamental architectural shift in how we build software, moving from sequential instruction to agentic loops powered by protocols like **MCP** (Model Context Protocol).
+This transition — often playfully called **vibe coding** — is more than just a meme. It represents a fundamental architectural shift in how we build software, moving from sequential instruction to agentic loops powered by protocols like **MCP** (Model Context Protocol). If you are new to the idea, my [intro to vibe coding](/blog/vibe-coding/) covers the philosophy and developer-experience side before this post dives into the architecture.
 
 ## The friction of the manual syntax
 
@@ -60,7 +60,7 @@ As an engineer who values quality, I don't just let the "vibe" take over without
 
 ### 1. Defined MCP servers
 
-I build small, dedicated **MCP** servers that expose only the necessary tools to the AI. This keeps the context window clean and the security tight.
+I build small, dedicated **MCP** servers that expose only the necessary tools to the AI. This keeps the context window clean and the security tight. I go deeper on this in [Claude MCP dev tools](/blog/claude-mcp-dev-tools/) and on designing [context-aware agents with MCP](/blog/mcp-context-aware-agents/).
 
 ```php
 // Conceptual MCP tool definition in a PHP environment

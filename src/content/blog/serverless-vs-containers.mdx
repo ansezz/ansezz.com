@@ -24,13 +24,13 @@ The debate over Serverless vs Containers is often simplified into "no servers" v
 
 **Containers** (Docker, Kubernetes) package the entire runtime environment. This includes the application code, libraries, and system dependencies. You have full control over the operating system version and the configuration. While containers run on infrastructure you manage (or semi-manage via Fargate or Cloud Run), they are typically "always on" or require specific scaling rules to spin up and down.
 
-| Feature      | Serverless (FaaS)            | Containers (Docker/K8s)   |
-| :----------- | :--------------------------- | :------------------------ |
-| **Control**  | Minimal; provider-managed    | High; you define the image |
-| **Scaling**  | Automatic per request        | Orchestrator-managed      |
-| **State**    | Strictly stateless           | Can be stateful           |
-| **Runtime**  | Limited to provider support  | Anything that can be Dockerized |
-| **Timeout**  | Usually < 15 minutes         | No inherent execution limit |
+| Feature     | Serverless (FaaS)           | Containers (Docker/K8s)         |
+| :---------- | :-------------------------- | :------------------------------ |
+| **Control** | Minimal; provider-managed   | High; you define the image      |
+| **Scaling** | Automatic per request       | Orchestrator-managed            |
+| **State**   | Strictly stateless          | Can be stateful                 |
+| **Runtime** | Limited to provider support | Anything that can be Dockerized |
+| **Timeout** | Usually < 15 minutes        | No inherent execution limit     |
 
 ## Serverless: the high-speed execution engine
 

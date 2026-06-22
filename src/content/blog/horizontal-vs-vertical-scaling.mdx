@@ -36,14 +36,14 @@ The catch is that horizontal scaling requires architectural changes. Your applic
 
 Choosing between these two depends on your current stage and technical requirements. Here is how they compare across critical engineering metrics.
 
-| Feature                | Vertical Scaling (Scale Up)    | Horizontal Scaling (Scale Out)  |
-| :--------------------- | :----------------------------- | :------------------------------ |
-| **Primary Action**     | Add CPU/RAM to one node        | Add more nodes to the pool      |
-| **Complexity**         | Low (No code changes)          | High (Distributed system)       |
-| **Fault Tolerance**    | Low (Single point of failure)  | High (Redundancy by design)     |
-| **Scalability Limit**  | Hard limit (Hardware ceiling)  | Virtually unlimited             |
-| **Maintenance**        | Requires downtime for resizing | Zero-downtime rolling updates   |
-| **Cost**               | Expensive at the high end      | More efficient through auto-scaling |
+| Feature               | Vertical Scaling (Scale Up)    | Horizontal Scaling (Scale Out)      |
+| :-------------------- | :----------------------------- | :---------------------------------- |
+| **Primary Action**    | Add CPU/RAM to one node        | Add more nodes to the pool          |
+| **Complexity**        | Low (No code changes)          | High (Distributed system)           |
+| **Fault Tolerance**   | Low (Single point of failure)  | High (Redundancy by design)         |
+| **Scalability Limit** | Hard limit (Hardware ceiling)  | Virtually unlimited                 |
+| **Maintenance**       | Requires downtime for resizing | Zero-downtime rolling updates       |
+| **Cost**              | Expensive at the high end      | More efficient through auto-scaling |
 
 ## The Challenge of Distributed State
 

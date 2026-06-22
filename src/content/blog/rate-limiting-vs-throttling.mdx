@@ -120,7 +120,7 @@ When designing your system, you must decide where to place these controls.
 
 **Inside the application:** Implement throttling within your service logic. Use it when calling external APIs or writing to a shared database. Use a queue system like Redis or Amazon SQS to hold requests that exceed your immediate capacity.
 
-I have found that the most resilient systems use both. Rate limiting at the perimeter blocks the "bad actors," while internal throttling ensures that your internal services don't melt down during a legitimate traffic surge. This is especially important when building [agentic commerce systems](/blog/agentic-commerce-shopify/) that may generate many automated API calls in a short period.
+I have found that the most resilient systems use both. Rate limiting at the perimeter blocks the "bad actors," while internal throttling ensures that your internal services don't melt down during a legitimate traffic surge. This is especially important when building [agentic commerce systems](/blog/agentic-commerce-shopify/) that may generate many automated API calls in a short period. And if those calls hit a paid LLM, the stakes shift from CPU to your bill — see [rate limiting and the denial-of-wallet problem](/blog/rate-limiting-ai-wallet/) for the token-cost angle.
 
 ## Takeaways
 

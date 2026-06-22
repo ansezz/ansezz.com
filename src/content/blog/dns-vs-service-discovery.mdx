@@ -3,7 +3,16 @@ title: "DNS vs service discovery"
 description: "DNS was built for servers that live for years; microservices live for minutes. Why service discovery beats stale DNS records for high-churn systems."
 publishDate: 2026-06-22
 category: devops
-tags: [dns, service-discovery, kubernetes, microservices, consul, devops, infrastructure]
+tags:
+  [
+    dns,
+    service-discovery,
+    kubernetes,
+    microservices,
+    consul,
+    devops,
+    infrastructure,
+  ]
 featured: false
 heroImage:
   url: "/blog/dns-vs-service-discovery/hero.webp"
@@ -32,13 +41,13 @@ The biggest hurdle in using DNS for microservices is Time-To-Live (TTL). DNS rel
 
 If you set a high TTL, your service changes are slow to propagate. If you set a very low TTL (like 0 or 1 second), you might overwhelm your DNS server with lookups. Even worse, many client libraries ignore low TTL values and cache the result indefinitely until the process restarts.
 
-| Feature              | DNS                       | Service Discovery            |
-| :------------------- | :------------------------ | :--------------------------- |
-| **Primary Goal**     | Human-readable name to IP | Dynamic instance tracking    |
-| **Propagation**      | Slow (TTL dependent)      | Near-instant (Gossip/Streaming) |
-| **Metadata**         | Very limited (TXT records) | Rich (tags, version, region) |
-| **Client Support**   | Native in all OS          | Often requires API/Agent     |
-| **Health Awareness** | None (Static)             | Active monitoring            |
+| Feature              | DNS                        | Service Discovery               |
+| :------------------- | :------------------------- | :------------------------------ |
+| **Primary Goal**     | Human-readable name to IP  | Dynamic instance tracking       |
+| **Propagation**      | Slow (TTL dependent)       | Near-instant (Gossip/Streaming) |
+| **Metadata**         | Very limited (TXT records) | Rich (tags, version, region)    |
+| **Client Support**   | Native in all OS           | Often requires API/Agent        |
+| **Health Awareness** | None (Static)              | Active monitoring               |
 
 Service Discovery solves this by moving away from deep-level caching. Clients or load balancers often maintain a streaming connection to the registry. When a service instance moves, the registry pushes a notification to all subscribers. There is no waiting for a cache to expire. The system converges on the new state almost instantly.
 

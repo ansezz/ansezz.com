@@ -3,8 +3,7 @@ title: "Load balancer vs API gateway"
 description: "Load balancers distribute traffic; API gateways enforce policy. The real differences, when to use each, and how to layer both in a production stack."
 publishDate: 2026-06-21
 category: architecture
-tags:
-  [api-gateway, load-balancer, architecture, microservices, devops, laravel]
+tags: [api-gateway, load-balancer, architecture, microservices, devops, laravel]
 featured: false
 heroImage:
   url: "/blog/load-balancer-vs-api-gateway/hero.webp"
@@ -37,14 +36,14 @@ Crucially, a gateway routes by **intent**, not just availability. It maps `/orde
 
 The two components overlap on the surface — both sit at the front, both can route HTTP — but their purpose, intelligence, and state could not be more different.
 
-| Aspect          | Load Balancer                  | API Gateway                              |
-| :-------------- | :----------------------------- | :--------------------------------------- |
-| **Primary job** | Distribute traffic across servers | Enforce policy + route by intent      |
-| **Layer**       | L4 (TCP/UDP) or L7 (HTTP)      | L7 (HTTP/API aware)                      |
-| **Awareness**   | Content-agnostic               | Inspects auth, headers, payload          |
-| **Core features** | Health checks, SSL, algorithms | Auth, rate limiting, caching, transforms |
-| **State**       | Mostly stateless               | Tracks clients, quotas, sessions         |
-| **Optimizes for** | Availability + throughput     | Security + control                       |
+| Aspect            | Load Balancer                     | API Gateway                              |
+| :---------------- | :-------------------------------- | :--------------------------------------- |
+| **Primary job**   | Distribute traffic across servers | Enforce policy + route by intent         |
+| **Layer**         | L4 (TCP/UDP) or L7 (HTTP)         | L7 (HTTP/API aware)                      |
+| **Awareness**     | Content-agnostic                  | Inspects auth, headers, payload          |
+| **Core features** | Health checks, SSL, algorithms    | Auth, rate limiting, caching, transforms |
+| **State**         | Mostly stateless                  | Tracks clients, quotas, sessions         |
+| **Optimizes for** | Availability + throughput         | Security + control                       |
 
 The rule of thumb: reach for a **load balancer** when you need raw distribution and uptime, and an **API gateway** when you need to apply rules — who can call this, how often, and in what shape.
 

@@ -49,13 +49,13 @@ Load balancers use specific algorithms to decide which server gets the next requ
 
 The confusion often arises because modern tools like Nginx, HAProxy, and Traefik can perform both roles. However, the conceptual difference remains important for system design.
 
-| Feature             | Reverse Proxy                          | Load Balancer                            |
-| :------------------ | :------------------------------------- | :--------------------------------------- |
-| **Primary Goal**    | Security, routing, and efficiency      | Availability and throughput              |
-| **Backend Pattern** | Usually one logical service            | A pool of identical nodes                |
-| **Caching**         | Excellent support for static + dynamic | Usually minimal or none                  |
-| **Health Checks**   | Basic (is the backend up?)             | Advanced (latency, error rates, load)    |
-| **OSI Layer**       | Mostly Layer 7 (Application)           | Layer 4 (Transport) or Layer 7           |
+| Feature             | Reverse Proxy                          | Load Balancer                         |
+| :------------------ | :------------------------------------- | :------------------------------------ |
+| **Primary Goal**    | Security, routing, and efficiency      | Availability and throughput           |
+| **Backend Pattern** | Usually one logical service            | A pool of identical nodes             |
+| **Caching**         | Excellent support for static + dynamic | Usually minimal or none               |
+| **Health Checks**   | Basic (is the backend up?)             | Advanced (latency, error rates, load) |
+| **OSI Layer**       | Mostly Layer 7 (Application)           | Layer 4 (Transport) or Layer 7        |
 
 Both are really reverse-proxy roles wearing different hats: a load balancer emphasizes _distribution_ (spreading traffic across a pool), while a reverse proxy emphasizes _transformation_ (SSL, caching, routing, security). The same tool — Nginx, HAProxy, Traefik — can do both. In a sophisticated [API gateway](/blog/api-gateway-ai-stack/), these roles are merged into a single entry point that manages both the security and the distribution of traffic across your microservices.
 

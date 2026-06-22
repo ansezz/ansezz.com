@@ -44,13 +44,13 @@ However, statefulness introduces a "sticky session" problem. If you have three s
 
 Choosing between these two paths depends on your specific technical requirements. Below is a breakdown of how they compare across critical engineering metrics.
 
-| Feature | Stateless Apps | Stateful Apps |
-| :--- | :--- | :--- |
-| **Data storage** | State is stored on the client or a shared database/cache. | State is stored in the server's memory or local storage. |
-| **Scalability** | High. Any server can process any request. | Low. Requires sticky sessions or complex synchronization. |
-| **Resilience** | High. If a server dies, another one takes over instantly. | Moderate. Server failure often leads to session loss. |
-| **Complexity** | Higher initial setup for token management and external caching. | Lower initial setup for small-scale projects. |
-| **Performance** | Potential overhead from passing tokens or fetching data from Redis. | Faster local memory access but slower overall scaling. |
+| Feature          | Stateless Apps                                                      | Stateful Apps                                             |
+| :--------------- | :------------------------------------------------------------------ | :-------------------------------------------------------- |
+| **Data storage** | State is stored on the client or a shared database/cache.           | State is stored in the server's memory or local storage.  |
+| **Scalability**  | High. Any server can process any request.                           | Low. Requires sticky sessions or complex synchronization. |
+| **Resilience**   | High. If a server dies, another one takes over instantly.           | Moderate. Server failure often leads to session loss.     |
+| **Complexity**   | Higher initial setup for token management and external caching.     | Lower initial setup for small-scale projects.             |
+| **Performance**  | Potential overhead from passing tokens or fetching data from Redis. | Faster local memory access but slower overall scaling.    |
 
 ## Practical implementation in Laravel
 

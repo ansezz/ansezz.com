@@ -20,7 +20,7 @@ Let's break down the 2026 vector database landscape so you can stop scrolling an
 
 ## Why the database matters in RAG
 
-An LLM like Claude or GPT-4 is a genius without a memory. RAG gives it that memory. Your vector database is the librarian. If the librarian is slow or loses books, the genius can't do its job.
+An LLM like Claude or GPT-4 is a genius without a memory. RAG gives it that memory. Your vector database is the librarian. If the librarian is slow or loses books, the genius can't do its job. (If you're still deciding whether RAG is even the right tool versus baking knowledge into the model, my breakdown of [RAG vs fine-tuning](/blog/rag-vs-fine-tuning/) is the better starting point.)
 
 When we talk about RAG stacks, we're looking for three things:
 
@@ -97,7 +97,7 @@ If you are building something like a global legal search engine or a massive e-c
 
 ### Factor 2: hybrid search is non-negotiable
 
-Pure vector search is actually pretty bad at finding specific technical terms. If you search for "PHP 8.4 features," a pure vector search might give you general "PHP" articles. A hybrid search combines the "vibe" of the vector with the "exactness" of a keyword search.
+Pure vector search is actually pretty bad at finding specific technical terms. If you search for "PHP 8.4 features," a pure vector search might give you general "PHP" articles. A hybrid search combines the "vibe" of the vector with the "exactness" of a keyword search. If your data is highly relational, it's also worth weighing [vector search vs graph search](/blog/vector-search-vs-graph-search/) before committing to a pure-vector approach.
 
 If search quality is your #1 metric, look at Weaviate or Qdrant. They handle the blending of these two search types natively.
 

@@ -84,7 +84,7 @@ You also need to isolate your cache and your file storage. If two tenants upload
 
 Your architecture is only as good as the infrastructure it runs on. I usually deploy my Laravel apps using Docker and cloud providers like Google Cloud or AWS.
 
-Containerization is key. It allows me to scale the application horizontally. When traffic spikes I can spin up more instances of the web server. Because the multi-tenancy logic is handled at the application level, the infrastructure stays clean.
+Containerization is key. It allows me to scale the application horizontally. When traffic spikes I can spin up more instances of the web server. Because the multi-tenancy logic is handled at the application level, the infrastructure stays clean. When a single tenant starts pushing serious request volume, I reach for [Laravel Octane to handle high traffic](/blog/laravel-octane-high-traffic/) before throwing more servers at the problem.
 
 ![Cloud infrastructure diagram for a multi-tenant Laravel deployment](/blog/laravel-multi-tenancy/infrastructure.webp)
 
@@ -112,4 +112,4 @@ If you are starting a new project today, here are the steps I recommend you foll
 4. **Plan for data migration.** As you update your schema you need a way to run migrations across hundreds of databases. Tools like `stancl/tenancy` have built-in commands for this.
 5. **Keep it simple.** Don't build a multi-database setup if you only have five users. Start small and scale as the revenue grows. My goal is always to deliver exceptional results without over-complicating the technical stack.
 
-Are you building a SaaS or looking to migrate your current app to a multi-tenant structure? What is the biggest technical hurdle you are facing right now? [Get in touch](/contact/) — I'd love to hear about it. 🤙
+Are you building a SaaS or looking to migrate your current app to a multi-tenant structure? What is the biggest technical hurdle you are facing right now? [Here's how I help teams architect and ship multi-tenant SaaS](/services/), and you can always [get in touch](/contact/) — I'd love to hear about it. 🤙

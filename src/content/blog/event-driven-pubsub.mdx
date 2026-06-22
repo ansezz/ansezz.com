@@ -24,7 +24,7 @@ Building a modern web application usually starts simple. You have a request and 
 
 This is the problem of tight coupling. Your application logic is tangled like old headphones in a pocket. Every new feature adds more risk and more latency. You want to scale, but your monolithic approach is holding you back. You need a way to let your services talk without being glued together.
 
-The solution is **event-driven architecture** (EDA). And in the Google Cloud world, the heart of that architecture is **Google Pub/Sub**. It is a globally distributed messaging service that decouples the services that produce events from the services that consume them. It allows you to build systems that are truly scalable, resilient, and ready for the future of AI and big data.
+The solution is **event-driven architecture** (EDA). And in the Google Cloud world, the heart of that architecture is **Google Pub/Sub**. It is a globally distributed messaging service that decouples the services that produce events from the services that consume them. It allows you to build systems that are truly scalable, resilient, and ready for the future of AI and big data. If you'd rather self-host the broker, the same patterns translate directly to [scaling with RabbitMQ](/blog/scaling-with-rabbitmq/).
 
 ## Understanding topics and subscriptions
 
@@ -56,7 +56,7 @@ When you set up a subscription, you have to decide how you want to receive messa
 
 **Push subscriptions** are great for serverless architectures. Google Cloud will literally "push" the message to a webhook URL you provide. This is perfect for [cloud infrastructure](/work/) built on Cloud Run or Cloud Functions. It scales automatically and you only pay for what you use. However, you have to make sure your endpoint can handle the sudden spikes in traffic.
 
-**Pull subscriptions** work differently. Your consumer service asks Google Pub/Sub for messages when it is ready. This gives you much more control over backpressure. If your worker is busy, it doesn't ask for more work. This is the preferred method for long-running services or when you are using tools like Laravel's queue workers. Pull delivery is generally more robust for heavy processing tasks where you want to fine-tune concurrency.
+**Pull subscriptions** work differently. Your consumer service asks Google Pub/Sub for messages when it is ready. This gives you much more control over backpressure. If your worker is busy, it doesn't ask for more work. This is the preferred method for long-running services or when you are using tools like Laravel's queue workers. Pull delivery is generally more robust for heavy processing tasks where you want to fine-tune concurrency — exactly the model I use for [message queues in document processing](/blog/message-queues-document-processing/).
 
 ## Building resilient systems with DLQs
 

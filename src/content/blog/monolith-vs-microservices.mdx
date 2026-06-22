@@ -3,8 +3,7 @@ title: "Monolith vs microservices: choosing the right architecture"
 description: "The technical trade-offs between monolith and microservices for Laravel and Shopify projects, and when to scale your infrastructure versus when not to."
 publishDate: 2026-06-21
 category: architecture
-tags:
-  [devops, laravel, shopify, cloud, gcp]
+tags: [devops, laravel, shopify, cloud, gcp]
 featured: false
 heroImage:
   url: "/blog/monolith-vs-microservices/hero.webp"
@@ -47,14 +46,14 @@ The primary driver for microservices is scalability and team autonomy. When your
 
 The choice between monolith vs microservices is always a trade-off between simplicity and flexibility. There is no silver bullet. You must weigh the operational cost against the developer experience.
 
-| Feature                     | Monolith                     | Microservices                |
-| :-------------------------- | :--------------------------- | :--------------------------- |
-| **Operational complexity**  | Low                          | High                         |
-| **Development speed**       | Fast (early stage)           | Slow (early stage)           |
-| **Scalability**             | Vertical / horizontal (whole) | Independent per service     |
-| **Data consistency**        | Strong (ACID)                | Eventual consistency         |
-| **Network latency**         | Minimal                      | Significant (API hops)       |
-| **Testing**                 | Simple                       | Complex distributed testing  |
+| Feature                    | Monolith                      | Microservices               |
+| :------------------------- | :---------------------------- | :-------------------------- |
+| **Operational complexity** | Low                           | High                        |
+| **Development speed**      | Fast (early stage)            | Slow (early stage)          |
+| **Scalability**            | Vertical / horizontal (whole) | Independent per service     |
+| **Data consistency**       | Strong (ACID)                 | Eventual consistency        |
+| **Network latency**        | Minimal                       | Significant (API hops)      |
+| **Testing**                | Simple                        | Complex distributed testing |
 
 ### The hidden cost of distribution
 
@@ -78,7 +77,7 @@ You do not have to choose between a "big ball of mud" and a complex mesh of serv
 
 ![Technical scene showing a modular dashboard with bento grid elements](/blog/monolith-vs-microservices/modular-monolith.webp)
 
-In Laravel, this means using separate namespaces or even local packages for different domains. Your "Billing" code should not directly call the "Inventory" models. Instead, it should use internal interfaces or events. This approach gives you the deployment simplicity of a monolith while making it easy to extract a specific module into a standalone microservice later. It is a path of "deferred decision making" which is often the most strategic move in software engineering.
+In Laravel, this means using separate namespaces or even local packages for different domains. Your "Billing" code should not directly call the "Inventory" models. Instead, it should use internal interfaces or events. This approach gives you the deployment simplicity of a monolith while making it easy to extract a specific module into a standalone microservice later. It is a path of "deferred decision making" which is often the most strategic move in software engineering. When the time finally comes to carve a module out, my guide on going [from monolith to microservices](/blog/monolith-to-microservices/) walks through the strangler-fig migration step by step.
 
 ## Takeaways
 

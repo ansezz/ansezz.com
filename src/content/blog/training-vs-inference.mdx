@@ -44,13 +44,13 @@ If you are building an [AI vs traditional development](/blog/ai-vs-traditional-d
 
 The hardware requirements for these two phases are fundamentally different. Understanding this can save you thousands in infrastructure costs.
 
-| Feature             | Training                       | Inference                                      |
-| :------------------ | :----------------------------- | :--------------------------------------------- |
-| **Primary Goal**    | High Throughput                | Low Latency                                    |
-| **Compute Pattern** | Burst-heavy / Parallel         | Steady / Sequential                            |
+| Feature             | Training                        | Inference                                        |
+| :------------------ | :------------------------------ | :----------------------------------------------- |
+| **Primary Goal**    | High Throughput                 | Low Latency                                      |
+| **Compute Pattern** | Burst-heavy / Parallel          | Steady / Sequential                              |
 | **Hardware**        | Multi-GPU Clusters (H100, A100) | Single GPU, CPU, or Edge (T4, L4, Apple Silicon) |
-| **Optimization**    | Gradient Descent / Backprop    | Quantization / Model Compression               |
-| **Cost Type**       | CAPEX (Upfront)                | OPEX (Recurring)                               |
+| **Optimization**    | Gradient Descent / Backprop     | Quantization / Model Compression                 |
+| **Cost Type**       | CAPEX (Upfront)                 | OPEX (Recurring)                                 |
 
 For training, you need massive VRAM and high-speed interconnects (like NVLink) between GPUs. For inference, you often prioritize energy efficiency and "cost per token." In many cases, a well-optimized model can run inference on standard CPUs or specialized "edge" chips, which is much cheaper than maintaining a fleet of high-end GPUs. If you are managing your own servers using tools like [Coolify and Docker](/blog/coolify-docker-saas-hosting/), you can split your workloads. Put training tasks on high-perf clusters and move inference to smaller, distributed nodes closer to your users.
 

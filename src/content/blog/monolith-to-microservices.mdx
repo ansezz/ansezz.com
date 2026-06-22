@@ -26,7 +26,7 @@ I have seen it happen a dozen times. A startup begins with a clean Laravel or Ra
 
 This is the point where most developers start dreaming of micro-services. They imagine a world where every service is isolated and deployments are instant. But the reality is often a nightmare. If you do it wrong, you end up with a distributed monolith. You get all the complexity of networking with none of the benefits of isolation.
 
-The solution is not a "big bang" rewrite. It is pragmatic scaling. I use the **strangler fig pattern** to move from monoliths to micro-services without losing my mind or my job.
+The solution is not a "big bang" rewrite. It is pragmatic scaling. I use the **strangler fig pattern** to move from monoliths to micro-services without losing my mind or my job. If you are still deciding whether to split at all, start with [monolith vs microservices](/blog/monolith-vs-microservices/) — this post assumes you have already made that call and want the migration playbook.
 
 ## The problem with the big bang
 
@@ -79,7 +79,7 @@ The hardest part of micro-services is not the code. It is the data. Your monolit
 
 I use an **anti-corruption layer (ACL)**. When I extract a service, I do not let it reach back into the monolith's database. That would be cheating. Instead, I create an interface. If the new service needs user data, it asks the monolith via a private API or a message queue like [Google Pub/Sub](https://cloud.google.com/pubsub).
 
-This keeps the new service clean. It does not care about the messy database schema of the legacy app. It only cares about the data it receives through the ACL. Eventually, when the user logic is also migrated, I just update the ACL to point to the new user service.
+This keeps the new service clean. It does not care about the messy database schema of the legacy app. It only cares about the data it receives through the ACL. Eventually, when the user logic is also migrated, I just update the ACL to point to the new user service. For the asynchronous side of this — letting services react to events instead of calling each other directly — I lean on [event-driven Pub/Sub](/blog/event-driven-pubsub/) or [a RabbitMQ-backed queue](/blog/scaling-with-rabbitmq/).
 
 ## Cloud infrastructure and DevOps
 

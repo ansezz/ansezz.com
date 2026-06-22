@@ -52,13 +52,13 @@ Reverse proxies are essential for scaling and securing web applications. They ha
 
 The easiest way to remember the difference is to look at who is being "hidden" from whom.
 
-| Feature | Forward Proxy | Reverse Proxy |
-| :--- | :--- | :--- |
-| **Who it protects** | The client | The server |
-| **IP hiding** | Hides client IP from server | Hides server IP from client |
-| **Placement** | Internal network (client-side) | Edge of the network (server-side) |
-| **Primary goal** | Privacy, filtering, egress control | Load balancing, security, performance |
-| **Example tool** | Squid, Blue Coat | Nginx, Apache, Cloudflare |
+| Feature             | Forward Proxy                      | Reverse Proxy                         |
+| :------------------ | :--------------------------------- | :------------------------------------ |
+| **Who it protects** | The client                         | The server                            |
+| **IP hiding**       | Hides client IP from server        | Hides server IP from client           |
+| **Placement**       | Internal network (client-side)     | Edge of the network (server-side)     |
+| **Primary goal**    | Privacy, filtering, egress control | Load balancing, security, performance |
+| **Example tool**    | Squid, Blue Coat                   | Nginx, Apache, Cloudflare             |
 
 In a forward proxy setup, the origin server has no idea who the actual client is. In a reverse proxy setup, the client has no idea which backend server actually processed their request. Both are essential for [clean architecture](/blog/category/architecture/) but solve entirely different problems.
 

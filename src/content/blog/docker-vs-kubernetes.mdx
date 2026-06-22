@@ -36,13 +36,13 @@ Kubernetes handles this automatically. It uses a declarative approach where you 
 
 Comparing Docker vs Kubernetes is not about choosing one over the other. They operate at different layers of the stack. Docker is the runtime that builds and runs the container. Kubernetes is the orchestration layer that schedules those containers across a network.
 
-| Feature           | Docker                          | Kubernetes                       |
-| :---------------- | :------------------------------ | :------------------------------- |
-| **Primary goal**  | Containerizing an application   | Managing a cluster of containers |
-| **Scaling**       | Manual scaling on a single host | Automated horizontal scaling     |
-| **Self-healing**  | Minimal (needs manual fixes)    | Automatic restarts and rescheduling |
-| **Networking**    | Basic host-level networking     | Advanced cluster-wide networking |
-| **Complexity**    | Low to medium                   | High                             |
+| Feature          | Docker                          | Kubernetes                          |
+| :--------------- | :------------------------------ | :---------------------------------- |
+| **Primary goal** | Containerizing an application   | Managing a cluster of containers    |
+| **Scaling**      | Manual scaling on a single host | Automated horizontal scaling        |
+| **Self-healing** | Minimal (needs manual fixes)    | Automatic restarts and rescheduling |
+| **Networking**   | Basic host-level networking     | Advanced cluster-wide networking    |
+| **Complexity**   | Low to medium                   | High                                |
 
 Docker focuses on the "how" of running an app. Kubernetes focuses on the "where" and "how many" of running those apps across a distributed system. For developers working on complex [AI-driven architectures](/blog/api-gateway-ai-stack/), Kubernetes provides the necessary guardrails for high availability.
 

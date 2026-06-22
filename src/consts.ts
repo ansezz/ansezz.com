@@ -212,6 +212,70 @@ export const BLOG_SERIES: BlogSeries[] = [
       "agentic-commerce-shopify",
     ],
   },
+  {
+    slug: "ai-architecture",
+    title: "AI Architecture Decisions",
+    description:
+      "The architectural forks every AI product hits — ML vs GenAI, RAG vs fine-tuning, context vs memory, vectors vs graphs, and where MCP fits.",
+    tone: "purple",
+    posts: [
+      "ml-vs-genai",
+      "ai-vs-machine-learning",
+      "llm-vs-ai-agent",
+      "rag-vs-fine-tuning",
+      "vector-search-vs-graph-search",
+      "context-window-vs-memory",
+      "prompt-engineering-vs-context-engineering",
+      "api-vs-mcp",
+      "training-vs-inference",
+    ],
+  },
+  {
+    slug: "infrastructure-decisions",
+    title: "Infrastructure Decisions",
+    description:
+      "Load balancers, proxies, gateways, containers, and scaling — the infrastructure trade-offs behind a system that stays up.",
+    tone: "blue",
+    posts: [
+      "horizontal-vs-vertical-scaling",
+      "load-balancer-vs-reverse-proxy",
+      "load-balancer-vs-api-gateway",
+      "forward-proxy-vs-reverse-proxy",
+      "api-gateway-ai-stack",
+      "docker-vs-kubernetes",
+      "container-vs-pod",
+      "serverless-vs-containers",
+      "stateless-vs-stateful-apps",
+    ],
+  },
+  {
+    slug: "async-and-messaging",
+    title: "Async & Messaging",
+    description:
+      "Queues, brokers, and event-driven patterns — how to move the heavy work off the request path without losing data.",
+    tone: "yellow",
+    posts: [
+      "synchronous-vs-asynchronous-communication",
+      "message-queues-document-processing",
+      "scaling-with-rabbitmq",
+      "event-driven-pubsub",
+    ],
+  },
+  {
+    slug: "engineering-roles",
+    title: "Engineering Roles, Compared",
+    description:
+      "DevOps vs MLOps, SRE vs platform, cloud vs DevOps, data engineer vs scientist — who does what, and which role you actually need.",
+    tone: "cyan",
+    posts: [
+      "devops-vs-mlops",
+      "sre-vs-platform-engineer",
+      "cloud-engineer-vs-devops-engineer",
+      "data-engineer-vs-data-scientist",
+      "ml-engineer-vs-ai-engineer",
+      "solutions-architect-vs-forward-deployed-engineer",
+    ],
+  },
 ];
 
 export const BLOG_CATEGORIES = [

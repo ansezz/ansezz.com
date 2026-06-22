@@ -40,14 +40,14 @@ The challenge with graph search is the ingestion process. Unlike vector search, 
 
 Choosing the right approach depends on the nature of your data and the questions your users are asking. The table below outlines the primary technical differences.
 
-| Feature        | Vector Search (pgvector)        | Graph Search (Knowledge Graph)       |
-| :------------- | :------------------------------ | :----------------------------------- |
-| **Data Model** | High-dimensional dense vectors  | Nodes, edges, and properties         |
-| **Query Type** | K-Nearest Neighbors (k-NN)      | Traversals and pattern matching      |
-| **Strengths**  | Semantic similarity, fuzzy match | Complex relationships, multi-hop logic |
-| **Weaknesses** | Struggles with structural reasoning | High ingestion complexity         |
+| Feature        | Vector Search (pgvector)            | Graph Search (Knowledge Graph)           |
+| :------------- | :---------------------------------- | :--------------------------------------- |
+| **Data Model** | High-dimensional dense vectors      | Nodes, edges, and properties             |
+| **Query Type** | K-Nearest Neighbors (k-NN)          | Traversals and pattern matching          |
+| **Strengths**  | Semantic similarity, fuzzy match    | Complex relationships, multi-hop logic   |
+| **Weaknesses** | Struggles with structural reasoning | High ingestion complexity                |
 | **Ideal For**  | FAQ bots, general search, broad Q&A | Fraud detection, supply chain, reasoning |
-| **Scaling**    | Efficient with ANN indexing (HNSW) | Sensitive to graph density and depth |
+| **Scaling**    | Efficient with ANN indexing (HNSW)  | Sensitive to graph density and depth     |
 
 For a deeper look at avoiding common pitfalls in this space, see our guide on [7 RAG mistakes in production](/blog/7-rag-mistakes-production/). Many teams find that they start with vectors and only introduce graphs when they hit a "reasoning wall."
 
