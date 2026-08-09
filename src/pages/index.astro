@@ -27,7 +27,6 @@ const personLd = {
     addressLocality: "Meknes",
     addressCountry: "MA",
   },
-  worksFor: undefined,
   knowsAbout: [
     "Laravel",
     "PHP",
@@ -70,7 +69,8 @@ const personLd = {
       "@type": "Country",
       name: "Morocco",
     },
-    skills: "Laravel, Shopify Plus, AI Engineering, Anthropic Claude, MCP, RAG, PostgreSQL, pgvector, Multi-tenant SaaS, Clean Architecture, TDD",
+    skills:
+      "Laravel, Shopify Plus, AI Engineering, Anthropic Claude, MCP, RAG, PostgreSQL, pgvector, Multi-tenant SaaS, Clean Architecture, TDD",
   },
   sameAs: SOCIALS.filter((s) => s.HREF.startsWith("http")).map((s) => s.HREF),
 };

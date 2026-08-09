@@ -21,5 +21,17 @@
 /rss.xml
   Cache-Control: public, max-age=3600
 
+/rss/*
+  Cache-Control: public, max-age=3600
+
+/feed.json
+  Cache-Control: public, max-age=3600
+
+/resume.json
+  Cache-Control: public, max-age=3600
+
+/llms.txt
+  Cache-Control: public, max-age=3600
+
 /sitemap-index.xml
   Cache-Control: public, max-age=3600

@@ -1,6 +1,6 @@
 ---
 import { ClientRouter } from "astro:transitions";
-import { SITE, OWNER, SOCIALS } from "@/consts";
+import { SITE, OWNER, SOCIALS, X_HANDLE } from "@/consts";
 import Header from "@/components/layout/Header.astro";
 import Footer from "@/components/layout/Footer.astro";
 import CommandPalette from "@/components/layout/CommandPalette.astro";
@@ -178,8 +178,8 @@ const ldList = structuredData
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={description} />
-    <meta name="twitter:creator" content="@ansezz" />
-    <meta name="twitter:site" content="@ansezz" />
+    <meta name="twitter:creator" content={`@${X_HANDLE}`} />
+    <meta name="twitter:site" content={`@${X_HANDLE}`} />
 
     <meta
       name="theme-color"

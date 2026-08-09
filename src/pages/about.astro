@@ -27,12 +27,51 @@ const aboutBreadcrumbLd = breadcrumbList([
   { name: "About", url: "/about/" },
 ]);
 
-const facts: { v: string; l: string; icon: string; tone: "yellow" | "pink" | "cyan" | "green" | "red" | "purple" }[] = [
-  { v: `${YEARS_EXPERIENCE}+`, l: "Years shipping", icon: "lucide:rocket", tone: "yellow" },
-  { v: "60+", l: "Production builds", icon: "lucide:package-check", tone: "cyan" },
+// Ties /about to the Person entity declared on the home page, so search
+// engines resolve one person across the site instead of two loose nodes.
+const profilePageLd = {
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "@id": `${new URL("/about/", SITE.URL).href}#profilepage`,
+  url: new URL("/about/", SITE.URL).href,
+  name: `About ${OWNER.NAME}`,
+  description: ABOUT.DESCRIPTION,
+  inLanguage: "en",
+  isPartOf: { "@id": `${SITE.URL}#website` },
+  mainEntity: { "@id": `${SITE.URL}#person` },
+};
+
+const facts: {
+  v: string;
+  l: string;
+  icon: string;
+  tone: "yellow" | "pink" | "cyan" | "green" | "red" | "purple";
+}[] = [
+  {
+    v: `${YEARS_EXPERIENCE}+`,
+    l: "Years shipping",
+    icon: "lucide:rocket",
+    tone: "yellow",
+  },
+  {
+    v: "60+",
+    l: "Production builds",
+    icon: "lucide:package-check",
+    tone: "cyan",
+  },
   { v: "3", l: "Continents served", icon: "lucide:globe", tone: "green" },
-  { v: "10+", l: "Shopify apps (public + private)", icon: "lucide:shopping-bag", tone: "pink" },
-  { v: "100%", l: `Remote since ${REMOTE_SINCE}`, icon: "lucide:laptop", tone: "purple" },
+  {
+    v: "10+",
+    l: "Shopify apps (public + private)",
+    icon: "lucide:shopping-bag",
+    tone: "pink",
+  },
+  {
+    v: "100%",
+    l: `Remote since ${REMOTE_SINCE}`,
+    icon: "lucide:laptop",
+    tone: "purple",
+  },
   { v: "1", l: "Time zone (GMT+1)", icon: "lucide:clock", tone: "red" },
 ];
 
@@ -103,22 +142,50 @@ const stackByLane = [
   {
     title: "Backend",
     tone: "red" as const,
-    tags: ["Laravel", "PHP 8.3", "Octane (FrankenPHP)", "Horizon", "Filament", "Pest"],
+    tags: [
+      "Laravel",
+      "PHP 8.3",
+      "Octane (FrankenPHP)",
+      "Horizon",
+      "Filament",
+      "Pest",
+    ],
   },
   {
     title: "AI engineering",
     tone: "purple" as const,
-    tags: ["Anthropic Claude", "Claude Code", "MCP", "RAG", "OpenAI", "pgvector"],
+    tags: [
+      "Anthropic Claude",
+      "Claude Code",
+      "MCP",
+      "RAG",
+      "OpenAI",
+      "pgvector",
+    ],
   },
   {
     title: "Shopify Plus",
     tone: "green" as const,
-    tags: ["GraphQL Admin", "App Bridge", "Polaris", "Functions", "Catalog API", "Theme Extensions"],
+    tags: [
+      "GraphQL Admin",
+      "App Bridge",
+      "Polaris",
+      "Functions",
+      "Catalog API",
+      "Theme Extensions",
+    ],
   },
   {
     title: "Data & infra",
     tone: "cyan" as const,
-    tags: ["PostgreSQL", "Redis", "Docker", "Coolify", "GitHub Actions", "Cloudflare"],
+    tags: [
+      "PostgreSQL",
+      "Redis",
+      "Docker",
+      "Coolify",
+      "GitHub Actions",
+      "Cloudflare",
+    ],
   },
 ];
 
@@ -137,34 +204,33 @@ const obsessions = [
   eyebrow="About"
   heading={`Backend brain. AI heart. ${YEARS_EXPERIENCE}+ years of shipping.`}
   intro={`I'm Anass — senior lead backend engineer, software architect, and AI engineer. Remote-only since ${REMOTE_SINCE}. I help founders, agencies, and product teams ship Laravel SaaS, Shopify Plus apps, and AI features that survive real users.`}
-  structuredData={aboutBreadcrumbLd}
+  structuredData={[aboutBreadcrumbLd, profilePageLd]}
 >
   <section
-    class="mx-auto max-w-5xl px-5 grid gap-10 md:grid-cols-[1fr_320px] md:gap-12 pb-12"
+    class="mx-auto grid max-w-5xl gap-10 px-5 pb-12 md:grid-cols-[1fr_320px] md:gap-12"
   >
-    <div class="space-y-14 min-w-0">
+    <div class="min-w-0 space-y-14">
       <div class="flex flex-wrap items-center gap-4">
         <AvailabilityBadge label={OWNER.STATUS} />
         <StickyNote tone="yellow" tilt={-3} class="max-w-[280px]">
-          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+          <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
             ▸ Heads up
           </p>
-          <p class="text-sm font-bold leading-snug">
-            Remote-first since {REMOTE_SINCE}. {SITE.TZ}, but I adapt to your zone.
+          <p class="text-sm leading-snug font-bold">
+            Remote-first since {REMOTE_SINCE}. {SITE.TZ}, but I adapt to your
+            zone.
           </p>
         </StickyNote>
       </div>
 
       <div>
         <BurstBadge tone="yellow" size="sm" class="mb-5">01</BurstBadge>
-        <h2 class="display text-3xl md:text-4xl mb-3">
-          By the numbers.
-        </h2>
-        <p class="text-base md:text-lg text-ink-soft mb-6 max-w-2xl">
+        <h2 class="display mb-3 text-3xl md:text-4xl">By the numbers.</h2>
+        <p class="text-ink-soft mb-6 max-w-2xl text-base md:text-lg">
           Receipts before opinions. The kind of numbers that hold up under
           procurement review.
         </p>
-        <ul class="grid gap-4 grid-cols-2 lg:grid-cols-3">
+        <ul class="grid grid-cols-2 gap-4 lg:grid-cols-3">
           {
             facts.map((f, i) => (
               <li>
@@ -172,18 +238,16 @@ const obsessions = [
                   tone={f.tone}
                   shadow="sm"
                   tilt={i % 2 === 0 ? -0.4 : 0.4}
-                  class="text-center flex flex-col gap-2"
+                  class="flex flex-col gap-2 text-center"
                 >
                   <span
-                    class="inline-flex h-10 w-10 mx-auto items-center justify-center border-[2.5px] border-ink rounded-full bg-paper text-ink shadow-neo-xs"
+                    class="border-ink bg-paper text-ink shadow-neo-xs mx-auto inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
                     aria-hidden="true"
                   >
                     <Icon name={f.icon} class="h-5 w-5" />
                   </span>
-                  <p class="display text-4xl md:text-5xl leading-none">
-                    {f.v}
-                  </p>
-                  <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-80">
+                  <p class="display text-4xl leading-none md:text-5xl">{f.v}</p>
+                  <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-80">
                     {f.l}
                   </p>
                 </NeoCard>
@@ -197,10 +261,8 @@ const obsessions = [
 
       <div>
         <BurstBadge tone="pink" size="sm" class="mb-5">02</BurstBadge>
-        <h2 class="display text-3xl md:text-4xl mb-3">
-          How I actually work.
-        </h2>
-        <p class="text-base md:text-lg text-ink-soft mb-6 max-w-2xl">
+        <h2 class="display mb-3 text-3xl md:text-4xl">How I actually work.</h2>
+        <p class="text-ink-soft mb-6 max-w-2xl text-base md:text-lg">
           Three phases. No agile theater, no surprise scope creep. Boring,
           predictable, ships.
         </p>
@@ -212,23 +274,23 @@ const obsessions = [
                   tone={p.tone}
                   shadow="md"
                   tilt={i === 1 ? 0 : i === 0 ? -0.4 : 0.4}
-                  class="h-full flex flex-col gap-4"
+                  class="flex h-full flex-col gap-4"
                 >
                   <header class="flex items-start justify-between gap-2">
                     <span
-                      class="inline-flex h-12 w-12 items-center justify-center border-[2.5px] border-ink rounded-[6px] bg-paper text-ink shadow-neo-xs"
+                      class="border-ink bg-paper text-ink shadow-neo-xs inline-flex h-12 w-12 items-center justify-center rounded-[6px] border-[2.5px]"
                       aria-hidden="true"
                     >
                       <Icon name={p.icon} class="h-5 w-5" />
                     </span>
                     <span
-                      class="display text-3xl md:text-4xl leading-none opacity-40"
+                      class="display text-3xl leading-none opacity-40 md:text-4xl"
                       aria-hidden="true"
                     >
                       {p.step}
                     </span>
                   </header>
-                  <h3 class="heading text-xl md:text-2xl uppercase leading-tight">
+                  <h3 class="heading text-xl leading-tight uppercase md:text-2xl">
                     {p.title}
                   </h3>
                   <p class="text-sm leading-snug opacity-90">{p.body}</p>
@@ -243,32 +305,32 @@ const obsessions = [
 
       <div>
         <BurstBadge tone="cyan" size="sm" class="mb-5">03</BurstBadge>
-        <h2 class="display text-3xl md:text-4xl mb-5">
+        <h2 class="display mb-5 text-3xl md:text-4xl">
           From PHP scripts to AI agents.
         </h2>
-        <div class="space-y-5 text-base md:text-lg leading-relaxed text-ink-soft max-w-2xl">
+        <div
+          class="text-ink-soft max-w-2xl space-y-5 text-base leading-relaxed md:text-lg"
+        >
           <p>
-            {YEARS_EXPERIENCE} years building products for teams that needed them to
-            work.
-            Not in a demo, not in a slide deck — on day three, when the cron
-            job dies and the customer is angry. That taught me the rule I still
-            ship by: observable infra costs less than incident response, and
-            async architecture beats timezone friction every time.
+            {YEARS_EXPERIENCE} years building products for teams that needed them
+            to work. Not in a demo, not in a slide deck — on day three, when the cron
+            job dies and the customer is angry. That taught me the rule I still ship
+            by: observable infra costs less than incident response, and async architecture
+            beats timezone friction every time.
           </p>
           <SpeechBubble tone="yellow" tail="bl" class="my-2">
-            <span
-              class="text-base md:text-lg leading-snug block max-w-xl"
-            >
+            <span class="block max-w-xl text-base leading-snug md:text-lg">
               "Boring fundamentals, opinionated defaults, the smallest clever
               bit that moves a metric."
             </span>
           </SpeechBubble>
           <p>
-            Started shipping web apps in {CAREER_SINCE}, went remote in {REMOTE_SINCE}, never
-            opened an office calendar invite again. Trajectory: generalist →
-            backend specialist → lead engineer → architect → AI engineer.
-            Tools changed; the rule didn't — ship something real, then make it
-            survive production.
+            Started shipping web apps in {CAREER_SINCE}, went remote in {
+              REMOTE_SINCE
+            }, never opened an office calendar invite again. Trajectory:
+            generalist → backend specialist → lead engineer → architect → AI
+            engineer. Tools changed; the rule didn't — ship something real, then
+            make it survive production.
           </p>
           <p>
             Today: split across Laravel architecture, Shopify Plus app
@@ -283,10 +345,10 @@ const obsessions = [
 
       <div>
         <BurstBadge tone="purple" size="sm" class="mb-5">04</BurstBadge>
-        <h2 class="display text-3xl md:text-4xl mb-3">Operating principles.</h2>
-        <p class="text-base md:text-lg text-ink-soft mb-6 max-w-2xl">
-          The rules that survived {YEARS_EXPERIENCE} years. Boring on purpose. Hard to
-          argue with under pressure.
+        <h2 class="display mb-3 text-3xl md:text-4xl">Operating principles.</h2>
+        <p class="text-ink-soft mb-6 max-w-2xl text-base md:text-lg">
+          The rules that survived {YEARS_EXPERIENCE} years. Boring on purpose. Hard
+          to argue with under pressure.
         </p>
         <ul class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {
@@ -296,15 +358,15 @@ const obsessions = [
                   tone={p.tone}
                   shadow="sm"
                   tilt={i % 2 === 0 ? -0.3 : 0.3}
-                  class="h-full flex flex-col gap-3"
+                  class="flex h-full flex-col gap-3"
                 >
                   <span
-                    class="inline-flex h-10 w-10 items-center justify-center border-[2.5px] border-ink rounded-full bg-paper text-ink shadow-neo-xs"
+                    class="border-ink bg-paper text-ink shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
                     aria-hidden="true"
                   >
                     <Icon name={p.icon} class="h-5 w-5" />
                   </span>
-                  <h3 class="heading text-base uppercase leading-tight">
+                  <h3 class="heading text-base leading-tight uppercase">
                     {p.title}
                   </h3>
                   <p class="text-sm leading-snug opacity-90">{p.body}</p>
@@ -317,9 +379,12 @@ const obsessions = [
 
       <div>
         <BurstBadge tone="green" size="sm" class="mb-5">05</BurstBadge>
-        <h2 class="display text-3xl md:text-4xl mb-3">Stack, at a glance.</h2>
-        <p class="text-base md:text-lg text-ink-soft mb-6 max-w-2xl">
-          Full list lives on <a class="font-bold underline underline-offset-4 decoration-[3px] hover:bg-yellow px-0.5" href="/uses/">/uses</a> — here are the lanes.
+        <h2 class="display mb-3 text-3xl md:text-4xl">Stack, at a glance.</h2>
+        <p class="text-ink-soft mb-6 max-w-2xl text-base md:text-lg">
+          Full list lives on <a
+            class="hover:bg-yellow px-0.5 font-bold underline decoration-[3px] underline-offset-4"
+            href="/uses/">/uses</a
+          > — here are the lanes.
         </p>
         <ul class="grid gap-5 md:grid-cols-2">
           {
@@ -331,7 +396,7 @@ const obsessions = [
                   tilt={i % 2 === 0 ? -0.3 : 0.3}
                   class="h-full"
                 >
-                  <h3 class="heading text-lg uppercase mb-3">{s.title}</h3>
+                  <h3 class="heading mb-3 text-lg uppercase">{s.title}</h3>
                   <ul class="flex flex-wrap gap-1.5">
                     {s.tags.map((t) => (
                       <li>
@@ -351,7 +416,7 @@ const obsessions = [
       <div class="grid gap-6 sm:grid-cols-3">
         <div>
           <p
-            class="mono text-xs font-bold uppercase tracking-widest opacity-60 mb-3"
+            class="mono mb-3 text-xs font-bold tracking-widest uppercase opacity-60"
           >
             ▸ Languages
           </p>
@@ -361,7 +426,7 @@ const obsessions = [
                 <li>
                   <TagPill tone="paper" size="sm">
                     <span class="font-black">{l.label}</span>
-                    <span class="mono opacity-70 ml-2">{l.level}</span>
+                    <span class="mono ml-2 opacity-70">{l.level}</span>
                   </TagPill>
                 </li>
               ))
@@ -370,7 +435,7 @@ const obsessions = [
         </div>
         <div>
           <p
-            class="mono text-xs font-bold uppercase tracking-widest opacity-60 mb-3"
+            class="mono mb-3 text-xs font-bold tracking-widest uppercase opacity-60"
           >
             ▸ Based in
           </p>
@@ -381,7 +446,7 @@ const obsessions = [
         </div>
         <div>
           <p
-            class="mono text-xs font-bold uppercase tracking-widest opacity-60 mb-3"
+            class="mono mb-3 text-xs font-bold tracking-widest uppercase opacity-60"
           >
             ▸ Mode
           </p>
@@ -394,7 +459,7 @@ const obsessions = [
       </div>
     </div>
 
-    <aside class="md:sticky md:top-24 md:self-start space-y-5">
+    <aside class="space-y-5 md:sticky md:top-24 md:self-start">
       <ChecklistBox
         title="Currently obsessed with"
         items={obsessions}
@@ -402,7 +467,7 @@ const obsessions = [
       />
       <NeoCard tone="paper" class="space-y-4">
         <p
-          class="mono text-xs font-bold uppercase tracking-widest text-pink-deep"
+          class="mono text-pink-deep text-xs font-bold tracking-widest uppercase"
         >
           ▸ For procurement / recruiters
         </p>
@@ -429,9 +494,9 @@ const obsessions = [
   </section>
 
   <HalftoneSection tone="ink" bordered class="py-14">
-    <div class="mx-auto max-w-5xl px-5 text-center text-bg">
-      <p class="display text-3xl md:text-4xl mb-4">Got a project in mind?</p>
-      <p class="text-bg/80 mb-6 max-w-xl mx-auto">
+    <div class="text-bg mx-auto max-w-5xl px-5 text-center">
+      <p class="display mb-4 text-3xl md:text-4xl">Got a project in mind?</p>
+      <p class="text-bg/80 mx-auto mb-6 max-w-xl">
         I take on a handful of senior / lead / advisory engagements each year.
         First call is on me — I'll tell you honestly if it's a fit.
       </p>

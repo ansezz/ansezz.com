@@ -14,10 +14,12 @@ const privacyBreadcrumbLd = breadcrumbList([
   { name: "Privacy", url: "/privacy/" },
 ]);
 
-import { statSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+// Bump this by hand when the substance of the notice changes. Do NOT derive
+// it from the file's mtime — a clean CI checkout stamps every file with the
+// build time, which made the page claim it was updated today, every day.
+const UPDATED = "2026-08-10";
 
-const updatedAt = statSync(fileURLToPath(import.meta.url)).mtime;
+const updatedAt = new Date(UPDATED);
 const updatedLabel = updatedAt.toLocaleDateString("en-US", {
   year: "numeric",
   month: "short",
