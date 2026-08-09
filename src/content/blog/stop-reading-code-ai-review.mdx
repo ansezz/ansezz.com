@@ -14,7 +14,7 @@ Nobody wants to read a 5,000-line diff. But that is what lands in the pull reque
 
 The failure mode that follows is worth naming precisely, because it does not look like failure while it is happening. An agent scaffolds a multi-tenant module in one pass — migrations, models, policies, jobs, tests. The diff is correct, mostly. You spend two evenings reading it line by line and approve it. Weeks later something breaks in production: a queued job that ran outside the tenant scope. You read that file. You read that exact method. Your eyes went over it and your brain filed it as "looks like the other ones."
 
-It felt like diligence. It was theater.
+It feels like diligence. It is theater.
 
 ## Where line-by-line review actually breaks
 
