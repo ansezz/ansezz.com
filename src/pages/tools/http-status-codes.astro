@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -862,6 +863,25 @@ const related = [
     href: "/tools/http-headers/",
     label: "HTTP Headers Reference",
     note: "The other half of the response: the headers these status codes require you to send.",
+  },
+];
+
+const relatedLinks = [
+  {
+    href: "/tools/http-headers/",
+    note: "The rest of the response envelope \u2014 caching, CORS, security, forwarding.",
+  },
+  {
+    href: "/blog/rest-vs-grpc/",
+    note: "Status semantics are a REST design decision. gRPC makes a different one.",
+  },
+  {
+    href: "/blog/rate-limiting-vs-throttling/",
+    note: "429 vs 503 vs shed-the-request \u2014 what you return under load, and why.",
+  },
+  {
+    href: "/blog/load-balancer-vs-api-gateway/",
+    note: "Which box in front of your app is generating that 502 in the first place.",
   },
 ];
 ---
@@ -1818,6 +1838,8 @@ const related = [
       }
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

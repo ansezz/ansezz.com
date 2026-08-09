@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import { Icon } from "astro-icon/components";
@@ -1237,6 +1238,25 @@ const related = [
     href: "/tools/jwt-decoder/",
     label: "JWT Decoder",
     note: "Paste the token out of an Authorization header and read its claims, algorithm and expiry.",
+  },
+];
+
+const relatedLinks = [
+  {
+    href: "/tools/http-status-codes/",
+    note: "Codes and headers are the same lookup, split in two. Here's the other half.",
+  },
+  {
+    href: "/blog/cdn-vs-cache/",
+    note: "Cache-Control, Vary and Age decide what the edge is allowed to keep.",
+  },
+  {
+    href: "/blog/forward-proxy-vs-reverse-proxy/",
+    note: "Who sets X-Forwarded-For, and why it lies if you trust it blindly.",
+  },
+  {
+    href: "/tools/url-parser/",
+    note: "The line above the headers: every part of the request URL, broken out.",
   },
 ];
 ---
@@ -2625,6 +2645,8 @@ const related = [
       }
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

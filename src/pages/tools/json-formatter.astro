@@ -141,10 +141,10 @@ const statValueClass = "heading text-lg leading-none mt-1";
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
-      <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
         ▸ Strict on purpose
       </p>
-      <p class="text-sm font-bold leading-snug">
+      <p class="text-sm leading-snug font-bold">
         This validates against RFC 8259 — no comments, no trailing commas, no
         single quotes. If your file needs those, it is JSONC or JSON5, not JSON.
       </p>
@@ -152,19 +152,19 @@ const statValueClass = "heading text-lg leading-none mt-1";
   </section>
 
   <!-- TOOL -->
-  <section class="mx-auto max-w-5xl px-5 pb-16 space-y-6" id="jsonf-root">
+  <section class="mx-auto max-w-5xl space-y-6 px-5 pb-16" id="jsonf-root">
     <NeoCard tone="paper" shadow="md" class="space-y-5">
       <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
         <div
           role="group"
           aria-label="Output mode"
-          class="inline-flex border-[3px] border-ink rounded-[4px] shadow-neo-xs overflow-hidden"
+          class="border-ink shadow-neo-xs inline-flex overflow-hidden rounded-[4px] border-[3px]"
         >
           <button
             type="button"
             data-jsonf-mode="format"
             aria-pressed="true"
-            class="bg-yellow px-3.5 py-2 mono text-[10px] font-bold uppercase tracking-widest border-r-[3px] border-ink transition-colors"
+            class="bg-yellow mono border-ink border-r-[3px] px-3.5 py-2 text-[10px] font-bold tracking-widest uppercase transition-colors"
           >
             Format
           </button>
@@ -172,7 +172,7 @@ const statValueClass = "heading text-lg leading-none mt-1";
             type="button"
             data-jsonf-mode="minify"
             aria-pressed="false"
-            class="bg-paper px-3.5 py-2 mono text-[10px] font-bold uppercase tracking-widest transition-colors"
+            class="bg-paper mono px-3.5 py-2 text-[10px] font-bold tracking-widest uppercase transition-colors"
           >
             Minify
           </button>
@@ -181,13 +181,13 @@ const statValueClass = "heading text-lg leading-none mt-1";
         <div class="flex items-center gap-2">
           <label
             for="jsonf-indent"
-            class="mono text-[11px] font-bold uppercase tracking-widest"
+            class="mono text-[11px] font-bold tracking-widest uppercase"
           >
             Indent
           </label>
           <select
             id="jsonf-indent"
-            class="border-[3px] border-ink rounded-[4px] bg-paper px-2.5 py-1.5 text-sm font-bold shadow-neo-xs focus:outline-none"
+            class="border-ink bg-paper shadow-neo-xs rounded-[4px] border-[3px] px-2.5 py-1.5 text-sm font-bold focus:outline-none"
           >
             <option value="2">2 spaces</option>
             <option value="4">4 spaces</option>
@@ -199,7 +199,7 @@ const statValueClass = "heading text-lg leading-none mt-1";
           type="button"
           id="jsonf-sort"
           aria-pressed="false"
-          class="inline-flex items-center gap-2 border-[2.5px] border-ink rounded-[4px] bg-paper px-3 py-1.5 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm"
+          class="border-ink bg-paper mono shadow-neo-xs hover:shadow-neo-sm inline-flex items-center gap-2 rounded-[4px] border-[2.5px] px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
         >
           <Icon
             name="lucide:arrow-down-up"
@@ -231,7 +231,7 @@ const statValueClass = "heading text-lg leading-none mt-1";
 
       <div class="flex flex-wrap items-center gap-2">
         <span
-          class="mono text-[10px] font-bold uppercase tracking-widest opacity-70"
+          class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
         >
           Try
         </span>
@@ -240,7 +240,7 @@ const statValueClass = "heading text-lg leading-none mt-1";
             <button
               type="button"
               data-jsonf-sample={s.json}
-              class="border-[2px] border-ink rounded-full bg-bg-alt px-3 py-1 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+              class="border-ink bg-bg-alt mono shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
             >
               {s.label}
             </button>
@@ -248,7 +248,7 @@ const statValueClass = "heading text-lg leading-none mt-1";
         }
       </div>
 
-      <p class="mono text-[10px] uppercase tracking-widest opacity-60">
+      <p class="mono text-[10px] tracking-widest uppercase opacity-60">
         Runs in this tab · nothing is uploaded · validation is live under 2 MB
       </p>
     </NeoCard>
@@ -257,7 +257,7 @@ const statValueClass = "heading text-lg leading-none mt-1";
       <NeoCard tone="paper" shadow="md" class="space-y-3">
         <label
           for="jsonf-input"
-          class="mono text-[11px] font-bold uppercase tracking-widest block"
+          class="mono block text-[11px] font-bold tracking-widest uppercase"
         >
           Input JSON
         </label>
@@ -274,7 +274,7 @@ const statValueClass = "heading text-lg leading-none mt-1";
       <NeoCard tone="green" shadow="lg" class="space-y-3">
         <label
           for="jsonf-output"
-          class="mono text-[11px] font-bold uppercase tracking-widest block"
+          class="mono block text-[11px] font-bold tracking-widest uppercase"
         >
           Output
         </label>
@@ -283,7 +283,7 @@ const statValueClass = "heading text-lg leading-none mt-1";
         <p
           id="jsonf-status"
           aria-live="polite"
-          class="mono text-[10px] uppercase tracking-widest opacity-70"
+          class="mono text-[10px] tracking-widest uppercase opacity-70"
         >
           Paste JSON above to validate it.
         </p>
@@ -292,20 +292,20 @@ const statValueClass = "heading text-lg leading-none mt-1";
 
     <div id="jsonf-error" role="alert" hidden>
       <NeoCard tone="pink" shadow="lg" class="space-y-3">
-        <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
           ▸ <span id="jsonf-error-title">—</span>
         </p>
-        <p id="jsonf-error-message" class="text-lg font-bold leading-snug">—</p>
+        <p id="jsonf-error-message" class="text-lg leading-snug font-bold">—</p>
         <pre
           id="jsonf-error-context"
-          class="overflow-x-auto border-[2.5px] border-ink rounded-[4px] bg-paper p-3 font-mono text-xs leading-relaxed">
+          class="border-ink bg-paper overflow-x-auto rounded-[4px] border-[2.5px] p-3 font-mono text-xs leading-relaxed">
         </pre>
         <p id="jsonf-error-hint" class="text-sm leading-relaxed"></p>
       </NeoCard>
     </div>
 
     <NeoCard tone="cyan" shadow="md" class="space-y-4">
-      <p class="mono text-[11px] font-bold uppercase tracking-widest">
+      <p class="mono text-[11px] font-bold tracking-widest uppercase">
         ▸ Document stats
       </p>
       <dl class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
@@ -345,14 +345,14 @@ const statValueClass = "heading text-lg leading-none mt-1";
       <ul
         id="jsonf-notes"
         aria-live="polite"
-        class="space-y-2 border-t-[2.5px] border-ink pt-3 empty:hidden empty:border-0 empty:pt-0"
+        class="border-ink space-y-2 border-t-[2.5px] pt-3 empty:hidden empty:border-0 empty:pt-0"
       >
       </ul>
     </NeoCard>
   </section>
 
   <!-- EXPLAINER -->
-  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+  <section class="mx-auto max-w-3xl space-y-10 px-5 pb-16">
     <div class="space-y-4">
       <h2 class="display text-2xl uppercase">
         The error message is the whole product
@@ -525,12 +525,12 @@ const statValueClass = "heading text-lg leading-none mt-1";
 
   <!-- FAQ -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="display text-2xl uppercase mb-6">Questions, answered</h2>
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
     <div class="space-y-4">
       {
         faq.map((f) => (
-          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
-            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
               <span>{f.q}</span>
               <Icon
                 name="lucide:plus"
@@ -547,7 +547,7 @@ const statValueClass = "heading text-lg leading-none mt-1";
 
   <!-- RELATED -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="heading text-xl uppercase mb-5">Keep reading</h2>
+    <h2 class="heading mb-5 text-xl uppercase">Keep reading</h2>
     <ul class="grid gap-4 sm:grid-cols-2">
       <li>
         <NeoCard
@@ -557,11 +557,11 @@ const statValueClass = "heading text-lg leading-none mt-1";
           href="/tools/json-to-typescript/"
         >
           <p
-            class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5"
+            class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase"
           >
             ▸ Tool
           </p>
-          <p class="heading text-lg uppercase leading-tight">
+          <p class="heading text-lg leading-tight uppercase">
             JSON to TypeScript
           </p>
           <p class="mt-2 text-sm leading-snug opacity-90">
@@ -573,11 +573,11 @@ const statValueClass = "heading text-lg leading-none mt-1";
       <li>
         <NeoCard tone="cyan" shadow="sm" hover href="/blog/rest-vs-grpc/">
           <p
-            class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5"
+            class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase"
           >
             ▸ Post
           </p>
-          <p class="heading text-lg uppercase leading-tight">REST vs gRPC</p>
+          <p class="heading text-lg leading-tight uppercase">REST vs gRPC</p>
           <p class="mt-2 text-sm leading-snug opacity-90">
             What you give up with text-over-the-wire — and what a schema-first
             binary format buys back, including real integers.
@@ -592,11 +592,11 @@ const statValueClass = "heading text-lg leading-none mt-1";
           href="/blog/logging-vs-monitoring/"
         >
           <p
-            class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5"
+            class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase"
           >
             ▸ Post
           </p>
-          <p class="heading text-lg uppercase leading-tight">
+          <p class="heading text-lg leading-tight uppercase">
             Logging vs monitoring
           </p>
           <p class="mt-2 text-sm leading-snug opacity-90">

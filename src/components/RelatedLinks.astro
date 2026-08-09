@@ -1,0 +1,56 @@
+---
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import { TOOL_LIST } from "@/consts";
+
+export interface RelatedLink {
+  /** Internal path, e.g. "/tools/jwt-decoder/" or "/blog/api-vs-mcp/". */
+  href: string;
+  /** Why the reader should click. One sentence. */
+  note: string;
+  /** Overrides the label; tool links resolve their title from TOOL_LIST. */
+  label?: string;
+  kind?: "Tool" | "Post" | "Series" | "Page";
+}
+
+interface Props {
+  title?: string;
+  items: RelatedLink[];
+  class?: string;
+}
+
+const { title = "Keep reading", items, class: className = "" } = Astro.props;
+
+const TONES = ["purple", "cyan", "yellow", "green", "pink"] as const;
+
+const toolTitles = new Map(TOOL_LIST.map((t) => [t.href, t.title]));
+
+const resolved = items.map((item, i) => ({
+  ...item,
+  label: item.label ?? toolTitles.get(item.href) ?? item.href,
+  kind: item.kind ?? (item.href.startsWith("/tools/") ? "Tool" : "Post"),
+  tone: TONES[i % TONES.length],
+}));
+---
+
+{
+  resolved.length > 0 && (
+    <section class:list={["mx-auto max-w-3xl px-5 pb-16", className]}>
+      <h2 class="heading mb-5 text-xl uppercase">{title}</h2>
+      <ul class="grid gap-4 sm:grid-cols-2">
+        {resolved.map((item) => (
+          <li>
+            <NeoCard tone={item.tone} shadow="sm" hover href={item.href}>
+              <p class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase">
+                ▸ {item.kind}
+              </p>
+              <p class="heading text-lg leading-tight uppercase">
+                {item.label}
+              </p>
+              <p class="mt-2 text-sm leading-snug opacity-90">{item.note}</p>
+            </NeoCard>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

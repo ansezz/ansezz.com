@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -56,10 +57,7 @@ const estimateRows = [
   },
   {
     label: "Use it for",
-    cells: [
-      "Sizing a prompt, sanity checks",
-      "Billing, hard limits, chunking",
-    ],
+    cells: ["Sizing a prompt, sanity checks", "Billing, hard limits, chunking"],
   },
 ];
 
@@ -148,6 +146,25 @@ const related = [
       "Wording is the small half of the job. Deciding what gets into the token budget is the big half.",
   },
 ];
+
+const relatedLinks = [
+  {
+    href: "/tools/llm-cost-calculator/",
+    note: "Tokens are the unit. This turns them into a monthly bill.",
+  },
+  {
+    href: "/tools/context-window-checker/",
+    note: "Will it fit? Headroom left across Claude, GPT and Gemini windows.",
+  },
+  {
+    href: "/tools/rag-chunk-splitter/",
+    note: "Split a document into retrieval chunks and see each chunk's token count.",
+  },
+  {
+    href: "/blog/context-window-vs-memory/",
+    note: "Why a bigger context window is not the same thing as memory.",
+  },
+];
 ---
 
 <Page
@@ -160,10 +177,10 @@ const related = [
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
-      <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
         ▸ Estimate, not exact
       </p>
-      <p class="text-sm font-bold leading-snug">
+      <p class="text-sm leading-snug font-bold">
         Uses the ~4 chars/token heuristic. Real tokenizers vary ±10-20%. For
         billing precision, count with the provider's tokenizer.
       </p>
@@ -171,11 +188,11 @@ const related = [
   </section>
 
   <section class="mx-auto max-w-5xl px-5 pb-16">
-    <div class="grid gap-6 md:grid-cols-[1fr_320px] items-start" id="tok-root">
+    <div class="grid items-start gap-6 md:grid-cols-[1fr_320px]" id="tok-root">
       <NeoCard tone="paper" shadow="md" class="space-y-3">
         <label
           for="tok-input"
-          class="mono text-[11px] font-bold uppercase tracking-widest block"
+          class="mono block text-[11px] font-bold tracking-widest uppercase"
         >
           Your text
         </label>
@@ -183,18 +200,25 @@ const related = [
           id="tok-input"
           rows="14"
           placeholder="Paste your prompt, document, or context here…"
-          class="w-full border-[3px] border-ink rounded-[4px] bg-paper p-3 font-mono text-sm shadow-neo-sm focus:outline-none resize-y"
+          class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm focus:outline-none"
         ></textarea>
       </NeoCard>
 
       <NeoCard tone="cyan" shadow="lg" class="space-y-4 md:sticky md:top-24">
-        <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
           ▸ Estimate
         </p>
         <dl class="space-y-2.5">
-          <div class="flex items-end justify-between border-b-[2.5px] border-ink pb-2">
+          <div
+            class="border-ink flex items-end justify-between border-b-[2.5px] pb-2"
+          >
             <dt class="text-sm font-bold uppercase">~ Tokens</dt>
-            <dd id="tok-tokens" class="display text-4xl leading-none text-pink-deep">0</dd>
+            <dd
+              id="tok-tokens"
+              class="display text-pink-deep text-4xl leading-none"
+            >
+              0
+            </dd>
           </div>
           <div class="flex items-end justify-between">
             <dt class="text-sm font-bold uppercase">Characters</dt>
@@ -205,15 +229,25 @@ const related = [
             <dd id="tok-words" class="display text-2xl leading-none">0</dd>
           </div>
         </dl>
-        <div class="border-t-[2.5px] border-ink pt-3">
-          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-2 opacity-80">
+        <div class="border-ink border-t-[2.5px] pt-3">
+          <p
+            class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-80"
+          >
             As input, once
           </p>
           <ul class="space-y-1 text-sm font-bold" id="tok-costs">
-            <li class="flex justify-between"><span>Claude Opus</span><span data-cost="5">$0</span></li>
-            <li class="flex justify-between"><span>Claude Sonnet</span><span data-cost="3">$0</span></li>
-            <li class="flex justify-between"><span>GPT-5.5</span><span data-cost="5">$0</span></li>
-            <li class="flex justify-between"><span>GPT-5.4 mini</span><span data-cost="0.75">$0</span></li>
+            <li class="flex justify-between">
+              <span>Claude Opus</span><span data-cost="5">$0</span>
+            </li>
+            <li class="flex justify-between">
+              <span>Claude Sonnet</span><span data-cost="3">$0</span>
+            </li>
+            <li class="flex justify-between">
+              <span>GPT-5.5</span><span data-cost="5">$0</span>
+            </li>
+            <li class="flex justify-between">
+              <span>GPT-5.4 mini</span><span data-cost="0.75">$0</span>
+            </li>
           </ul>
         </div>
       </NeoCard>
@@ -221,7 +255,7 @@ const related = [
   </section>
 
   <!-- EXPLAINER -->
-  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+  <section class="mx-auto max-w-3xl space-y-10 px-5 pb-16">
     <div class="space-y-4">
       <h2 class="display text-2xl uppercase">A token is not a word</h2>
       <p class="text-base leading-relaxed opacity-90">
@@ -264,37 +298,36 @@ const related = [
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>JSON.</strong> Braces, quotes, colons, and commas are all
-            tokens, and every record repeats every key. A 200-row API response
-            spends a serious share of its budget re-stating field names.</span
+            ><strong>JSON.</strong> Braces, quotes, colons, and commas are all tokens,
+            and every record repeats every key. A 200-row API response spends a serious
+            share of its budget re-stating field names.</span
           >
         </li>
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>Whitespace.</strong> Newer OpenAI vocabularies added
-            multi-space tokens precisely because indented Python was brutal
-            under the GPT-2 tokenizer, where a run of indentation cost roughly
-            one token per space. Which tokenizer you are on decides what your
-            formatting costs.</span
+            ><strong>Whitespace.</strong> Newer OpenAI vocabularies added multi-space
+            tokens precisely because indented Python was brutal under the GPT-2 tokenizer,
+            where a run of indentation cost roughly one token per space. Which tokenizer
+            you are on decides what your formatting costs.</span
           >
         </li>
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>High-entropy strings.</strong> UUIDs, hashes, base64 blobs,
-            minified bundles. There are no useful merges to find, so they
-            shatter — a single UUID can cost more than a dozen tokens.</span
+            ><strong>High-entropy strings.</strong> UUIDs, hashes, base64 blobs, minified
+            bundles. There are no useful merges to find, so they shatter — a single
+            UUID can cost more than a dozen tokens.</span
           >
         </li>
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>Non-Latin scripts.</strong> A Chinese or Japanese character
-            often costs a full token on its own, against roughly four English
-            characters per token. Arabic, Hebrew, and Devanagari usually do
-            worse, fragmenting toward individual UTF-8 bytes. Per character,
-            that is several times the price for the same meaning.</span
+            ><strong>Non-Latin scripts.</strong> A Chinese or Japanese character often
+            costs a full token on its own, against roughly four English characters
+            per token. Arabic, Hebrew, and Devanagari usually do worse, fragmenting
+            toward individual UTF-8 bytes. Per character, that is several times the
+            price for the same meaning.</span
           >
         </li>
       </ul>
@@ -309,12 +342,14 @@ const related = [
         and a bigger vocabulary means fewer tokens for the same string — which
         is why the same paragraph can differ by a double-digit percentage across
         providers, and by much more if it is not English. OpenAI publishes
-        <code class="mono font-bold">tiktoken</code> (<code class="mono font-bold"
-          >cl100k_base</code
-        > for the GPT-4 generation, <code class="mono font-bold">o200k_base</code
+        <code class="mono font-bold">tiktoken</code> (<code
+          class="mono font-bold">cl100k_base</code
+        > for the GPT-4 generation, <code class="mono font-bold"
+          >o200k_base</code
         > for newer models). Anthropic does not publish Claude's tokenizer and gives
         you a <code class="mono font-bold">count_tokens</code> endpoint on the Messages
-        API instead. Google exposes <code class="mono font-bold">countTokens</code
+        API instead. Google exposes <code class="mono font-bold"
+          >countTokens</code
         > for Gemini. Open-weight models ship their tokenizer with the checkpoint,
         so <code class="mono font-bold">AutoTokenizer</code> gives you an exact count
         locally.
@@ -365,12 +400,12 @@ const related = [
 
   <!-- FAQ -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="display text-2xl uppercase mb-6">Questions, answered</h2>
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
     <div class="space-y-4">
       {
         faq.map((f) => (
-          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
-            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
               <span>{f.q}</span>
               <Icon
                 name="lucide:plus"
@@ -387,16 +422,16 @@ const related = [
 
   <!-- RELATED -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="heading text-xl uppercase mb-5">Keep going</h2>
+    <h2 class="heading mb-5 text-xl uppercase">Keep going</h2>
     <ul class="grid gap-4 sm:grid-cols-2">
       {
         related.map((r) => (
           <li>
             <NeoCard href={r.href} tone={r.tone} shadow="sm" hover>
-              <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5 opacity-70">
+              <p class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase opacity-70">
                 ▸ {r.kind}
               </p>
-              <p class="heading text-lg uppercase leading-tight flex items-center gap-2">
+              <p class="heading flex items-center gap-2 text-lg leading-tight uppercase">
                 {r.title}
                 <Icon
                   name="lucide:arrow-right"
@@ -411,6 +446,8 @@ const related = [
       }
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

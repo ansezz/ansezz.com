@@ -36,7 +36,10 @@ const dialectRows = [
   {
     icon: "lucide:layers",
     label: "Fields",
-    cells: ["5 — minute to day-of-week", "6 or 7 — seconds first, optional year"],
+    cells: [
+      "5 — minute to day-of-week",
+      "6 or 7 — seconds first, optional year",
+    ],
   },
   { icon: "lucide:timer", label: "Seconds field", cells: [false, true] },
   {
@@ -151,13 +154,15 @@ const related = [
 >
   <section class="mx-auto max-w-3xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
-      <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
         ▸ Format
       </p>
-      <p class="text-sm font-bold leading-snug">
-        Standard 5 fields: minute hour day-of-month month day-of-week.
-        Supports <code>*</code>, <code>*/n</code>, ranges <code>a-b</code>, and
-        lists <code>a,b,c</code>.
+      <p class="text-sm leading-snug font-bold">
+        Standard 5 fields: minute hour day-of-month month day-of-week. Supports <code
+          >*</code
+        >, <code>*/n</code>, ranges <code>a-b</code>, and lists <code
+          >a,b,c</code
+        >.
       </p>
     </StickyNote>
   </section>
@@ -166,7 +171,7 @@ const related = [
     <NeoCard tone="paper" shadow="md" class="space-y-4">
       <label
         for="cron-input"
-        class="mono text-[11px] font-bold uppercase tracking-widest block"
+        class="mono block text-[11px] font-bold tracking-widest uppercase"
       >
         Cron expression
       </label>
@@ -176,7 +181,7 @@ const related = [
         value="0 2 * * *"
         spellcheck="false"
         autocomplete="off"
-        class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-4 py-3.5 font-mono text-lg font-bold shadow-neo-sm focus:outline-none"
+        class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-4 py-3.5 font-mono text-lg font-bold focus:outline-none"
       />
       <div class="flex flex-wrap gap-2">
         {
@@ -184,7 +189,7 @@ const related = [
             <button
               type="button"
               data-cron-preset={p.expr}
-              class="border-[2px] border-ink rounded-full bg-bg-alt px-3 py-1 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+              class="border-ink bg-bg-alt mono shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
             >
               {p.label}
             </button>
@@ -194,38 +199,42 @@ const related = [
     </NeoCard>
 
     <NeoCard tone="cyan" shadow="lg" class="mt-6 space-y-3">
-      <p class="mono text-[11px] font-bold uppercase tracking-widest">
+      <p class="mono text-[11px] font-bold tracking-widest uppercase">
         ▸ In plain English
       </p>
-      <p id="cron-summary" class="text-lg md:text-xl font-bold leading-snug">
+      <p id="cron-summary" class="text-lg leading-snug font-bold md:text-xl">
         —
       </p>
-      <ul id="cron-fields" class="space-y-1.5 border-t-[2.5px] border-ink pt-3 text-sm"></ul>
+      <ul
+        id="cron-fields"
+        class="border-ink space-y-1.5 border-t-[2.5px] pt-3 text-sm"
+      >
+      </ul>
     </NeoCard>
   </section>
 
   <!-- EXPLAINER -->
-  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+  <section class="mx-auto max-w-3xl space-y-10 px-5 pb-16">
     <div class="space-y-4">
       <h2 class="display text-2xl uppercase">The five fields, left to right</h2>
       <p class="text-base leading-relaxed opacity-90">
         Minute (0–59), hour (0–23), day-of-month (1–31), month (1–12),
         day-of-week (0–7). Sunday is both <code class="mono font-bold">0</code> and
         <code class="mono font-bold">7</code> — a Vixie-era compromise that still
-        catches anyone assuming <code class="mono font-bold">7</code> means
-        Saturday. Each field takes a star, a value, a range
+        catches anyone assuming <code class="mono font-bold">7</code> means Saturday.
+        Each field takes a star, a value, a range
         <code class="mono font-bold">a-b</code>, a list
         <code class="mono font-bold">a,b,c</code>, or a step
-        <code class="mono font-bold">*/n</code>. Steps are a Vixie extension, not
-        POSIX.
+        <code class="mono font-bold">*/n</code>. Steps are a Vixie extension,
+        not POSIX.
       </p>
       <p class="text-base leading-relaxed opacity-90">
         Three-letter names like <code class="mono font-bold">JAN</code> and
         <code class="mono font-bold">MON</code> work for month and day-of-week, but
         classic <code class="mono font-bold">crontab(5)</code> forbids ranges and
-        lists of names — <code class="mono font-bold">MON-FRI</code> is a
-        portability gamble. Use numbers. The readout above walks the expression
-        left to right, token by token.
+        lists of names — <code class="mono font-bold">MON-FRI</code> is a portability
+        gamble. Use numbers. The readout above walks the expression left to right,
+        token by token.
       </p>
     </div>
 
@@ -234,40 +243,38 @@ const related = [
         Day-of-month and day-of-week are OR, not AND
       </h2>
       <p class="text-base leading-relaxed opacity-90">
-        This is the bug that ships. Minute, hour and month are ANDed together the
-        way you expect. The two day fields are not: when <em>both</em> are
-        restricted, cron fires if <em>either</em> one matches.
+        This is the bug that ships. Minute, hour and month are ANDed together
+        the way you expect. The two day fields are not: when <em>both</em> are restricted,
+        cron fires if <em>either</em> one matches.
       </p>
       <p class="text-base leading-relaxed opacity-90">
-        So <code class="mono font-bold">0 0 13 * 5</code> is not "midnight on
-        Friday the 13th". It is midnight on the 13th of every month
+        So <code class="mono font-bold">0 0 13 * 5</code> is not "midnight on Friday
+        the 13th". It is midnight on the 13th of every month
         <em>plus</em> midnight every Friday — roughly sixty runs a year, not one or
         two. Leave one of the two day fields as
-        <code class="mono font-bold">*</code> and normal AND behaviour returns.
-        Vixie-derived crons test "restricted" by looking for a literal leading
-        asterisk, so <code class="mono font-bold">0 0 */2 * 5</code> still gets AND
-        semantics. Quartz sidesteps the argument by requiring
+        <code class="mono font-bold">*</code> and normal AND behaviour returns. Vixie-derived
+        crons test "restricted" by looking for a literal leading asterisk, so <code
+          class="mono font-bold">0 0 */2 * 5</code
+        > still gets AND semantics. Quartz sidesteps the argument by requiring
         <code class="mono font-bold">?</code> in exactly one of the two fields.
       </p>
     </div>
 
     <div class="space-y-4">
-      <h2 class="display text-2xl uppercase">
-        */7 is not "every 7 minutes"
-      </h2>
+      <h2 class="display text-2xl uppercase">*/7 is not "every 7 minutes"</h2>
       <p class="text-base leading-relaxed opacity-90">
-        A step is a set, not an interval. <code class="mono font-bold">*/7</code> in
-        the minute field expands to 0, 7, 14, 21, 28, 35, 42, 49, 56 — then the hour
-        rolls over and the count restarts, so the gap between :56 and the next :00
-        is four minutes.
+        A step is a set, not an interval. <code class="mono font-bold">*/7</code
+        > in the minute field expands to 0, 7, 14, 21, 28, 35, 42, 49, 56 — then the
+        hour rolls over and the count restarts, so the gap between :56 and the next
+        :00 is four minutes.
       </p>
       <p class="text-base leading-relaxed opacity-90">
         Day-of-month is worse: the field length changes underneath you.
         <code class="mono font-bold">*/2</code> means 1, 3, 5 … 31 and restarts at
-        1 every month, so a 31-day month hands you runs on two consecutive days.
-        Only steps that divide their field evenly give a true interval — for
-        minutes, 2, 3, 4, 5, 6, 10, 12, 15, 20 and 30. If you need a real
-        interval, use a scheduler that has one — systemd's
+        1 every month, so a 31-day month hands you runs on two consecutive days. Only
+        steps that divide their field evenly give a true interval — for minutes, 2,
+        3, 4, 5, 6, 10, 12, 15, 20 and 30. If you need a real interval, use a scheduler
+        that has one — systemd's
         <code class="mono font-bold">OnUnitActiveSec=</code>, or
         <code class="mono font-bold">@every 1h30m</code> in Go's robfig/cron.
       </p>
@@ -291,8 +298,8 @@ const related = [
         three hours for fixed-time jobs: skipped runs fire once right after the
         jump, nothing repeats. Jobs running more often than hourly get no such
         help — <code class="mono font-bold">*/5</code> follows the wall clock, so
-        you collect a bonus hour of runs every autumn. Run schedulers in UTC,
-        convert at the edges with an <a
+        you collect a bonus hour of runs every autumn. Run schedulers in UTC, convert
+        at the edges with an <a
           href="/tools/epoch-converter/"
           class="font-bold underline decoration-2 underline-offset-2"
           >epoch converter</a
@@ -313,12 +320,12 @@ const related = [
       <p class="text-base leading-relaxed opacity-90">
         Cron gives you nothing here, so wrap it:
         <code class="mono font-bold">flock -n /var/lock/job.lock ./job.sh</code> from
-        util-linux, <code class="mono font-bold">withoutOverlapping()</code> in
-        Laravel's scheduler,
-        <code class="mono font-bold">concurrencyPolicy: Forbid</code> on a
-        Kubernetes CronJob, or a systemd service unit, which cannot run two
-        instances at once. Once a job is routinely long enough to overlap, put the
-        work behind a queue instead — the argument in <a
+        util-linux, <code class="mono font-bold">withoutOverlapping()</code> in Laravel's
+        scheduler,
+        <code class="mono font-bold">concurrencyPolicy: Forbid</code> on a Kubernetes
+        CronJob, or a systemd service unit, which cannot run two instances at once.
+        Once a job is routinely long enough to overlap, put the work behind a queue
+        instead — the argument in <a
           href="/blog/message-queues-document-processing/"
           class="font-bold underline decoration-2 underline-offset-2"
           >message queues for document processing</a
@@ -344,11 +351,11 @@ const related = [
       <p class="text-base leading-relaxed opacity-90">
         Seconds are where copy-paste dies. Quartz, Spring's
         <code class="mono font-bold">@Scheduled</code>, node-cron and Go's
-        robfig/cron with <code class="mono font-bold">WithSeconds()</code> put a
-        seconds field first, so a six-field expression pasted into a Linux crontab
-        shifts every field one place and gets rejected — and a five-field
-        expression pasted into Quartz quietly becomes a seconds schedule.
-        Kubernetes CronJob stays five-field; one minute is its floor.
+        robfig/cron with <code class="mono font-bold">WithSeconds()</code> put a seconds
+        field first, so a six-field expression pasted into a Linux crontab shifts
+        every field one place and gets rejected — and a five-field expression pasted
+        into Quartz quietly becomes a seconds schedule. Kubernetes CronJob stays five-field;
+        one minute is its floor.
       </p>
       <ComparisonTable columns={dialectColumns} rows={dialectRows} />
     </div>
@@ -356,12 +363,12 @@ const related = [
 
   <!-- FAQ -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="display text-2xl uppercase mb-6">Questions, answered.</h2>
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered.</h2>
     <div class="space-y-4">
       {
         faq.map((f) => (
-          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
-            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
               <span>{f.q}</span>
               <Icon
                 name="lucide:plus"
@@ -378,15 +385,15 @@ const related = [
 
   <!-- RELATED -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="heading text-xl uppercase mb-5">Keep going</h2>
+    <h2 class="heading mb-5 text-xl uppercase">Keep going</h2>
     <div class="grid gap-4 sm:grid-cols-2">
       {
         related.map((r) => (
           <NeoCard href={r.href} tone={r.tone} shadow="sm" hover>
-            <p class="mono text-[10px] font-bold uppercase tracking-widest mb-2 opacity-70">
+            <p class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70">
               {r.kind}
             </p>
-            <p class="heading text-lg uppercase leading-tight mb-2 flex items-center gap-2">
+            <p class="heading mb-2 flex items-center gap-2 text-lg leading-tight uppercase">
               {r.title}
               <Icon
                 name="lucide:arrow-right"

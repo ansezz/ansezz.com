@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -204,6 +205,25 @@ const RELATED = [
     blurb:
       "What you get when the schema comes first and the wire format is generated from it, instead of the other way round.",
     tone: "purple" as const,
+  },
+];
+
+const relatedLinks = [
+  {
+    href: "/tools/json-formatter/",
+    note: "Fix the sample first: format, validate, and find the exact broken character.",
+  },
+  {
+    href: "/tools/url-parser/",
+    note: "The other half of an API payload \u2014 query params, and the four encoders people mix up.",
+  },
+  {
+    href: "/blog/rest-vs-grpc/",
+    note: "Schema-first vs sample-first, and what you give up choosing either.",
+  },
+  {
+    href: "/blog/api-vs-mcp/",
+    note: "Typed schemas stop being a nicety once an agent is picking the tool.",
   },
 ];
 ---
@@ -721,6 +741,8 @@ const RELATED = [
       }
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

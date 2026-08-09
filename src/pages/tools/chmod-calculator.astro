@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -125,6 +126,17 @@ const related = [
     note: "Crypto-random v4 UUIDs, generated in the same browser tab.",
   },
 ];
+
+const relatedLinks = [
+  {
+    href: "/tools/common-ports/",
+    note: "The other lookup table you reach for on a fresh box: what listens where, and why.",
+  },
+  {
+    href: "/blog/coolify-self-hosted-saas/",
+    note: "Where these permissions actually bite \u2014 deploy keys, volumes, and container users on a self-hosted box.",
+  },
+];
 ---
 
 <Page
@@ -137,10 +149,10 @@ const related = [
 >
   <section class="mx-auto max-w-4xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
-      <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
         ▸ Runs offline
       </p>
-      <p class="text-sm font-bold leading-snug">
+      <p class="text-sm leading-snug font-bold">
         Every digit is computed in this tab. No request, no upload, no logging —
         paste a real path if you want to.
       </p>
@@ -154,7 +166,7 @@ const related = [
         <div>
           <label
             for="chmod-octal"
-            class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
           >
             Octal mode
           </label>
@@ -165,13 +177,13 @@ const related = [
             inputmode="numeric"
             spellcheck="false"
             autocomplete="off"
-            class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-4 py-3 font-mono text-2xl font-bold shadow-neo-sm focus:outline-none"
+            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-4 py-3 font-mono text-2xl font-bold focus:outline-none"
           />
         </div>
         <div>
           <label
             for="chmod-path"
-            class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
           >
             Path (for the command)
           </label>
@@ -181,14 +193,14 @@ const related = [
             value="path/to/file"
             spellcheck="false"
             autocomplete="off"
-            class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-4 py-3 font-mono text-base font-bold shadow-neo-sm focus:outline-none"
+            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-4 py-3 font-mono text-base font-bold focus:outline-none"
           />
         </div>
       </div>
 
       <p
         id="chmod-error"
-        class="text-sm font-bold text-pink-deep"
+        class="text-pink-deep text-sm font-bold"
         role="status"
         hidden
       >
@@ -200,7 +212,7 @@ const related = [
             <button
               type="button"
               data-chmod-preset={p.mode}
-              class="border-[2px] border-ink rounded-full bg-bg-alt px-3 py-1 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+              class="border-ink bg-bg-alt mono shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
             >
               {p.label}
             </button>
@@ -220,7 +232,7 @@ const related = [
             <tr>
               <th
                 scope="col"
-                class="mono text-[10px] font-bold uppercase tracking-widest border-b-[2.5px] border-ink p-2 text-left"
+                class="mono border-ink border-b-[2.5px] p-2 text-left text-[10px] font-bold tracking-widest uppercase"
               >
                 Class
               </th>
@@ -228,7 +240,7 @@ const related = [
                 BITS.map((bit) => (
                   <th
                     scope="col"
-                    class="mono text-[10px] font-bold uppercase tracking-widest border-b-[2.5px] border-ink p-2"
+                    class="mono border-ink border-b-[2.5px] p-2 text-[10px] font-bold tracking-widest uppercase"
                   >
                     {bit.label}
                     <span class="ml-1 opacity-60">{bit.weight}</span>
@@ -237,7 +249,7 @@ const related = [
               }
               <th
                 scope="col"
-                class="mono text-[10px] font-bold uppercase tracking-widest border-b-[2.5px] border-ink p-2"
+                class="mono border-ink border-b-[2.5px] p-2 text-[10px] font-bold tracking-widest uppercase"
               >
                 Digit
               </th>
@@ -249,7 +261,7 @@ const related = [
                 <tr>
                   <th
                     scope="row"
-                    class="border-b-[2px] border-ink p-2 text-left text-sm font-bold uppercase"
+                    class="border-ink border-b-[2px] p-2 text-left text-sm font-bold uppercase"
                   >
                     {cls.label}
                     <span class="mono ml-1 text-[11px] opacity-60">
@@ -257,7 +269,7 @@ const related = [
                     </span>
                   </th>
                   {BITS.map((bit) => (
-                    <td class="border-b-[2px] border-ink p-2">
+                    <td class="border-ink border-b-[2px] p-2">
                       <label
                         for={`chmod-${cls.key}-${bit.key}`}
                         class="inline-flex cursor-pointer items-center gap-1.5"
@@ -265,7 +277,7 @@ const related = [
                         <input
                           id={`chmod-${cls.key}-${bit.key}`}
                           type="checkbox"
-                          class="h-5 w-5 border-[2.5px] border-ink accent-pink"
+                          class="border-ink accent-pink h-5 w-5 border-[2.5px]"
                         />
                         <span aria-hidden="true" class="mono text-sm font-bold">
                           {bit.key}
@@ -276,7 +288,7 @@ const related = [
                       </label>
                     </td>
                   ))}
-                  <td class="border-b-[2px] border-ink p-2">
+                  <td class="border-ink border-b-[2px] p-2">
                     <span
                       id={`chmod-digit-${cls.key}`}
                       class="display text-2xl leading-none"
@@ -291,8 +303,8 @@ const related = [
         </table>
       </div>
 
-      <div class="border-t-[2.5px] border-ink pt-5">
-        <p class="mono text-[10px] font-bold uppercase tracking-widest mb-3">
+      <div class="border-ink border-t-[2.5px] pt-5">
+        <p class="mono mb-3 text-[10px] font-bold tracking-widest uppercase">
           ▸ Special bits (the optional 4th digit) — now <span
             id="chmod-digit-special">0</span
           >
@@ -303,12 +315,12 @@ const related = [
               <li>
                 <label
                   for={s.id}
-                  class="flex h-full cursor-pointer items-start gap-2 border-[2.5px] border-ink rounded-[4px] bg-bg-alt p-3 shadow-neo-xs"
+                  class="border-ink bg-bg-alt shadow-neo-xs flex h-full cursor-pointer items-start gap-2 rounded-[4px] border-[2.5px] p-3"
                 >
                   <input
                     id={s.id}
                     type="checkbox"
-                    class="mt-0.5 h-5 w-5 shrink-0 border-[2.5px] border-ink accent-pink"
+                    class="border-ink accent-pink mt-0.5 h-5 w-5 shrink-0 border-[2.5px]"
                   />
                   <span>
                     <span class="mono block text-sm font-bold">
@@ -332,33 +344,33 @@ const related = [
       <div aria-live="polite" class="space-y-5">
         <div class="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p class="mono text-[11px] font-bold uppercase tracking-widest">
+            <p class="mono text-[11px] font-bold tracking-widest uppercase">
               ▸ Mode
             </p>
             <p
               id="chmod-out-octal"
-              class="display text-5xl md:text-6xl leading-none"
+              class="display text-5xl leading-none md:text-6xl"
             >
               755
             </p>
             <p
-              class="mono text-[11px] uppercase tracking-widest opacity-70 mt-2"
+              class="mono mt-2 text-[11px] tracking-widest uppercase opacity-70"
             >
               4-digit: <span id="chmod-out-four">0755</span>
             </p>
           </div>
           <div class="text-right">
-            <p class="mono text-[11px] font-bold uppercase tracking-widest">
+            <p class="mono text-[11px] font-bold tracking-widest uppercase">
               ▸ Symbolic
             </p>
             <p
               id="chmod-out-symbolic"
-              class="mono text-2xl md:text-3xl font-bold leading-none"
+              class="mono text-2xl leading-none font-bold md:text-3xl"
             >
               rwxr-xr-x
             </p>
             <p
-              class="mono text-[11px] uppercase tracking-widest opacity-70 mt-2"
+              class="mono mt-2 text-[11px] tracking-widest uppercase opacity-70"
             >
               ls -l: <span id="chmod-out-ls-file">-rwxr-xr-x</span> ·
               <span id="chmod-out-ls-dir">drwxr-xr-x</span>
@@ -366,34 +378,34 @@ const related = [
           </div>
         </div>
 
-        <div class="border-t-[2.5px] border-ink pt-4">
-          <p class="mono text-[11px] font-bold uppercase tracking-widest mb-2">
+        <div class="border-ink border-t-[2.5px] pt-4">
+          <p class="mono mb-2 text-[11px] font-bold tracking-widest uppercase">
             ▸ In plain English
           </p>
-          <p id="chmod-out-english" class="text-lg font-bold leading-snug">
+          <p id="chmod-out-english" class="text-lg leading-snug font-bold">
             Owner can read, write, and execute; group and others can read and
             execute.
           </p>
           <ul id="chmod-out-notes" class="mt-3 space-y-1.5"></ul>
         </div>
 
-        <div class="border-t-[2.5px] border-ink pt-4">
+        <div class="border-ink border-t-[2.5px] pt-4">
           <div class="flex items-center justify-between gap-3">
-            <p class="mono text-[11px] font-bold uppercase tracking-widest">
+            <p class="mono text-[11px] font-bold tracking-widest uppercase">
               ▸ Command
             </p>
             <button
               type="button"
               id="chmod-copy"
-              class="inline-flex items-center gap-2 border-[2.5px] border-ink rounded-[4px] bg-paper px-3 py-1.5 text-xs font-bold uppercase tracking-wide shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+              class="border-ink bg-paper shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-2 rounded-[4px] border-[2.5px] px-3 py-1.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
             >
               <Icon name="lucide:copy" class="h-3.5 w-3.5" aria-hidden="true" />
               <span id="chmod-copy-label">Copy command</span>
             </button>
           </div>
           <pre
-            class="mt-2 overflow-x-auto border-[2.5px] border-ink rounded-[4px] bg-paper p-3 text-sm"><code id="chmod-out-command">chmod 755 path/to/file</code></pre>
-          <p class="mono text-[11px] uppercase tracking-widest opacity-70 mt-2">
+            class="border-ink bg-paper mt-2 overflow-x-auto rounded-[4px] border-[2.5px] p-3 text-sm"><code id="chmod-out-command">chmod 755 path/to/file</code></pre>
+          <p class="mono mt-2 text-[11px] tracking-widest uppercase opacity-70">
             Symbolic: <code id="chmod-out-symbolic-command"
               >chmod u=rwx,g=rx,o=rx path/to/file</code
             >
@@ -404,7 +416,7 @@ const related = [
 
     <div id="chmod-warnings-wrap" class="mt-6" hidden>
       <NeoCard tone="yellow" shadow="md">
-        <p class="mono text-[11px] font-bold uppercase tracking-widest mb-3">
+        <p class="mono mb-3 text-[11px] font-bold tracking-widest uppercase">
           ▸ Sanity check
         </p>
         <ul id="chmod-out-warnings" class="space-y-3" aria-live="polite"></ul>
@@ -566,12 +578,12 @@ const related = [
 
   <!-- FAQ -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="display text-2xl uppercase mb-5">Questions people ask</h2>
+    <h2 class="display mb-5 text-2xl uppercase">Questions people ask</h2>
     <div class="space-y-3">
       {
         faq.map((f) => (
-          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
-            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
               <span>{f.q}</span>
               <Icon
                 name="lucide:plus"
@@ -588,7 +600,7 @@ const related = [
 
   <!-- Related -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="display text-2xl uppercase mb-5">Related</h2>
+    <h2 class="display mb-5 text-2xl uppercase">Related</h2>
     <ul class="grid gap-4 sm:grid-cols-2">
       {
         related.map((r) => (
@@ -608,6 +620,8 @@ const related = [
       }
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

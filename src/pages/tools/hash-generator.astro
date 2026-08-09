@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -165,6 +166,25 @@ const related = [
     blurb:
       "Why hashing a prompt into an exact-match cache key stops working, and what to do instead.",
     tone: "green" as const,
+  },
+];
+
+const relatedLinks = [
+  {
+    href: "/tools/secret-generator/",
+    note: "Hashing verifies; generating creates. Crypto-random keys, secrets, and passphrases.",
+  },
+  {
+    href: "/tools/shopify-hmac-verifier/",
+    note: "SHA-256 doing real work: constant-time webhook signature checks.",
+  },
+  {
+    href: "/blog/rest-vs-grpc/",
+    note: "Where payload integrity and content hashing show up in API design.",
+  },
+  {
+    href: "/tools/base64-encoder/",
+    note: "Hex or base64 \u2014 the other half of getting a digest into a header safely.",
   },
 ];
 ---
@@ -516,6 +536,8 @@ const related = [
       }
     </div>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

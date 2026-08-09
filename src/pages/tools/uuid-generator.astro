@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
@@ -53,7 +54,11 @@ const versionRows = [
   {
     icon: "lucide:file-text",
     label: "Where it is specified",
-    cells: ["RFC 4122, kept in RFC 9562", "RFC 4122, kept in RFC 9562", "RFC 9562 (2024)"],
+    cells: [
+      "RFC 4122, kept in RFC 9562",
+      "RFC 4122, kept in RFC 9562",
+      "RFC 9562 (2024)",
+    ],
   },
 ];
 
@@ -134,6 +139,25 @@ const related = [
     tone: "green" as const,
   },
 ];
+
+const relatedLinks = [
+  {
+    href: "/tools/secret-generator/",
+    note: "UUIDs are identifiers, not secrets. Use this when you need entropy.",
+  },
+  {
+    href: "/tools/shopify-gid-decoder/",
+    note: "The other ID format you end up staring at, with a type baked in.",
+  },
+  {
+    href: "/blog/laravel-multi-tenancy/",
+    note: "Where UUID vs auto-increment keys becomes a tenancy decision.",
+  },
+  {
+    href: "/blog/monolith-vs-microservices/",
+    note: "Globally unique IDs stop being optional once one database becomes several.",
+  },
+];
 ---
 
 <Page
@@ -161,7 +185,9 @@ const related = [
     <NeoCard tone="paper" shadow="md" class="space-y-5">
       <div class="flex flex-wrap items-end gap-4">
         <label class="block">
-          <span class="mono text-[11px] font-bold uppercase tracking-widest block mb-2">
+          <span
+            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
+          >
             How many
           </span>
           <input
@@ -170,10 +196,15 @@ const related = [
             min="1"
             max="500"
             value="5"
-            class="w-28 border-[3px] border-ink rounded-[4px] bg-paper px-3 py-2.5 font-mono font-bold shadow-neo-sm focus:outline-none"
+            class="border-ink bg-paper shadow-neo-sm w-28 rounded-[4px] border-[3px] px-3 py-2.5 font-mono font-bold focus:outline-none"
           />
         </label>
-        <NeoButton type="button" variant="primary" size="md" class="cursor-pointer">
+        <NeoButton
+          type="button"
+          variant="primary"
+          size="md"
+          class="cursor-pointer"
+        >
           <span id="uuid-generate" class="inline-flex items-center gap-2">
             <Icon name="lucide:refresh-cw" class="h-4 w-4" />
             Generate
@@ -182,7 +213,7 @@ const related = [
         <button
           type="button"
           id="uuid-copy"
-          class="inline-flex items-center gap-2 border-[3px] border-ink bg-paper px-4 py-2.5 text-sm font-bold uppercase tracking-wide shadow-neo-sm transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-md"
+          class="border-ink bg-paper shadow-neo-sm hover:bg-yellow hover:shadow-neo-md inline-flex items-center gap-2 border-[3px] px-4 py-2.5 text-sm font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
         >
           <Icon name="lucide:copy" class="h-4 w-4" />
           <span id="uuid-copy-label">Copy all</span>
@@ -193,7 +224,7 @@ const related = [
         id="uuid-output"
         rows="10"
         readonly
-        class="w-full border-[3px] border-ink rounded-[4px] bg-bg-alt p-3 font-mono text-sm shadow-neo-sm focus:outline-none resize-y"
+        class="border-ink bg-bg-alt shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm focus:outline-none"
       ></textarea>
     </NeoCard>
   </section>
@@ -209,7 +240,8 @@ const related = [
       third group starts with the version digit, always
       <code class="mono font-bold">4</code> here, and the fourth group starts with
       the variant digit, always <code class="mono font-bold">8</code>,
-      <code class="mono font-bold">9</code>, <code class="mono font-bold">a</code
+      <code class="mono font-bold">9</code>, <code class="mono font-bold"
+        >a</code
       >, or <code class="mono font-bold">b</code>.
     </p>
     <p class="mt-4 text-base leading-relaxed">
@@ -233,11 +265,11 @@ const related = [
     <p class="mt-4 text-base leading-relaxed">
       What you can break is the assumption underneath the maths: a real CSPRNG.
       Duplicates in the wild come from
-      <code class="mono font-bold">Math.random()</code>, from a PRNG in a process
-      that forked after seeding, from images that boot with an identical entropy
-      pool, and from code that truncates a UUID to fit a legacy column. Keep the
-      unique constraint anyway — not as a retry mechanism, but as documentation
-      of intent.
+      <code class="mono font-bold">Math.random()</code>, from a PRNG in a
+      process that forked after seeding, from images that boot with an identical
+      entropy pool, and from code that truncates a UUID to fit a legacy column.
+      Keep the unique constraint anyway — not as a retry mechanism, but as
+      documentation of intent.
     </p>
 
     <h2 class="display mt-12 mb-4 text-2xl uppercase">
@@ -257,11 +289,11 @@ const related = [
       production failure people actually hit. A primary key is a B-tree key.
       Time-ordered values append to the rightmost leaf page, which stays hot in
       the buffer pool. Random v4 values target a random page every time: the
-      working set becomes the entire
-      index, pages split down the middle instead of filling up, and the moment
-      the index outgrows RAM your insert throughput falls off a cliff. MySQL
-      with InnoDB suffers worst, because the table <em>is</em> the primary-key
-      B-tree and every secondary index carries a full copy of that key.
+      working set becomes the entire index, pages split down the middle instead
+      of filling up, and the moment the index outgrows RAM your insert
+      throughput falls off a cliff. MySQL with InnoDB suffers worst, because the
+      table <em>is</em> the primary-key B-tree and every secondary index carries a
+      full copy of that key.
     </p>
     <p class="mt-4 text-base leading-relaxed">
       This tool generates v4. For keys in a table that will get large, reach for
@@ -269,7 +301,8 @@ const related = [
       <code class="mono font-bold">uuidv7()</code> is built into PostgreSQL 18 and
       there is a library for every language. ULID is the same idea (48 bits of milliseconds
       plus 80 random) in a 26-character base32 encoding that sorts as text; v7 wins
-      on being a real UUID that drops into a <code class="mono font-bold">uuid</code
+      on being a real UUID that drops into a <code class="mono font-bold"
+        >uuid</code
       > column.
     </p>
 
@@ -281,7 +314,8 @@ const related = [
       <code class="mono font-bold">char(36)</code> spends 36 bytes to hold 16 bytes
       of information. PostgreSQL has a native <code class="mono font-bold"
         >uuid</code
-      > type; MySQL does not, so use <code class="mono font-bold">binary(16)</code
+      > type; MySQL does not, so use <code class="mono font-bold"
+        >binary(16)</code
       > with <code class="mono font-bold">UUID_TO_BIN()</code> and <code
         class="mono font-bold">BIN_TO_UUID()</code
       > at the edges; SQL Server has <code class="mono font-bold"
@@ -299,18 +333,18 @@ const related = [
     </h2>
     <p class="text-base leading-relaxed">
       A <code class="mono font-bold">bigint</code> is 8 bytes, strictly monotonic,
-      readable in a log, and half the width of a UUID in every index and foreign
-      key. One database, one writer, IDs that never appear in a URL — that is the
-      correct choice, and a UUID there is pure tax.
+      readable in a log, and half the width of a UUID in every index and foreign key.
+      One database, one writer, IDs that never appear in a URL — that is the correct
+      choice, and a UUID there is pure tax.
     </p>
     <p class="mt-4 text-base leading-relaxed">
-      UUIDs earn their place when you need the ID before the insert
-      (client-side creation, offline-first sync, idempotency keys), when you
-      merge rows from several sources, when you shard, or when the ID is
-      public — <code class="mono font-bold">/orders/1024</code> tells a
-      competitor your order count and invites a stranger to try 1025. Most teams
-      land on both: a <code class="mono font-bold">bigint</code> primary key for joins,
-      plus an indexed UUID column for the outside world.
+      UUIDs earn their place when you need the ID before the insert (client-side
+      creation, offline-first sync, idempotency keys), when you merge rows from
+      several sources, when you shard, or when the ID is public — <code
+        class="mono font-bold">/orders/1024</code
+      > tells a competitor your order count and invites a stranger to try 1025. Most
+      teams land on both: a <code class="mono font-bold">bigint</code> primary key
+      for joins, plus an indexed UUID column for the outside world.
     </p>
   </section>
 
@@ -360,6 +394,8 @@ const related = [
       }
     </div>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
@@ -190,6 +191,25 @@ const related = [
     blurb:
       "For when the digest is the easy part and the payload encoding is what's actually broken.",
     tone: "cyan" as const,
+  },
+];
+
+const relatedLinks = [
+  {
+    href: "/tools/shopify-gid-decoder/",
+    note: "Once the webhook verifies, decode the resource IDs inside it.",
+  },
+  {
+    href: "/tools/hash-generator/",
+    note: "The primitive underneath: SHA-256 over the raw request body.",
+  },
+  {
+    href: "/blog/secure-agentic-commerce-shopify/",
+    note: "Signature verification is the floor, not the ceiling, for agent traffic.",
+  },
+  {
+    href: "/blog/synchronous-vs-asynchronous-communication/",
+    note: "Verify fast, queue the work \u2014 why webhook handlers must return in milliseconds.",
   },
 ];
 ---
@@ -635,6 +655,8 @@ const related = [
       }
     </div>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

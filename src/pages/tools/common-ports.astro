@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
@@ -993,6 +994,25 @@ const related = [
     note: "What the request and response actually carry over 80 and 443.",
   },
 ];
+
+const relatedLinks = [
+  {
+    href: "/tools/http-status-codes/",
+    note: "The other half of the debugging lookup: what the response code is telling you.",
+  },
+  {
+    href: "/blog/docker-vs-kubernetes/",
+    note: "Port mapping stops being trivial the moment an orchestrator owns the network.",
+  },
+  {
+    href: "/blog/dns-vs-service-discovery/",
+    note: "Ports are only half the address. This is how services find each other's host.",
+  },
+  {
+    href: "/tools/chmod-calculator/",
+    note: "Same category of thing you look up mid-incident and never memorise.",
+  },
+];
 ---
 
 <Page
@@ -1033,13 +1053,13 @@ const related = [
                 placeholder="5432, redis, kubernetes, smtp…"
                 spellcheck="false"
                 autocomplete="off"
-                class="min-w-0 flex-1 rounded-[4px] border-[3px] border-ink bg-paper px-4 py-3 font-mono text-base font-bold shadow-neo-sm focus:outline-none"
+                class="border-ink bg-paper shadow-neo-sm min-w-0 flex-1 rounded-[4px] border-[3px] px-4 py-3 font-mono text-base font-bold focus:outline-none"
               />
               <button
                 type="button"
                 id="common-ports-clear"
                 hidden
-                class="inline-flex items-center gap-2 rounded-[4px] border-[2.5px] border-ink bg-bg-alt px-3 py-2.5 text-xs font-bold tracking-wide uppercase shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+                class="border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-2 rounded-[4px] border-[2.5px] px-3 py-2.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
               >
                 <Icon name="lucide:x" class="h-3.5 w-3.5" aria-hidden="true" />
                 Clear
@@ -1054,7 +1074,7 @@ const related = [
             </p>
           </div>
 
-          <div class="border-t-[2.5px] border-ink pt-4">
+          <div class="border-ink border-t-[2.5px] pt-4">
             <p
               class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70"
             >
@@ -1065,7 +1085,7 @@ const related = [
                 JUMP.map((j) => (
                   <a
                     href={j.href}
-                    class="mono rounded-full border-[2px] border-ink bg-bg-alt px-3 py-1 text-[10px] font-bold tracking-widest uppercase shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+                    class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
                   >
                     {j.label}
                   </a>
@@ -1074,7 +1094,7 @@ const related = [
             </div>
           </div>
 
-          <div class="border-t-[2.5px] border-ink pt-4">
+          <div class="border-ink border-t-[2.5px] pt-4">
             <p
               class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70"
             >
@@ -1085,7 +1105,7 @@ const related = [
                 (["never-public", "legacy", "local"] as const).map((flag) => (
                   <li
                     class:list={[
-                      "mono border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                      "mono border-ink border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
                       FLAG_CLASS[flag],
                     ]}
                   >
@@ -1143,7 +1163,7 @@ const related = [
         </p>
       </div>
       <div
-        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
       >
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">Web, proxy and HTTP ports</caption>
@@ -1151,22 +1171,22 @@ const related = [
             <tr class="bg-cyan">
               <th
                 scope="col"
-                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Port</th
               >
               <th
                 scope="col"
-                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[6rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Proto</th
               >
               <th
                 scope="col"
-                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[13rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Service</th
               >
               <th
                 scope="col"
-                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Note</th
               >
             </tr>
@@ -1177,17 +1197,17 @@ const related = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="align-top transition-colors hover:bg-bg-alt"
+                  class="hover:bg-bg-alt align-top transition-colors"
                 >
                   <th
                     scope="row"
-                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
                   >
                     <span class="display text-lg leading-tight">{p.port}</span>
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1195,13 +1215,13 @@ const related = [
                       </span>
                     )}
                   </th>
-                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-[11px] font-bold whitespace-nowrap">
                     {p.proto}
                   </td>
-                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
                     {p.service}
                   </td>
-                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
                     {p.note}
                   </td>
                 </tr>
@@ -1235,7 +1255,7 @@ const related = [
         </p>
       </div>
       <div
-        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
       >
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">Database and search engine ports</caption>
@@ -1243,22 +1263,22 @@ const related = [
             <tr class="bg-yellow">
               <th
                 scope="col"
-                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Port</th
               >
               <th
                 scope="col"
-                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[6rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Proto</th
               >
               <th
                 scope="col"
-                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[13rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Service</th
               >
               <th
                 scope="col"
-                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Note</th
               >
             </tr>
@@ -1269,17 +1289,17 @@ const related = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="align-top transition-colors hover:bg-bg-alt"
+                  class="hover:bg-bg-alt align-top transition-colors"
                 >
                   <th
                     scope="row"
-                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
                   >
                     <span class="display text-lg leading-tight">{p.port}</span>
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1287,13 +1307,13 @@ const related = [
                       </span>
                     )}
                   </th>
-                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-[11px] font-bold whitespace-nowrap">
                     {p.proto}
                   </td>
-                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
                     {p.service}
                   </td>
-                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
                     {p.note}
                   </td>
                 </tr>
@@ -1324,7 +1344,7 @@ const related = [
         </p>
       </div>
       <div
-        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
       >
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">Cache, queue and streaming ports</caption>
@@ -1332,22 +1352,22 @@ const related = [
             <tr class="bg-green">
               <th
                 scope="col"
-                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Port</th
               >
               <th
                 scope="col"
-                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[6rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Proto</th
               >
               <th
                 scope="col"
-                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[13rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Service</th
               >
               <th
                 scope="col"
-                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Note</th
               >
             </tr>
@@ -1358,17 +1378,17 @@ const related = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="align-top transition-colors hover:bg-bg-alt"
+                  class="hover:bg-bg-alt align-top transition-colors"
                 >
                   <th
                     scope="row"
-                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
                   >
                     <span class="display text-lg leading-tight">{p.port}</span>
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1376,13 +1396,13 @@ const related = [
                       </span>
                     )}
                   </th>
-                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-[11px] font-bold whitespace-nowrap">
                     {p.proto}
                   </td>
-                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
                     {p.service}
                   </td>
-                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
                     {p.note}
                   </td>
                 </tr>
@@ -1416,7 +1436,7 @@ const related = [
         </p>
       </div>
       <div
-        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
       >
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only"> Container and orchestration ports </caption>
@@ -1424,22 +1444,22 @@ const related = [
             <tr class="bg-pink">
               <th
                 scope="col"
-                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Port</th
               >
               <th
                 scope="col"
-                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[6rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Proto</th
               >
               <th
                 scope="col"
-                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[13rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Service</th
               >
               <th
                 scope="col"
-                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Note</th
               >
             </tr>
@@ -1450,17 +1470,17 @@ const related = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="align-top transition-colors hover:bg-bg-alt"
+                  class="hover:bg-bg-alt align-top transition-colors"
                 >
                   <th
                     scope="row"
-                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
                   >
                     <span class="display text-lg leading-tight">{p.port}</span>
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1468,13 +1488,13 @@ const related = [
                       </span>
                     )}
                   </th>
-                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-[11px] font-bold whitespace-nowrap">
                     {p.proto}
                   </td>
-                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
                     {p.service}
                   </td>
-                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
                     {p.note}
                   </td>
                 </tr>
@@ -1509,7 +1529,7 @@ const related = [
         </p>
       </div>
       <div
-        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
       >
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">
@@ -1519,22 +1539,22 @@ const related = [
             <tr class="bg-purple text-paper">
               <th
                 scope="col"
-                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Port</th
               >
               <th
                 scope="col"
-                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[6rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Proto</th
               >
               <th
                 scope="col"
-                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[13rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Service</th
               >
               <th
                 scope="col"
-                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Note</th
               >
             </tr>
@@ -1545,17 +1565,17 @@ const related = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="align-top transition-colors hover:bg-bg-alt"
+                  class="hover:bg-bg-alt align-top transition-colors"
                 >
                   <th
                     scope="row"
-                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
                   >
                     <span class="display text-lg leading-tight">{p.port}</span>
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1563,13 +1583,13 @@ const related = [
                       </span>
                     )}
                   </th>
-                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-[11px] font-bold whitespace-nowrap">
                     {p.proto}
                   </td>
-                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
                     {p.service}
                   </td>
-                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
                     {p.note}
                   </td>
                 </tr>
@@ -1601,7 +1621,7 @@ const related = [
         </p>
       </div>
       <div
-        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
       >
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">Mail transport and retrieval ports</caption>
@@ -1609,22 +1629,22 @@ const related = [
             <tr class="bg-cyan">
               <th
                 scope="col"
-                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Port</th
               >
               <th
                 scope="col"
-                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[6rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Proto</th
               >
               <th
                 scope="col"
-                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[13rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Service</th
               >
               <th
                 scope="col"
-                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Note</th
               >
             </tr>
@@ -1635,17 +1655,17 @@ const related = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="align-top transition-colors hover:bg-bg-alt"
+                  class="hover:bg-bg-alt align-top transition-colors"
                 >
                   <th
                     scope="row"
-                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
                   >
                     <span class="display text-lg leading-tight">{p.port}</span>
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1653,13 +1673,13 @@ const related = [
                       </span>
                     )}
                   </th>
-                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-[11px] font-bold whitespace-nowrap">
                     {p.proto}
                   </td>
-                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
                     {p.service}
                   </td>
-                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
                     {p.note}
                   </td>
                 </tr>
@@ -1690,7 +1710,7 @@ const related = [
         </p>
       </div>
       <div
-        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
       >
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">
@@ -1700,22 +1720,22 @@ const related = [
             <tr class="bg-yellow">
               <th
                 scope="col"
-                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Port</th
               >
               <th
                 scope="col"
-                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[6rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Proto</th
               >
               <th
                 scope="col"
-                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[13rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Service</th
               >
               <th
                 scope="col"
-                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Note</th
               >
             </tr>
@@ -1726,17 +1746,17 @@ const related = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="align-top transition-colors hover:bg-bg-alt"
+                  class="hover:bg-bg-alt align-top transition-colors"
                 >
                   <th
                     scope="row"
-                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
                   >
                     <span class="display text-lg leading-tight">{p.port}</span>
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1744,13 +1764,13 @@ const related = [
                       </span>
                     )}
                   </th>
-                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-[11px] font-bold whitespace-nowrap">
                     {p.proto}
                   </td>
-                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
                     {p.service}
                   </td>
-                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
                     {p.note}
                   </td>
                 </tr>
@@ -1782,7 +1802,7 @@ const related = [
         </p>
       </div>
       <div
-        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
       >
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">
@@ -1792,22 +1812,22 @@ const related = [
             <tr class="bg-green">
               <th
                 scope="col"
-                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Port</th
               >
               <th
                 scope="col"
-                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[6rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Proto</th
               >
               <th
                 scope="col"
-                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[13rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Service</th
               >
               <th
                 scope="col"
-                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Note</th
               >
             </tr>
@@ -1818,17 +1838,17 @@ const related = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="align-top transition-colors hover:bg-bg-alt"
+                  class="hover:bg-bg-alt align-top transition-colors"
                 >
                   <th
                     scope="row"
-                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
                   >
                     <span class="display text-lg leading-tight">{p.port}</span>
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1836,13 +1856,13 @@ const related = [
                       </span>
                     )}
                   </th>
-                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-[11px] font-bold whitespace-nowrap">
                     {p.proto}
                   </td>
-                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
                     {p.service}
                   </td>
-                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
                     {p.note}
                   </td>
                 </tr>
@@ -1874,7 +1894,7 @@ const related = [
         </p>
       </div>
       <div
-        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
       >
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">Development server ports</caption>
@@ -1882,22 +1902,22 @@ const related = [
             <tr class="bg-pink">
               <th
                 scope="col"
-                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Port</th
               >
               <th
                 scope="col"
-                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[6rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Proto</th
               >
               <th
                 scope="col"
-                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink w-[13rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Service</th
               >
               <th
                 scope="col"
-                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
                 >Note</th
               >
             </tr>
@@ -1908,17 +1928,17 @@ const related = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="align-top transition-colors hover:bg-bg-alt"
+                  class="hover:bg-bg-alt align-top transition-colors"
                 >
                   <th
                     scope="row"
-                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
                   >
                     <span class="display text-lg leading-tight">{p.port}</span>
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1926,13 +1946,13 @@ const related = [
                       </span>
                     )}
                   </th>
-                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-[11px] font-bold whitespace-nowrap">
                     {p.proto}
                   </td>
-                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
                     {p.service}
                   </td>
-                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
                     {p.note}
                   </td>
                 </tr>
@@ -2236,7 +2256,7 @@ const related = [
     <div class="space-y-3">
       {
         faq.map((f) => (
-          <details class="group rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-sm">
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
             <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
               <span>{f.q}</span>
               <Icon
@@ -2274,6 +2294,8 @@ const related = [
       }
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

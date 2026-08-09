@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import { Icon } from "astro-icon/components";
@@ -132,6 +133,25 @@ const related = [
     tone: "green" as const,
   },
 ];
+
+const relatedLinks = [
+  {
+    href: "/tools/base64-encoder/",
+    note: "The encoding under every JWT segment \u2014 base64url, padding and all.",
+  },
+  {
+    href: "/tools/hash-generator/",
+    note: "The signature side: SHA-256 and friends, in the browser.",
+  },
+  {
+    href: "/tools/epoch-converter/",
+    note: "Turn exp, iat and nbf into dates you can reason about.",
+  },
+  {
+    href: "/blog/shopify-liquid-vs-headless/",
+    note: "Where token-based auth shows up in a headless storefront.",
+  },
+];
 ---
 
 <Page
@@ -144,10 +164,10 @@ const related = [
 >
   <section class="mx-auto max-w-4xl px-5 pb-6">
     <StickyNote tone="pink" tilt={-1.5} class="max-w-md">
-      <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
         ▸ Decode only
       </p>
-      <p class="text-sm font-bold leading-snug">
+      <p class="text-sm leading-snug font-bold">
         Decoding runs in this tab — nothing is sent anywhere. It does not verify
         the signature, so a decoded token proves nothing; never trust a JWT you
         haven't verified server-side. And never paste a production token into
@@ -156,11 +176,11 @@ const related = [
     </StickyNote>
   </section>
 
-  <section class="mx-auto max-w-4xl px-5 pb-16 space-y-5" id="jwt-root">
+  <section class="mx-auto max-w-4xl space-y-5 px-5 pb-16" id="jwt-root">
     <NeoCard tone="paper" shadow="md" class="space-y-3">
       <label
         for="jwt-input"
-        class="mono text-[11px] font-bold uppercase tracking-widest block"
+        class="mono block text-[11px] font-bold tracking-widest uppercase"
       >
         JWT
       </label>
@@ -169,28 +189,30 @@ const related = [
         rows="5"
         spellcheck="false"
         placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.SflKxw..."
-        class="w-full border-[3px] border-ink rounded-[4px] bg-paper p-3 font-mono text-sm shadow-neo-sm focus:outline-none resize-y break-all"
+        class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm break-all focus:outline-none"
       ></textarea>
-      <p id="jwt-error" class="text-sm font-bold text-pink-deep" hidden></p>
+      <p id="jwt-error" class="text-pink-deep text-sm font-bold" hidden></p>
     </NeoCard>
 
     <div class="grid gap-5 md:grid-cols-2">
       <NeoCard tone="cyan" shadow="sm" class="space-y-2">
-        <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
           ▸ Header
         </p>
-        <pre class="overflow-x-auto text-sm"><code id="jwt-header">—</code></pre>
+        <pre
+          class="overflow-x-auto text-sm"><code id="jwt-header">—</code></pre>
       </NeoCard>
       <NeoCard tone="yellow" shadow="sm" class="space-y-2">
-        <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
           ▸ Payload
         </p>
-        <pre class="overflow-x-auto text-sm"><code id="jwt-payload">—</code></pre>
+        <pre
+          class="overflow-x-auto text-sm"><code id="jwt-payload">—</code></pre>
       </NeoCard>
     </div>
 
     <NeoCard tone="paper" shadow="sm" class="space-y-2">
-      <p class="mono text-[11px] font-bold uppercase tracking-widest">
+      <p class="mono text-[11px] font-bold tracking-widest uppercase">
         ▸ Claims
       </p>
       <ul id="jwt-claims" class="space-y-1 text-sm"></ul>
@@ -198,7 +220,7 @@ const related = [
   </section>
 
   <!-- EXPLAINER -->
-  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+  <section class="mx-auto max-w-3xl space-y-10 px-5 pb-16">
     <div class="space-y-4">
       <h2 class="display text-2xl uppercase">
         Three segments, none of them secret
@@ -216,10 +238,10 @@ const related = [
         encryption. There is no key. Anyone holding the token reads every claim
         in it — including this page, which does it with <code
           class="mono font-bold">atob</code
-        > and a <code class="mono font-bold">TextDecoder</code>. A JWT is a signed
-        postcard: a user id and a role are fine; a password or an API key are not.
-        If the contents must stay private you want JWE, the encrypted variant —
-        and almost nothing calling itself "a JWT" is JWE.
+        > and a <code class="mono font-bold">TextDecoder</code>. A JWT is a
+        signed postcard: a user id and a role are fine; a password or an API key
+        are not. If the contents must stay private you want JWE, the encrypted
+        variant — and almost nothing calling itself "a JWT" is JWE.
       </p>
     </div>
 
@@ -267,15 +289,16 @@ const related = [
       <p class="text-base leading-relaxed opacity-90">
         That matters more than it sounds: <strong
           >a decoded token proves nothing.</strong
-        > Anyone can hand-craft a payload that reads <code class="mono font-bold"
-          >{'{"role":"admin"}'}</code
-        >. Trust starts only after your server checks the signature with a key it
-        already trusted, then <code class="mono font-bold">exp</code>, <code
+        > Anyone can hand-craft a payload that reads <code
+          class="mono font-bold">{'{"role":"admin"}'}</code
+        >. Trust starts only after your server checks the signature with a key
+        it already trusted, then <code class="mono font-bold">exp</code>, <code
           class="mono font-bold">iss</code
         >, and <code class="mono font-bold">aud</code>.
       </p>
       <p class="text-base leading-relaxed opacity-90">
-        Everything here runs locally: no <code class="mono font-bold">fetch</code
+        Everything here runs locally: no <code class="mono font-bold"
+          >fetch</code
         >, no analytics, no server to log it. Still: never paste a production
         token into this decoder or any other. A live bearer token is a password
         until <code class="mono font-bold">exp</code>, and you cannot audit what
@@ -299,8 +322,8 @@ const related = [
       </p>
       <p class="text-base leading-relaxed opacity-90">
         <strong>Algorithm confusion.</strong> An attacker takes an RS256 token, rewrites
-        the header to <code class="mono font-bold">HS256</code>, and signs it with
-        your RSA <em>public</em> key as the HMAC secret — the public key is public.
+        the header to <code class="mono font-bold">HS256</code>, and signs it
+        with your RSA <em>public</em> key as the HMAC secret — the public key is public.
         A verifier that reads <code class="mono font-bold">alg</code> from the token
         and hands it to a generic <code class="mono font-bold"
           >verify(token, key)</code
@@ -324,30 +347,30 @@ const related = [
       </p>
       <p class="text-base leading-relaxed opacity-90">
         Two tokens fix it: a short-lived access JWT, five to fifteen minutes,
-        plus a refresh token stored server-side that you can delete.
-        The hot path stays stateless; the refresh exchange is where you re-read
-        the user's real state. A 30-day access token plus "we'll add a denylist
+        plus a refresh token stored server-side that you can delete. The hot
+        path stays stateless; the refresh exchange is where you re-read the
+        user's real state. A 30-day access token plus "we'll add a denylist
         later" does not work — that denylist is a database read on every
         request, which is the session table you were avoiding.
       </p>
       <p class="text-base leading-relaxed opacity-90">
         If one backend serves your frontend and owns the database, a session id
         in a <code class="mono font-bold">Secure; HttpOnly; SameSite</code> cookie
-        wins where it counts: instant revocation, an opaque payload, one indexed
-        read you already pay for. JWTs earn their keep when the verifier
-        cannot reach that store — separate services, a third party, an edge worker.
+        wins where it counts: instant revocation, an opaque payload, one indexed read
+        you already pay for. JWTs earn their keep when the verifier cannot reach that
+        store — separate services, a third party, an edge worker.
       </p>
     </div>
   </section>
 
   <!-- FAQ -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="display text-2xl uppercase mb-6">Questions, answered.</h2>
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered.</h2>
     <div class="space-y-4">
       {
         faq.map((f) => (
-          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
-            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
               <span>{f.q}</span>
               <Icon
                 name="lucide:plus"
@@ -364,12 +387,12 @@ const related = [
 
   <!-- RELATED -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="display text-2xl uppercase mb-6">Keep going</h2>
+    <h2 class="display mb-6 text-2xl uppercase">Keep going</h2>
     <div class="grid gap-4 sm:grid-cols-2">
       {
         related.map((r) => (
           <NeoCard href={r.href} tone={r.tone} shadow="sm" hover>
-            <p class="mono mb-2 text-[10px] font-bold uppercase tracking-widest opacity-70">
+            <p class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70">
               {r.kind}
             </p>
             <p class="heading mb-2 flex items-center gap-2 text-lg uppercase">
@@ -386,6 +409,8 @@ const related = [
       }
     </div>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

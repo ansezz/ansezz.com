@@ -33,7 +33,12 @@ const MODELS = [
   { id: "gpt-5-4-nano", label: "GPT-5.4 nano", in: 0.2, out: 1.25 },
   { id: "gemini-pro", label: "Gemini 2.5 Pro", in: 1.25, out: 10 },
   { id: "gemini-flash", label: "Gemini 2.5 Flash", in: 0.3, out: 2.5 },
-  { id: "gemini-flash-lite", label: "Gemini 2.5 Flash-Lite", in: 0.1, out: 0.4 },
+  {
+    id: "gemini-flash-lite",
+    label: "Gemini 2.5 Flash-Lite",
+    in: 0.1,
+    out: 0.4,
+  },
   { id: "custom", label: "Custom (enter prices)", in: 0, out: 0 },
 ];
 const modelsJson = JSON.stringify(MODELS);
@@ -124,12 +129,12 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
-      <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
         ▸ Heads up
       </p>
-      <p class="text-sm font-bold leading-snug">
-        Prices are approximate list rates. Always confirm against the
-        provider's current pricing page.
+      <p class="text-sm leading-snug font-bold">
+        Prices are approximate list rates. Always confirm against the provider's
+        current pricing page.
       </p>
     </StickyNote>
   </section>
@@ -137,7 +142,7 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
   <section class="mx-auto max-w-5xl px-5 pb-16">
     <form
       id="cost-form"
-      class="grid gap-6 md:grid-cols-[1fr_360px] items-start"
+      class="grid items-start gap-6 md:grid-cols-[1fr_360px]"
       data-models={modelsJson}
     >
       <!-- Inputs -->
@@ -145,19 +150,15 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
         <div>
           <label
             for="model"
-            class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
           >
             Model
           </label>
           <select
             id="model"
-            class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-bold shadow-neo-sm focus:outline-none"
+            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-bold focus:outline-none"
           >
-            {
-              MODELS.map((m) => (
-                <option value={m.id}>{m.label}</option>
-              ))
-            }
+            {MODELS.map((m) => <option value={m.id}>{m.label}</option>)}
           </select>
         </div>
 
@@ -165,7 +166,7 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
           <div>
             <label
               for="priceIn"
-              class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
             >
               Input $ / 1M
             </label>
@@ -175,13 +176,13 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
               min="0"
               step="0.01"
               value="5"
-              class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none"
+              class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono font-bold focus:outline-none"
             />
           </div>
           <div>
             <label
               for="priceOut"
-              class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
             >
               Output $ / 1M
             </label>
@@ -191,7 +192,7 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
               min="0"
               step="0.01"
               value="25"
-              class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none"
+              class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono font-bold focus:outline-none"
             />
           </div>
         </div>
@@ -200,7 +201,7 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
           <div>
             <label
               for="tokIn"
-              class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
             >
               Input tokens / request
             </label>
@@ -210,13 +211,13 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
               min="0"
               step="1"
               value="2000"
-              class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none"
+              class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono font-bold focus:outline-none"
             />
           </div>
           <div>
             <label
               for="tokOut"
-              class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
             >
               Output tokens / request
             </label>
@@ -226,7 +227,7 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
               min="0"
               step="1"
               value="600"
-              class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none"
+              class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono font-bold focus:outline-none"
             />
           </div>
         </div>
@@ -234,7 +235,7 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
         <div>
           <label
             for="reqs"
-            class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
           >
             Requests / day
           </label>
@@ -244,15 +245,15 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
             min="0"
             step="1"
             value="1000"
-            class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none"
+            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono font-bold focus:outline-none"
           />
         </div>
 
-        <label class="flex items-center gap-2 text-sm font-bold cursor-pointer">
+        <label class="flex cursor-pointer items-center gap-2 text-sm font-bold">
           <input
             id="cacheHits"
             type="checkbox"
-            class="h-5 w-5 border-[2.5px] border-ink accent-pink"
+            class="border-ink accent-pink h-5 w-5 border-[2.5px]"
           />
           Assume 50% input-token cache hit (×0.1 price on cached input)
         </label>
@@ -260,24 +261,33 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
 
       <!-- Output -->
       <NeoCard tone="cyan" shadow="lg" class="space-y-4 md:sticky md:top-24">
-        <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
           ▸ Estimated spend
         </p>
         <dl class="space-y-3">
-          <div class="flex items-end justify-between gap-2 border-b-[2.5px] border-ink pb-2">
+          <div
+            class="border-ink flex items-end justify-between gap-2 border-b-[2.5px] pb-2"
+          >
             <dt class="text-sm font-bold uppercase">Per request</dt>
             <dd id="out-req" class="display text-2xl leading-none">$0</dd>
           </div>
-          <div class="flex items-end justify-between gap-2 border-b-[2.5px] border-ink pb-2">
+          <div
+            class="border-ink flex items-end justify-between gap-2 border-b-[2.5px] pb-2"
+          >
             <dt class="text-sm font-bold uppercase">Per day</dt>
             <dd id="out-day" class="display text-3xl leading-none">$0</dd>
           </div>
           <div class="flex items-end justify-between gap-2">
             <dt class="text-sm font-bold uppercase">Per month</dt>
-            <dd id="out-month" class="display text-4xl leading-none text-pink-deep">$0</dd>
+            <dd
+              id="out-month"
+              class="display text-pink-deep text-4xl leading-none"
+            >
+              $0
+            </dd>
           </div>
         </dl>
-        <p class="mono text-[10px] uppercase tracking-widest opacity-70 pt-1">
+        <p class="mono pt-1 text-[10px] tracking-widest uppercase opacity-70">
           30-day month · live as you type
         </p>
         <NeoButton href="/contact/" variant="ink" size="sm" fullWidth>
@@ -288,9 +298,11 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
   </section>
 
   <!-- EXPLAINER -->
-  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+  <section class="mx-auto max-w-3xl space-y-10 px-5 pb-16">
     <div class="space-y-4">
-      <h2 class="display text-2xl uppercase">Input and output are two prices</h2>
+      <h2 class="display text-2xl uppercase">
+        Input and output are two prices
+      </h2>
       <p class="text-base leading-relaxed opacity-90">
         Every provider bills two meters, not one. Tokens you send are input;
         tokens the model generates are output, and output is always the
@@ -308,7 +320,9 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
     </div>
 
     <div class="space-y-4">
-      <h2 class="display text-2xl uppercase">Prompt caching redraws the maths</h2>
+      <h2 class="display text-2xl uppercase">
+        Prompt caching redraws the maths
+      </h2>
       <p class="text-base leading-relaxed opacity-90">
         Caching is the biggest lever on this page, and the checkbox above only
         gestures at it. The shape is the same everywhere: pay a premium once to
@@ -320,66 +334,67 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
         automatically rather than charging for the write.
       </p>
       <p class="text-base leading-relaxed opacity-90">
-        The break-even is trivial: the write premium is 0.25× and every hit saves
-        0.9×, so one reuse inside the TTL pays for it. It fails two ways.
+        The break-even is trivial: the write premium is 0.25× and every hit
+        saves 0.9×, so one reuse inside the TTL pays for it. It fails two ways.
         Matching is on an exact prefix, so a timestamp or re-ordered retrieval
         block near the top invalidates everything after it — keep volatile parts
         last. And the TTL is short, so a low-traffic endpoint pays the premium
-        more often than it collects the discount. The checkbox here
-        assumes half your input hits cache at 0.1×, or 0.55× on input overall,
-        and charges nothing for writes.
+        more often than it collects the discount. The checkbox here assumes half
+        your input hits cache at 0.1×, or 0.55× on input overall, and charges
+        nothing for writes.
       </p>
     </div>
 
     <div class="space-y-4">
-      <h2 class="display text-2xl uppercase">Your token counts are estimates</h2>
+      <h2 class="display text-2xl uppercase">
+        Your token counts are estimates
+      </h2>
       <p class="text-base leading-relaxed opacity-90">
         This calculator does not tokenize anything — it multiplies the numbers
         you hand it. If those came from the <a
           href="/tools/token-counter/"
           class="font-bold underline decoration-2 underline-offset-2"
           >token counter</a
-        > here, or any characters ÷ 4 rule of thumb, expect 10–15% error on
-        English prose and worse elsewhere:
+        > here, or any characters ÷ 4 rule of thumb, expect 10–15% error on English
+        prose and worse elsewhere:
       </p>
       <ul class="space-y-2 text-base leading-relaxed opacity-90">
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>Code.</strong> Indentation, braces, punctuation and
-            camelCase splits push you nearer 2.5–3 characters per token, so a
-            prose-tuned estimate undercounts a diff.</span
+            ><strong>Code.</strong> Indentation, braces, punctuation and camelCase
+            splits push you nearer 2.5–3 characters per token, so a prose-tuned estimate
+            undercounts a diff.</span
           >
         </li>
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>Non-English text.</strong> Tokenizer vocabularies are
-            English-dominated, so Cyrillic, Devanagari, Arabic and CJK routinely
-            cost two to four times as many tokens.</span
+            ><strong>Non-English text.</strong> Tokenizer vocabularies are English-dominated,
+            so Cyrillic, Devanagari, Arabic and CJK routinely cost two to four times
+            as many tokens.</span
           >
         </li>
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>High-entropy strings.</strong> UUIDs, hashes, base64 and
-            minified JSON have no learned merges and fragment almost character
-            by character.</span
+            ><strong>High-entropy strings.</strong> UUIDs, hashes, base64 and minified
+            JSON have no learned merges and fragment almost character by character.</span
           >
         </li>
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>Reasoning tokens.</strong> Billed as output whether or not
-            the API hands the text back to you — the line item that surprises
-            people on thinking models.</span
+            ><strong>Reasoning tokens.</strong> Billed as output whether or not the
+            API hands the text back to you — the line item that surprises people on
+            thinking models.</span
           >
         </li>
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>Images and audio.</strong> Converted to tokens by a
-            per-tile or per-second formula, billed at the input rate.</span
+            ><strong>Images and audio.</strong> Converted to tokens by a per-tile
+            or per-second formula, billed at the input rate.</span
           >
         </li>
       </ul>
@@ -416,34 +431,34 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
         The single biggest surprise on a real invoice: an agent does not make N
         cheap calls — it re-sends the entire conversation every turn. Each tool
         result is appended, and the whole transcript, system prompt and tool
-        definitions included, goes back over the wire next turn. Input cost grows
-        quadratically with turn count.
+        definitions included, goes back over the wire next turn. Input cost
+        grows quadratically with turn count.
       </p>
       <p class="text-base leading-relaxed opacity-90">
-        Concretely: a 3,000-token system-and-tools header, 1,200 tokens added per
-        turn, 20 turns. Turn one sends 3,000 input tokens; turn twenty sends
+        Concretely: a 3,000-token system-and-tools header, 1,200 tokens added
+        per turn, 20 turns. Turn one sends 3,000 input tokens; turn twenty sends
         25,800; the run totals 288,000 for an average of 14,400 per call.
         Estimating it as "20 calls at the opening prompt size" understates the
         bill by nearly 5×.
       </p>
       <p class="text-base leading-relaxed opacity-90">
-        So the <strong>input tokens / request</strong> field above wants the
-        average across turns, and requests per day means tasks per day times
-        turns per task. Caching also stops being optional here: an agent
-        conversation grows purely by appending, the ideal cache shape. And it is
-        why capping an agent by request count, not tokens, protects nothing.
+        So the <strong>input tokens / request</strong> field above wants the average
+        across turns, and requests per day means tasks per day times turns per task.
+        Caching also stops being optional here: an agent conversation grows purely
+        by appending, the ideal cache shape. And it is why capping an agent by request
+        count, not tokens, protects nothing.
       </p>
     </div>
   </section>
 
   <!-- FAQ -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="display text-2xl uppercase mb-6">Questions, answered</h2>
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
     <div class="space-y-4">
       {
         faq.map((f) => (
-          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
-            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
               <span>{f.q}</span>
               <Icon
                 name="lucide:plus"
@@ -460,14 +475,16 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
 
   <!-- RELATED -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
-    <h2 class="heading text-xl uppercase mb-5">Keep reading</h2>
+    <h2 class="heading mb-5 text-xl uppercase">Keep reading</h2>
     <ul class="grid gap-4 sm:grid-cols-2">
       <li>
         <NeoCard tone="cyan" shadow="sm" hover href="/tools/token-counter/">
-          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+          <p
+            class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase"
+          >
             ▸ Tool
           </p>
-          <p class="heading text-lg uppercase leading-tight">Token Counter</p>
+          <p class="heading text-lg leading-tight uppercase">Token Counter</p>
           <p class="mt-2 text-sm leading-snug opacity-90">
             Get the token numbers you type in here, and see how badly code and
             non-English text break the estimate.
@@ -481,10 +498,12 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
           hover
           href="/tools/context-window-checker/"
         >
-          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+          <p
+            class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase"
+          >
             ▸ Tool
           </p>
-          <p class="heading text-lg uppercase leading-tight">
+          <p class="heading text-lg leading-tight uppercase">
             Context Window Checker
           </p>
           <p class="mt-2 text-sm leading-snug opacity-90">
@@ -495,12 +514,12 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
       </li>
       <li>
         <NeoCard tone="yellow" shadow="sm" hover href="/blog/llm-vs-ai-agent/">
-          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+          <p
+            class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase"
+          >
             ▸ Post
           </p>
-          <p class="heading text-lg uppercase leading-tight">
-            LLM vs AI agent
-          </p>
+          <p class="heading text-lg leading-tight uppercase">LLM vs AI agent</p>
           <p class="mt-2 text-sm leading-snug opacity-90">
             Why one call and one agent run are different products, and why only
             one of them has a quadratic bill.
@@ -514,10 +533,12 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
           hover
           href="/blog/rate-limiting-ai-wallet/"
         >
-          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+          <p
+            class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase"
+          >
             ▸ Post
           </p>
-          <p class="heading text-lg uppercase leading-tight">
+          <p class="heading text-lg leading-tight uppercase">
             Rate limiting your AI wallet
           </p>
           <p class="mt-2 text-sm leading-snug opacity-90">
@@ -527,11 +548,18 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
         </NeoCard>
       </li>
       <li class="sm:col-span-2">
-        <NeoCard tone="green" shadow="sm" hover href="/blog/rag-vs-fine-tuning/">
-          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+        <NeoCard
+          tone="green"
+          shadow="sm"
+          hover
+          href="/blog/rag-vs-fine-tuning/"
+        >
+          <p
+            class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase"
+          >
             ▸ Post
           </p>
-          <p class="heading text-lg uppercase leading-tight">
+          <p class="heading text-lg leading-tight uppercase">
             RAG vs fine-tuning
           </p>
           <p class="mt-2 text-sm leading-snug opacity-90">

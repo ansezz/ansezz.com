@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
@@ -202,6 +203,25 @@ const RELATED = [
     blurb:
       "The other half of webhook handling — check the signature before you trust the IDs inside the payload.",
     tone: "purple" as const,
+  },
+];
+
+const relatedLinks = [
+  {
+    href: "/tools/shopify-hmac-verifier/",
+    note: "The other Shopify thing that fails silently: webhook signature verification.",
+  },
+  {
+    href: "/blog/agentic-commerce-shopify/",
+    note: "Why structured, machine-readable product IDs suddenly matter a lot more.",
+  },
+  {
+    href: "/blog/shopify-liquid-vs-headless/",
+    note: "Which ID format you get depends on which storefront stack you picked.",
+  },
+  {
+    href: "/tools/base64-encoder/",
+    note: "Older Shopify APIs hand back base64-wrapped GIDs. Here's the decoder.",
   },
 ];
 ---
@@ -754,6 +774,8 @@ const RELATED = [
       </NeoButton>
     </div>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>
