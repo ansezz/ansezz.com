@@ -115,7 +115,7 @@ Coverage percentage is a vanity metric here. These four are not:
 
 ## The verification pipeline
 
-Manual review does not scale against agent output. A reviewer facing 800 lines of plausible-looking code per hour is not reviewing — they are skimming for style. The gate has to be automatic, and it has to run on the diff.
+Manual review does not scale against agent output. A reviewer facing 800 lines of plausible-looking code per hour is not reviewing — they are skimming for style. The gate has to be automatic, and it has to run on the diff. I make the full case for [giving up line-by-line reading](/blog/stop-reading-code-ai-review/) separately; this is the tooling that has to exist first.
 
 ```yaml
 name: Agentic PR gate

@@ -64,7 +64,7 @@ Concretely, that means:
 - **Contract tests at every boundary.** Webhook payloads, third-party API responses, queue message shapes. This is where agent code fails quietly, because the happy path is the only path in the training data.
 - **Machine-checkable rules for the things I keep repeating.** Static analysis at a strict level, an architecture-test suite asserting "no job may run without a tenant context," a lint rule for direct DB access outside repositories.
 
-That last one is the real trick. Every review comment I would type twice becomes a rule instead. If the agent can violate an invariant and the pipeline stays green, that is my bug, not the agent's.
+That last one is the real trick. Every review comment I would type twice becomes a rule instead. If the agent can violate an invariant and the pipeline stays green, that is my bug, not the agent's. The numbers behind why this layer is non-negotiable — and the CI configuration I run — are in [test AI code too](/blog/testing-ai-generated-code/).
 
 When a check fails, I do not hand-patch the file. I fix the prompt, tighten the spec, or add the missing rule, then re-run. That loop is the practical core of [agentic workflows](/blog/agentic-workflows-vibe-coding/), and it only works if the feedback the agent receives is precise. Vague context produces vague code — the point I made in [prompt engineering vs context engineering](/blog/prompt-engineering-vs-context-engineering/).
 
