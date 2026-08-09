@@ -271,6 +271,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "vibe-coding",
       "agentic-workflows-vibe-coding",
       "vibe-coding-vs-agentic-engineering",
+      "ai-coding-workflow-levels",
     ],
   },
   {
