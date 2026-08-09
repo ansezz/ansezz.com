@@ -153,7 +153,9 @@ const structured = relatedLd
   ogType="article"
   article={{
     publishedTime: post.data.publishDate.toISOString(),
-    modifiedTime: (post.data.updatedDate ?? post.data.publishDate).toISOString(),
+    modifiedTime: (
+      post.data.updatedDate ?? post.data.publishDate
+    ).toISOString(),
     author: OWNER.NAME,
     section: CATEGORY_LABEL[post.data.category],
     tags: post.data.tags,
@@ -167,71 +169,75 @@ const structured = relatedLd
       ← Back to blog
     </NeoButton>
 
-    <div class="flex flex-wrap items-center gap-3 mb-5">
+    <div class="mb-5 flex flex-wrap items-center gap-3">
       <TagPill
         tone={CATEGORY_TONE[post.data.category]}
         href={`/blog/category/${post.data.category}/`}
       >
         {CATEGORY_LABEL[post.data.category]}
       </TagPill>
-      <span class="mono text-xs font-bold uppercase tracking-widest opacity-70 inline-flex items-center gap-1.5">
+      <span
+        class="mono inline-flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase opacity-70"
+      >
         <Icon name="lucide:calendar" class="h-3.5 w-3.5" />
         {fmtDate(post.data.publishDate)}
       </span>
       {
         post.data.updatedDate && (
-          <span class="mono text-xs opacity-60 inline-flex items-center gap-1.5">
+          <span class="mono inline-flex items-center gap-1.5 text-xs opacity-60">
             <Icon name="lucide:refresh-cw" class="h-3.5 w-3.5" />
             Updated {fmtDate(post.data.updatedDate)}
           </span>
         )
       }
-      <span class="mono text-xs font-bold uppercase tracking-widest opacity-70 inline-flex items-center gap-1.5">
+      <span
+        class="mono inline-flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase opacity-70"
+      >
         <Icon name="lucide:clock" class="h-3.5 w-3.5" />
         {rt}
       </span>
-      <span class="mono text-xs font-bold uppercase tracking-widest opacity-70 inline-flex items-center gap-1.5">
+      <span
+        class="mono inline-flex items-center gap-1.5 text-xs font-bold tracking-widest uppercase opacity-70"
+      >
         <Icon name="lucide:type" class="h-3.5 w-3.5" />
         {words.toLocaleString()} words
       </span>
     </div>
 
     <h1
-      class="display text-[clamp(2.25rem,5.5vw,4.25rem)] max-w-4xl leading-[0.95] tracking-tight"
+      class="display max-w-4xl text-[clamp(2.25rem,5.5vw,4.25rem)] leading-[0.95] tracking-tight"
     >
       {post.data.title}
     </h1>
     <p
-      class="mt-5 max-w-3xl text-base sm:text-lg md:text-xl text-ink-soft leading-snug"
+      class="text-ink-soft mt-5 max-w-3xl text-base leading-snug sm:text-lg md:text-xl"
     >
       {post.data.description}
     </p>
 
-    <div class="mt-6 flex flex-wrap items-center gap-4 justify-between">
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
       <div class="inline-flex items-center gap-3">
         <span
-          class="inline-flex h-10 w-10 items-center justify-center border-[2.5px] border-ink rounded-full bg-yellow text-ink shadow-neo-xs"
+          class="border-ink bg-yellow text-ink shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
           aria-hidden="true"
         >
           <Icon name="lucide:user" class="h-5 w-5" />
         </span>
         <div class="leading-tight">
-          <p class="font-bold text-sm">{OWNER.NAME}</p>
-          <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-70">
+          <p class="text-sm font-bold">{OWNER.NAME}</p>
+          <p
+            class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
+          >
             Backend · Architect · AI
           </p>
         </div>
       </div>
-      <ShareBar
-        title={post.data.title}
-        url={canonicalUrl}
-        label="Share"
-      />
+      <ShareBar title={post.data.title} url={canonicalUrl} label="Share" />
     </div>
 
     {
       post.data.tags.length > 0 && (
-        <ul class="flex flex-wrap gap-2 mt-6">
+        <ul class="mt-6 flex flex-wrap gap-2">
           {post.data.tags.map((t) => (
             <li>
               <TagPill tone="paper" size="sm" href={`/blog/tag/${tagSlug(t)}/`}>
@@ -247,7 +253,7 @@ const structured = relatedLd
   {
     post.data.heroImage && (
       <section class="mx-auto max-w-6xl px-5 pb-10">
-        <figure class="border-[3px] border-ink rounded-[4px] shadow-neo-md overflow-hidden bg-ink mx-auto max-w-5xl aspect-[16/10]">
+        <figure class="border-ink shadow-neo-md bg-ink mx-auto aspect-[16/10] max-w-5xl overflow-hidden rounded-[4px] border-[3px]">
           <img
             src={post.data.heroImage.url}
             alt={post.data.heroImage.alt}
@@ -256,7 +262,7 @@ const structured = relatedLd
             loading="eager"
             decoding="async"
             fetchpriority="high"
-            class="w-full h-full object-cover"
+            class="h-full w-full object-cover"
           />
         </figure>
       </section>
@@ -265,14 +271,25 @@ const structured = relatedLd
 
   <section class="mx-auto max-w-6xl px-5 pb-10">
     <div class="grid gap-10 lg:grid-cols-[1fr_280px] lg:gap-12">
-      <article
-        class="prose max-w-3xl min-w-0"
-        data-pagefind-body
-        data-pagefind-meta={`title:${post.data.title}`}
-      >
-        <Content />
-      </article>
-      <aside class="hidden lg:block">
+      <div class="min-w-0">
+        {
+          /* The sidebar is lg-only, so mobile/tablet readers would otherwise
+            never see which series a post belongs to. */
+        }
+        <SeriesNav
+          currentId={post.id}
+          class="mb-8 max-w-3xl lg:hidden"
+          data-pagefind-ignore
+        />
+        <article
+          class="prose max-w-3xl min-w-0"
+          data-pagefind-body
+          data-pagefind-meta={`title:${post.data.title}`}
+        >
+          <Content />
+        </article>
+      </div>
+      <aside class="hidden lg:block" data-pagefind-ignore>
         <div class="sticky top-24 space-y-5">
           <SeriesNav currentId={post.id} />
           <TableOfContents headings={headings} />
@@ -287,11 +304,11 @@ const structured = relatedLd
           }
           <NeoCard tone="paper" shadow="sm" class="space-y-3 !p-4">
             <p
-              class="mono text-[10px] font-bold uppercase tracking-widest text-pink-deep"
+              class="mono text-pink-deep text-[10px] font-bold tracking-widest uppercase"
             >
               ▸ Liked this?
             </p>
-            <p class="text-sm font-bold leading-snug">
+            <p class="text-sm leading-snug font-bold">
               Grab the feed — new posts land in your reader.
             </p>
             <NeoButton href="/rss.xml" variant="primary" size="sm" fullWidth>
@@ -306,16 +323,14 @@ const structured = relatedLd
 
   <section class="mx-auto max-w-6xl px-5 pb-10">
     <div
-      class="max-w-4xl mx-auto border-y-[3px] border-ink py-6 flex flex-wrap items-center justify-between gap-4"
+      class="border-ink mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-4 border-y-[3px] py-6"
     >
-      <p class="mono text-xs font-bold uppercase tracking-widest text-pink-deep">
+      <p
+        class="mono text-pink-deep text-xs font-bold tracking-widest uppercase"
+      >
         ▸ Made it to the end? Send it around.
       </p>
-      <ShareBar
-        title={post.data.title}
-        url={canonicalUrl}
-        label="Share"
-      />
+      <ShareBar title={post.data.title} url={canonicalUrl} label="Share" />
     </div>
   </section>
 
@@ -324,7 +339,7 @@ const structured = relatedLd
   </section>
 
   <section class="mx-auto max-w-6xl px-5 pb-12">
-    <AuthorFooter class="max-w-4xl mx-auto" />
+    <AuthorFooter class="mx-auto max-w-4xl" />
   </section>
 
   <Comments />
@@ -332,29 +347,26 @@ const structured = relatedLd
   {
     (prevPost || nextPost) && (
       <section class="mx-auto max-w-6xl px-5 pb-16">
-        <div class="max-w-4xl mx-auto">
-          <p class="mono text-xs font-bold uppercase tracking-widest opacity-60 mb-4 text-center">
+        <div class="mx-auto max-w-4xl">
+          <p class="mono mb-4 text-center text-xs font-bold tracking-widest uppercase opacity-60">
             ▸ Keep reading
           </p>
-          <nav
-            class="grid gap-4 md:grid-cols-2"
-            aria-label="Post navigation"
-          >
+          <nav class="grid gap-4 md:grid-cols-2" aria-label="Post navigation">
             {prevPost ? (
               <a
                 href={`/blog/${prevPost.id}/`}
                 data-neo-hover
-                class="group flex items-start gap-3 border-[3px] border-ink rounded-[4px] bg-paper p-5 shadow-neo-sm transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-neo-md hover:bg-yellow"
+                class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-5 transition-all hover:-translate-x-1 hover:-translate-y-1"
               >
                 <Icon
                   name="lucide:arrow-left"
-                  class="h-5 w-5 mt-0.5 shrink-0"
+                  class="mt-0.5 h-5 w-5 shrink-0"
                 />
-                <div class="flex-1 min-w-0">
-                  <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-70">
+                <div class="min-w-0 flex-1">
+                  <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-70">
                     Newer post
                   </p>
-                  <p class="heading text-base md:text-lg uppercase leading-tight mt-1">
+                  <p class="heading mt-1 text-base leading-tight uppercase md:text-lg">
                     {prevPost.data.title}
                   </p>
                 </div>
@@ -366,17 +378,17 @@ const structured = relatedLd
               <a
                 href={`/blog/${nextPost.id}/`}
                 data-neo-hover
-                class="group flex items-start gap-3 border-[3px] border-ink rounded-[4px] bg-paper p-5 shadow-neo-sm transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-neo-md hover:bg-yellow md:text-right md:flex-row-reverse"
+                class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-5 transition-all hover:-translate-x-1 hover:-translate-y-1 md:flex-row-reverse md:text-right"
               >
                 <Icon
                   name="lucide:arrow-right"
-                  class="h-5 w-5 mt-0.5 shrink-0"
+                  class="mt-0.5 h-5 w-5 shrink-0"
                 />
-                <div class="flex-1 min-w-0">
-                  <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-70">
+                <div class="min-w-0 flex-1">
+                  <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-70">
                     Older post
                   </p>
-                  <p class="heading text-base md:text-lg uppercase leading-tight mt-1">
+                  <p class="heading mt-1 text-base leading-tight uppercase md:text-lg">
                     {nextPost.data.title}
                   </p>
                 </div>

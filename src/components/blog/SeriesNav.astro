@@ -6,14 +6,15 @@ import { Icon } from "astro-icon/components";
 interface Props {
   currentId: string;
   class?: string;
+  [key: string]: unknown;
 }
 
-const { currentId, class: className = "" } = Astro.props;
+const { currentId, class: className = "", ...rest } = Astro.props;
 const ctx = getSeriesForPost(currentId);
 
 const titles = new Map<string, string>();
 if (ctx) {
-  const all = await getCollection("blog");
+  const all = await getCollection("blog", ({ data }) => !data.draft);
   for (const p of all) titles.set(p.id, p.data.title);
 }
 ---
@@ -22,18 +23,19 @@ if (ctx) {
   ctx && (
     <aside
       class:list={[
-        "border-[3px] border-ink rounded-[4px] bg-bg-alt shadow-neo-sm p-5",
+        "border-ink bg-bg-alt shadow-neo-sm rounded-[4px] border-[3px] p-5",
         className,
       ]}
       aria-label={`Part of the ${ctx.series.title} series`}
+      {...rest}
     >
-      <div class="flex items-center gap-2 mb-3">
+      <div class="mb-3 flex items-center gap-2">
         <Icon name="lucide:layers" class="h-4 w-4" />
-        <p class="mono text-[10px] font-bold uppercase tracking-widest">
+        <p class="mono text-[10px] font-bold tracking-widest uppercase">
           Part {ctx.index + 1} of {ctx.total} ·{" "}
           <a
             href={`/blog/series/${ctx.series.slug}/`}
-            class="underline decoration-2 underline-offset-2 hover:bg-yellow"
+            class="hover:bg-yellow underline decoration-2 underline-offset-2"
           >
             {ctx.series.title}
           </a>
@@ -48,13 +50,13 @@ if (ctx) {
                 href={`/blog/${id}/`}
                 aria-current={isCurrent ? "true" : undefined}
                 class:list={[
-                  "flex items-start gap-2 text-sm leading-snug rounded-[3px] px-2 py-1.5 transition-colors",
+                  "flex items-start gap-2 rounded-[3px] px-2 py-1.5 text-sm leading-snug transition-colors",
                   isCurrent
                     ? "bg-ink text-bg font-bold"
                     : "hover:bg-yellow font-medium",
                 ]}
               >
-                <span class="mono text-[11px] font-bold opacity-70 shrink-0">
+                <span class="mono shrink-0 text-[11px] font-bold opacity-70">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span>{titles.get(id) ?? id}</span>
