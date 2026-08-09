@@ -5,21 +5,23 @@ import { Icon } from "astro-icon/components";
 import { X_HANDLE } from "@/consts";
 ---
 
-<section class="bg-bg border-t-[3px] border-ink py-16 md:py-20">
+<section class="bg-bg border-ink border-t-[3px] py-16 md:py-20">
   <div class="mx-auto max-w-6xl px-5">
-    <div class="flex items-end justify-between flex-wrap gap-4 mb-8">
+    <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p class="mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
+        <p
+          class="mono text-[10px] font-bold tracking-[0.2em] uppercase opacity-60"
+        >
           ▸ Social
         </p>
-        <h2 class="display text-3xl md:text-4xl mt-2">Live from the feed.</h2>
-        <p class="mt-3 text-base text-ink-soft max-w-xl">
+        <h2 class="display mt-2 text-3xl md:text-4xl">Find me elsewhere.</h2>
+        <p class="text-ink-soft mt-3 max-w-xl text-base">
           Production logs, shipping notes, contrarian takes — Laravel, Shopify,
-          AI. Real-time on X.
+          AI. Plus RSS and JSON feeds if you'd rather subscribe.
         </p>
       </div>
       <NeoButton href="/feed/" variant="primary" size="sm">
-        Open feed →
+        All the links →
       </NeoButton>
     </div>
 
@@ -29,28 +31,30 @@ import { X_HANDLE } from "@/consts";
       hover
       class="block p-6 md:p-8"
     >
-      <div class="flex items-center justify-between mb-4">
-        <div class="inline-flex items-center justify-center h-10 w-10 rounded-[4px] border-[2.5px] border-ink bg-ink text-paper">
+      <div class="mb-4 flex items-center justify-between">
+        <div
+          class="border-ink bg-ink text-paper inline-flex h-10 w-10 items-center justify-center rounded-[4px] border-[2.5px]"
+        >
           <Icon name="lucide:twitter" class="h-5 w-5" />
         </div>
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border-[2.5px] border-ink bg-green shadow-neo-xs mono text-[10px] font-bold uppercase tracking-widest">
-          <span class="relative inline-flex h-1.5 w-1.5">
-            <span class="absolute inline-flex h-full w-full rounded-full bg-ink opacity-75 animate-ping"></span>
-            <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-ink"></span>
-          </span>
-          Live
+        <span
+          class="border-ink bg-green shadow-neo-xs mono inline-flex items-center gap-1.5 rounded-full border-[2.5px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase"
+        >
+          Follow
         </span>
       </div>
-      <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-60">
+      <p
+        class="mono text-[10px] font-bold tracking-widest uppercase opacity-60"
+      >
         ▸ X · @{X_HANDLE}
       </p>
-      <p class="display text-2xl md:text-3xl mt-1 leading-tight">
-        Real-time timeline.
+      <p class="display mt-1 text-2xl leading-tight md:text-3xl">
+        Engineering threads.
       </p>
-      <p class="text-sm md:text-base opacity-70 mt-3 leading-snug max-w-2xl">
-        Engineering threads, shipping logs, hot takes — auto-pulled live.
+      <p class="mt-3 max-w-2xl text-sm leading-snug opacity-70 md:text-base">
+        Shipping logs and hot takes, posted as they happen.
       </p>
-      <p class="mt-5 mono text-[10px] font-bold uppercase tracking-widest">
+      <p class="mono mt-5 text-[10px] font-bold tracking-widest uppercase">
         Open profile →
       </p>
     </NeoCard>

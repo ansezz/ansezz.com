@@ -33,14 +33,54 @@ const tldr = [
 ];
 
 const sections = [
-  { id: "collect", label: "What I collect", icon: "lucide:database", tone: "paper" as const },
-  { id: "analytics", label: "Analytics", icon: "lucide:bar-chart-3", tone: "cyan" as const },
-  { id: "cookies", label: "Cookies", icon: "lucide:cookie", tone: "green" as const },
-  { id: "hosting", label: "Hosting & CDN", icon: "lucide:cloud", tone: "blue" as const },
-  { id: "third-party", label: "Third-party", icon: "lucide:external-link", tone: "yellow" as const },
-  { id: "email", label: "Email & booking", icon: "lucide:mail", tone: "pink" as const },
-  { id: "rights", label: "Your rights", icon: "lucide:shield-check", tone: "purple" as const },
-  { id: "changes", label: "Changes", icon: "lucide:history", tone: "paper" as const },
+  {
+    id: "collect",
+    label: "What I collect",
+    icon: "lucide:database",
+    tone: "paper" as const,
+  },
+  {
+    id: "analytics",
+    label: "Analytics",
+    icon: "lucide:bar-chart-3",
+    tone: "cyan" as const,
+  },
+  {
+    id: "cookies",
+    label: "Cookies",
+    icon: "lucide:cookie",
+    tone: "green" as const,
+  },
+  {
+    id: "hosting",
+    label: "Hosting & CDN",
+    icon: "lucide:cloud",
+    tone: "blue" as const,
+  },
+  {
+    id: "third-party",
+    label: "Third-party",
+    icon: "lucide:external-link",
+    tone: "yellow" as const,
+  },
+  {
+    id: "email",
+    label: "Email & booking",
+    icon: "lucide:mail",
+    tone: "pink" as const,
+  },
+  {
+    id: "rights",
+    label: "Your rights",
+    icon: "lucide:shield-check",
+    tone: "purple" as const,
+  },
+  {
+    id: "changes",
+    label: "Changes",
+    icon: "lucide:history",
+    tone: "paper" as const,
+  },
 ];
 ---
 
@@ -53,151 +93,177 @@ const sections = [
   structuredData={privacyBreadcrumbLd}
 >
   <div class="mx-auto max-w-4xl px-5 pb-20">
-    <div class="flex flex-wrap items-center gap-3 mb-8">
-      <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full border-[2.5px] border-ink bg-paper shadow-neo-xs mono text-[11px] font-bold uppercase tracking-widest">
+    <div class="mb-8 flex flex-wrap items-center gap-3">
+      <span
+        class="border-ink bg-paper shadow-neo-xs mono inline-flex items-center gap-2 rounded-full border-[2.5px] px-3 py-1 text-[11px] font-bold tracking-widest uppercase"
+      >
         <Icon name="lucide:calendar" class="h-3.5 w-3.5" />
         Updated {updatedLabel}
       </span>
-      <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full border-[2.5px] border-ink bg-green shadow-neo-xs mono text-[11px] font-bold uppercase tracking-widest">
+      <span
+        class="border-ink bg-green shadow-neo-xs mono inline-flex items-center gap-2 rounded-full border-[2.5px] px-3 py-1 text-[11px] font-bold tracking-widest uppercase"
+      >
         <Icon name="lucide:lock" class="h-3.5 w-3.5" />
         GDPR-friendly
       </span>
     </div>
 
     <NeoCard tone="yellow" class="mb-10 p-6">
-      <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-70 mb-3">
+      <p
+        class="mono mb-3 text-[10px] font-bold tracking-widest uppercase opacity-70"
+      >
         ▸ TL;DR
       </p>
       <ul class="flex flex-wrap gap-2">
-        {tldr.map((t) => (
-          <li>
-            <TagPill tone={t.tone}>
-              <Icon name="lucide:check" class="h-3 w-3" />
-              {t.label}
-            </TagPill>
-          </li>
-        ))}
+        {
+          tldr.map((t) => (
+            <li>
+              <TagPill tone={t.tone}>
+                <Icon name="lucide:check" class="h-3 w-3" />
+                {t.label}
+              </TagPill>
+            </li>
+          ))
+        }
       </ul>
     </NeoCard>
 
     <TagPillRow label="Jump to" class="mb-12" scrollOnMobile>
-      {sections.map((s) => (
-        <li>
-          <TagPill tone="paper" href={`#${s.id}`}>{s.label}</TagPill>
-        </li>
-      ))}
+      {
+        sections.map((s) => (
+          <li>
+            <TagPill tone="paper" href={`#${s.id}`}>
+              {s.label}
+            </TagPill>
+          </li>
+        ))
+      }
     </TagPillRow>
 
     <div class="space-y-6">
-      <NeoCard id="collect" tone="paper" class="p-6 scroll-mt-24">
-        <div class="flex items-center gap-3 mb-3">
-          <span class="inline-flex items-center justify-center h-9 w-9 rounded-[4px] border-[2.5px] border-ink bg-paper">
+      <NeoCard id="collect" tone="paper" class="scroll-mt-24 p-6">
+        <div class="mb-3 flex items-center gap-3">
+          <span
+            class="border-ink bg-paper inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px]"
+          >
             <Icon name="lucide:database" class="h-4 w-4" />
           </span>
           <h2 class="heading text-xl uppercase">What I collect</h2>
         </div>
         <p class="text-sm leading-relaxed">
           This site is a static blog and portfolio. It does <strong>not</strong>
-          store any personal information on its own — no login, no server, no
-          database. Two features are <strong>opt-in</strong>: blog comments
-          (powered by GitHub Discussions via giscus) and the contact form
-          (delivered by Web3Forms). You only share data if you choose to use
-          them. Otherwise,
+          store any personal information on its own — no login, no server, no database.
+          Two features are <strong>opt-in</strong>: blog comments (powered by
+          GitHub Discussions via giscus) and the contact form (delivered by
+          Web3Forms). You only share data if you choose to use them. Otherwise,
           reach me via email, phone, LinkedIn, or my Google Calendar booking
           link — data shared that way is handled by those services under their
           own privacy terms.
         </p>
       </NeoCard>
 
-      <NeoCard id="analytics" tone="cyan" class="p-6 scroll-mt-24">
-        <div class="flex items-center gap-3 mb-3">
-          <span class="inline-flex items-center justify-center h-9 w-9 rounded-[4px] border-[2.5px] border-ink bg-paper">
+      <NeoCard id="analytics" tone="cyan" class="scroll-mt-24 p-6">
+        <div class="mb-3 flex items-center gap-3">
+          <span
+            class="border-ink bg-paper inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px]"
+          >
             <Icon name="lucide:bar-chart-3" class="h-4 w-4" />
           </span>
           <h2 class="heading text-xl uppercase">Analytics</h2>
         </div>
         <p class="text-sm leading-relaxed">
-          None. I run <strong>no</strong> analytics, no tracking scripts, and no
-          tracking pixels — no Google Analytics, no Plausible, nothing. I have no
-          visibility into who you are or which pages you read. The only traffic
-          data that exists is the host's standard access logs (see Hosting &amp;
-          CDN below).
+          None. I run <strong>no</strong> analytics, no tracking scripts, and no tracking
+          pixels — no Google Analytics, no Plausible, nothing. I have no visibility
+          into who you are or which pages you read. The only traffic data that exists
+          is the host's standard access logs (see Hosting &amp; CDN below).
         </p>
       </NeoCard>
 
-      <NeoCard id="cookies" tone="green" class="p-6 scroll-mt-24">
-        <div class="flex items-center gap-3 mb-3">
-          <span class="inline-flex items-center justify-center h-9 w-9 rounded-[4px] border-[2.5px] border-ink bg-paper">
+      <NeoCard id="cookies" tone="green" class="scroll-mt-24 p-6">
+        <div class="mb-3 flex items-center gap-3">
+          <span
+            class="border-ink bg-paper inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px]"
+          >
             <Icon name="lucide:cookie" class="h-4 w-4" />
           </span>
           <h2 class="heading text-xl uppercase">Cookies & local storage</h2>
         </div>
         <p class="text-sm leading-relaxed">
-          I set <strong>no cookies</strong> and no session identifiers. The only
-          thing stored in your browser is a single <code>localStorage</code> key
-          (<code>theme</code>) remembering your light/dark mode choice — it never
-          leaves your device. If you open the comments and sign in to GitHub,
-          giscus may set its own storage inside its embedded frame, under
-          GitHub's terms.
+          I set <strong>no cookies</strong> and no session identifiers. The only thing
+          stored in your browser is a single <code>localStorage</code> key (<code
+            >theme</code
+          >) remembering your light/dark mode choice — it never leaves your
+          device. If you open the comments and sign in to GitHub, giscus may set
+          its own storage inside its embedded frame, under GitHub's terms.
         </p>
       </NeoCard>
 
-      <NeoCard id="hosting" tone="blue" class="p-6 scroll-mt-24 text-paper">
-        <div class="flex items-center gap-3 mb-3">
-          <span class="inline-flex items-center justify-center h-9 w-9 rounded-[4px] border-[2.5px] border-ink bg-paper text-ink">
+      <NeoCard id="hosting" tone="blue" class="text-paper scroll-mt-24 p-6">
+        <div class="mb-3 flex items-center gap-3">
+          <span
+            class="border-ink bg-paper text-ink inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px]"
+          >
             <Icon name="lucide:cloud" class="h-4 w-4" />
           </span>
           <h2 class="heading text-xl uppercase">Hosting & CDN</h2>
         </div>
         <p class="text-sm leading-relaxed">
-          Hosted on Cloudflare Pages. The host stores access logs (IP,
-          user agent, requested URL, timestamp) for security and performance,
+          Hosted on Cloudflare Pages. The host stores access logs (IP, user
+          agent, requested URL, timestamp) for security and performance,
           retained under their own retention policies. I do not link those logs
           to any identity and cannot match them to a person.
         </p>
       </NeoCard>
 
-      <NeoCard id="third-party" tone="yellow" class="p-6 scroll-mt-24">
-        <div class="flex items-center gap-3 mb-3">
-          <span class="inline-flex items-center justify-center h-9 w-9 rounded-[4px] border-[2.5px] border-ink bg-paper">
+      <NeoCard id="third-party" tone="yellow" class="scroll-mt-24 p-6">
+        <div class="mb-3 flex items-center gap-3">
+          <span
+            class="border-ink bg-paper inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px]"
+          >
             <Icon name="lucide:external-link" class="h-4 w-4" />
           </span>
           <h2 class="heading text-xl uppercase">Third-party content</h2>
         </div>
         <p class="text-sm leading-relaxed">
-          Fonts and images are self-hosted from this domain. A few features load
-          third-party content only when you engage with them:
-          <strong>giscus / GitHub</strong> (blog comments),
-          <strong>Web3Forms</strong> (contact form delivery), and an embedded
-          <strong>X / Twitter</strong> timeline on the feed page. Each loads
-          under its own privacy policy. External links in blog posts point
-          elsewhere — once you leave this domain, the destination's policy
-          applies.
+          Fonts and images are self-hosted from this domain. There are no
+          embedded social timelines, no ad tags, and no third-party scripts on
+          page load. Exactly two features reach outside this domain, and only
+          when you engage with them: <strong>giscus / GitHub</strong> (blog comments)
+          and <strong>Web3Forms</strong> (contact form delivery). Each loads under
+          its own privacy policy. External links in blog posts point elsewhere — once
+          you leave this domain, the destination's policy applies.
         </p>
       </NeoCard>
 
-      <NeoCard id="email" tone="pink" class="p-6 scroll-mt-24 text-paper">
-        <div class="flex items-center gap-3 mb-3">
-          <span class="inline-flex items-center justify-center h-9 w-9 rounded-[4px] border-[2.5px] border-ink bg-paper text-ink">
+      <NeoCard id="email" tone="pink" class="text-paper scroll-mt-24 p-6">
+        <div class="mb-3 flex items-center gap-3">
+          <span
+            class="border-ink bg-paper text-ink inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px]"
+          >
             <Icon name="lucide:mail" class="h-4 w-4" />
           </span>
-          <h2 class="heading text-xl uppercase">Email, contact form & booking</h2>
+          <h2 class="heading text-xl uppercase">
+            Email, contact form & booking
+          </h2>
         </div>
         <p class="text-sm leading-relaxed">
           If you <a
             href={`mailto:${SITE.EMAIL}`}
-            class="underline decoration-[3px] underline-offset-4 hover:bg-yellow hover:text-ink"
-          >email me</a>, submit the contact form, or book a call via Google
-          Calendar, I keep that message / thread / event only as long as needed
-          to reply or run the engagement. The contact form is delivered by
+            class="hover:bg-yellow hover:text-ink underline decoration-[3px] underline-offset-4"
+            >email me</a
+          >, submit the contact form, or book a call via Google Calendar, I keep
+          that message / thread / event only as long as needed to reply or run
+          the engagement. The contact form is delivered by
           <strong>Web3Forms</strong>, which forwards your message to my inbox —
           no marketing list, no sharing, no selling. I'll delete on request.
         </p>
       </NeoCard>
 
-      <NeoCard id="rights" tone="purple" class="p-6 scroll-mt-24 text-paper">
-        <div class="flex items-center gap-3 mb-3">
-          <span class="inline-flex items-center justify-center h-9 w-9 rounded-[4px] border-[2.5px] border-ink bg-paper text-ink">
+      <NeoCard id="rights" tone="purple" class="text-paper scroll-mt-24 p-6">
+        <div class="mb-3 flex items-center gap-3">
+          <span
+            class="border-ink bg-paper text-ink inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px]"
+          >
             <Icon name="lucide:shield-check" class="h-4 w-4" />
           </span>
           <h2 class="heading text-xl uppercase">Your rights</h2>
@@ -208,14 +274,17 @@ const sections = [
           basically none, this typically means: nothing to access, nothing to
           delete. If you have specific questions, <a
             href={`mailto:${SITE.EMAIL}`}
-            class="underline decoration-[3px] underline-offset-4 hover:bg-yellow hover:text-ink"
-          >email me</a>.
+            class="hover:bg-yellow hover:text-ink underline decoration-[3px] underline-offset-4"
+            >email me</a
+          >.
         </p>
       </NeoCard>
 
-      <NeoCard id="changes" tone="paper" class="p-6 scroll-mt-24">
-        <div class="flex items-center gap-3 mb-3">
-          <span class="inline-flex items-center justify-center h-9 w-9 rounded-[4px] border-[2.5px] border-ink bg-paper">
+      <NeoCard id="changes" tone="paper" class="scroll-mt-24 p-6">
+        <div class="mb-3 flex items-center gap-3">
+          <span
+            class="border-ink bg-paper inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px]"
+          >
             <Icon name="lucide:history" class="h-4 w-4" />
           </span>
           <h2 class="heading text-xl uppercase">Changes</h2>
@@ -229,21 +298,25 @@ const sections = [
       </NeoCard>
     </div>
 
-    <div class="relative mt-12 border-[3px] border-ink rounded-[6px] bg-bg-alt shadow-neo-md p-6 md:p-8">
+    <div
+      class="border-ink bg-bg-alt shadow-neo-md relative mt-12 rounded-[6px] border-[3px] p-6 md:p-8"
+    >
       <div class="absolute -top-4 -right-3 hidden md:block">
         <StickyNote tone="yellow" tilt={4} class="max-w-[180px]">
-          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+          <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
             ▸ Plain English
           </p>
-          <p class="text-xs font-bold leading-snug">
+          <p class="text-xs leading-snug font-bold">
             Questions? Just ask. No legal form needed.
           </p>
         </StickyNote>
       </div>
-      <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2">
+      <p
+        class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-60"
+      >
         ▸ Got a question?
       </p>
-      <h3 class="display text-2xl md:text-3xl mb-4">
+      <h3 class="display mb-4 text-2xl md:text-3xl">
         Need clarification on any of this?
       </h3>
       <div class="flex flex-wrap gap-3">
