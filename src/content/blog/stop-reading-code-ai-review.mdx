@@ -12,9 +12,9 @@ heroImage:
 
 Nobody wants to read a 5,000-line diff. But that is what lands in the pull request when an agent spends an afternoon refactoring a legacy service or scaffolding a new Laravel module end to end.
 
-I hit this wall on a multi-tenant SaaS build last year. The agent produced migrations, models, policies, jobs, and tests in one pass. The diff was correct — mostly. I spent two evenings reading it line by line, approved it, and then found the actual bug in production three weeks later: a queued job that ran outside the tenant scope. I had read that file. I had read that exact method. My eyes went over it and my brain filed it as "looks like the other ones."
+The failure mode that follows is worth naming precisely, because it does not look like failure while it is happening. An agent scaffolds a multi-tenant module in one pass — migrations, models, policies, jobs, tests. The diff is correct, mostly. You spend two evenings reading it line by line and approve it. Weeks later something breaks in production: a queued job that ran outside the tenant scope. You read that file. You read that exact method. Your eyes went over it and your brain filed it as "looks like the other ones."
 
-That is the honest failure mode. Reading every line felt like diligence. It was theatre.
+It felt like diligence. It was theater.
 
 ## Where line-by-line review actually breaks
 
@@ -80,7 +80,7 @@ One giant "review this PR" prompt produces mush. Narrow agents with narrow brief
 
 Each agent needs real access to be useful — the schema, the logs, the actual test output, not a pasted snippet. That is exactly the problem [MCP servers](/blog/claude-mcp-dev-tools/) solve, and it is the difference between a reviewer that guesses and one that checks.
 
-Two rules keep this from becoming noise. First, findings are severity-ranked and anything below "would break in production" goes to a comment, never a block. Second, a second agent tries to _refute_ each finding before I see it. Roughly a third of the initial findings die there, and they are the ones that would have burned my afternoon.
+Two rules keep this from becoming noise. First, findings are severity-ranked and anything below "would break in production" goes to a comment, never a block. Second, a second agent tries to _refute_ each finding before I see it. A large share of the initial findings die there, and they are exactly the ones that would otherwise burn an afternoon.
 
 ![Multi-agent CI pipeline with correctness, security, and regression agents](/blog/stop-reading-code-ai-review/review-pipeline.webp)
 
