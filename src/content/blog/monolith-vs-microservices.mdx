@@ -77,7 +77,7 @@ You do not have to choose between a "big ball of mud" and a complex mesh of serv
 
 ![Modular monolith diagram showing bounded modules inside a single deployable codebase](/blog/monolith-vs-microservices/modular-monolith.webp)
 
-In Laravel, this means using separate namespaces or even local packages for different domains. Your "Billing" code should not directly call the "Inventory" models. Instead, it should use internal interfaces or events. This approach gives you the deployment simplicity of a monolith while making it easy to extract a specific module into a standalone microservice later. It is a path of "deferred decision making" which is often the most strategic move in software engineering. When the time finally comes to carve a module out, my guide on going [from monolith to microservices](/blog/monolith-to-microservices/) walks through the strangler-fig migration step by step.
+In Laravel, this means using separate namespaces or even local packages for different domains. Your "Billing" code should not directly call the "Inventory" models. Instead, it should use internal interfaces or events. This approach gives you the deployment simplicity of a monolith while making it easy to extract a specific module into a standalone microservice later. I go deeper on the mechanics — contracts, schema-per-module, and the friction signals that justify a split — in [modular monoliths first](/blog/modular-monolith-first/). It is a path of "deferred decision making" which is often the most strategic move in software engineering. When the time finally comes to carve a module out, my guide on going [from monolith to microservices](/blog/monolith-to-microservices/) walks through the strangler-fig migration step by step.
 
 ## Takeaways
 
