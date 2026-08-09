@@ -1,9 +1,18 @@
+// ── Career timeline ───────────────────────────────────────
+// Single source of truth for every "N+ years" claim on the site.
+// Derived, not hardcoded, so the numbers can't drift out of date.
+export const CAREER_SINCE = 2012;
+export const REMOTE_SINCE = 2014;
+
+const currentYear = new Date().getFullYear();
+export const YEARS_EXPERIENCE = currentYear - CAREER_SINCE;
+export const YEARS_REMOTE = currentYear - REMOTE_SINCE;
+
 export const SITE = {
   URL: "https://ansezz.com",
   TITLE: "Anass Ez-zouaine — Backend, AI & Shopify Engineer",
   SHORT_TITLE: "ansezz",
-  DESCRIPTION:
-    "Senior backend, software architect, and AI engineer. 12+ years shipping Laravel SaaS, Shopify Plus apps, and AI features (Claude, MCP, RAG). Remote-first.",
+  DESCRIPTION: `Senior backend, software architect, and AI engineer. ${YEARS_EXPERIENCE}+ years shipping Laravel SaaS, Shopify Plus apps, and AI features (Claude, MCP, RAG). Remote-first.`,
   EMAIL: "me@ansezz.com",
   PHONE: "+212679405863",
   PHONE_DISPLAY: "+212 679 40 58 63",
@@ -21,8 +30,8 @@ export const OWNER = {
     "I ship production backends, Shopify Plus apps, and AI features that survive real users — Laravel + Anthropic Claude + pgvector, every day.",
   CURRENTLY:
     "Productionizing agentic commerce, MCP servers, and RAG pipelines on Laravel + Shopify.",
-  YEARS_EXPERIENCE: 12,
-  REMOTE_SINCE: 2014,
+  YEARS_EXPERIENCE,
+  REMOTE_SINCE,
   CONSULTING_SINCE: 2022,
   STATUS: "Open for senior / lead / advisory engagements",
 };
@@ -39,7 +48,7 @@ export const AVAILABLE_FOR = [
 ];
 
 export const STATS = [
-  { value: "12+", label: "Years shipping" },
+  { value: `${YEARS_EXPERIENCE}+`, label: "Years shipping" },
   { value: "60+", label: "Production builds" },
   { value: "3", label: "Continents served" },
   { value: "∞", label: "Bugs squashed" },
@@ -105,14 +114,12 @@ export const FOOTER_MORE = [
 
 export const HOME = {
   TITLE: "Home",
-  DESCRIPTION:
-    "Senior backend, software architect, and AI engineer. 12+ years shipping Laravel SaaS, Shopify Plus apps, and AI features — Claude, MCP, RAG, agentic systems.",
+  DESCRIPTION: `Senior backend, software architect, and AI engineer. ${YEARS_EXPERIENCE}+ years shipping Laravel SaaS, Shopify Plus apps, and AI features — Claude, MCP, RAG, agentic systems.`,
 };
 
 export const ABOUT = {
   TITLE: "About",
-  DESCRIPTION:
-    "Senior backend engineer and AI engineer with 12+ years of remote-only experience. Multi-tenant B2B SaaS, Shopify Plus apps, and production AI on Laravel.",
+  DESCRIPTION: `Senior backend engineer and AI engineer with ${YEARS_EXPERIENCE}+ years of experience, remote-only since ${REMOTE_SINCE}. Multi-tenant B2B SaaS, Shopify Plus apps, and production AI on Laravel.`,
 };
 
 export const WORK = {

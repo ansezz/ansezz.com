@@ -1,6 +1,10 @@
 ---
 import HalftoneSection from "@/components/neobrutalist/HalftoneSection.astro";
 import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
+import { OWNER } from "@/consts";
+
+// Derive from OWNER.REMOTE_SINCE so the claim can't go stale.
+const remoteYears = new Date().getFullYear() - OWNER.REMOTE_SINCE;
 ---
 
 <HalftoneSection tone="pink" bordered class="py-16 md:py-24">
@@ -47,7 +51,7 @@ import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
 
     <p class="mt-12 text-base md:text-lg max-w-2xl mx-auto opacity-90">
       Production-ready, observable, opinionated. Backed by tests, types, and
-      ten years of remote-only scar tissue.
+      {remoteYears} years of remote-only scar tissue.
     </p>
 
     <div class="mt-8">

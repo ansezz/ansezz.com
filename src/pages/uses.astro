@@ -10,7 +10,7 @@ import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import SpeechBubble from "@/components/neobrutalist/SpeechBubble.astro";
 import { Icon } from "astro-icon/components";
-import { USES, SITE } from "@/consts";
+import { USES, SITE, YEARS_EXPERIENCE } from "@/consts";
 import { breadcrumbList } from "@/lib/seo";
 
 const usesBreadcrumbLd = breadcrumbList([
@@ -256,7 +256,7 @@ const stats = [
     tone: "pink" as const,
   },
   {
-    v: "12+",
+    v: `${YEARS_EXPERIENCE}+`,
     l: "Years curating",
     icon: "lucide:rocket",
     tone: "purple" as const,

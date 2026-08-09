@@ -1,3 +1,5 @@
+import { YEARS_EXPERIENCE } from "@/consts";
+
 // Curated OG cards for the main static pages. Single source of truth for
 // both the generator endpoint (/og/page/[slug].png) and the per-page image
 // resolution in Page.astro.
@@ -20,7 +22,7 @@ export const PAGE_OG: PageOg[] = [
     slug: "about",
     path: "/about/",
     label: "About",
-    title: "Senior engineer. 12+ years. Remote-first.",
+    title: `Senior engineer. ${YEARS_EXPERIENCE}+ years. Remote-first.`,
   },
   {
     slug: "work",

@@ -11,7 +11,15 @@ import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import AvailabilityBadge from "@/components/neobrutalist/AvailabilityBadge.astro";
 import { Icon } from "astro-icon/components";
-import { ABOUT, LANGUAGES, SITE, OWNER } from "@/consts";
+import {
+  ABOUT,
+  LANGUAGES,
+  SITE,
+  OWNER,
+  YEARS_EXPERIENCE,
+  CAREER_SINCE,
+  REMOTE_SINCE,
+} from "@/consts";
 import { breadcrumbList } from "@/lib/seo";
 
 const aboutBreadcrumbLd = breadcrumbList([
@@ -20,11 +28,11 @@ const aboutBreadcrumbLd = breadcrumbList([
 ]);
 
 const facts: { v: string; l: string; icon: string; tone: "yellow" | "pink" | "cyan" | "green" | "red" | "purple" }[] = [
-  { v: "12+", l: "Years shipping", icon: "lucide:rocket", tone: "yellow" },
+  { v: `${YEARS_EXPERIENCE}+`, l: "Years shipping", icon: "lucide:rocket", tone: "yellow" },
   { v: "60+", l: "Production builds", icon: "lucide:package-check", tone: "cyan" },
   { v: "3", l: "Continents served", icon: "lucide:globe", tone: "green" },
   { v: "10+", l: "Shopify apps (public + private)", icon: "lucide:shopping-bag", tone: "pink" },
-  { v: "100%", l: "Remote since 2014", icon: "lucide:laptop", tone: "purple" },
+  { v: "100%", l: `Remote since ${REMOTE_SINCE}`, icon: "lucide:laptop", tone: "purple" },
   { v: "1", l: "Time zone (GMT+1)", icon: "lucide:clock", tone: "red" },
 ];
 
@@ -127,8 +135,8 @@ const obsessions = [
   title={ABOUT.TITLE}
   description={ABOUT.DESCRIPTION}
   eyebrow="About"
-  heading="Backend brain. AI heart. 12+ years of shipping."
-  intro="I'm Anass — senior lead backend engineer, software architect, and AI engineer. Remote-only since 2014. I help founders, agencies, and product teams ship Laravel SaaS, Shopify Plus apps, and AI features that survive real users."
+  heading={`Backend brain. AI heart. ${YEARS_EXPERIENCE}+ years of shipping.`}
+  intro={`I'm Anass — senior lead backend engineer, software architect, and AI engineer. Remote-only since ${REMOTE_SINCE}. I help founders, agencies, and product teams ship Laravel SaaS, Shopify Plus apps, and AI features that survive real users.`}
   structuredData={aboutBreadcrumbLd}
 >
   <section
@@ -142,7 +150,7 @@ const obsessions = [
             ▸ Heads up
           </p>
           <p class="text-sm font-bold leading-snug">
-            Remote-first since 2014. {SITE.TZ}, but I adapt to your zone.
+            Remote-first since {REMOTE_SINCE}. {SITE.TZ}, but I adapt to your zone.
           </p>
         </StickyNote>
       </div>
@@ -240,7 +248,8 @@ const obsessions = [
         </h2>
         <div class="space-y-5 text-base md:text-lg leading-relaxed text-ink-soft max-w-2xl">
           <p>
-            Twelve years building products for teams that needed them to work.
+            {YEARS_EXPERIENCE} years building products for teams that needed them to
+            work.
             Not in a demo, not in a slide deck — on day three, when the cron
             job dies and the customer is angry. That taught me the rule I still
             ship by: observable infra costs less than incident response, and
@@ -255,7 +264,7 @@ const obsessions = [
             </span>
           </SpeechBubble>
           <p>
-            Started shipping web apps in 2012, went remote in 2014, never
+            Started shipping web apps in {CAREER_SINCE}, went remote in {REMOTE_SINCE}, never
             opened an office calendar invite again. Trajectory: generalist →
             backend specialist → lead engineer → architect → AI engineer.
             Tools changed; the rule didn't — ship something real, then make it
@@ -276,7 +285,7 @@ const obsessions = [
         <BurstBadge tone="purple" size="sm" class="mb-5">04</BurstBadge>
         <h2 class="display text-3xl md:text-4xl mb-3">Operating principles.</h2>
         <p class="text-base md:text-lg text-ink-soft mb-6 max-w-2xl">
-          The rules that survived twelve years. Boring on purpose. Hard to
+          The rules that survived {YEARS_EXPERIENCE} years. Boring on purpose. Hard to
           argue with under pressure.
         </p>
         <ul class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

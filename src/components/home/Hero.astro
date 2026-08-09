@@ -17,10 +17,12 @@ const heroTags = [
 ];
 const tagTones = ["red", "purple", "cyan", "green", "blue"] as const;
 
-const stats = [
-  { v: "12+", l: "Years" },
-  { v: "60+", l: "Builds" },
-  { v: "3", l: "Continents" },
+// Deliberately NOT the headline numbers — those live in the <Stats /> band
+// right below. These are the practical "how do we work together" facts.
+const cardFacts = [
+  { v: SITE.TZ, l: "Time zone" },
+  { v: String(OWNER.REMOTE_SINCE), l: "Remote since" },
+  { v: "≤24h", l: "Reply" },
 ];
 ---
 
@@ -159,14 +161,14 @@ const stats = [
           class="relative z-10 grid grid-cols-3 border-t-[3px] border-ink"
         >
           {
-            stats.map((s, i) => (
+            cardFacts.map((s, i) => (
               <li
                 class:list={[
                   "px-2 py-3 text-center bg-paper",
                   i < 2 && "border-r-[3px] border-ink",
                 ]}
               >
-                <p class="display text-2xl md:text-3xl leading-none">
+                <p class="display text-xl md:text-2xl leading-none">
                   {s.v}
                 </p>
                 <p class="mono text-[9px] font-bold uppercase tracking-widest opacity-70 mt-1">
@@ -196,10 +198,10 @@ const stats = [
       >
         <StickyNote tone="pink" tilt={0} class="max-w-[180px]">
           <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
-            ▸ Open
+            ▸ First step
           </p>
           <p class="text-xs font-bold leading-snug">
-            Currently open · Senior / Lead / Advisory.
+            Free 15-min intro call. Honest yes or no.
           </p>
         </StickyNote>
       </div>
