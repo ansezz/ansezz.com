@@ -182,6 +182,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "why-your-rag-is-failing",
       "7-rag-mistakes-production",
       "picking-the-right-rag-stack",
+      "rag-architectures-traditional-agentic-corrective",
       "redis-semantic-caching-rag",
       "circuit-breakers-vector-db",
     ],
@@ -229,6 +230,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "prompt-engineering-vs-context-engineering",
       "api-vs-mcp",
       "mcp-vs-a2a-vs-acp",
+      "mcp-context-aware-agents",
       "training-vs-inference",
     ],
   },
@@ -244,8 +246,10 @@ export const BLOG_SERIES: BlogSeries[] = [
       "load-balancer-vs-api-gateway",
       "forward-proxy-vs-reverse-proxy",
       "api-gateway-ai-stack",
+      "rest-vs-grpc",
       "docker-vs-kubernetes",
       "container-vs-pod",
+      "dns-vs-service-discovery",
       "serverless-vs-containers",
       "stateless-vs-stateful-apps",
     ],
@@ -293,6 +297,62 @@ export const BLOG_SERIES: BlogSeries[] = [
       "data-engineer-vs-data-scientist",
       "ml-engineer-vs-ai-engineer",
       "solutions-architect-vs-forward-deployed-engineer",
+    ],
+  },
+  {
+    slug: "monolith-and-modularity",
+    title: "Monolith and Modularity",
+    description:
+      "Choose an architecture, keep the modules honest, and only split when the friction earns it — the full monolith-to-services arc.",
+    tone: "purple",
+    posts: [
+      "monolith-vs-microservices",
+      "modular-monolith-first",
+      "monolith-to-microservices",
+    ],
+  },
+  {
+    slug: "serving-ai-in-production",
+    title: "Serving AI in Production",
+    description:
+      "GPU-aware routing, scaling triggers that actually track LLM load, and the rate limits that stop one agent loop from burning your margin.",
+    tone: "cyan",
+    posts: [
+      "gpu-aware-load-balancing",
+      "smart-auto-scaling-ai",
+      "rate-limiting-ai-wallet",
+    ],
+  },
+  {
+    slug: "production-operations",
+    title: "Production Operations",
+    description:
+      "Ship it, provision it, and see inside it — the CI/CD, infrastructure-as-code, and observability disciplines behind a system you can debug at 3am.",
+    tone: "blue",
+    posts: ["ci-vs-cd", "terraform-vs-ansible", "logging-vs-monitoring"],
+  },
+  {
+    slug: "performance-and-limits",
+    title: "Performance and Limits",
+    description:
+      "Diagnose the real bottleneck, cut the distance with edge delivery and caching, then cap the traffic before it caps you.",
+    tone: "green",
+    posts: [
+      "bandwidth-vs-throughput",
+      "cdn-vs-cache",
+      "rate-limiting-vs-throttling",
+    ],
+  },
+  {
+    slug: "laravel-at-scale",
+    title: "Laravel at Scale",
+    description:
+      "Multi-tenant isolation, Octane workers that stay warm, and the replication-plus-backup setup that survives both hardware failure and human error.",
+    tone: "pink",
+    posts: [
+      "laravel-multi-tenancy",
+      "laravel-octane-high-traffic",
+      "replication-vs-backup-laravel",
     ],
   },
 ];
