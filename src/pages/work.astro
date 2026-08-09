@@ -19,6 +19,7 @@ import {
   OTHER_PLATFORMS,
 } from "@/consts";
 import { collectionPage, breadcrumbList } from "@/lib/seo";
+import { externalLinkAttrs } from "@/lib/links";
 
 const entries = await getCollection("work");
 const sorted = entries.sort(
@@ -389,8 +390,7 @@ const workBreadcrumbLd = breadcrumbList([
                 <li>
                   <a
                     href={p.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    {...externalLinkAttrs(p.url)}
                     class="group border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[2.5px] p-3 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
                   >
                     <span
@@ -435,8 +435,7 @@ const workBreadcrumbLd = breadcrumbList([
                 <li>
                   <a
                     href={p.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    {...externalLinkAttrs(p.url)}
                     class="group border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[2.5px] p-3 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
                   >
                     <span
@@ -486,8 +485,7 @@ const workBreadcrumbLd = breadcrumbList([
                 <li>
                   <a
                     href={p.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    {...externalLinkAttrs(p.url)}
                     class="group border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[2.5px] p-3 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
                   >
                     <span

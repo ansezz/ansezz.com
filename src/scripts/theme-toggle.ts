@@ -29,7 +29,7 @@ function setTheme(theme: Theme): void {
 document.addEventListener("click", (event) => {
   const target = event.target;
   if (!(target instanceof Element)) return;
-  if (!target.closest("#theme-toggle")) return;
+  if (!target.closest("[data-theme-toggle]")) return;
   setTheme(current() === "dark" ? "light" : "dark");
 });
 

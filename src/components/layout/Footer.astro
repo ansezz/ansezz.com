@@ -6,59 +6,62 @@ import { externalLinkAttrs } from "@/lib/links";
 const year = new Date().getFullYear();
 
 const socialIcons = SOCIALS.filter((s) =>
-  ["GitHub", "LinkedIn", "X", "Threads", "Instagram", "Facebook"].includes(s.NAME),
+  ["GitHub", "LinkedIn", "X", "Threads", "Instagram", "Facebook"].includes(
+    s.NAME,
+  ),
 );
 const directLinks = SOCIALS.filter((s) =>
   ["Email", "Phone", "Book a call", "Resume (PDF)"].includes(s.NAME),
 );
 
+// Feed lives in the "Site" column above; /styleguide/ is Disallow-ed in
+// robots.txt, so it doesn't belong in a sitewide footer either.
 const bottomLinks = [
-  { label: "Feed", href: "/feed/" },
   { label: "Privacy", href: "/privacy/" },
-  { label: "Styleguide", href: "/styleguide/" },
   { label: "RSS", href: "/rss.xml" },
+  { label: "JSON Feed", href: "/feed.json" },
 ];
 ---
 
 <footer
-  class="mt-24 border-t-[3px] border-ink bg-ink text-bg relative overflow-hidden"
+  class="border-ink bg-ink text-bg relative mt-24 overflow-hidden border-t-[3px]"
 >
   <div
     aria-hidden="true"
     class="pointer-events-none absolute inset-0 opacity-[0.08]"
     style="background-image: radial-gradient(circle, var(--color-paper) 1px, transparent 1px); background-size: 14px 14px;"
-  ></div>
+  >
+  </div>
 
   <div
-    class="relative mx-auto max-w-6xl px-5 sm:px-6 pt-12 sm:pt-14 pb-8 sm:pb-10 grid gap-10 sm:gap-12 sm:grid-cols-2 lg:grid-cols-4"
+    class="relative mx-auto grid max-w-6xl gap-10 px-5 pt-12 pb-8 sm:grid-cols-2 sm:gap-12 sm:px-6 sm:pt-14 sm:pb-10 lg:grid-cols-4"
   >
     <div class="space-y-5 sm:col-span-2 lg:col-span-1">
-      <a href="/" class="inline-flex items-baseline group">
+      <a href="/" class="group inline-flex items-baseline">
         <span
-          class="display text-3xl sm:text-4xl tracking-tight group-hover:text-yellow transition-colors"
+          class="display group-hover:text-yellow text-3xl tracking-tight transition-colors sm:text-4xl"
         >
           {SITE.SHORT_TITLE}
         </span>
-        <span class="text-pink text-3xl sm:text-4xl display">.</span>
+        <span class="text-pink display text-3xl sm:text-4xl">.</span>
       </a>
-      <p class="text-sm opacity-80 leading-relaxed max-w-sm">
+      <p class="max-w-sm text-sm leading-relaxed opacity-80">
         {OWNER.ROLES.join(" · ")}. {OWNER.YEARS_EXPERIENCE}+ years shipping
         Laravel SaaS, Shopify Plus apps, and production AI. Remote-first since
         {OWNER.REMOTE_SINCE}.
       </p>
 
       <div
-        class="inline-flex items-center gap-2 px-3 py-2 rounded-full border-[2.5px] border-bg bg-bg/5 backdrop-blur-sm"
+        class="border-bg bg-bg/5 inline-flex items-center gap-2 rounded-full border-[2.5px] px-3 py-2 backdrop-blur-sm"
       >
         <span class="relative inline-flex h-2 w-2">
           <span
-            class="absolute inline-flex h-full w-full rounded-full bg-green opacity-75 animate-ping"
+            class="bg-green absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
           ></span>
-          <span
-            class="relative inline-flex h-2 w-2 rounded-full bg-green"
+          <span class="bg-green relative inline-flex h-2 w-2 rounded-full"
           ></span>
         </span>
-        <span class="mono text-[10px] font-bold uppercase tracking-widest">
+        <span class="mono text-[10px] font-bold tracking-widest uppercase">
           Open · Senior / Lead / Advisory
         </span>
       </div>
@@ -66,17 +69,17 @@ const bottomLinks = [
 
     <div>
       <p
-        class="mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-50 mb-4"
+        class="mono mb-4 text-[10px] font-bold tracking-[0.2em] uppercase opacity-50"
       >
         ▸ Site
       </p>
-      <ul class="grid grid-cols-2 sm:grid-cols-1 gap-y-2 gap-x-4">
+      <ul class="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-1">
         {
           NAV.map((n) => (
             <li>
               <a
                 href={n.HREF}
-                class="text-sm font-bold opacity-90 hover:opacity-100 hover:text-yellow transition-colors inline-block"
+                class="hover:text-yellow inline-block text-sm font-bold opacity-90 transition-colors hover:opacity-100"
               >
                 {n.LABEL}
               </a>
@@ -86,7 +89,7 @@ const bottomLinks = [
         <li>
           <a
             href="/feed/"
-            class="text-sm font-bold opacity-90 hover:opacity-100 hover:text-yellow transition-colors inline-block"
+            class="hover:text-yellow inline-block text-sm font-bold opacity-90 transition-colors hover:opacity-100"
           >
             Feed
           </a>
@@ -96,7 +99,7 @@ const bottomLinks = [
             <li>
               <a
                 href={n.HREF}
-                class="text-sm font-bold opacity-90 hover:opacity-100 hover:text-yellow transition-colors inline-block"
+                class="hover:text-yellow inline-block text-sm font-bold opacity-90 transition-colors hover:opacity-100"
               >
                 {n.LABEL}
               </a>
@@ -108,11 +111,11 @@ const bottomLinks = [
 
     <div>
       <p
-        class="mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-50 mb-4"
+        class="mono mb-4 text-[10px] font-bold tracking-[0.2em] uppercase opacity-50"
       >
         ▸ Connect
       </p>
-      <ul class="flex flex-wrap gap-2 mb-5">
+      <ul class="mb-5 flex flex-wrap gap-2">
         {
           socialIcons.map((s) => (
             <li>
@@ -121,7 +124,7 @@ const bottomLinks = [
                 {...externalLinkAttrs(s.HREF)}
                 aria-label={s.NAME}
                 title={s.NAME}
-                class="inline-flex h-10 w-10 items-center justify-center border-[2.5px] border-bg/30 rounded-[4px] bg-bg/5 hover:bg-yellow hover:text-ink hover:border-bg hover:-translate-y-0.5 transition-all"
+                class="border-bg/30 bg-bg/5 hover:bg-yellow hover:text-ink hover:border-bg inline-flex h-10 w-10 items-center justify-center rounded-[4px] border-[2.5px] transition-all hover:-translate-y-0.5"
               >
                 <Icon name={s.ICON} class="h-4 w-4" />
               </a>
@@ -136,7 +139,7 @@ const bottomLinks = [
               <a
                 href={s.HREF}
                 {...externalLinkAttrs(s.HREF)}
-                class="inline-flex items-center gap-2 text-sm font-bold opacity-90 hover:opacity-100 hover:text-yellow transition-colors"
+                class="hover:text-yellow inline-flex items-center gap-2 text-sm font-bold opacity-90 transition-colors hover:opacity-100"
               >
                 <Icon name={s.ICON} class="h-3.5 w-3.5 shrink-0" />
                 <span class="truncate">{s.NAME}</span>
@@ -150,19 +153,17 @@ const bottomLinks = [
     <div class="space-y-5">
       <div>
         <p
-          class="mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-50 mb-4"
+          class="mono mb-4 text-[10px] font-bold tracking-[0.2em] uppercase opacity-50"
         >
           ▸ Based in
         </p>
         <p class="text-base font-bold">{SITE.LOCATION}</p>
-        <p class="text-sm opacity-70 mt-1">{SITE.TZ} · Remote-first</p>
+        <p class="mt-1 text-sm opacity-70">{SITE.TZ} · Remote-first</p>
       </div>
 
-      <div
-        class="border-[2.5px] border-bg/30 rounded-[4px] p-4 bg-bg/5"
-      >
+      <div class="border-bg/30 bg-bg/5 rounded-[4px] border-[2.5px] p-4">
         <p
-          class="mono text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2"
+          class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-60"
         >
           ▸ Overlap windows
         </p>
@@ -175,15 +176,13 @@ const bottomLinks = [
     </div>
   </div>
 
-  <div class="relative border-t border-bg/15">
+  <div class="border-bg/15 relative border-t">
     <div
-      class="mx-auto max-w-6xl px-5 sm:px-6 py-4 sm:py-5 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center text-xs"
+      class="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-4 text-xs sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5"
     >
-      <div
-        class="flex flex-wrap items-center gap-x-3 gap-y-1 opacity-70"
-      >
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 opacity-70">
         <span>© {year} {OWNER.NAME}</span>
-        <span class="mono opacity-60 hidden sm:inline">·</span>
+        <span class="mono hidden opacity-60 sm:inline">·</span>
         <span class="mono opacity-60">Built with Astro + Tailwind ✦</span>
       </div>
       <div class="flex flex-wrap items-center gap-2">
@@ -191,7 +190,7 @@ const bottomLinks = [
           bottomLinks.map((l) => (
             <a
               href={l.href}
-              class="inline-flex items-center px-2.5 py-1 rounded-full border-[2px] border-bg/30 bg-bg/5 mono text-[10px] font-bold uppercase tracking-widest hover:bg-yellow hover:text-ink hover:border-bg transition-all"
+              class="border-bg/30 bg-bg/5 mono hover:bg-yellow hover:text-ink hover:border-bg inline-flex items-center rounded-full border-[2px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-all"
             >
               {l.label}
             </a>
@@ -200,7 +199,7 @@ const bottomLinks = [
         <a
           href="#top"
           aria-label="Back to top"
-          class="inline-flex items-center justify-center h-7 w-7 rounded-full border-[2px] border-bg/30 bg-bg/5 hover:bg-pink hover:text-paper hover:border-bg transition-all"
+          class="border-bg/30 bg-bg/5 hover:bg-pink hover:text-paper hover:border-bg inline-flex h-7 w-7 items-center justify-center rounded-full border-[2px] transition-all"
         >
           <Icon name="lucide:arrow-up" class="h-3 w-3" />
         </a>

@@ -6,15 +6,21 @@
 
 <section class="mx-auto max-w-6xl px-5 pb-2" id="search">
   <div
-    class="border-[3px] border-ink rounded-[4px] bg-paper p-4 md:p-5 shadow-neo-sm"
+    class="border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px] p-4 md:p-5"
   >
-    <label
-      for="blog-search-input"
-      class="mono text-[10px] font-bold uppercase tracking-widest text-pink-deep mb-3 block"
+    <p
+      id="blog-search-label"
+      class="mono text-pink-deep mb-3 block text-[10px] font-bold tracking-widest uppercase"
     >
       ▸ Search the blog
-    </label>
-    <div id="pagefind-search" data-pagefind-search></div>
+    </p>
+    <div
+      id="pagefind-search"
+      role="search"
+      aria-labelledby="blog-search-label"
+      data-pagefind-search
+    >
+    </div>
     <noscript>
       <p class="text-sm opacity-70">Search needs JavaScript enabled.</p>
     </noscript>
