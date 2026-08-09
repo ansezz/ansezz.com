@@ -1,6 +1,6 @@
 ---
 title: "Agency + studio web platforms"
-description: "Multi-vertical agency and studio sites built on Laravel, Nuxt, and Astro stacks. Lead funnels, CMS, headless content, performance budgets under 100ms server response, and SEO-tuned routing for marketing-driven traffic."
+description: "Agency and studio web platforms on Laravel, Nuxt, and Astro: lead funnels, headless CMS, performance budgets, and SEO-tuned routing for marketing traffic."
 category: saas
 stack:
   - "Laravel"

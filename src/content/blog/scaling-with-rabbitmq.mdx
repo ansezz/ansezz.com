@@ -43,7 +43,7 @@ At its core, RabbitMQ uses a few key concepts:
 - **Producers** — your web applications or APIs that create a task.
 - **Exchanges** — the "post office" that decides which queue a message should go to based on rules.
 - **Queues** — the temporary storage where messages sit until they are processed.
-- **Consumers** — the background workers (often running in [Docker containers](/work/)) that actually do the heavy lifting.
+- **Consumers** — the background workers (often running in Docker containers) that actually do the heavy lifting.
 
 By putting RabbitMQ in the middle, your web tier only needs to do one thing: tell RabbitMQ that a task needs to be done. This takes milliseconds. The user gets an instant confirmation, while the heavy work happens whenever your workers are ready.
 
@@ -51,11 +51,11 @@ By putting RabbitMQ in the middle, your web tier only needs to do one thing: tel
 
 ## Smoothing out the spikes
 
-One of the biggest pains in [custom web development](/) is handling "noisy neighbors" or sudden traffic bursts. If a large enterprise client uploads a 100,000-row CSV for processing, you don't want that to slow down the login page for everyone else.
+One of the biggest pains in scaling is handling "noisy neighbors" or sudden traffic bursts. If a large enterprise client uploads a 100,000-row CSV for processing, you don't want that to slow down the login page for everyone else. This is exactly the kind of workload [message queues for heavy document processing](/blog/message-queues-document-processing/) are built to absorb.
 
 With RabbitMQ, those 100,000 rows become 100,000 individual messages in a queue. Your workers will chew through them at a steady pace. If the queue gets too long, you don't need to scale your entire application — you just spin up more worker instances.
 
-This is called **horizontal scaling**. Since the workers are decoupled from the web server, you can scale them independently based on the specific load. In Laravel, you manage these background jobs through its queue system — and while Laravel ships drivers for Redis, SQS, and the database, talking directly to RabbitMQ uses a community package like `vladimir-yuldashev/laravel-queue-rabbitmq`.
+This is [horizontal scaling](/blog/horizontal-vs-vertical-scaling/) in its purest form. Since the workers are decoupled from the web server, you can scale them independently based on the specific load. In Laravel, you manage these background jobs through its queue system — and while Laravel ships drivers for Redis, SQS, and the database, talking directly to RabbitMQ uses a community package like `vladimir-yuldashev/laravel-queue-rabbitmq`.
 
 ## How to move from sync to async
 
@@ -80,7 +80,7 @@ Now, even if your email provider (like SendGrid or Mailgun) is having a bad day,
 
 ## Building for the future
 
-Moving to a message-broker-first mindset is the first step toward a microservices architecture. Once your monolith starts publishing "events" (like `order.placed` or `user.registered`), other services can start listening to those events without you ever changing the original code.
+Moving to a message-broker-first mindset is the first step in the journey [from a monolith to microservices](/blog/monolith-to-microservices/). Once your monolith starts publishing "events" (like `order.placed` or `user.registered`), other services can start listening to those events without you ever changing the original code.
 
 It creates a system that is resilient, observable, and significantly easier to debug. You can look at the RabbitMQ management UI and see exactly how many tasks are pending and how fast they are being processed. No more guessing why the server is slow.
 

@@ -1,6 +1,6 @@
 ---
 title: "Maestro Collections Schedule — Shopify collection rollouts"
-description: "Schedule collection publishes, products-in-collection updates, and sort-order changes at exact times. Sister app to Product Maestro for merchandising teams running coordinated multi-collection drops."
+description: "Schedule Shopify collection publishes, product membership, and sort-order changes to the minute. Sister app to Product Maestro for multi-collection drops."
 category: shopify
 stack:
   - "Laravel"

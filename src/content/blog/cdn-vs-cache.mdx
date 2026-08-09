@@ -7,18 +7,18 @@ tags: [cdn, caching, web-performance, redis, laravel, shopify, infrastructure]
 featured: false
 heroImage:
   url: "/blog/cdn-vs-cache/hero.webp"
-  alt: "Pop-art comic-style globe with global data connections and a local server cache"
+  alt: "Pop-art globe showing a CDN's global edge network alongside a local server cache"
 ---
 
 High-traffic applications often collapse under the weight of redundant data requests. Every time a user in London requests a file from a server in New York, the latency kills the user experience and drains your server resources. If you do not optimize how data is stored and delivered, your infrastructure costs will skyrocket as your performance plateaus.
 
-The solution lies in understanding the distinct roles of Content Delivery Networks (CDNs) and general caching. While many developers use these terms interchangeably, they serve different masters in the architecture stack. Mastering the synergy between a global CDN and local caching is the only way to build a truly scalable web application.
+The solution lies in understanding the distinct roles of Content Delivery Networks (CDNs) and general caching. While many developers use these terms interchangeably, they serve different masters in the architecture stack. The CDN-vs-cache decision is rarely either/or: mastering the synergy between a global CDN and local caching is what lets a high-traffic site stay fast under load.
 
 ## The fundamental speed gap
 
-Latency is the silent killer of conversion rates. A standard request involves multiple round-trips between the client and the origin server. If the data has to travel across the Atlantic, the physical distance imposes a speed limit that no amount of code optimization can fix.
+Latency is the silent killer of conversion rates. A standard request involves multiple round-trips between the client and the origin server. If the data has to travel across the Atlantic, the physical distance imposes a speed limit that no amount of code optimization can fix. This is a latency problem, not a bandwidth one — a [wider pipe won't fix the lag](/blog/bandwidth-vs-throughput/) when the bottleneck is round-trip distance.
 
-![A Pop-art comic panel showing the difference between high latency from an origin server and low latency from a nearby edge server](/blog/cdn-vs-cache/latency-edge.webp)
+![Pop-art comic panel contrasting high latency from a distant origin server with low latency from a nearby CDN edge server](/blog/cdn-vs-cache/latency-edge.webp)
 
 Caching solves this by keeping data closer to the execution point. A CDN solves this by keeping that cache closer to the user. When these two work together, they create a multi-layered shield that protects your origin server from unnecessary load.
 
@@ -29,7 +29,7 @@ Caching is a broad technical concept that refers to the temporary storage of dat
 The most common layers include:
 
 - **Browser cache**: Assets like CSS, JS, and images are stored on the user's device. This makes repeat visits feel instantaneous.
-- **Server cache**: Tools like Redis or Memcached store database query results and computed objects in memory. This prevents the application from hitting the database for every single request.
+- **Server cache**: Tools like Redis or Memcached store database query results and computed objects in memory. This prevents the application from hitting the database for every single request. The same in-memory layer powers more advanced patterns too, like [semantic caching in RAG pipelines](/blog/redis-semantic-caching-rag/).
 - **Application cache**: Modern frameworks like [Laravel](/blog/category/laravel/) have built-in mechanisms to cache entire HTML fragments or API responses.
 
 The primary goal of caching is to reduce the workload on your primary infrastructure. By storing the result of a complex calculation or a heavy database query, you trade a small amount of memory for a massive gain in response time.
@@ -38,9 +38,9 @@ The primary goal of caching is to reduce the workload on your primary infrastruc
 
 A CDN is a specialized type of cache that lives at the "edge" of the network. While a standard cache might live on your main server, a CDN is a globally distributed network of servers designed to host your content in dozens of geographical locations simultaneously.
 
-When a user visits your site, the CDN intercepts the request. If the requested asset is already stored at the edge server closest to the user, it is served immediately. This bypasses the need to travel back to your origin server entirely. This is particularly critical for static assets like images, video files, and large JavaScript bundles.
+When a user visits your site, the CDN intercepts the request — acting as a [reverse proxy](/blog/forward-proxy-vs-reverse-proxy/) sitting in front of your origin. If the requested asset is already stored at the edge server closest to the user, it is served immediately. This bypasses the need to travel back to your origin server entirely. This is particularly critical for static assets like images, video files, and large JavaScript bundles.
 
-For businesses running [Shopify Plus](/blog/category/shopify/), the platform handles much of this CDN logic automatically. However, understanding how to manage cache headers and purge cycles remains a vital skill for custom development.
+For businesses running on [Shopify](/blog/category/shopify/), the platform handles much of this CDN logic automatically — its CDN (backed by Cloudflare) ships on every plan, not just Plus. Even so, understanding how to manage cache headers and purge cycles remains a vital skill for custom development.
 
 ## Technical comparison: CDN vs cache
 
@@ -56,7 +56,7 @@ To choose the right tool for the job, you must understand where each one excels.
 
 Caching is about how the data is stored. A CDN is about where that data is distributed. You use a cache to stop the server from doing the same work twice. You use a CDN to stop the data from traveling across the world twice.
 
-![A technical diagram in Pop-art style showing the four layers of caching: Browser, CDN, Server, and Database](/blog/cdn-vs-cache/cache-layers.webp)
+![Pop-art technical diagram showing the four caching layers a request passes through: browser, CDN edge, server cache, and database](/blog/cdn-vs-cache/cache-layers.webp)
 
 ## Implementation in Laravel and Shopify
 
@@ -83,7 +83,7 @@ The most resilient architectures use a "cache-aside" pattern combined with an ed
 
 This layered approach is essential for [modern DevOps](/blog/category/devops/) practices. It ensures that even during a massive traffic spike, such as a Black Friday sale or a viral product launch, your core application remains responsive.
 
-![A Pop-art comic-style UI screenshot showing a dashboard with performance metrics and a purge cache button](/blog/cdn-vs-cache/purge-dashboard.webp)
+![Pop-art dashboard UI showing CDN performance metrics next to a purge cache button for clearing the edge cache](/blog/cdn-vs-cache/purge-dashboard.webp)
 
 ## Common pitfalls to avoid
 

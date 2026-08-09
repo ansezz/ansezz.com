@@ -1,6 +1,6 @@
 ---
-title: "Monolith vs microservices: choosing the right architecture"
-description: "The technical trade-offs between monolith and microservices for Laravel and Shopify projects, and when to scale your infrastructure versus when not to."
+title: "Monolith vs microservices: how to choose"
+description: "Monolith vs microservices: the real technical trade-offs for Laravel and Shopify teams, when each pays off, and why a modular monolith often wins."
 publishDate: 2026-06-21
 category: architecture
 tags: [devops, laravel, shopify, cloud, gcp]
@@ -24,7 +24,7 @@ Monoliths are often unfairly criticized as "legacy." In reality, they offer sign
 
 ### The benefits of a single codebase
 
-1. **Simplified deployment:** You only need one CI/CD pipeline. Whether you are using GitHub Actions to deploy to [Cloud Run](/blog/coolify-docker-saas-hosting/) or a VPS, the process remains straightforward.
+1. **Simplified deployment:** You only need one CI/CD pipeline. Whether you are using GitHub Actions to deploy to a [Docker-based host](/blog/coolify-docker-saas-hosting/) or a VPS, the process remains straightforward.
 2. **Cross-cutting concerns:** Implementing features like authentication, logging, and caching is easier when they are centralized. You don't have to replicate these services across multiple endpoints.
 3. **End-to-end testing:** Testing the entire user journey is simpler because you can run the whole stack on a single machine without complex orchestration.
 
@@ -42,9 +42,9 @@ The primary driver for microservices is scalability and team autonomy. When your
 - **Technology diversity:** You might need a Python service for AI-driven [RAG systems](/blog/7-rag-mistakes-production/) while keeping your core business logic in Laravel.
 - **Fault isolation:** A crash in the reporting service should not prevent customers from checking out.
 
-## Comparing technical trade-offs
+## Monolith vs microservices: comparing the trade-offs
 
-The choice between monolith vs microservices is always a trade-off between simplicity and flexibility. There is no silver bullet. You must weigh the operational cost against the developer experience.
+The choice between monolith and microservices is always a trade-off between simplicity and flexibility. There is no silver bullet. You weigh operational cost against developer experience.
 
 | Feature                    | Monolith                      | Microservices               |
 | :------------------------- | :---------------------------- | :-------------------------- |
@@ -69,13 +69,13 @@ Splitting a Shopify app into microservices prematurely often leads to "distribut
 
 Google Cloud Platform (GCP) offers excellent tools for both patterns. For a monolith, Cloud Run is an exceptional choice. It abstracts away the server management and scales your container based on request traffic. It is cost-effective because you only pay when your code is running.
 
-For microservices, you might utilize GKE or a series of Cloud Run services connected via [Pub/Sub](/blog/api-gateway-ai-stack/). This setup allows for asynchronous communication. When a Shopify order is created, the "Order Service" publishes an event to Pub/Sub. The "Shipping Service" and "Email Service" both listen for that event and act independently. This architecture is powerful but requires significant investment in observability tools like Cloud Logging and Cloud Trace to debug issues across service boundaries.
+For microservices, you might utilize GKE or a series of Cloud Run services connected via [Pub/Sub](/blog/event-driven-pubsub/). This setup allows for asynchronous communication. When a Shopify order is created, the "Order Service" publishes an event to Pub/Sub. The "Shipping Service" and "Email Service" both listen for that event and act independently. This architecture is powerful but requires significant investment in observability tools like Cloud Logging and Cloud Trace to debug issues across service boundaries.
 
 ## The hybrid approach: modular monolith
 
 You do not have to choose between a "big ball of mud" and a complex mesh of services. The modular monolith is an effective middle ground. In this pattern, you maintain a single codebase and database, but you strictly enforce boundaries within the code.
 
-![Technical scene showing a modular dashboard with bento grid elements](/blog/monolith-vs-microservices/modular-monolith.webp)
+![Modular monolith diagram showing bounded modules inside a single deployable codebase](/blog/monolith-vs-microservices/modular-monolith.webp)
 
 In Laravel, this means using separate namespaces or even local packages for different domains. Your "Billing" code should not directly call the "Inventory" models. Instead, it should use internal interfaces or events. This approach gives you the deployment simplicity of a monolith while making it easy to extract a specific module into a standalone microservice later. It is a path of "deferred decision making" which is often the most strategic move in software engineering. When the time finally comes to carve a module out, my guide on going [from monolith to microservices](/blog/monolith-to-microservices/) walks through the strangler-fig migration step by step.
 

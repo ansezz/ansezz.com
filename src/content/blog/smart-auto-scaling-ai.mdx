@@ -1,6 +1,6 @@
 ---
-title: "Scaling on demand: smart auto-scaling for modern AI apps"
-description: "CPU autoscaling fails GPU workloads. Why queue depth, KV-cache pressure, and TTFT beat CPU as triggers — KEDA patterns that scale AI before users see a spinner."
+title: "Smart auto-scaling for modern AI apps"
+description: "CPU auto-scaling fails GPU workloads. Why queue depth, KV-cache pressure, and TTFT beat CPU as triggers, plus the KEDA patterns to scale AI in time."
 publishDate: 2026-05-25
 category: architecture
 tags:
@@ -30,7 +30,7 @@ If you wait for your CPU to hit 80 percent before spinning up a new pod, your se
 
 To build a resilient, cost-effective AI SaaS, you need to move beyond reactive hardware metrics. You need to scale on intent, queue pressure, and the specific physics of GPU memory.
 
-## Why the CPU lie is killing your UX
+## Why CPU-based auto-scaling lies to you
 
 Most horizontal pod autoscalers (HPA) are configured to watch CPU utilization by default. For a Laravel or Node.js API, this works great. The work is linear — more requests equal more CPU cycles.
 
@@ -64,7 +64,7 @@ Scaling on queue depth lets you provision capacity while the current hardware is
 
 In generative AI, not all requests are created equal. A 10-token summary request is light. A 4,000-token RAG retrieval analysis is a heavyweight.
 
-This is where token velocity and KV-cache usage come in. The KV cache is the memory on the GPU that stores the context of current conversations. If your KV cache is 95 percent full, the next long request will trigger an eviction or a "swap to CPU" event.
+This is where token velocity and KV-cache usage come in. The KV cache is the GPU memory that stores attention keys and values for in-flight sequences. If your KV cache is nearly full, the engine has to preempt a request to free blocks. In current vLLM (V1), the default recovery is recompute — the victim's cache is discarded and its prompt plus generated tokens are reprocessed from scratch when it resumes. Older vLLM (V0) swapped blocks out to host memory over PCIe instead. Either way you pay for it.
 
 Latency will skyrocket. Your P99 will look like a mountain range.
 
@@ -91,7 +91,7 @@ Implementing this doesn't have to be a nightmare. Here is how I structure it:
 
 - **Use KEDA** — the Kubernetes Event-Driven Autoscaler is the gold standard. It lets you scale based on Prometheus metrics like queue depth or P99 latency instead of just CPU.
 - **Set TTFT SLOs** — measure time-to-first-token (TTFT). This is the most critical metric for user perception. If TTFT P99 exceeds 500ms, you need more replicas.
-- **Blur the lines** — don't rely on a single metric. Create a composite score of GPU utilization, queue depth, and cache pressure.
+- **Blur the lines** — don't rely on a single metric. Create a composite score of GPU utilization, queue depth, and cache pressure. Once you have multiple replicas, route across them with [GPU-aware load balancing](/blog/gpu-aware-load-balancing/) so traffic lands on the least-saturated GPU.
 - **Fix your RAG** — sometimes the scaling issue is actually a retrieval issue. If your vector search is slow, the inference engine waits longer, hogging the GPU. Check out these [common RAG mistakes](/blog/7-rag-mistakes-production/) to ensure your bottleneck isn't upstream.
 - **Optimize the frontend** — for Shopify apps or custom SaaS, ensure your [agentic workflows](/blog/agentic-workflows-vibe-coding/) handle retries gracefully when the infrastructure is scaling up.
 

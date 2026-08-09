@@ -1,6 +1,6 @@
 ---
 title: "YouCan — multi-tenant commerce platform"
-description: "Hosted commerce platform serving thousands of merchants in MENA and West Africa. Single Laravel codebase, tenant-scoped storefronts, theming engine, integrated payments, shipping, and dashboard analytics."
+description: "Multi-tenant commerce platform for MENA and West Africa: one Laravel codebase running tenant-scoped storefronts, theming, local payments, analytics."
 category: saas
 stack:
   - "Laravel"

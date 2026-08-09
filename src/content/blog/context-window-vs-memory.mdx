@@ -10,7 +10,7 @@ heroImage:
   alt: "Pop-art comic-style split view of short-term context and long-term memory"
 ---
 
-Large language models have a memory problem that costs you money and performance. You spend thousands of tokens feeding the same documentation, user history, and context into every single prompt. Yet the moment the session ends, the model forgets everything. It is like hiring a genius consultant who suffers from total amnesia every 24 hours.
+Large language models have a memory problem that costs you money and performance. You spend thousands of tokens feeding the same documentation, user history, and context into every single prompt. Yet the moment the session ends, the model forgets everything. It is like hiring a genius consultant who suffers from total amnesia the instant they walk out the door.
 
 This cycle of "context stuffing" is unsustainable for production systems. Relying solely on a massive context window leads to high latency and the "lost in the middle" phenomenon where models ignore data buried in the center of a large prompt. To build truly intelligent agentic systems, you must distinguish between the ephemeral context window and persistent long-term memory.
 
@@ -18,11 +18,11 @@ Building a robust AI architecture requires a strategic mix of RAG, vector databa
 
 ## Understanding the context window
 
-The context window is the model's immediate working memory. It represents the total number of tokens (words or parts of words) the model can process at one specific moment. When you send a prompt to Claude or GPT-4, the context window includes your current instruction, the previous conversation history, and any files you have attached.
+The context window is the model's immediate working memory. It represents the total number of tokens (words or parts of words) the model can process at one specific moment. When you send a prompt to a frontier model like Claude or GPT, the context window includes your current instruction, the previous conversation history, and any files you have attached.
 
 Think of the context window as a physical desk. You can only fit so many papers on it at once. If you add a new stack of documents, you have to push the old ones off. Once a token falls out of this window, the model loses all awareness of it. It does not matter if the information was vital. It is gone.
 
-Modern models offer massive context windows reaching up to two million tokens. While impressive, these are still temporary. They are not a replacement for a database. Using a large context window for everything is an expensive way to handle data that should be stored permanently.
+Modern models offer massive context windows — Claude is at one million tokens and Gemini reaches up to two million. While impressive, these are still temporary. They are not a replacement for a database. Using a large context window for everything is an expensive way to handle data that should be stored permanently. Bigger is not automatically better, either: accuracy and recall degrade as the window fills, a problem the field now calls "context rot."
 
 ## The illusion of long-term memory
 
@@ -36,7 +36,7 @@ This creates three immediate problems:
 
 True long-term memory is persistent. It lives outside the model. It allows an AI agent to remember a user's preference from three months ago without needing that preference to be included in every single API call. This is where Retrieval-Augmented Generation (RAG) becomes the hero of your architecture.
 
-![Bento grid dashboard showing token usage and vector database status](/blog/context-window-vs-memory/token-usage-dashboard.webp)
+![Bento-grid dashboard contrasting high per-request token usage against a persistent vector database store](/blog/context-window-vs-memory/token-usage-dashboard.webp)
 
 ## RAG: the external brain for AI
 
@@ -49,7 +49,7 @@ For technical teams using the Laravel ecosystem, implementing RAG has become sig
 | Feature          | Context Window              | Long-Term Memory (RAG)          |
 | :--------------- | :-------------------------- | :------------------------------ |
 | **Duration**     | Session-based (Temporary)   | Persistent (Permanent)          |
-| **Capacity**     | Limited (e.g., 200k tokens) | Virtually Unlimited             |
+| **Capacity**     | Limited (1M–2M tokens)      | Virtually Unlimited             |
 | **Cost**         | High per-request cost       | Low per-request (fixed storage) |
 | **Update Speed** | Instant for the session     | Requires indexing/embedding     |
 
@@ -59,9 +59,9 @@ Choosing between a larger context window and a RAG pipeline is an economic decis
 
 However, for a SaaS application or a high-volume e-commerce store, the math shifts quickly. Sending 100,000 tokens per request at scale will destroy your margins. A well-optimized RAG system might only send 2,000 tokens per request.
 
-The infrastructure cost of a vector database like Pinecone or a self-hosted pgvector instance is often a fraction of the cost of wasted tokens. Furthermore, you avoid the common [RAG mistakes in production](/blog/7-rag-mistakes-production/) by focusing on retrieval quality rather than just prompt size.
+The infrastructure cost of a vector database like Pinecone or a self-hosted pgvector instance is often a fraction of the cost of wasted tokens. The trade-offs between managed and self-hosted stores are worth weighing up front — see [picking the right RAG stack](/blog/picking-the-right-rag-stack/). Either way, you avoid the common [RAG mistakes in production](/blog/7-rag-mistakes-production/) by focusing on retrieval quality rather than just prompt size.
 
-![Architecture diagram showing the flow of data in a RAG system](/blog/context-window-vs-memory/rag-data-flow.webp)
+![RAG data flow diagram: a query runs semantic search over a vector database, then the top chunks are injected into the LLM context window](/blog/context-window-vs-memory/rag-data-flow.webp)
 
 ## Implementing persistent memory with pgvector
 
@@ -90,7 +90,7 @@ Instead of you manually managing what goes into the context window, the model us
 
 This is the foundation for agentic systems. An agent that can query its own database or read its own logs via MCP doesn't need a massive context window. It needs a high "reasoning capacity" to know which piece of memory to grab at the right time.
 
-![A code editor showing a pgvector implementation in a pop-art style](/blog/context-window-vs-memory/pgvector-code.webp)
+![Pop-art-style code editor showing a pgvector semantic similarity query in a Laravel application](/blog/context-window-vs-memory/pgvector-code.webp)
 
 ## Hybrid strategies for agentic systems
 

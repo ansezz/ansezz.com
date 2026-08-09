@@ -1,6 +1,6 @@
 ---
 title: "Product Maestro — Shopify product scheduling"
-description: "Schedule product publishes, unpublishes, price changes, and tag updates at the minute. Built for drops, embargoes, and rolling launches across multiple markets — with audit trail and revert."
+description: "Shopify product scheduling for drops and launches. Time publishes, price changes, and tag updates to the minute, with an audit trail and one-click revert."
 category: shopify
 stack:
   - "Laravel"

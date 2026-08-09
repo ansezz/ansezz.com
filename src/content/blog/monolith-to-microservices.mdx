@@ -1,6 +1,6 @@
 ---
-title: "From monolith to microservices: a pragmatic scaling guide"
-description: "Skip the big-bang rewrite. The strangler fig pattern, anti-corruption layers, and Docker-first migration to peel services off a Laravel monolith safely."
+title: "Monolith to microservices: a pragmatic guide"
+description: "Skip the big-bang rewrite. The strangler fig pattern, anti-corruption layers, and Docker-first steps to move from monolith to microservices safely."
 publishDate: 2026-02-22
 category: architecture
 tags:
@@ -40,9 +40,9 @@ I prefer a slower, more deliberate approach. I focus on high-value extractions. 
 
 ## The strangler fig pattern in practice
 
-I named this approach after a tree that grows around another tree. It starts as a small vine and eventually replaces the host entirely. In software, this means building new features as services while the old monolith remains.
+[Martin Fowler named this approach](https://martinfowler.com/bliki/StranglerFigApplication.html) after a tree that grows around another tree. It starts as a small vine and eventually replaces the host entirely. In software, this means building new features as services while the old monolith remains.
 
-The process starts with an API gateway or a load balancer. I use [Nginx](https://www.nginx.com/) or [Cloud Armor](https://cloud.google.com/armor) on [Google Cloud](https://cloud.google.com/) to route traffic. If a request comes for `/api/v1/orders`, it goes to the new service. Everything else goes to the old monolith.
+The process starts with an API gateway or a load balancer. I put a routing layer in front — [Nginx](https://www.nginx.com/) or a [Google Cloud](https://cloud.google.com/) HTTP(S) load balancer with [Cloud Armor](https://cloud.google.com/armor) bolted on for WAF and DDoS protection. If a request comes for `/api/v1/orders`, the URL map sends it to the new service. Everything else goes to the old monolith. (If you're unsure which box does what here, see [load balancer vs API gateway](/blog/load-balancer-vs-api-gateway/).)
 
 This allows me to test the new service in production with real traffic while the monolith acts as a safety net. If the new service fails, I just flip the routing back. I do not have to migrate everything at once. I can migrate one endpoint at a time.
 
@@ -56,7 +56,7 @@ I start by containerizing the monolith. Even if it stays as a monolith for anoth
 
 ```dockerfile
 # a simplified example of a service container
-FROM php:8.3-fpm
+FROM php:8.4-fpm
 
 WORKDIR /app
 COPY . /app
@@ -85,7 +85,7 @@ This keeps the new service clean. It does not care about the messy database sche
 
 ![Cloud infrastructure overview — GKE, Pub/Sub, managed databases](/blog/monolith-to-microservices/cloud-infrastructure.webp)
 
-Scaling a monolith usually means buying a bigger server. Scaling micro-services means managing a fleet. I rely heavily on cloud-native tools to manage the complexity.
+Scaling a monolith usually means buying a bigger server. Scaling micro-services means managing a fleet of small instances. I rely heavily on cloud-native tools to manage the complexity.
 
 I use [Terraform](https://www.terraform.io/) to manage my infrastructure as code. This ensures that my staging and production environments are identical. If I need a new database for a service, I define it in code. I do not click around in a dashboard.
 

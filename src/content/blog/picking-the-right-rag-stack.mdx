@@ -10,7 +10,7 @@ heroImage:
   alt: "Illustration of a librarian robot picking the right book — vector database as RAG memory"
 ---
 
-You built a cool chatbot. It works great on your local machine until you feed it 50,000 internal documents. Suddenly, it's hallucinating. It's slow. It's pulling data from three years ago when you specifically asked for last week's report.
+You built a cool chatbot. It works great on your local machine until you feed it 50,000 internal documents. Suddenly, it's hallucinating. It's slow. It's pulling data from three years ago when you specifically asked for last week's report. Nine times out of ten, the weak link is your RAG stack — specifically the vector database underneath it.
 
 Building a Retrieval-Augmented Generation (RAG) system sounds like a weekend project. But once you move past the "hello world" stage, you hit the database wall. Choosing the wrong vector store early on is a silent killer. It leads to high latency, soaring cloud costs, and a painful migration six months down the line when your data outgrows your infrastructure.
 
@@ -20,11 +20,11 @@ Let's break down the 2026 vector database landscape so you can stop scrolling an
 
 ## Why the database matters in RAG
 
-An LLM like Claude or GPT-4 is a genius without a memory. RAG gives it that memory. Your vector database is the librarian. If the librarian is slow or loses books, the genius can't do its job. (If you're still deciding whether RAG is even the right tool versus baking knowledge into the model, my breakdown of [RAG vs fine-tuning](/blog/rag-vs-fine-tuning/) is the better starting point.)
+An LLM like Claude or GPT-5 is a genius without a memory. RAG gives it that memory. Your vector database is the librarian. If the librarian is slow or loses books, the genius can't do its job. (If you're still deciding whether RAG is even the right tool versus baking knowledge into the model, my breakdown of [RAG vs fine-tuning](/blog/rag-vs-fine-tuning/) is the better starting point.)
 
 When we talk about RAG stacks, we're looking for three things:
 
-1. **Latency** — can it find the right "memory" in under 50ms?
+1. **Latency** — can it find the right "memory" in tens of milliseconds? (When it can't, a [Redis semantic cache in front of the store](/blog/redis-semantic-caching-rag/) often does more than swapping databases.)
 2. **Hybrid search** — can it search by meaning (vectors) and exact keywords (full-text)?
 3. **Developer experience** — how much time are you going to spend on DevOps?
 
@@ -138,6 +138,8 @@ Make sure your embedding model and your vector database are on the same page. If
 
 **3. Keep the metadata lean.**
 It's tempting to store the entire JSON object of a document inside your vector database. Don't. Store the vector and a simple ID. Keep the heavy data in your primary database (like Postgres). This keeps your vector index small and fast.
+
+These are the cheap wins. For the deeper traps — bad chunking, missing reranking, stale embeddings — see the [7 mistakes you're making with your production RAG stack](/blog/7-rag-mistakes-production/).
 
 ## My personal rule of thumb
 

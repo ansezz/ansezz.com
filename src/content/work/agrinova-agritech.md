@@ -1,6 +1,6 @@
 ---
 title: "Agrinova — agritech platform"
-description: "Web platform for an agricultural services business: product catalog, distributor portal, lead capture, partner network, and content hub. Performance-focused stack tuned for slow networks and mobile-first agricultural buyers."
+description: "Laravel-built agritech web platform for a Moroccan agri-food cluster: services and content hub with lead capture, tuned for slow mobile networks."
 category: saas
 stack:
   - "Laravel"
@@ -9,7 +9,7 @@ stack:
   - "Tailwind CSS"
   - "Alpine.js"
 liveUrl: "https://agrinova.ma/"
-outcome: "Lead pipeline + distributor portal on one Laravel stack"
+outcome: "Services catalog, content hub, and lead capture on one Laravel stack"
 order: 12
 featured: false
 ---

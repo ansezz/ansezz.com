@@ -1,6 +1,6 @@
 ---
 title: "Post-Purchase by Order Helper — checkout upsells"
-description: "Shopify post-purchase app that surfaces one-click upsell offers between checkout and thank-you page. Merchant rule engine for product targeting, discount stacking, A/B testing, and incremental-revenue analytics."
+description: "Shopify post-purchase upsell app: one-click offers between checkout and thank-you, with a merchant rule engine, discount stacking, and A/B testing."
 category: shopify
 stack:
   - "Laravel"

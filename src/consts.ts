@@ -1,10 +1,9 @@
 export const SITE = {
   URL: "https://ansezz.com",
-  TITLE:
-    "Anass Ez-zouaine — Senior Backend Engineer · Software Architect · AI Engineer",
+  TITLE: "Anass Ez-zouaine — Backend, AI & Shopify Engineer",
   SHORT_TITLE: "ansezz",
   DESCRIPTION:
-    "Senior Lead Backend Engineer, Software Architect, and AI Engineer. 12+ years building production Laravel SaaS, Shopify Plus apps, and AI features (Claude, MCP, RAG, agentic systems). Remote-first since 2014.",
+    "Senior backend, software architect, and AI engineer. 12+ years shipping Laravel SaaS, Shopify Plus apps, and AI features (Claude, MCP, RAG). Remote-first.",
   EMAIL: "me@ansezz.com",
   PHONE: "+212679405863",
   PHONE_DISPLAY: "+212 679 40 58 63",
@@ -107,7 +106,7 @@ export const FOOTER_MORE = [
 export const HOME = {
   TITLE: "Home",
   DESCRIPTION:
-    "Senior Lead Backend Engineer, Software Architect, and AI Engineer. 12+ years shipping Laravel SaaS, Shopify Plus apps, and AI features (Claude, MCP, RAG, agentic systems).",
+    "Senior backend, software architect, and AI engineer. 12+ years shipping Laravel SaaS, Shopify Plus apps, and AI features — Claude, MCP, RAG, agentic systems.",
 };
 
 export const ABOUT = {
@@ -119,7 +118,7 @@ export const ABOUT = {
 export const WORK = {
   TITLE: "Work",
   DESCRIPTION:
-    "Selected projects across AI engineering, Shopify Plus, SaaS platforms, and open source — what I've shipped, what I learned, what survived production.",
+    "Selected projects across AI engineering, Shopify Plus, and multi-tenant SaaS — what I've shipped, what I learned, and what survived production.",
 };
 
 export const BLOG = {
@@ -413,12 +412,12 @@ export const LANGUAGES = [
 export const SERVICES_PAGE = {
   TITLE: "Services",
   DESCRIPTION:
-    "Senior engineering you can hire by the engagement — Laravel SaaS MVPs, AI integration sprints, Shopify Plus apps, and architecture audits. Fixed-scope, senior-only, remote-first.",
+    "Senior engineering by the engagement — Laravel SaaS MVPs, AI integration sprints, Shopify Plus apps, and architecture audits. Fixed-scope, senior-only.",
   HOW: [
     {
       step: "01",
       title: "Discovery call",
-      body: "Free 30-minute call. We scope the problem, I tell you honestly if I'm the right fit and what it'll take.",
+      body: "Free 15-minute call. We scope the problem, I tell you honestly if I'm the right fit and what it'll take.",
       icon: "lucide:phone-call",
       tone: "yellow" as const,
     },
@@ -492,7 +491,7 @@ export const TESTIMONIALS: Testimonial[] = [];
 export const NOW = {
   TITLE: "Now",
   DESCRIPTION:
-    "What Anass Ez-zouaine is focused on right now — current projects, what I'm learning, and what I'm available for.",
+    "What Anass Ez-zouaine is building right now — current projects in agentic AI, MCP, and RAG, what I'm learning, and the engagements I'm open to this season.",
   // Keep this honest and current. Update the date when you edit it.
   UPDATED: "2026-05-29",
   FOCUS: [
@@ -527,7 +526,7 @@ export const NOW = {
 export const TOOLS = {
   TITLE: "Tools",
   DESCRIPTION:
-    "Free, no-signup tools for engineers building with LLMs and Laravel. Built because I needed them.",
+    "Free, no-signup engineering tools that run in your browser — LLM cost calculator, token counter, cron explainer, JWT decoder, and a UUID generator.",
 };
 
 export interface ToolEntry {
@@ -816,12 +815,6 @@ export const OTHER_SHOPIFY_APPS: OtherProjectLink[] = [
 ];
 
 export const OTHER_PLATFORMS: OtherProjectLink[] = [
-  {
-    name: "NextMedia",
-    url: "https://www.nextmedia.ma/",
-    note: "Media group portal",
-    tone: "blue",
-  },
   {
     name: "Medi1",
     url: "https://www.medi1.com/",

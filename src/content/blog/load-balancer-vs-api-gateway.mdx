@@ -7,7 +7,7 @@ tags: [api-gateway, load-balancer, architecture, microservices, devops, laravel]
 featured: false
 heroImage:
   url: "/blog/load-balancer-vs-api-gateway/hero.webp"
-  alt: "Pop-art comic-style comparison of a load balancer and an API gateway"
+  alt: "Pop-art comic-style split panel comparing a load balancer distributing traffic and an API gateway inspecting requests"
 ---
 
 Two boxes sit at the front of almost every production system, and engineers constantly confuse them. One spreads traffic across servers so nothing falls over. The other inspects each request, checks who is calling, and decides where it should go. They look similar on an architecture diagram, but they solve fundamentally different problems.
@@ -22,15 +22,15 @@ A load balancer has one job: take incoming traffic and spread it across a pool o
 
 Load balancers operate at one of two layers. An **L4 (transport layer)** balancer routes by IP and port. It does not look inside the request — it just forwards TCP/UDP packets, which makes it extremely fast. An **L7 (application layer)** balancer understands HTTP, so it can route based on the path or host header and terminate SSL/TLS. Algorithms like round-robin, least-connections, and IP-hash decide which backend gets the next request.
 
-The key trait is that a load balancer is largely **stateless and content-agnostic**. It cares about availability and distribution, not about who you are or whether you are allowed to make this call. That ignorance is a feature: it keeps the component simple, fast, and reliable.
+The key trait is that a load balancer is largely **stateless and content-agnostic**. It cares about availability and distribution, not about who you are or whether you are allowed to make this call. That ignorance is a feature: it keeps the component simple, fast, and reliable. If you have ever wondered how this differs from a reverse proxy, the two overlap heavily — see [load balancer vs reverse proxy](/blog/load-balancer-vs-reverse-proxy/) for where they diverge.
 
 ## What an API gateway actually does
 
 An API gateway is the opposite kind of component. It is opinionated, aware, and full of business rules. It sits in front of your services and acts as a single, managed front door for every API call.
 
-A gateway handles the **cross-cutting concerns** you do not want duplicated in every microservice: authentication and JWT validation, [rate limiting and quota enforcement](/blog/rate-limiting-ai-wallet/), request/response transformation, protocol translation (REST to gRPC, for example), caching, and per-client logging. Instead of each service re-implementing auth, the gateway enforces it once at the edge.
+A gateway handles the **cross-cutting concerns** you do not want duplicated in every microservice: authentication and JWT validation, [rate limiting and quota enforcement](/blog/rate-limiting-ai-wallet/), request/response transformation, protocol translation (exposing internal [gRPC services](/blog/rest-vs-grpc/) as REST/JSON, for example), caching, and per-client logging. Instead of each service re-implementing auth, the gateway enforces it once at the edge.
 
-Crucially, a gateway routes by **intent**, not just availability. It maps `/orders` to the orders service and `/users` to the users service, applies the right policy to each, and stitches a fleet of microservices into one coherent API. This is the foundation of a clean [API gateway for an AI stack](/blog/api-gateway-ai-stack/), where the gateway also governs which model endpoints and tools a request can reach.
+Crucially, a gateway routes by **intent**, not just availability. It maps `/orders` to the orders service and `/users` to the users service, applies the right policy to each, and stitches a fleet of microservices into one coherent API. That makes it a natural fit once you [move from a monolith to microservices](/blog/monolith-vs-microservices/) and need one stable front door over many services. It is also the foundation of a clean [API gateway for an AI stack](/blog/api-gateway-ai-stack/), where the gateway governs which model endpoints and tools a request can reach.
 
 ## Key differences at a glance
 
@@ -57,9 +57,9 @@ A typical request flow looks like this:
 2. **The API gateway:** Receives the traffic from the load balancer. It checks the user's JWT token, validates that they haven't exceeded their rate limit, and routes the request to the correct microservice.
 3. **The backend services:** These are often fronted by their own internal load balancers. For example, your Laravel API might have three pods. A simple internal load balancer (often built into Docker or Kubernetes) distributes the traffic from the gateway across those three pods.
 
-This separation of concerns allows you to scale your infrastructure independently of your business rules. You can change your authentication logic in the gateway without touching your load balancing configuration.
+This separation of concerns lets you scale your infrastructure independently of your business rules. You can rewrite authentication logic in the gateway without touching load balancer configuration, and you can [add or remove backend replicas](/blog/horizontal-vs-vertical-scaling/) without the gateway noticing.
 
-![Architecture diagram showing layered request flow from users to load balancer to API gateway to backend services](/blog/load-balancer-vs-api-gateway/request-flow.webp)
+![Layered request flow diagram: users hit an edge load balancer that terminates TLS, an API gateway checks JWT and rate limits, then backend services sit behind internal load balancers](/blog/load-balancer-vs-api-gateway/request-flow.webp)
 
 ## Implementing traffic control with Laravel and Docker
 
@@ -80,15 +80,15 @@ services:
 
 In this example, Traefik is performing the role of an API gateway by checking with an external auth service and enforcing rate limits before the request ever reaches the Laravel application.
 
-![Technical illustration showing Laravel, Docker containers, middleware labels, auth checks, and rate limiting](/blog/load-balancer-vs-api-gateway/traefik-traffic-control.webp)
+![Technical illustration of Traefik fronting a Laravel app in Docker, using container labels for forward-auth and rate-limit middleware before requests reach the application](/blog/load-balancer-vs-api-gateway/traefik-traffic-control.webp)
 
 ## Shopify and the gateway pattern
 
 For Shopify developers, the API gateway pattern is vital when building "headless" storefronts. Since you are communicating with both the Shopify Storefront API and your own custom backend, a gateway can unify these disparate sources. It can cache frequent Shopify queries to reduce API consumption and improve performance for the end user.
 
-Using a gateway allows you to implement custom logic that Shopify doesn't support natively. You can perform complex data transformations or merge data from multiple sources into a single response. This reduces the number of network calls the browser has to make. This is a core part of building [agentic workflows](/blog/agentic-workflows-vibe-coding/) in modern commerce.
+A gateway also lets you implement logic Shopify doesn't support natively: transforming payloads or merging multiple sources into a single response, which cuts the number of round trips the browser has to make. That pattern is foundational to building [agentic workflows](/blog/agentic-workflows-vibe-coding/) in modern commerce.
 
-![Headless commerce diagram showing storefront, API gateway, Shopify data panels, custom backend, caching, and merged responses](/blog/load-balancer-vs-api-gateway/headless-gateway.webp)
+![Headless commerce diagram: a browser storefront calls one API gateway that merges Shopify Storefront API data with a custom backend and caches frequent queries into a single response](/blog/load-balancer-vs-api-gateway/headless-gateway.webp)
 
 ## Takeaways
 

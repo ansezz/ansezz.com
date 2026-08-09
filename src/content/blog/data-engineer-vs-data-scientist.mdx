@@ -1,6 +1,6 @@
 ---
 title: "Data engineer vs data scientist: roles, tools, and overlap"
-description: "Discover the key differences between Data Engineers and Data Scientists. Learn about roles, tools, and how they collaborate to build AI-driven solutions."
+description: "Data engineer vs data scientist: who builds the pipelines, who builds the models, where the tools overlap, and which role your AI project needs first."
 publishDate: 2026-06-21
 category: career
 tags: [data-engineering, data-science, ai, infrastructure, python, sql]
@@ -22,7 +22,7 @@ The Data Scientist is the urban planner and behavioral psychologist. They look a
 
 In a technical stack, this means the Data Engineer manages the flow of information from source to storage. The Data Scientist then extracts that information to train models, run experiments, and generate business insights.
 
-## The role of the Data Engineer: building the pipeline
+## The role of the data engineer: building the pipeline
 
 The Data Engineer is responsible for the design, construction, and maintenance of the systems that collect, store, and move data. They operate at the "upstream" end of the lifecycle. Their primary focus is on the "three Vs": Volume, Velocity, and Variety.
 
@@ -37,7 +37,7 @@ Data Engineers spend a significant amount of time thinking about system architec
 
 ![A grid of technical tools including SQL, Python, Spark, and PyTorch in a pop-art style](/blog/data-engineer-vs-data-scientist/tools-grid.webp)
 
-## The role of the Data Scientist: extracting the value
+## The role of the data scientist: extracting the value
 
 Once the data is clean, formatted, and accessible, the Data Scientist takes over. They operate "downstream," using the curated datasets to solve specific business problems or create predictive features.
 
@@ -50,7 +50,7 @@ Once the data is clean, formatted, and accessible, the Data Scientist takes over
 
 Data Scientists are the ones who ask "Why is our churn rate increasing?" or "What is the optimal price point for this new subscription service?" They rely heavily on the Data Engineer to provide high-quality data. If the data is corrupted, the model will be biased or inaccurate.
 
-## Technical comparison: a side-by-side view
+## Data engineer vs data scientist: a side-by-side view
 
 The tools and skill sets overlap, but the application differs. Below is a breakdown of how these roles compare in a production environment.
 
@@ -65,13 +65,13 @@ The tools and skill sets overlap, but the application differs. Below is a breakd
 
 While a Data Scientist might use SQL to pull a specific cohort of users for analysis, a Data Engineer uses SQL to optimize a transformation job that processes millions of rows per second.
 
-![A pop-art illustration of a modern data architecture and pipeline flow](/blog/data-engineer-vs-data-scientist/data-architecture.webp)
+![Pop-art diagram of a data pipeline flowing from sources through a warehouse to models, showing where engineers and scientists hand off](/blog/data-engineer-vs-data-scientist/data-architecture.webp)
 
 ## The synergy in modern AI stacks
 
-In the era of LLMs and generative AI, the lines between these roles are becoming more blurred, yet the need for specialization is higher than ever. Consider a Retrieval-Augmented Generation (RAG) system.
+In the era of LLMs and generative AI, the lines between these roles are becoming more blurred, yet the need for specialization is higher than ever. A similar boundary is being redrawn between the [ML engineer and the AI engineer](/blog/ml-engineer-vs-ai-engineer/). Consider a Retrieval-Augmented Generation (RAG) system.
 
-The Data Engineer builds the ingestion pipeline that scrapes documentation, cleans the text, generates embeddings, and stores them in a vector database like pgvector. They ensure the [API gateway](/blog/api-gateway-ai-stack/) is secure and that the data is updated in real-time.
+The Data Engineer builds the ingestion pipeline that scrapes documentation, cleans the text, generates embeddings, and stores them in a vector database like pgvector. They ensure the [API gateway](/blog/api-gateway-ai-stack/) is secure and that the index stays fresh, whether through scheduled batch jobs or near-real-time streaming.
 
 The Data Scientist then steps in to evaluate the performance of the RAG system. They experiment with different embedding models, adjust the "top-k" retrieval parameters, and fine-tune the prompts to ensure the AI provides the most accurate and helpful responses.
 

@@ -10,7 +10,7 @@ heroImage:
   alt: "Bento grid illustration comparing rate limiting and throttling mechanisms"
 ---
 
-Your server is screaming, not because of a bug, but because of a success. A sudden viral tweet or a massive batch of automated requests has flooded your API. Without a protection layer, your database locks up. Your CPU usage spikes to 100%. The site goes down for everyone.
+Your server is screaming, not because of a bug, but because of a success. A sudden viral tweet or a massive batch of automated requests has flooded your API. Without rate limiting or throttling in place, your database locks up, your CPU pegs at 100%, and the site goes down for everyone.
 
 This is the nightmare scenario for any engineering team. To prevent it, you need to control the flow of traffic. However, engineers often use the terms "rate limiting" and "throttling" interchangeably. While they both deal with traffic management, they solve the problem using different philosophies.
 
@@ -78,12 +78,13 @@ How does this look in the real world? Let's look at two ecosystems where these p
 
 ### Rate limiting in Laravel
 
-Laravel makes rate limiting incredibly simple through its `RateLimiter` facade and middleware. It typically uses the "Fixed Window" or "Sliding Window" approach.
+Laravel makes rate limiting simple through its `RateLimiter` facade and the `throttle` middleware. The built-in limiter uses a fixed-window counter backed by your cache store.
 
-In your `RouteServiceProvider`, you might define a limiter like this:
+In Laravel 11 and 12, you define named limiters in the `boot` method of `AppServiceProvider` (the old `RouteServiceProvider` was dropped from the default skeleton):
 
 ```php
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 
 RateLimiter::for('api', function (Request $request) {
@@ -93,23 +94,23 @@ RateLimiter::for('api', function (Request $request) {
 
 This tells Laravel to allow 60 requests per minute per user ID or IP address. If the limit is hit, Laravel automatically throws a `ThrottleRequestsException`, which results in a 429 response. This is a classic "hard stop" rate limit.
 
-### Throttling in Shopify Plus
+### Throttling in the Shopify API
 
-Shopify uses a variant of the leaky bucket algorithm for its GraphQL and REST APIs. This is a brilliant example of throttling.
+Shopify uses a leaky bucket algorithm for its GraphQL Admin API on every plan, not just Plus. This is a clean example of throttling.
 
-When you make a Shopify API call, the response includes a `cost` and a `throttleStatus`.
+When you make a GraphQL call, the response carries cost details under `extensions.cost`, including the `requestedQueryCost` and a `throttleStatus`.
 
-- **GraphQL cost:** Each query has a cost based on the complexity of the data requested.
-- **The bucket:** Your API client has a bucket of "points." Points leak out (restore) over time.
-- **The brake:** If you use points faster than they restore, Shopify will throttle your requests.
+- **GraphQL cost:** Each query is assigned a calculated cost based on the fields and connection sizes you request.
+- **The bucket:** Your app has a bucket of "points" — 100 per second restore on Standard, 200 on Advanced, 1,000 on Plus. Points are spent on each query and restore over time.
+- **The brake:** If you spend points faster than they restore, Shopify returns a `THROTTLED` error.
 
-For high-volume commerce, this means you have to build "back-off" logic into your application. If you receive a throttle warning, your script should sleep for a few seconds before retrying. This allows the bucket to refill.
+For high-volume commerce, this means you have to build back-off logic into your application. A well-behaved client reads `throttleStatus.currentlyAvailable` and slows down before it hits the wall, rather than firing blindly and retrying on every `THROTTLED` error. When you do get throttled, wait long enough for `restoreRate` to refill the points your next query needs.
 
 | Feature             | Rate Limiting (Laravel Default) | Throttling (Shopify API Style) |
 | :------------------ | :------------------------------ | :----------------------------- |
 | **Primary Action**  | Block (HTTP 429)                | Delay or Queue                 |
 | **Best For**        | Security & Quotas               | Resource Stability             |
-| **Logic**           | Fixed/Sliding Window            | Leaky Bucket                   |
+| **Logic**           | Fixed Window                    | Leaky Bucket                   |
 | **User Experience** | Instant Error                   | Latency Spike                  |
 
 ## Architectural impact: security vs experience

@@ -1,6 +1,6 @@
 ---
-title: "Maestro Theme Scheduler — Shopify Plus theme deployment"
-description: "Public Shopify app that schedules theme publishes for sales, drops, and seasonal launches. Merchants queue a future theme rollout (with rollback) so the storefront swaps automatically at the planned minute — no on-call required."
+title: "Maestro Theme Scheduler — Shopify theme deployment"
+description: "Public Shopify app that schedules theme publishes for drops, sales, and seasonal launches. Merchants queue a future rollout with rollback and it fires on time."
 category: shopify
 stack:
   - "Laravel"

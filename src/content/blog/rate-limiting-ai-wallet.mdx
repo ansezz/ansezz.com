@@ -49,13 +49,13 @@ I've seen this happen in three ways:
 
 Without token-aware rate limiting, your provider (like OpenAI or Anthropic) will eventually hit you with a `429` error. But by that time, the damage to your wallet is already done.
 
-## Solving the noisy neighbor with hierarchical limits
+## Solving the noisy neighbor with hierarchical rate limiting
 
-To solve this, I implement a three-layer rate limiting strategy at the API gateway level. This ensures that even if one tenant goes rogue, the rest of the platform stays healthy.
+To solve this, I implement a three-layer rate limiting strategy at the [API gateway](/blog/api-gateway-ai-stack/) level. This ensures that even if one tenant goes rogue, the rest of the platform stays healthy.
 
 ### 1. The global provider layer
 
-This is your final line of defense. If your OpenAI quota is 500,000 tokens per minute (TPM), set your internal global limit to 450,000. This leaves a safety buffer and prevents you from actually hitting the provider's hard ceiling, which can sometimes lead to temporary account bans or throttled priority.
+This is your final line of defense. If your OpenAI quota is 500,000 tokens per minute (TPM), set your internal global limit to 450,000. This leaves a safety buffer so you degrade gracefully on your own terms instead of eating a wall of provider `429`s — which means failed user requests and a Retry-After you don't control.
 
 ### 2. The tenant layer
 
@@ -73,7 +73,7 @@ For most of my builds, I use a **token bucket** algorithm backed by Redis. It re
 
 Here is the logic: each user has a "bucket" of tokens. Every time they send a prompt, we estimate the total cost (input tokens + expected `max_tokens`). If the bucket has enough, they proceed and the tokens are deducted. The bucket refills at a constant rate over time.
 
-If you're [modernizing your stack](/about/) or building a SaaS on the LEMP stack, you can implement this efficiently in Laravel using middleware and a fast storage layer like Redis.
+If you're building a SaaS on the LEMP stack, you can implement this efficiently in Laravel using middleware and a fast in-memory store like Redis, where atomic increment operations make per-tenant counters cheap and race-free.
 
 ```php
 // A simplified token-bucket check in Laravel middleware
@@ -112,13 +112,13 @@ In a RAG (retrieval-augmented generation) system, one user query often triggers 
 2. One search query to the vector database.
 3. One (or more) LLM calls for the final answer.
 
-If you only rate limit the final LLM call, your vector database might still get hammered by search queries. You need to treat the entire "RAG flow" as a single unit of work with its own combined budget. I cover some of these [common RAG production mistakes](/blog/7-rag-mistakes-production/) frequently, but rate limiting the "flow" is often the most overlooked fix.
+If you only rate limit the final LLM call, your vector database might still get hammered by search queries. You need to treat the entire "RAG flow" as a single unit of work with its own combined budget. There are plenty of [common RAG production mistakes](/blog/7-rag-mistakes-production/) to trip over, but rate limiting the whole flow rather than just the LLM call is one of the most overlooked.
 
 ## Practical steps to protect your system today
 
 If you're launching an AI feature this week, do these three things:
 
-1. **Set a hard daily spend cap** — most API providers let you set a maximum dollar amount per month. Set it. It's your parachute.
+1. **Set a budget threshold — but don't trust it as a hard cap** — OpenAI's "monthly budget" is now notification-only: when you cross it you get an email and a dashboard alert, but your API keys keep working and the bill keeps climbing. Anthropic similarly relies on user/org spend limits and alerts rather than a default hard ceiling. Treat these as smoke detectors, not circuit breakers. The real cap — daily or monthly — has to be enforced by you, at the application layer.
 2. **Enforce `max_tokens`** — never let a user request an uncapped response. Always set a sane default for `max_tokens` in every API call.
 3. **Implement per-request timeout** — if an LLM call takes longer than 30 seconds, kill it. Slow calls are often the symptom of a system that is about to spiral out of control.
 

@@ -24,7 +24,7 @@ In a production environment, especially for [Shopify development](/blog/agentic-
 
 ## The infrastructure shift: what is context engineering?
 
-Context engineering is the programmatic management of the entire informational environment surrounding the model. It is not just about the text you send; it is about the architecture that decides what data, tools, and memories are available to the model at any given millisecond.
+Context engineering is the programmatic management of the entire informational environment surrounding the model. It is not just about the text you send; it is about the architecture that decides what data, tools, and memories are available to the model at any given moment.
 
 If prompt engineering is writing a script for an actor, context engineering is building the entire stage, providing the props, and hiring the research team that whispers facts into the actor's earpiece.
 
@@ -41,7 +41,7 @@ By shifting from "telling" to "showing," you reduce the cognitive load on the mo
 
 ## RAG: the context delivery engine
 
-Retrieval-Augmented Generation (RAG) is the most common implementation of context engineering. It solves the "knowledge gap" by connecting your LLM to a vector database like [pgvector](/blog/circuit-breakers-vector-db/).
+Retrieval-augmented generation (RAG) is the most common implementation of context engineering. It solves the "knowledge gap" by connecting your LLM to a vector store — Postgres with the [pgvector extension](/blog/picking-the-right-rag-stack/), or a dedicated database like Pinecone, Weaviate, or Qdrant.
 
 When a user asks a question, the system doesn't just pass the question to the model. First, it converts the query into an embedding (a mathematical representation of meaning). It then searches a database for the most semantically similar documents. These "context snippets" are then injected into the prompt.
 
@@ -49,7 +49,7 @@ The difference is subtle but massive. In prompt engineering, you might say: "Ans
 
 ## MCP: the universal data plumbing
 
-One of the most exciting developments in context engineering is the **Model Context Protocol (MCP)**. Introduced to facilitate better communication between models and tools, MCP serves as a standardized bridge.
+One of the most useful developments in context engineering is the **Model Context Protocol (MCP)**. Introduced by Anthropic in November 2024 and since adopted as an open standard by OpenAI and Google, MCP serves as a standardized bridge between models and the systems where data lives.
 
 Imagine you are building an AI agent that needs to check GitHub issues, look up a customer in a CRM, and then write a technical summary. In a traditional setup, you would have to write custom integration code for every single data source. With MCP, you can use "context servers" that expose these data sources in a format the model understands natively.
 
@@ -113,7 +113,7 @@ class AIContextManager
 Context engineering is the professional evolution of prompt engineering. While knowing how to talk to a model remains useful, knowing how to build the infrastructure that informs the model is what creates value.
 
 1. **Prompts are instructions; context is knowledge.** Stop trying to teach the model your entire business logic inside a system prompt.
-2. **Invest in RAG early.** Connecting a vector database like pgvector provides a scalable way to handle growing documentation and data.
+2. **Invest in RAG early.** A vector store like Postgres with pgvector gives you a scalable way to handle growing documentation and data.
 3. **Adopt MCP for tool-calling.** Using the Model Context Protocol standardizes how your AI interacts with your existing APIs and databases.
 4. **Manage state outside the prompt.** Use your application backend (Laravel, Node, etc.) to handle memory and session state rather than relying on the LLM's limited window.
 5. **Focus on data quality.** A perfect RAG system with bad data will still produce bad results. Context engineering is, at its heart, a data engineering discipline.

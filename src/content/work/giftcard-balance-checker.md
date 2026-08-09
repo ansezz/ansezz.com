@@ -1,6 +1,6 @@
 ---
 title: "Gift Card Balance Checker — storefront widget"
-description: "Theme App Extension + Admin app that lets shoppers check their gift-card balance from the storefront without contacting support. Works with multi-currency, multi-language, and Shopify Plus expanded gift-card limits."
+description: "Shopify gift card balance checker: a storefront widget plus Admin app that lets shoppers self-check balances, cutting support tickets on multi-currency stores."
 category: shopify
 stack:
   - "Laravel"
@@ -8,7 +8,7 @@ stack:
   - "Shopify GraphQL Admin API"
   - "App Bridge"
   - "Polaris"
-outcome: "Support tickets for gift cards drop; self-service for shoppers"
+outcome: "Fewer gift-card support tickets via shopper self-service"
 liveUrl: "https://apps.shopify.com/giftcard-balance-checker"
 order: 6
 featured: false

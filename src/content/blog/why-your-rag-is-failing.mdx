@@ -18,7 +18,7 @@ That is usually where the illusion breaks.
 
 Users start reporting that the LLM is "hallucinating" when the real issue is retrieval. Obvious answers go missing even though they exist in the documentation. Irrelevant chunks surface because they are semantically adjacent, not actually useful.
 
-If your RAG system feels unreliable in production, you are not dealing with a model problem first. You are dealing with a retrieval design problem. Most production RAG systems fail because they rely too heavily on vector search and confuse a strong demo with a robust system.
+If your RAG system feels unreliable in production, you are not dealing with a model problem first. You are dealing with a retrieval design problem. Most production RAG systems fail because they rely too heavily on vector search and confuse a strong demo with a robust system. (For the broader catalogue of ways this goes wrong, see [7 mistakes you're making with your production RAG stack](/blog/7-rag-mistakes-production/).)
 
 I've spent a lot of time building custom AI solutions at [Ansezz](/), and one pattern keeps showing up: **a demo proves possibility, but production demands precision.**
 
@@ -36,20 +36,20 @@ If a user searches for _"Project-X-99 deployment logs,"_ a vector search might r
 
 ## The solution: hybrid search (vector + BM25)
 
-The move from demo RAG to production RAG usually starts with one realization: meaning alone is not enough. You need semantic retrieval and lexical precision working together. This is **hybrid search**.
+The fix starts with one realization: meaning alone is not enough. You need semantic retrieval and lexical precision working together. This is **hybrid search**.
 
 ![Hybrid search workflow combining vector and BM25 retrieval](/blog/why-your-rag-is-failing/hybrid-search-workflow.webp)
 
 ### What is BM25?
 
-BM25 (Best Matching 25) is the standard lexical ranking method behind classic search systems. It does not try to infer meaning. It rewards exact terms based on how important they are within a document and across the collection.
+BM25 (Best Matching 25, from the Okapi probabilistic retrieval framework) is the standard lexical ranking method behind classic search systems. It does not try to infer meaning. It rewards exact terms based on how important they are within a document and across the collection, while accounting for document length and diminishing returns from repeated terms.
 
 ### Why you need both
 
 - **Vector search** handles synonyms, multi-lingual queries, and conceptual matching.
 - **BM25 search** handles exact matches, IDs, SKUs, product codes, and technical jargon.
 
-Production systems need both because user questions are rarely pure meaning or pure keyword. They are usually a mix of the two.
+Production systems need both because user questions are rarely pure meaning or pure keyword. They are usually a mix of the two. If you are still deciding how to structure retrieval in the first place, [vector search vs graph search](/blog/vector-search-vs-graph-search/) is a useful companion read.
 
 ![Side-by-side comparison of vector search vs keyword search results](/blog/why-your-rag-is-failing/vector-vs-keyword.webp)
 
@@ -101,7 +101,7 @@ A re-ranker such as Cohere Rerank or BGE-Reranker is a cross-encoder model that 
 - **Step 2.** Pass those 50 results through a re-ranker.
 - **Step 3.** Send only the top 5 re-ranked results to your LLM.
 
-This reduces context stuffing and improves the quality of what reaches the model. In practice, it is one of the clearest differences between a RAG demo and a production RAG system that behaves consistently.
+This reduces context stuffing and improves the quality of what reaches the model. In practice, it is one of the clearest differences between a RAG demo and a production RAG system that behaves consistently. The extra hop does add latency, which is where a [Redis and semantic caching layer](/blog/redis-semantic-caching-rag/) earns its keep.
 
 ## Your production RAG checklist
 
@@ -123,7 +123,7 @@ To move from demo RAG to production RAG, I focus on a few non-negotiables:
 - **Add a re-ranker.** Refine the final candidate set before anything reaches the LLM.
 - **Evaluate with RAGAS.** Measure faithfulness and relevance instead of trusting intuition.
 
-Building AI is easy. Building _reliable_ AI is hard. It requires a deeper understanding of retrieval, ranking, and context design, not just the ability to connect an API.
+Building AI is easy. Building _reliable_ AI is hard. It requires a deeper understanding of retrieval, ranking, and context design, not just the ability to connect an API. If you are still choosing your foundation, [picking the right RAG stack](/blog/picking-the-right-rag-stack/) walks through the vector database trade-offs.
 
 If you are looking to build a high-performance SaaS or need help modernizing your digital presence with AI that actually works, check out what I do at [Ansezz](/work/). I specialize in solving these exact types of technical problems.
 

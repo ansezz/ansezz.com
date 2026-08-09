@@ -1,5 +1,5 @@
 ---
-title: "Self-hosted SaaS with Coolify and Docker: a deployment guide"
+title: "Self-hosted SaaS with Coolify and Docker"
 description: "Get Heroku-grade DX on your own server. How Coolify and Docker on a $5 VPS deliver one-click databases, automatic SSL, and zero-downtime deploys."
 publishDate: 2026-04-19
 category: devops
@@ -7,14 +7,14 @@ tags: [coolify, docker, self-hosting, devops, saas, deployment, vps, traefik]
 featured: false
 heroImage:
   url: "/blog/coolify-docker-saas-hosting/hero.webp"
-  alt: "Pop-art illustration of a SaaS being self-hosted with Coolify on a single VPS"
+  alt: "Pop-art illustration of a SaaS self-hosted with Coolify and Docker on a single VPS"
 ---
 
 Shipping a SaaS is hard enough without the constant anxiety of a "surprise" bill from your hosting provider. I have seen developers start a project on a managed platform only to find that as soon as they add a second team member or cross a certain bandwidth threshold, their costs skyrocket. You are trapped between paying a "convenience tax" that eats your margins or spending your entire weekend fighting with Nginx configurations and manual SSH commands. It feels like you are either overpaying for simplicity or overworking for control.
 
 The agitation grows when you realize that most managed platforms are essentially wrappers around the same open source tools you could run yourself. You are paying for a pretty dashboard and an easy git-push flow. But when you try to leave, you find yourself deep in vendor lock-in. Your databases, your environment variables, and your build pipelines are all tied to a proprietary ecosystem. If the platform goes down or changes its pricing, your business is at the mercy of their support team.
 
-There is a better way. **Coolify** combined with **Docker** gives you the exact same developer experience as high-end managed platforms but on your own infrastructure. You get the "one-click" deploy feel and a beautiful dashboard while keeping 100 percent control over your servers. It is the ultimate setup for a [modern web application](/) that needs to scale without breaking the bank.
+There is a better way. **Coolify** combined with **Docker** gives you the same developer experience as high-end managed platforms, but on your own infrastructure. You get the one-click deploy feel and a clean dashboard while keeping full control over your servers. If you want the business case first, I make it in [why I ditch expensive cloud providers for self-hosted SaaS](/blog/coolify-self-hosted-saas/); this guide is the hands-on build.
 
 ## Why the cloud is getting more expensive
 
@@ -22,7 +22,7 @@ In the early days of a startup, a $20-per-month plan feels reasonable. But as yo
 
 I have worked with clients who moved their entire stack from managed services to a self-hosted Coolify setup and saw their monthly infrastructure bill drop by eighty percent. We are talking about moving from $500 a month down to $50 a month while maintaining the same performance and reliability. When you own the server, you own the resources. There are no "hidden" charges for extra build minutes or database connections.
 
-![Architecture diagram of Coolify control plane and app nodes](/blog/coolify-docker-saas-hosting/coolify-architecture.webp)
+![Diagram of a Coolify control plane managing app and database nodes across servers](/blog/coolify-docker-saas-hosting/coolify-architecture.webp)
 
 ## What exactly is Coolify?
 
@@ -39,13 +39,13 @@ Docker is the silent engine that makes this entire workflow possible. Instead of
 3. **Version control.** Your infrastructure is defined as code. You can version your Dockerfile just like your application code.
 4. **Scalability.** Adding more instances of your app is as simple as spinning up another container.
 
-When I build [custom web solutions](/work/), I always prioritize Docker. It ensures that the handoff to the client is seamless. They don't need to worry about the underlying server configuration. They just need a Docker-compatible environment.
+I prioritize Docker on every build I ship. It makes the handoff to the client seamless: they don't need to worry about the underlying server configuration, just a Docker-compatible environment. Coolify deliberately stays at the single-host Docker layer rather than orchestrating clusters — if you're weighing that trade-off, see [Docker vs Kubernetes: containers vs orchestration](/blog/docker-vs-kubernetes/).
 
-![Pop-art rack of Docker containers stacked in a modular grid](/blog/coolify-docker-saas-hosting/docker-rack.webp)
+![Pop-art rack of isolated Docker containers stacked in a modular grid](/blog/coolify-docker-saas-hosting/docker-rack.webp)
 
 ## Setting up your control plane
 
-Getting started is surprisingly simple. You need a fresh VPS with at least two gigabytes of RAM. I typically recommend Ubuntu for the operating system. Once you have your server, you run a single installation command provided by the Coolify documentation.
+Getting started is surprisingly simple. Coolify's documented minimum is 2 CPU cores, 2 GB of RAM, and 30 GB of storage — though I'd budget 4 GB if you plan to run more than a couple of apps alongside it. I typically recommend Ubuntu for the operating system. Once you have your server, you run the single installation command from the Coolify documentation.
 
 ```bash
 # the only command you need to bootstrap Coolify
@@ -60,9 +60,9 @@ It feels magical. You get the same feedback loop as the big-name platforms. You 
 
 One of the biggest pain points of self-hosting is managing databases. Nobody wants to manually configure Postgres clusters or worry about backing up Redis instances. Coolify solves this by offering "one-click" services.
 
-You can spin up a Postgres, MySQL, MongoDB, or Redis instance in seconds. Coolify automatically generates secure credentials and provides you with the connection strings. It also handles persistent volumes. This means that even if your container restarts or you update the image, your data stays safe.
+You can spin up a Postgres, MySQL, MongoDB, or Redis instance in seconds. Coolify automatically generates secure credentials and provides you with the connection strings. It also handles persistent volumes, so even if your container restarts or you update the image, your data stays safe. Persistent volumes are not a backup strategy, though — schedule automated dumps and keep them off-box, because [replication and backup solve different failure modes](/blog/replication-vs-backup-laravel/).
 
-For a SaaS, I usually recommend a dedicated server for your databases if you have high traffic. Coolify makes this easy because it supports multi-server setups. You can have one server acting as your "control plane" and several other servers acting as "worker nodes" where your apps and databases actually live. (I cover that scaling pattern in more depth in [Scaling with confidence: advanced Coolify deployment strategies](/blog/scaling-with-coolify/).)
+For a SaaS, I usually recommend a dedicated server for your databases once traffic climbs. Coolify makes this easy because it supports multi-server setups. You can have one server acting as your control plane and several other servers acting as worker nodes where your apps and databases actually live. (I cover that scaling pattern in more depth in [scaling SaaS with advanced Coolify deployment strategies](/blog/scaling-with-coolify/).)
 
 ## Security and SSL by default
 
@@ -72,7 +72,7 @@ When you point a domain to your server and add it to your app configuration, Coo
 
 Beyond encryption, Coolify helps you manage your environment variables securely. You don't need to hardcode secrets in your git repository. You can define them in the dashboard, and they are injected into your containers at runtime. This is a standard best practice that many developers skip when they are in a rush.
 
-![Pop-art illustration of automatic SSL certificates and runtime secrets](/blog/coolify-docker-saas-hosting/ssl-security.webp)
+![Pop-art illustration of automatic Let's Encrypt SSL certificates and runtime-injected secrets](/blog/coolify-docker-saas-hosting/ssl-security.webp)
 
 ## The senior engineer's workflow
 
@@ -84,7 +84,7 @@ While Coolify can automatically detect many frameworks like Laravel or Node.js, 
 
 ### Leverage Nixpacks
 
-If you don't want to write a Dockerfile, Coolify supports Nixpacks. It is a tool developed by Railway that looks at your code and builds an optimized container image automatically. It is incredibly smart and works for almost every major framework.
+If you don't want to write a Dockerfile, Coolify supports Nixpacks. It is a tool built by Railway that inspects your code and builds an optimized container image automatically, with detection for 20-plus languages. Railway itself has since moved to a successor called Railpack, but Nixpacks remains a solid zero-config option inside Coolify.
 
 ### Set up health checks
 

@@ -1,6 +1,6 @@
 ---
 title: "Hello, world. Yes, another developer blog."
-description: "Why this site exists, what I'll write about, and why neobrutalism is the right call for an engineer's portfolio in 2026."
+description: "Why this developer blog exists, what I'll write about — Laravel, AI, Shopify — and why neobrutalism is the right call for an engineer's site in 2026."
 publishDate: 2025-11-16
 category: career
 tags: [meta, intro]
@@ -19,9 +19,10 @@ where I take notes out loud.
 
 ## Why now
 
-I've spent 10+ years remote, mostly head-down in client codebases. The patterns I keep
-reaching for — Laravel Octane at scale, RAG done right, agentic commerce — don't show up
-in tutorials. So I'm writing them down.
+I've spent 12+ years remote, mostly head-down in client codebases. The patterns I keep
+reaching for — [Laravel Octane](/blog/laravel-octane-high-traffic/) at scale, [RAG done
+right](/blog/why-your-rag-is-failing/), [agentic commerce](/blog/agentic-commerce-shopify/) — don't
+show up in tutorials. So I'm writing them down.
 
 <SpeechBubble tone="yellow" tail="bl">
   Strong opinions, loosely held. Code that runs in production.
@@ -30,15 +31,15 @@ in tutorials. So I'm writing them down.
 ## What you'll find here
 
 - Laravel internals you actually use day-to-day
-- AI engineering with Anthropic Claude + MCP
+- AI engineering with [Claude and MCP](/blog/claude-mcp-dev-tools/)
 - Shopify Plus app patterns
-- Architecture & DevOps lessons learned the hard way
+- Architecture and DevOps lessons learned the hard way
 
 <StickyNote tone="cyan" tilt={-2}>
   Subscribe via [RSS](/rss.xml) — no newsletter, no popup, no LinkedIn dance.
 </StickyNote>
 
-## A small comparison
+## This blog vs the AI-slop blog
 
 <ComparisonTable
   columns={[
@@ -57,12 +58,12 @@ in tutorials. So I'm writing them down.
   ]}
 />
 
-## Example code
+## Code you can actually run
 
-Every post that needs code gets the syntax treatment:
+Every post that needs code gets the syntax treatment — real, runnable, not pseudo-code:
 
 <CodeBlock
-  code={`use Prism\\Prism\\Prism;\n\n$response = Prism::text()\n    ->using('anthropic', 'claude-opus-4-7')\n    ->withSystemPrompt('You are a senior Laravel engineer.')\n    ->withPrompt('Refactor this controller for clarity.')\n    ->asText();`}
+  code={`use Prism\\Prism\\Prism;\n\n$response = Prism::text()\n    ->using('anthropic', 'claude-sonnet-4-5')\n    ->withSystemPrompt('You are a senior Laravel engineer.')\n    ->withPrompt('Refactor this controller for clarity.')\n    ->asText();`}
   lang="php"
   filename="app/Actions/AskClaude.php"
 />

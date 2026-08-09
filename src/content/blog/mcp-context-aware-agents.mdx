@@ -1,34 +1,34 @@
 ---
 title: "MCP tool-use: building context-aware agents"
-description: "The Model Context Protocol kills brittle one-off integrations. Tools, resources, and prompts — the three primitives that let one server talk to any MCP client."
+description: "Build context-aware agents with MCP. How tools, resources, and prompts let one server talk to any client — and kill brittle one-off integrations for good."
 publishDate: 2026-04-05
 category: ai
 tags: [mcp, anthropic, claude, agentic-ai, typescript, tool-use, context]
 featured: false
 heroImage:
   url: "/blog/mcp-context-aware-agents/hero.webp"
-  alt: "Pop-art illustration of an AI agent plugged into multiple data sources via MCP"
+  alt: "Pop-art illustration of a context-aware AI agent plugged into multiple data sources through MCP"
 ---
 
-The current state of AI agents is a mess of fragmented integrations. Every time I want to give an LLM access to a new data source or a specific tool I find myself writing custom glue code that breaks the moment an API version changes. It is a frustrating cycle of building brittle wrappers. We are effectively forcing highly intelligent models to peer through a keyhole when they should have a wide-open window into our data ecosystems.
+Building context-aware agents is harder than it should be, because the current state of AI tooling is a mess of fragmented integrations. Every time I want to give an LLM access to a new data source or a specific tool I find myself writing custom glue code that breaks the moment an API version changes. It is a frustrating cycle of brittle wrappers. We are effectively forcing highly intelligent models to peer through a keyhole when they should have a wide-open window into our data ecosystems.
 
-This fragmentation creates a massive technical debt for developers. You spend eighty percent of your time on plumbing and maybe twenty percent on the actual intelligence of the agent. Without a unified way to share context the model often hallucinates because it lacks the grounding of real-time data. It is stuck in a loop of "I don't have access to that" or worse "I'll guess what that data looks like" — which leads to unreliable outputs and a poor user experience.
+This fragmentation creates massive technical debt. You spend most of your time on plumbing and only a sliver on the actual intelligence of the agent. Without a unified way to share context the model often hallucinates because it lacks the grounding of real-time data. It is stuck in a loop of "I don't have access to that" or worse "I'll guess what that data looks like" — which leads to unreliable outputs and a poor user experience.
 
-The **Model Context Protocol** (MCP) changes this dynamic entirely. It is an open standard that allows me to build context-aware agents that connect to any data source using a universal language. By standardizing how servers and clients communicate I can focus on building sophisticated logic rather than managing endless API endpoints. It is the missing link in the agentic workflow.
+The **Model Context Protocol** (MCP) changes this dynamic entirely. It is an open standard, created by Anthropic and donated in late 2025 to the Agentic AI Foundation under the Linux Foundation, that lets me build context-aware agents that connect to any data source using a universal language. By standardizing how servers and clients communicate I can focus on building sophisticated logic rather than managing endless API endpoints. If you want the bigger picture on how this fits the wider toolbox, I broke down [API vs MCP](/blog/api-vs-mcp/) separately — MCP is the missing link in the agentic workflow.
 
 ## Why MCP matters for developers
 
-![Architecture diagram showing MCP servers bridging an AI client to many data sources](/blog/mcp-context-aware-agents/architecture-diagram.webp)
+![MCP architecture diagram: a single AI client connecting through MCP servers to databases, APIs, and files](/blog/mcp-context-aware-agents/architecture-diagram.webp)
 
 I have spent years building custom web applications and one of the biggest hurdles has always been data silos. When I work on [complex technical challenges](/work/) the goal is usually to make data actionable. Traditional tool-use requires the developer to define every schema and every function call manually for the model. MCP flips this script.
 
 MCP acts as a bridge. It defines a clear boundary between the AI application (the client) and the data sources (the servers). This separation of concerns means I can swap out the underlying model without rebuilding the entire data integration layer. If I move from Claude to another model that supports MCP, the tools and resources remain the same.
 
-It also solves the "context window" problem. Instead of stuffing a massive document into the prompt I can expose it as an MCP resource. The model only fetches what it needs when it needs it. This is significantly more efficient and cost-effective. It allows me to build agents that are aware of their environment without being overwhelmed by it.
+It also eases the [context window](/blog/context-window-vs-memory/) problem. Instead of stuffing a massive document into the prompt I can expose it as an MCP resource. The model only pulls what it needs when it needs it. This is significantly more efficient and cost-effective. It lets me build agents that are aware of their environment without being overwhelmed by it.
 
 ## The three pillars: tools, resources, and prompts
 
-![Visual breakdown of MCP primitives — tools, resources, prompts](/blog/mcp-context-aware-agents/context-visual.webp)
+![Visual breakdown of the three MCP primitives: model-controlled tools, application-controlled resources, and user-controlled prompts](/blog/mcp-context-aware-agents/context-visual.webp)
 
 To understand how to build with MCP I look at its three core primitives. These are the building blocks for any context-aware system.
 
@@ -38,7 +38,7 @@ To understand how to build with MCP I look at its three core primitives. These a
 
 ## Building your first MCP server
 
-I prefer using TypeScript for building MCP servers because of the robust SDK provided by Anthropic. However the protocol itself is language-agnostic. Here is a simplified look at how I structure a basic server that exposes a weather tool.
+I prefer using TypeScript for building MCP servers because of the mature official SDK. However the protocol itself is language-agnostic, with first-party SDKs for Python, Java, Go, and more. Here is a simplified look at how I structure a basic server that exposes a weather tool. This uses the low-level `Server` API to make the request handlers explicit; the higher-level `McpServer` class wraps the same boilerplate if you want less ceremony.
 
 ```typescript
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -97,23 +97,23 @@ This snippet illustrates the simplicity of the protocol. I define the tool and h
 
 ## Security and the MCP ecosystem
 
-![Dashboard mockup of an MCP server admin showing fine-grained tool permissions](/blog/mcp-context-aware-agents/dashboard-mockup.webp)
+![Mockup of an MCP server admin dashboard showing fine-grained, per-tool access permissions](/blog/mcp-context-aware-agents/dashboard-mockup.webp)
 
 Security is a major concern when giving an AI agent access to your data. I have seen many implementations where API keys are hardcoded or permissions are too broad. MCP addresses this by using a client-server architecture where the server controls exactly what is exposed.
 
 The server acts as a gatekeeper. I can implement fine-grained access control at the server level. For example an MCP server connecting to a database can be restricted to only specific tables or read-only queries. This level of control is essential for enterprise-grade applications.
 
-The ecosystem is growing rapidly. We are seeing early adoption from major players in the dev tools space. Tools like Zed, Cursor, and Claude Code are already integrating MCP to help developers write better code by giving their AI assistants better context. This trend will only accelerate as more developers realize the power of standardized context.
+The ecosystem has matured fast. MCP has gone from an Anthropic experiment to a genuine industry standard, with OpenAI, Google, and Microsoft all backing it. On the tooling side, clients like Zed, Cursor, VS Code, and Claude Code ship MCP support so AI assistants write better code with real context. If you want a hands-on walkthrough, I wrote up [connecting my own dev tools through Claude MCP](/blog/claude-mcp-dev-tools/) separately.
 
 ## Practical steps for getting started
 
 If you are a developer looking to dive into MCP I recommend following these steps.
 
-1. **Explore the existing MCP servers** on GitHub. There are already servers for file system access and SQLite databases. See how they are structured.
+1. **Explore the existing MCP servers** on GitHub. The reference repo ships servers for filesystem access, Git, web fetching, and persistent memory. See how they are structured.
 2. **Pick a simple data source you use every day.** It could be your Obsidian notes or a local directory of markdown files. Build a basic server to expose these as resources.
 3. **Use a client like Claude Desktop** to test your server. See how the model interacts with your data. Adjust the tool descriptions to make them more intuitive for the AI.
 4. **Compose multiple MCP servers** once you are comfortable. Imagine an agent that can read your calendar and then write a draft email based on your upcoming meetings.
 
-MCP is more than just a new protocol. It is a fundamental shift in how we build AI applications. It moves us away from the era of "black box" agents and toward a world of transparent and context-aware assistants. I am excited to see how this technology evolves and how it will transform our development workflows.
+MCP is more than just a new protocol. It is a shift in how we build AI applications, moving us away from "black box" agents and toward transparent, context-aware assistants you can actually reason about in production.
 
 **How are you planning to use MCP in your next project?** [Drop me a line](/contact/) — happy to swap notes on real-world MCP server design.

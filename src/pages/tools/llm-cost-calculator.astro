@@ -12,15 +12,21 @@ const breadcrumbLd = breadcrumbList([
   { name: "LLM Cost Calculator", url: "/tools/llm-cost-calculator/" },
 ]);
 
-// Prices in USD per 1M tokens. Approximate list prices — VERIFY against the
-// provider's current pricing page before you bet a budget on it.
+// Prices in USD per 1M tokens. List prices verified June 2026 against each
+// provider's official pricing page (claude.com/pricing,
+// developers.openai.com/api/docs/pricing, ai.google.dev/gemini-api/docs/pricing).
+// Always reconfirm before you bet a budget on it.
 const MODELS = [
-  { id: "claude-opus", label: "Claude Opus 4.x", in: 15, out: 75 },
-  { id: "claude-sonnet", label: "Claude Sonnet 4.x", in: 3, out: 15 },
+  { id: "claude-opus", label: "Claude Opus 4.8", in: 5, out: 25 },
+  { id: "claude-sonnet", label: "Claude Sonnet 4.6", in: 3, out: 15 },
   { id: "claude-haiku", label: "Claude Haiku 4.5", in: 1, out: 5 },
-  { id: "gpt-4o", label: "GPT-4o", in: 2.5, out: 10 },
-  { id: "gpt-4o-mini", label: "GPT-4o mini", in: 0.15, out: 0.6 },
-  { id: "gpt-4-1", label: "GPT-4.1", in: 2, out: 8 },
+  { id: "gpt-5-5", label: "GPT-5.5", in: 5, out: 30 },
+  { id: "gpt-5-4", label: "GPT-5.4", in: 2.5, out: 15 },
+  { id: "gpt-5-4-mini", label: "GPT-5.4 mini", in: 0.75, out: 4.5 },
+  { id: "gpt-5-4-nano", label: "GPT-5.4 nano", in: 0.2, out: 1.25 },
+  { id: "gemini-pro", label: "Gemini 2.5 Pro", in: 1.25, out: 10 },
+  { id: "gemini-flash", label: "Gemini 2.5 Flash", in: 0.3, out: 2.5 },
+  { id: "gemini-flash-lite", label: "Gemini 2.5 Flash-Lite", in: 0.1, out: 0.4 },
   { id: "custom", label: "Custom (enter prices)", in: 0, out: 0 },
 ];
 const modelsJson = JSON.stringify(MODELS);
@@ -28,7 +34,7 @@ const modelsJson = JSON.stringify(MODELS);
 
 <Page
   title="LLM Cost Calculator"
-  description="Free, no-signup calculator for LLM API spend. Estimate monthly cost across Claude, GPT, and custom models from tokens, requests, and price per million tokens."
+  description="Free, no-signup calculator for LLM API spend. Estimate monthly cost across Claude, GPT, Gemini, and custom models from tokens, requests, and price per million tokens."
   eyebrow="Free tool"
   heading="LLM Cost Calculator."
   intro="Plug in tokens, requests, and a model. See the daily and monthly API bill before you ship it to production."
@@ -86,7 +92,7 @@ const modelsJson = JSON.stringify(MODELS);
               type="number"
               min="0"
               step="0.01"
-              value="3"
+              value="5"
               class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none"
             />
           </div>
@@ -102,7 +108,7 @@ const modelsJson = JSON.stringify(MODELS);
               type="number"
               min="0"
               step="0.01"
-              value="15"
+              value="25"
               class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none"
             />
           </div>

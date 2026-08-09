@@ -1,5 +1,5 @@
 ---
-title: "7 mistakes you're making with your production RAG stack"
+title: "7 mistakes wrecking your production RAG stack"
 description: "Naive chunking, no reranker, embedding drift, latency blowups — the structural mistakes that wreck a production RAG stack, and the fixes that ship."
 publishDate: 2026-05-17
 category: ai
@@ -7,10 +7,10 @@ tags: [rag, ai, llm, pgvector, reranker, hybrid-search, evals, production]
 featured: true
 heroImage:
   url: "/blog/7-rag-mistakes-production/hero.webp"
-  alt: "Stylized illustration of a production RAG stack under stress"
+  alt: "Stylized illustration of a production RAG pipeline under load, with retrieval, reranking, and generation stages showing stress points"
 ---
 
-Getting a RAG (retrieval-augmented generation) demo working is easy. You take a few PDFs, throw them into a vector database like Chroma or Pinecone, and ask a question. It feels like magic.
+Getting a RAG (retrieval-augmented generation) demo working is easy. You take a few PDFs, throw them into a vector database like Chroma or Pinecone, and ask a question. It feels like magic. If you're still choosing your foundation, my guide to [picking the right RAG stack](/blog/picking-the-right-rag-stack/) covers the trade-offs before you commit.
 
 But shipping RAG to production is where the magic dies.
 
@@ -30,9 +30,9 @@ This "naive chunking" treats your data like raw soup. It might cut a sentence in
 
 **The fix:** use semantic or structural chunking.
 
-I always recommend chunking based on the actual structure of the document first. Use headers (H1, H2, H3), paragraphs, or even markdown delimiters to ensure related ideas stay together. If you're working with complex data, consider recursive character splitting that respects newlines and punctuation before falling back to raw token counts.
+I always recommend chunking based on the actual structure of the document first. Use headers (H1, H2, H3), paragraphs, or even markdown delimiters to ensure related ideas stay together. If you're working with complex data, consider recursive character splitting that respects newlines and punctuation before falling back to raw token counts. Bad chunking is one of the most common reasons [your RAG fails in production](/blog/why-your-rag-is-failing/).
 
-![Structural vs naive chunking illustration](/blog/7-rag-mistakes-production/chunking.webp)
+![Diagram comparing structural chunking that keeps a heading with its paragraph against naive chunking that splits a sentence and table mid-row](/blog/7-rag-mistakes-production/chunking.webp)
 
 ## 2. Skipping the reranker step
 
@@ -46,7 +46,7 @@ I look at retrieval as a two-stage process. Stage one is the "fast and broad" se
 
 The reranker acts like a bouncer at a club. It doesn't care if a document looks "okay." It only lets in the ones that are actually relevant to the question.
 
-![Two-stage retrieval with reranker](/blog/7-rag-mistakes-production/reranker.webp)
+![Two-stage retrieval funnel: a broad vector search returns 50 candidates, then a cross-encoder reranker narrows them to the most relevant few](/blog/7-rag-mistakes-production/reranker.webp)
 
 ## 3. Ignoring embedding drift and versioning
 
@@ -58,11 +58,11 @@ Suddenly, the vectors being generated for new queries don't "line up" with the v
 
 Treat your embedding model like a database schema. If you change the model, you must re-index. I always include the model name and version in the metadata of every index I build. This way, if I need to test a new model, I can run them side-by-side without breaking the production flow. My [experience in cloud infrastructure](/about/) has taught me that consistency is better than a "better" model that doesn't match its data.
 
-## 4. The "needle in a haystack" latency problem
+## 4. The "lost in the middle" latency problem
 
 Everyone wants more context. We see context windows of 128k or even 1M tokens and think, "great, I'll just give the LLM everything!"
 
-This is a trap for two reasons. First, latency — feeding 50k tokens of context into an LLM can make your response time balloon to 20 or 30 seconds. Second, models still struggle with "lost in the middle" problems: they tend to ignore information buried in the center of a massive context window.
+This is a trap for two reasons. First, latency — feeding tens of thousands of tokens of context into an LLM inflates your time-to-first-token and can push response times into double-digit seconds. Second, models still struggle with the ["lost in the middle"](https://arxiv.org/abs/2307.03172) effect: they reliably use information at the start and end of a long context but tend to ignore facts buried in the center. A bigger [context window is not the same as memory](/blog/context-window-vs-memory/), and stuffing it rarely helps.
 
 **The fix:** optimize your latency budget.
 
@@ -70,7 +70,7 @@ I start with a "latency budget." If the user expects a response in under 2 secon
 
 If you need more data, consider using a multi-step approach: use a cheaper model to summarize the retrieved chunks before passing the refined info to your main model.
 
-![Latency budget illustration](/blog/7-rag-mistakes-production/latency.webp)
+![Latency budget breakdown showing retrieval, reranking, and generation time fitting inside a two-second response target](/blog/7-rag-mistakes-production/latency.webp)
 
 ## 5. Forgetting about hybrid search
 
@@ -78,7 +78,7 @@ Vector search is terrible at finding specific keywords or unique identifiers. If
 
 **The fix:** implement hybrid search.
 
-I always combine dense vector search with traditional sparse search (like BM25). By blending these two results using something like Reciprocal Rank Fusion (RRF), you get the best of both worlds. You get the semantic understanding of vectors and the keyword precision of full-text search. This is non-negotiable for enterprise search or technical documentation.
+I always combine dense vector search with traditional sparse search (like BM25). By blending these two results using something like Reciprocal Rank Fusion (RRF), you get the best of both worlds. You get the semantic understanding of vectors and the keyword precision of full-text search. This is non-negotiable for enterprise search or technical documentation. If keyword precision matters more than you expect, it's worth weighing [vector search against graph search](/blog/vector-search-vs-graph-search/) for your retrieval strategy.
 
 ## 6. Failing to filter by metadata
 
@@ -104,7 +104,7 @@ I use the Ragas framework or simple LLM-as-a-judge patterns to run automated eva
 2. **Answer relevance** — does it answer the user's question?
 3. **Context precision** — are the retrieved chunks actually useful?
 
-![Evaluation harness illustration](/blog/7-rag-mistakes-production/evals.webp)
+![RAG evaluation harness scoring answers against a golden set on faithfulness, answer relevance, and context precision](/blog/7-rag-mistakes-production/evals.webp)
 
 ### Practical takeaways for your stack
 

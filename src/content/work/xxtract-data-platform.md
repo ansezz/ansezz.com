@@ -1,6 +1,6 @@
 ---
 title: "xxtract — data extraction platform"
-description: "Backend and integration work on a data extraction platform — pipelines, API design, and operational tooling that turns unstructured sources into structured, queryable output for downstream products."
+description: "Backend and integration work on a data extraction platform: Laravel pipelines, REST and GraphQL APIs, and tooling that turn raw sources into queryable data."
 category: saas
 stack:
   - "Laravel"

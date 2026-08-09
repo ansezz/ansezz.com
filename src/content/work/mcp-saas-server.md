@@ -1,6 +1,6 @@
 ---
 title: "MCP server for an internal SaaS"
-description: "Built a Model Context Protocol server that exposes a Laravel SaaS's tickets, billing, and product docs as MCP resources + tools. Claude agents resolve tier-1 support tickets without leaving the host app; auth + audit log + cost ceilings included."
+description: "An MCP server exposing a Laravel SaaS's tickets, billing, and docs as resources and tools, so Claude agents resolve tier-1 support in-app, with audit logging."
 category: ai
 stack:
   - "Laravel"

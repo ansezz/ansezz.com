@@ -1,6 +1,6 @@
 ---
 title: "Scartify — shoppable reels for Shopify"
-description: "TikTok-style vertical video player embedded in Shopify storefronts. Each clip links to a product or collection with one-tap add-to-cart, ABV tracking, and conversion analytics. Built for DTC brands that already produce social content."
+description: "Shoppable TikTok-style video player for Shopify storefronts. Clips link to products with one-tap add-to-cart, AOV tracking, and conversion analytics for DTC."
 category: shopify
 stack:
   - "Laravel"

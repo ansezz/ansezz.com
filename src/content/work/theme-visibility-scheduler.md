@@ -1,6 +1,6 @@
 ---
-title: "Theme Visibility Scheduler — section / block visibility"
-description: "Schedule Shopify theme sections and blocks to appear / disappear at the minute. Useful for embargoed launches, flash sales, region-gated banners, and rolling A/B tests without editing the theme each time."
+title: "Theme Visibility Scheduler"
+description: "Schedule Shopify theme sections and blocks to show or hide on a timer — for embargoed launches, flash sales, and region-gated banners, no theme edits."
 category: shopify
 stack:
   - "Laravel"

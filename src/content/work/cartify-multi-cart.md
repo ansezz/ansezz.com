@@ -1,6 +1,6 @@
 ---
 title: "Cartify — multi-cart sharing for Shopify"
-description: "Shopify app that lets shoppers save, name, and share multiple persistent carts — like Amazon's saved-for-later, but with shareable links for gifting, wishlists, and B2B procurement workflows."
+description: "Shopify app for multi-cart sharing — shoppers save, name, and share persistent carts via links for gifting, wishlists, and B2B procurement."
 category: shopify
 stack:
   - "Laravel"

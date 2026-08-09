@@ -52,11 +52,11 @@ If you are [comparing AI vs traditional development](/blog/ai-vs-traditional-dev
 
 Agentic systems require a level of autonomy that traditional APIs struggle to provide efficiently. When an agent is tasked with "researching a company and drafting a proposal," it might need to hit a search tool, a CRM, a file system, and a PDF generator.
 
-Using standard APIs, you would need to feed the descriptions of all those endpoints into the model's context window. This eats up tokens and increases the risk of the model getting confused. With MCP, the agent only sees the tools it needs at the moment it needs them. The protocol handles the context streaming, ensuring that the model has the right data without being overwhelmed by irrelevant metadata.
+Using standard APIs, you would need to feed the descriptions of all those endpoints into the model's context window. This eats up tokens and increases the risk of the model getting confused. With MCP, the client negotiates capabilities at connection time and the agent calls tools on demand, so you can surface only the tools relevant to the task instead of pre-loading every schema. The result is less wasted context and fewer irrelevant choices for the model to wade through.
 
 ![An AI agent dashboard dynamically selecting tools from an MCP server](/blog/api-vs-mcp/agent-tool-selection.webp)
 
-Furthermore, MCP allows for "resource" access. Unlike an API endpoint that just returns data, an MCP resource can be a living document or a continuous stream of information. This is crucial for RAG (retrieval-augmented generation) systems. Instead of building a complex ETL pipeline to move data into a vector database, an MCP server can expose your local files or database directly to the model in a standardized way. This avoids the common [7 RAG mistakes in production](/blog/7-rag-mistakes-production/).
+Furthermore, MCP defines a "resource" primitive. Unlike an API endpoint that just returns data on request, an MCP resource can be subscribed to, so the server pushes a notification when the underlying file or record changes. For lightweight retrieval-augmented generation (RAG) cases, an MCP server can expose your local files or database directly to the model in a standardized way, sparing you a custom ingestion layer for every experiment. It does not replace a vector store for large-scale semantic search, though — get that wrong and you hit the usual [production RAG mistakes](/blog/7-rag-mistakes-production/).
 
 ## Implementation: how they work together
 
@@ -86,7 +86,7 @@ When should you stick to direct API calls, and when should you implement MCP? Th
 3. You want your tools to be reusable across different AI clients (e.g., [Claude Desktop and custom IDE tools](/blog/claude-mcp-dev-tools/)).
 4. You need to expose local data or specialized resources to an LLM without building a custom backend for every experiment.
 
-![A side-by-side code comparison of JSON REST and MCP tool definitions](/blog/api-vs-mcp/rest-vs-mcp-code.webp)
+![Side-by-side code comparison of a REST endpoint call and an MCP tool definition](/blog/api-vs-mcp/rest-vs-mcp-code.webp)
 
 ## Takeaways
 

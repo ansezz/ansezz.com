@@ -1,5 +1,5 @@
 ---
-title: "Shopify Storefront Web Components: headless for everyone"
+title: "Shopify Storefront Web Components: headless light"
 description: "Headless used to mean six engineers and a Hydrogen rebuild. Shopify Storefront Web Components drop products, collections, and cart into any page with a script."
 publishDate: 2026-05-19
 category: shopify
@@ -19,9 +19,9 @@ heroImage:
   alt: "Shopify Storefront Web Components — headless commerce on plain HTML"
 ---
 
-Headless used to mean hiring a team of six engineers just to show a "Buy" button.
+Headless used to mean hiring a team of six engineers just to show a "Buy" button. Shopify Storefront Web Components change that.
 
-If you wanted a custom Shopify experience outside of their Liquid-based themes, you were usually forced into a massive architectural decision. You had to build a full React or Hydrogen app, manage server-side rendering, handle complex routing, and pray your SEO didn't tank. For many startups and established brands, this was like buying a semi-truck when all they needed was a bicycle.
+If you wanted a custom Shopify experience outside of their Liquid-based themes, you were usually forced into a big architectural decision. You had to build a full React or Hydrogen app, manage server-side rendering, handle complex routing, and pray your SEO didn't tank. For many startups and established brands, this was like buying a semi-truck when all they needed was a bicycle.
 
 The complexity of traditional headless was a gatekeeper. It prevented simple content-driven sites on platforms like Astro or WordPress from easily selling products without a jarring transition to a subdomain. We've spent years over-engineering solutions for problems that could have been solved with a few custom elements.
 
@@ -54,9 +54,11 @@ Getting these up and running is refreshing for any developer used to complex API
 The first step is adding the script tag and the `<shopify-store>` component to your HTML. This establishes the connection to your Shopify domain.
 
 ```html
-<script src="https://webcomponents.shopify.dev/components.js"></script>
+<!-- Load the components script — see the official docs:
+     https://shopify.dev/docs/api/storefront-web-components -->
+<script src="https://cdn.shopify.com/storefront/web-components.js"></script>
 
-<shopify-store store-domain="your-store.myshopify.com"></shopify-store>
+<shopify-store store-domain="https://your-store.myshopify.com"></shopify-store>
 ```
 
 If you need inventory counts or custom data, add a `public-access-token` from the Shopify headless channel. For basic title and price display, you don't even need that.
@@ -79,14 +81,14 @@ Inside that template, you use `<shopify-data>` to pull specific fields. It uses 
 
 ```html
 <shopify-data query="product.title"></shopify-data>
-<shopify-money query="product.variants.first.price"></shopify-money>
+<shopify-money query="product.selectedOrFirstAvailableVariant.price"></shopify-money>
 ```
 
 ![AI-assisted Shopify code](/blog/shopify-storefront-web-components/ai-assisted-code.webp)
 
 ## The secret sauce: llms.txt
 
-Here is the part where it gets interesting for modern developers. Shopify has released a specific [llms.txt](https://webcomponents.shopify.dev/llms.txt) file.
+Here is the part where it gets interesting for modern developers. Shopify publishes a machine-readable [llms.txt](https://shopify.dev/llms.txt) file.
 
 If you've been following the rise of [agentic workflows and vibe coding](/blog/agentic-workflows-vibe-coding/), you know that providing context to an AI model is everything. By pointing your AI agent (like Claude or ChatGPT) to this text file, it learns exactly how to write code for these specific Web Components.
 
@@ -113,7 +115,7 @@ As a senior engineer, you have to pick the right tool for the job. Here is my ru
 - You need complex server-side logic and deep integrations with multiple APIs.
 - You require the absolute highest level of performance optimization via streaming and edge rendering.
 
-For most people starting out or modernizing a digital presence, Web Components are the winning choice. They offer the best balance of [AI-driven development](/blog/ai-vs-traditional-development/) and production stability.
+For most people starting out or modernizing a digital presence, Web Components are the winning choice. They offer the best balance of [AI-driven development](/blog/ai-vs-traditional-development/) and production stability. If you're still weighing the bigger architectural call, see [Shopify Liquid vs. headless](/blog/shopify-liquid-vs-headless/).
 
 ## Takeaways for the modern dev
 

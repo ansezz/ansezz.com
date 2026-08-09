@@ -133,7 +133,7 @@ const workBreadcrumbLd = breadcrumbList([
   description={WORK.DESCRIPTION}
   eyebrow="Selected work"
   heading="Things I built. Most of them are still shipping."
-  intro="A slice of projects across AI engineering, Shopify Plus apps + storefronts, multi-tenant SaaS, and open source. Tech-first descriptions — pick what you need built next."
+  intro="A slice of projects across AI engineering, Shopify Plus apps + storefronts, and multi-tenant SaaS. Tech-first descriptions — pick what you need built next."
   structuredData={[workCollectionLd, workBreadcrumbLd]}
 >
   <section class="mx-auto max-w-6xl px-5 pb-6">
@@ -550,11 +550,9 @@ const workBreadcrumbLd = breadcrumbList([
       });
       sections.forEach((section) => {
         const slug = section.dataset.workSection;
-        if (value === "all") {
-          section.hidden = slug === "all-featured" ? false : false;
-        } else {
-          section.hidden = slug !== value;
-        }
+        // "all" shows every section (featured marquee + each lane);
+        // a specific lane shows only its matching section.
+        section.hidden = value !== "all" && slug !== value;
       });
     }
 

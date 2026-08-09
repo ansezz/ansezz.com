@@ -1,6 +1,6 @@
 ---
 title: "Production RAG pipeline on PostgreSQL + pgvector"
-description: "End-to-end retrieval-augmented generation pipeline for a knowledge-heavy SaaS. Chunking, embeddings, hybrid search (BM25 + vector + RRF), Cohere reranker, eval harness, and cost guardrails — running entirely on Postgres + pgvector, no managed vector DB."
+description: "End-to-end RAG pipeline on Postgres: hybrid search (BM25 + vector + RRF), a Cohere reranker, an eval harness, and cost guardrails. No managed vector DB."
 category: ai
 stack:
   - "Laravel"

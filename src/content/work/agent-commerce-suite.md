@@ -1,6 +1,6 @@
 ---
 title: "Agent Commerce Suite — AI optimization for Shopify"
-description: "Shopify app helping merchants prepare catalogs for the agentic-shopping era. Three modules: Agent SEO Optimizer (LLM-readable product fields), Agentic Analytics (LLM-traffic insights), and UPC/GTIN Compliance Manager — leveraging Shopify Catalog API inferredFields."
+description: "Shopify app that prepares product catalogs for agentic shopping: LLM-readable fields, AI-traffic analytics, and UPC/GTIN compliance via the Catalog API."
 category: ai
 stack:
   - "Laravel"
@@ -9,7 +9,7 @@ stack:
   - "Anthropic Claude"
   - "App Bridge"
   - "Polaris"
-outcome: "Product catalogs optimized for AI-driven shopping agents (Perplexity, ChatGPT)"
+outcome: "Catalogs structured for AI-driven product discovery and agentic shopping surfaces"
 order: 1
 featured: false
 ---

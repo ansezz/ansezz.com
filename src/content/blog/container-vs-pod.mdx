@@ -10,9 +10,9 @@ heroImage:
   alt: "Pop-art comic-style metallic shipping container nested inside a glowing rounded pod capsule"
 ---
 
-Building a modern application stack often feels like playing with digital Legos. You have your code. You have your environment. You have your deployment target. But when you move from simple Docker setups to orchestrated environments like Kubernetes, the terminology starts to blur. You might wonder why you can't just deploy a container directly. You might struggle to understand why Kubernetes insists on wrapping your perfectly good Docker image in something called a Pod.
+When you move from a simple Docker setup to an orchestrated environment like Kubernetes, the terminology starts to blur. You wonder why you can't just deploy a container directly, and why Kubernetes insists on wrapping your perfectly good Docker image in something called a Pod. The container vs Pod distinction is the first thing that trips people up.
 
-This confusion leads to messy architecture and inefficient resource allocation. If you treat a Pod as just a "fancy container," you miss out on the shared networking and storage capabilities that make Kubernetes powerful. You end up creating monolithic containers that are hard to scale or sidecars that can't actually talk to the main application. Understanding the relationship between a container and a Pod is the difference between a brittle deployment and a scalable, resilient system.
+Treat a Pod as merely a "fancy container" and you miss the shared networking and storage that make Kubernetes powerful. You end up with monolithic containers that are hard to scale, or sidecars that can't actually reach the main application. Understanding how a container relates to a Pod is the difference between a brittle deployment and a scalable, resilient system.
 
 ## The atomic unit: what is a container?
 
@@ -59,7 +59,9 @@ Common sidecar examples include:
 - **Config reloaders**: A sidecar that watches a configuration source (like a Git repo or ConfigMap) and signals the main application to reload when changes occur.
 - **Security**: A sidecar that handles SSL/TLS termination so the main application only has to deal with plain HTTP.
 
-By separating these concerns into different containers within the same Pod, you keep your main application container clean and focused. This modularity is a pillar of [modern technical architecture](/blog/api-gateway-ai-stack/).
+By separating these concerns into different containers within the same Pod, you keep your main application container clean and focused. This modularity is a pillar of [containers versus orchestration](/blog/docker-vs-kubernetes/) thinking.
+
+A practical note: historically you added a sidecar by listing a second entry under `spec.containers`, which gave you no control over startup or shutdown order. Kubernetes now has first-class sidecar support — an init container with `restartPolicy: Always` starts before the main containers, stays running for the Pod's lifetime, and shuts down after them. This feature reached stable in Kubernetes v1.33, so reach for native sidecars over plain co-containers when ordering matters.
 
 ## Technical comparison: container vs Pod
 
@@ -77,7 +79,7 @@ By separating these concerns into different containers within the same Pod, you 
 
 When you move your workloads to managed cloud providers like Google Cloud (GKE) or AWS (EKS), the container vs Pod distinction becomes operational. These platforms manage the infrastructure, but you still define the Pod specifications.
 
-In a serverless container environment like AWS Fargate or GCP Cloud Run, the Pod abstraction is often hidden. You typically deploy a single container, and the provider handles the "pod-like" environment for you. However, as soon as you need complex [architecture and infrastructure](/blog/category/architecture/) involving sidecars or shared local resources, you must move to full Kubernetes where the Pod is your primary tool.
+The line gets blurrier on serverless platforms. EKS on Fargate still runs real Pods, so multi-container Pods and sidecars work exactly as they do on a self-managed node — Fargate just provisions the compute per Pod instead of per node. Cloud Run started as single-container only, but since May 2023 it supports multi-container deployments where sidecars share the network namespace and communicate over `localhost`, just like a Pod. So you no longer have to jump to full Kubernetes the moment you need a sidecar — though you do once you need [richer orchestration](/blog/serverless-vs-containers/) like DaemonSets, complex scheduling, or fine-grained networking.
 
 ![A pop-art-style Kubernetes dashboard UI screenshot listing Pods with green "Running" status icons on a light dotted background](/blog/container-vs-pod/k8s-dashboard.webp)
 

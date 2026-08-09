@@ -14,7 +14,7 @@ Your application is slowing down. Users are reporting latency, your database is 
 
 Engineering for scale is not just about adding hardware. It is about understanding the trade-offs between vertical and horizontal strategies. If you wait too long to scale out, you risk a single point of failure. If you scale out too early, you drown in the complexity of distributed systems. This guide breaks down the technical substance of both approaches.
 
-## Vertical Scaling: The "Bigger Box" Strategy
+## Vertical scaling: the "bigger box" strategy
 
 Vertical scaling, or "scaling up," is the process of adding more power to your existing server. This typically means increasing the CPU, RAM, or storage capacity of a single instance. In a cloud environment like Google Cloud or AWS, this is as simple as changing your machine type from a small instance to a high-memory or high-compute instance.
 
@@ -22,17 +22,17 @@ This is the path of least resistance. Since the application still lives on one m
 
 However, vertical scaling has a hard ceiling. Every hardware generation has a limit. Eventually, you will find that the "biggest box" available is either too expensive or simply not enough. More importantly, vertical scaling does not solve the problem of redundancy. If that one big server goes down, your entire system goes down with it.
 
-## Horizontal Scaling: Building the "Fleet"
+## Horizontal scaling: building the "fleet"
 
 Horizontal scaling, or "scaling out," involves adding more machines to your infrastructure. Instead of one giant server, you have a fleet of smaller servers working in parallel. A load balancer sits in front of this fleet, distributing incoming traffic across the available nodes.
 
 ![Modern web architecture diagram with a load balancer and multiple server nodes in pop-art style](/blog/horizontal-vs-vertical-scaling/architecture-diagram.webp)
 
-This is the gold standard for high availability and modern [cloud infrastructure](/blog/coolify-docker-saas-hosting/). When one server fails, the load balancer simply routes traffic to the healthy ones. It also offers extreme elasticity. You can add nodes during a traffic spike and remove them when things quiet down, ensuring you only pay for what you use.
+This is the gold standard for high availability and modern [cloud infrastructure](/blog/coolify-docker-saas-hosting/). When one server fails, the load balancer simply routes traffic to the healthy ones. It also offers extreme elasticity. With [auto-scaling](/blog/smart-auto-scaling-ai/), you can add nodes during a traffic spike and remove them when things quiet down, ensuring you only pay for what you use.
 
-The catch is that horizontal scaling requires architectural changes. Your application must be stateless. If a user uploads a file to Server A, Server B must be able to access it. If you store session data in the local memory of Server A, the user will be logged out if their next request hits Server B. You must externalize state to shared databases or object storage.
+The catch is that horizontal scaling requires architectural changes. Your application must be [stateless](/blog/stateless-vs-stateful-apps/). If a user uploads a file to Server A, Server B must be able to access it. If you store session data in the local memory of Server A, the user will be logged out if their next request hits Server B. You must externalize state to shared databases or object storage.
 
-## Key Differences at a Glance
+## Key differences at a glance
 
 Choosing between these two depends on your current stage and technical requirements. Here is how they compare across critical engineering metrics.
 
@@ -45,17 +45,17 @@ Choosing between these two depends on your current stage and technical requireme
 | **Maintenance**       | Requires downtime for resizing | Zero-downtime rolling updates       |
 | **Cost**              | Expensive at the high end      | More efficient through auto-scaling |
 
-## The Challenge of Distributed State
+## The challenge of distributed state
 
 When you move to a horizontal model, the database becomes the most significant bottleneck. Scaling an application layer is relatively easy because app servers are usually stateless. Scaling a database is harder because data must remain consistent across multiple nodes.
 
-For many [Shopify](/blog/category/shopify/) apps or custom web platforms, the first step into horizontal scaling is adding read replicas. You keep one "primary" database for writes and multiple "replica" databases for reads. This offloads the heavy lifting from the main node.
+For many [Shopify](/blog/category/shopify/) apps or custom web platforms, the first step into horizontal scaling is adding [read replicas](/blog/replication-vs-backup-laravel/). You keep one "primary" database for writes and multiple "replica" databases for reads. This offloads the heavy lifting from the main node.
 
 If your data grows beyond the capacity of a single primary node, you might look into sharding. This involves splitting your data across different database clusters. It is a powerful technique but introduces massive complexity in how you query and join data.
 
-![UI dashboard showing system metrics like CPU and RAM usage in a bento grid layout](/blog/horizontal-vs-vertical-scaling/metrics-dashboard.webp)
+![Server monitoring dashboard showing CPU, RAM, and database load metrics in a bento grid layout](/blog/horizontal-vs-vertical-scaling/metrics-dashboard.webp)
 
-## Scaling in Practice: Laravel and DevOps
+## Scaling in practice: Laravel and DevOps
 
 In the Laravel ecosystem, scaling often starts with vertical upgrades. I have seen many projects stay on a single powerful VPS for years. As traffic grows, the transition to horizontal scaling usually follows a specific pattern.
 
@@ -66,7 +66,7 @@ In the Laravel ecosystem, scaling often starts with vertical upgrades. I have se
 
 Tools like [Coolify](/blog/coolify-self-hosted-saas/) or Docker Swarm make managing multiple containers easier. They allow you to define your infrastructure as code, making it simple to spin up new nodes as needed.
 
-## How to Choose Your Strategy
+## How to choose your strategy
 
 There is no one-size-fits-all answer. Your choice should be a pragmatic balance of cost, time, and reliability.
 

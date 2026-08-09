@@ -12,11 +12,11 @@ heroImage:
 
 You spend six hours manually clicking through the AWS console to set up a VPC, three subnets, and a load balancer, only to realize you missed a single security group rule that breaks the entire staging environment. Then you have to do it all over again for production. This manual toil is a ticking time bomb for technical debt and human error. Infrastructure as Code (IaC) is the industry standard solution, but the market is split between two titans: Terraform and Ansible. Choosing the wrong one for the wrong task leads to fragile pipelines and "snowflake" servers that no one dares to touch.
 
-## The core difference: provisioning vs configuration
+## Terraform vs Ansible: provisioning vs configuration
 
 The most common misunderstanding in DevOps is treating Terraform and Ansible as interchangeable tools. They are not. At their core, they solve two distinct stages of the infrastructure lifecycle.
 
-Terraform is a **provisioning tool**. Its primary job is to talk to cloud providers like AWS, Google Cloud, or Azure to create the "hardware" (virtualized) of your stack. This includes VPCs, subnets, IAM roles, and managed databases. It creates the foundation upon which your software will live.
+Terraform is a **provisioning tool**. Its primary job is to talk to cloud providers like AWS, Google Cloud, or Azure to create the virtualized "hardware" of your stack: VPCs, subnets, IAM roles, and managed databases. It builds the foundation your software will live on.
 
 Ansible is a **configuration management** tool. Once the server exists, Ansible takes over to install Nginx, configure the PHP-FPM pool, or deploy your latest Laravel build. It is designed to manage the internal state of the operating system and the applications running on it.
 
@@ -45,7 +45,7 @@ While Ansible modules are idempotent (meaning they won't re-install Docker if it
 
 ## Immutable vs mutable infrastructure
 
-The choice between Terraform vs Ansible often dictates your architectural philosophy. Terraform leans heavily toward **immutable infrastructure**. In an immutable world, you don't "fix" a server. If you need to change the instance type or update the base OS, you destroy the old server and provision a new one from a fresh image. This eliminates "configuration drift" where servers that started identical become different over time due to manual patches.
+The choice between Terraform vs Ansible often dictates your architectural philosophy. Terraform leans heavily toward **immutable infrastructure**. In an immutable world, you don't "fix" a server. If you need to change the instance type or update the base OS, you destroy the old server and provision a new one from a fresh image. This is the same philosophy behind [containers and orchestration](/blog/docker-vs-kubernetes/), and it eliminates "configuration drift" where servers that started identical become different over time due to manual patches.
 
 Ansible is the king of **mutable infrastructure**. It is designed to go into existing, long-lived servers and modify them. This is often necessary for legacy systems or complex environments where spinning up a fresh cluster for every minor config change is too slow or expensive. For teams using self-hosted solutions like [Coolify for SaaS hosting](/blog/coolify-docker-saas-hosting/), Ansible can be a powerful ally in managing the underlying VPS environment.
 
@@ -69,7 +69,9 @@ A typical workflow looks like this:
 2. **Terraform** outputs the IP addresses of those new instances.
 3. **Ansible** picks up those IPs and runs a playbook to install the LEMP stack, configure SSL certificates, and tune the firewall.
 
-By separating the **cloud fabric** (Terraform) from the **software layer** (Ansible), you create a modular system that is easy to debug and scale. If you need to move from AWS to Google Cloud, you rewrite your Terraform providers but keep your Ansible playbooks largely the same.
+By separating the **cloud fabric** (Terraform) from the **software layer** (Ansible), you create a modular system that is easy to debug and scale. If you need to move from AWS to Google Cloud, you rewrite your Terraform providers but keep your Ansible playbooks largely the same. Wiring both stages into a single [CI/CD](/blog/ci-vs-cd/) pipeline turns this into a one-command, reproducible build.
+
+One 2026 caveat worth flagging: HashiCorp moved Terraform to the Business Source License in August 2023, and the community forked it into [OpenTofu](https://opentofu.org/) (now a CNCF project under the Linux Foundation). OpenTofu is a near drop-in replacement using the same HCL syntax and state format, so "Terraform" in this article applies equally to it. IBM completed its acquisition of HashiCorp in February 2025, which has only sharpened that licensing question for teams.
 
 ## Takeaways
 

@@ -1,6 +1,6 @@
 ---
-title: "API Gateway: the front door of your AI stack"
-description: "Stop exposing LLM providers to the frontend. The gateway pattern for AI apps: tenant isolation, model aliases, rate limiting, and streaming-safe timeouts."
+title: "API gateway: the front door of your AI stack"
+description: "Stop exposing LLM providers to your frontend. The API gateway pattern for AI apps: tenant isolation, model aliases, rate limiting, and streaming-safe timeouts."
 publishDate: 2026-05-20
 category: architecture
 tags:
@@ -17,7 +17,7 @@ tags:
 featured: false
 heroImage:
   url: "/blog/api-gateway-ai-stack/hero.webp"
-  alt: "Stylized API gateway sitting in front of an AI inference stack"
+  alt: "A senior developer facing a glowing API gateway portal ringed by lock, router, and timer icons"
 ---
 
 Stop exposing your models to the wild.
@@ -32,11 +32,11 @@ This is where the API gateway comes in. It is the first line of defense and the 
 
 ## The gatekeeper pattern
 
-At its core, an API gateway is a reverse proxy that sits between your users and your backend services. But for an AI stack, it does more than just forward traffic. It acts as a centralized brain for auth, routing, and rate limiting.
+At its core, an API gateway is a reverse proxy that sits between your users and your backend services. But for an AI stack, it does more than just forward traffic. It acts as a centralized brain for auth, routing, and rate limiting. (If the distinction blurs for you, I break it down in [load balancer vs API gateway](/blog/load-balancer-vs-api-gateway/).)
 
 When a request hits your gateway, it goes through a gauntlet of checks before it ever touches a model. This "gatekeeper" ensures that every millisecond of GPU time or every cent of token cost is intentional.
 
-![Gateway responsibilities — auth, routing, rate limiting, observability](/blog/api-gateway-ai-stack/gateway-stack.webp)
+![Three API gateway responsibilities shown as cards: a key for auth, a route map for routing, and a gauge for rate limits](/blog/api-gateway-ai-stack/gateway-stack.webp)
 
 ## Authentication and tenant isolation
 
@@ -50,15 +50,15 @@ This means the orchestrator doesn't have to "guess" who the user is. It receives
 
 ## Smart routing for model flexibility
 
-The AI world moves fast. Today you are using GPT-4o. Tomorrow, Claude 3.5 Sonnet might be the better play. Next week, you might want to test a fine-tuned Llama 3 model running on your own infrastructure via [Docker and Coolify](/blog/coolify-docker-saas-hosting/).
+The AI world moves fast. Today you are using GPT-5. Tomorrow, Claude Sonnet 4.6 might be the better play. Next week, you might want to test a fine-tuned Llama 4 model running on your own infrastructure via [Docker and Coolify](/blog/coolify-docker-saas-hosting/).
 
 If your model logic is hardcoded into your frontend or a single monolithic backend, switching models is a nightmare. An API gateway solves this with smart routing.
 
-![Smart routing — model aliases, tier-based routing, failover](/blog/api-gateway-ai-stack/routing-flow.webp)
+![Diagram of a user message passing through a shielded API gateway that routes it to one of three LLM backends](/blog/api-gateway-ai-stack/routing-flow.webp)
 
 I use the gateway to create "model aliases." Instead of the frontend calling a specific model, it calls a generic endpoint like `/v1/chat/completions`. The gateway then decides where to send that request based on:
 
-1. **User tier** — free users get routed to a cheaper, faster model like GPT-4o-mini. Pro users get the heavy hitters.
+1. **User tier** — free users get routed to a cheaper, faster model like GPT-5 mini or Claude Haiku 4.5. Pro users get the heavy hitters.
 2. **Versioning** — run an A/B test by routing 10% of traffic to a new model version without changing a single line of client-side code.
 3. **Failover** — if OpenAI is having an outage, the gateway can automatically reroute traffic to an Anthropic backup.
 
@@ -72,7 +72,7 @@ AI requests are asymmetric. A user sends a 50-word prompt, and the model might g
 
 A good API gateway implementation allows for tiered rate limiting. Set global limits to prevent your entire system from being overwhelmed, but also set per-tenant or per-user limits.
 
-I usually implement this using Redis. The gateway checks the user's quota in real time. If they have exceeded their daily token limit or their requests-per-minute (RPM) cap, the gateway returns a `429 Too Many Requests` immediately.
+I usually implement this using Redis. The gateway checks the user's quota in real time. If they have exceeded their daily token limit or their requests-per-minute (RPM) cap, the gateway returns a `429 Too Many Requests` immediately. I go deeper on the token-budget angle in [rate limiting to protect your AI wallet](/blog/rate-limiting-ai-wallet/).
 
 This saves your backend from doing expensive work that you won't get paid for. It also stops "noisy neighbors" — one user scripting an automated tool that hogs all your capacity and makes the app slow for everyone else.
 
@@ -90,9 +90,9 @@ Make sure your gateway (whether you are using [Kong](https://konghq.com/), [Tyk]
 
 Traditional APIs expect a response in 1–2 seconds. A complex RAG query involving multiple vector searches and a large model generation might take 30 seconds or more.
 
-You need to adjust your gateway's "upstream timeout" settings. If you keep the default 5-second timeout, your users will see constant `504 Gateway Timeout` errors even when your models are working perfectly.
+You need to adjust your gateway's "upstream timeout" settings. Kong defaults to a 60-second upstream timeout, but managed gateways are far stricter — AWS API Gateway integrations default to a 29-second cap, and you can only raise it beyond that on Regional or private REST APIs by requesting a service quota increase (which may cost you some account throttle headroom). Leave those defaults in place and your users will see `504 Gateway Timeout` errors even when your models are working perfectly.
 
-![Clean code under load — gateway protecting model traffic](/blog/api-gateway-ai-stack/clean-code.webp)
+![A monitor showing a Kubernetes Gateway API YAML manifest next to a 'keep it clean' sticky note and a coffee mug](/blog/api-gateway-ai-stack/clean-code.webp)
 
 ## Practical steps for your stack
 

@@ -7,7 +7,7 @@ tags: [devops, laravel, shopify, infrastructure, nginx, scaling]
 featured: false
 heroImage:
   url: "/blog/load-balancer-vs-reverse-proxy/hero.webp"
-  alt: "Pop-art comic-style illustration of a load balancer and a reverse proxy managing traffic"
+  alt: "Pop-art comic illustration contrasting a load balancer distributing traffic with a reverse proxy shielding backend servers"
 ---
 
 Your server is gasping for air. A sudden traffic spike from a new marketing campaign or a successful product launch on Shopify has pushed your single Laravel instance to its absolute limit. CPU usage is pinned at 99 percent. Requests are timing out. The database is struggling to keep up with the sheer volume of open connections. You know you need to scale. You know you need a buffer between the public internet and your application. But when you look at the architectural diagrams, you see two terms used almost interchangeably: load balancer and reverse proxy.
@@ -16,14 +16,14 @@ Choosing the wrong one — or failing to understand how they work together — l
 
 ## The gatekeeper: understanding the reverse proxy
 
-A reverse proxy is a server that sits in front of one or more web servers and intercepts requests from clients. It acts as a shield and a middleman. When a user tries to access your website, they talk to the reverse proxy first. The proxy then decides how to handle that request before passing it along to your backend Laravel or Node.js application.
+A reverse proxy is a server that sits in front of one or more web servers and intercepts requests from clients. It acts as a shield and a middleman. When a user tries to access your website, they talk to the reverse proxy first, then it decides how to handle that request before passing it along to your backend Laravel or Node.js application. (If you are fuzzy on which direction it faces, see [forward proxy vs reverse proxy](/blog/forward-proxy-vs-reverse-proxy/) — they sit on opposite ends of the connection.)
 
 In the world of [Coolify and self-hosted SaaS](/blog/coolify-self-hosted-saas/), Nginx is the most common reverse proxy. Its primary job is to simplify the management of incoming traffic. Instead of exposing your application server directly to the wild internet, the reverse proxy handles the "dirty work" of HTTP communication.
 
 ### Key functions of a reverse proxy
 
 - **SSL termination:** Encrypting and decrypting HTTPS traffic is CPU-intensive. A reverse proxy handles the SSL certificates and offloads this work from your application server. This allows your Laravel workers to focus on executing business logic rather than processing handshakes.
-- **Caching:** A reverse proxy can store copies of static assets or even dynamic pages. When a second user requests the same data, the proxy serves it from memory. This drastically reduces the load on your backend.
+- **Caching:** A reverse proxy can store copies of static assets or even dynamic responses. When a second user requests the same data, the proxy serves it straight from its cache instead of hitting your application. (Nginx, for example, keeps cached responses on disk with the keys held in shared memory.) This drastically reduces the load on your backend.
 - **Request routing:** You can route traffic based on the URL path. For example, your reverse proxy can send all requests starting with `/api` to one service and everything else to a different frontend application.
 - **Security and anonymity:** By hiding the IP addresses of your backend servers, a reverse proxy makes it much harder for attackers to target your infrastructure directly. It can also act as a basic Web Application Firewall (WAF) to block malicious traffic patterns.
 
@@ -31,7 +31,7 @@ In the world of [Coolify and self-hosted SaaS](/blog/coolify-self-hosted-saas/),
 
 ## The traffic controller: understanding the load balancer
 
-While a reverse proxy focuses on _how_ a request is handled, a load balancer focuses on _where_ it goes. The primary mission of a load balancer is high availability and horizontal scaling. If you have five identical Laravel servers running in a [Docker](/blog/coolify-docker-saas-hosting/) cluster, the load balancer ensures that no single server gets overwhelmed while others sit idle.
+While a reverse proxy focuses on _how_ a request is handled, a load balancer focuses on _where_ it goes. The primary mission of a load balancer is high availability and [horizontal scaling](/blog/horizontal-vs-vertical-scaling/). If you have five identical Laravel servers running in a [Docker](/blog/coolify-docker-saas-hosting/) cluster, the load balancer ensures that no single server gets overwhelmed while others sit idle.
 
 Load balancers operate at different levels of the networking stack. Layer 4 load balancers work at the transport level (TCP/UDP), making decisions based on IP addresses and ports without looking at the actual content of the request. Layer 7 load balancers work at the application level (HTTP/HTTPS), allowing for much more granular routing based on headers, cookies, or URL parameters.
 
@@ -75,9 +75,9 @@ This multi-layer approach provides redundancy. If one Nginx instance fails, the 
 
 ### The Shopify app context
 
-If you are developing a Shopify app, your infrastructure requirements are unique. Shopify's webhooks can send thousands of requests per second during major events like Black Friday. You cannot rely on a single server.
+If you are developing a Shopify app, your infrastructure requirements are unique. During major events like Black Friday, webhook traffic can spike hard and bursty, and Shopify gives you only a 5-second window to acknowledge each delivery before it counts as failed and gets retried (up to 8 times over roughly 4 hours). You cannot ride that out on a single server.
 
-You should use a load balancer to ingest these webhooks and distribute them across a fleet of worker nodes. A reverse proxy at the edge can help you implement rate limiting. This prevents a single store from monopolizing your app resources and ensures that your [agentic commerce systems](/blog/agentic-commerce-shopify/) remain responsive for all merchants.
+You should use a load balancer to ingest these webhooks and distribute them across a fleet of worker nodes, acknowledging fast and processing the payload [asynchronously](/blog/synchronous-vs-asynchronous-communication/). A reverse proxy at the edge can help you implement rate limiting. This prevents a single store from monopolizing your app resources and ensures that your [agentic commerce systems](/blog/agentic-commerce-shopify/) remain responsive for all merchants.
 
 ![Architectural diagram for a Laravel application stack using Nginx and Docker](/blog/load-balancer-vs-reverse-proxy/laravel-nginx-stack.webp)
 

@@ -1,6 +1,6 @@
 ---
 title: "Claimify — warranty + returns claims for Shopify"
-description: "End-to-end claim management embedded in Shopify Admin. Customers file warranty / damage / return claims from the storefront; merchants triage, approve, and refund or reship from one queue with status webhooks."
+description: "Warranty, damage, and return claims managed inside Shopify Admin — customers file from the storefront, merchants triage, approve, and refund from one queue."
 category: shopify
 stack:
   - "Laravel"

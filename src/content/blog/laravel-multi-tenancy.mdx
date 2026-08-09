@@ -15,7 +15,7 @@ I still remember the panic of my first SaaS launch. I was watching the logs as t
 
 Building a software-as-a-service (SaaS) platform is a massive technical challenge. The biggest hurdle is almost always data isolation. You need to ensure that every tenant feels like they have the whole application to themselves. If you get this wrong early on, it will haunt you forever.
 
-I have spent years refining a scalable architecture using Laravel. It is the most robust way to handle multiple customers on a single codebase. Here is how I approach the architecture to ensure security and scalability.
+I have spent years refining a scalable Laravel multi-tenancy architecture. It is the most robust way to serve many customers from a single codebase without their data ever bleeding together. Here is how I approach it to keep both security and scalability intact.
 
 ## Why simple database structures fail SaaS
 
@@ -25,7 +25,7 @@ You start adding more relationships. You forget to add a `where` clause in one o
 
 Performance also becomes a nightmare. As your database grows to millions of rows the queries get slower. Indexing helps, but it does not solve the fundamental problem of data bloat. You need a strategy that isolates data while keeping your infrastructure manageable.
 
-![Tenant isolation architecture diagram](/blog/laravel-multi-tenancy/architecture.webp)
+![Diagram comparing single-database tenant_id isolation with a multi-database setup where each tenant has its own database](/blog/laravel-multi-tenancy/architecture.webp)
 
 ## Choosing your isolation strategy
 
@@ -33,7 +33,7 @@ When I build custom web solutions I always start by choosing between two main pa
 
 The **single database** approach uses a shared schema. Every row has a `tenant_id`. It is cheap to run and easy to update. I recommend this for startups where costs need to stay low. You can manage thousands of small tenants on a single server this way.
 
-The **multi-database** approach is the gold standard for enterprise. Every customer gets their own database. This offers the best security and makes backups easy. If one database crashes the others stay online. I use this for high-value clients who have strict compliance needs.
+The **multi-database** approach is the gold standard for enterprise. Every customer gets their own database. This offers the strongest isolation and makes per-tenant [backups and replication](/blog/replication-vs-backup-laravel/) straightforward. If one database crashes the others stay online. I use this for high-value clients who have strict compliance needs.
 
 I often use the `stancl/tenancy` package for Laravel. It is the most flexible tool in the ecosystem. It allows you to switch between these strategies as your business grows. You can find out more about how I handle these complex technical challenges on the [Ansezz work page](/work/).
 
@@ -43,7 +43,7 @@ The secret to sleeping well at night is automation. I never rely on my memory to
 
 A global scope automatically adds a filter to every query on a model. It ensures that `Customer::all()` only returns customers for the current tenant. It happens behind the scenes so you cannot forget it.
 
-![Annotated code snippet showing a BelongsToTenant trait](/blog/laravel-multi-tenancy/code-snippet.webp)
+![Annotated PHP code of a BelongsToTenant trait registering a global scope and a creating event to set tenant_id](/blog/laravel-multi-tenancy/code-snippet.webp)
 
 I create a `BelongsToTenant` trait. I apply this trait to every model that needs isolation. It handles the filtering and automatically sets the `tenant_id` when a new record is created. It is a simple solution that prevents 99 percent of data leaks.
 
@@ -84,7 +84,7 @@ You also need to isolate your cache and your file storage. If two tenants upload
 
 Your architecture is only as good as the infrastructure it runs on. I usually deploy my Laravel apps using Docker and cloud providers like Google Cloud or AWS.
 
-Containerization is key. It allows me to scale the application horizontally. When traffic spikes I can spin up more instances of the web server. Because the multi-tenancy logic is handled at the application level, the infrastructure stays clean. When a single tenant starts pushing serious request volume, I reach for [Laravel Octane to handle high traffic](/blog/laravel-octane-high-traffic/) before throwing more servers at the problem.
+Containerization is key. It lets me [scale the application horizontally](/blog/horizontal-vs-vertical-scaling/): when traffic spikes I spin up more instances of the web server. That only works because the web tier stays [stateless](/blog/stateless-vs-stateful-apps/) — tenant context is resolved per request, not stored on the box. Because the multi-tenancy logic lives at the application level, the infrastructure stays clean. When a single tenant starts pushing serious request volume, I reach for [Laravel Octane to handle high traffic](/blog/laravel-octane-high-traffic/) before throwing more servers at the problem.
 
 ![Cloud infrastructure diagram for a multi-tenant Laravel deployment](/blog/laravel-multi-tenancy/infrastructure.webp)
 
@@ -96,13 +96,13 @@ If you are looking to modernize your digital presence with a scalable cloud setu
 
 The final piece of the puzzle is the user interface. Customers need a seamless way to move between different accounts if they own multiple businesses.
 
-I build clean dashboards using Vue. The frontend communicates with the Laravel backend via GraphQL APIs. This setup allows for a very fast and reactive user experience. The tenant switcher is always accessible and shows the user exactly which context they are working in.
+I build clean dashboards using Vue, with the frontend talking to the Laravel backend over a GraphQL API for a reactive feel. The tenant switcher is always accessible and shows the user exactly which context they are working in.
 
 ![Tenant switcher UI mockup in a Vue dashboard](/blog/laravel-multi-tenancy/tenant-switcher.webp)
 
 I focus on making the transition between tenants feel instant. I cache the tenant configuration in the frontend to avoid unnecessary API calls. It is these small details that separate a basic app from a high-quality pro solution.
 
-## My SaaS architecture checklist
+## My Laravel multi-tenancy checklist
 
 If you are starting a new project today, here are the steps I recommend you follow.
 

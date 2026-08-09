@@ -1,6 +1,6 @@
 ---
-title: "Claude MCP: connecting my dev tools to LLMs for context"
-description: "The Model Context Protocol is the USB port for LLMs: one MCP server, any host, no MxN integration tax. The architecture, the servers I run, and why it's safe."
+title: "Claude MCP: connecting my dev tools to LLMs"
+description: "The Model Context Protocol is a USB-C port for LLMs: one MCP server, any host, no MxN integration tax. The architecture, the servers I run, and why it is safe."
 publishDate: 2026-05-27
 category: ai
 tags:
@@ -17,24 +17,24 @@ tags:
 featured: false
 heroImage:
   url: "/blog/claude-mcp-dev-tools/hero.webp"
-  alt: "Pop-art illustration of dev tools plugged into an LLM via MCP"
+  alt: "Pop-art illustration of developer tools plugged into a Claude LLM through an MCP connector"
 ---
 
-Every time I have to build a custom integration for a new tool, a little piece of my developer soul dies. It is a maintenance nightmare that never ends. We have reached a point where building the actual product is often faster than setting up the pipes to make it work with our data.
+Every time I have to build a custom integration for a new tool, a little piece of my developer soul dies. It is a maintenance nightmare that never ends. We have reached a point where building the actual product is often faster than setting up the pipes to make it work with our data — which is exactly the problem Claude's MCP (Model Context Protocol) was built to kill.
 
 If you have spent any time building [agentic workflows and vibe coding](/blog/agentic-workflows-vibe-coding/), you know exactly what I am talking about. You have an LLM like Claude that is incredibly smart but essentially locked in a room with no windows. To give it context, you have to manually copy-paste code, export CSV files, or spend three days writing a brittle wrapper for a third-party API just so your assistant can "see" your work.
 
 This fragmentation is the biggest bottleneck in modern software development. We have powerful models, but they are isolated from our local files, our databases, and our production logs. It is like having a world-class architect who isn't allowed to visit the construction site. They are just guessing based on the photos you decide to send them.
 
-Enter the Model Context Protocol — or as I have been calling it: the USB port for LLMs.
+Enter the Model Context Protocol — or, in Anthropic's own framing, a USB-C port for AI applications.
 
 ## The fragmentation tax is killing your productivity
 
 The problem is simple but massive. Every AI application — whether it is Claude Desktop, a custom agent, or an IDE extension — wants to talk to your data. On the other side, every data source — your GitHub repos, your Postgres databases, your Slack channels — has its own specific API and authentication flow.
 
-Without a standard, we are stuck in an M×N problem. If you have 5 AI apps and 10 data sources, you need 50 different integrations. This is why most "AI-powered" tools feel shallow. They only support a few basic integrations, and if you want to use your internal company data, you are back to writing custom glue code.
+Without a standard, we are stuck in an M×N problem. If you have 5 AI apps and 10 data sources, you need 50 different integrations. (If you are weighing whether to expose a plain REST endpoint or an MCP server here, I broke that down in [API vs MCP](/blog/api-vs-mcp/).) This is why most "AI-powered" tools feel shallow. They only support a few basic integrations, and if you want to use your internal company data, you are back to writing custom glue code.
 
-This agitation is real. We are wasting hours building the same connectors over and over again. We are worried about security because every new integration is another potential leak. And we are frustrated because the "magic" of AI disappears the moment we hit a data silo.
+The cost is real. We waste hours rebuilding the same connectors, every new integration is another potential leak, and the "magic" of AI evaporates the moment we hit a data silo.
 
 ## The solution: MCP as a universal standard
 
@@ -60,13 +60,13 @@ The model can then decide to call the "grep" tool whenever it needs to find a sp
 
 ## Modularity and the MCP server ecosystem
 
-![A grid of MCP servers — Postgres, GitHub, Google Drive — ready to plug in](/blog/claude-mcp-dev-tools/servers.webp)
+![Grid of plug-in MCP servers for Postgres, GitHub, and Google Drive feeding context to an LLM](/blog/claude-mcp-dev-tools/servers.webp)
 
 The beauty of this modularity is that once a server is built, anyone can use it. The community has already started building servers for everything you can imagine. I have been using a few in my daily workflow that have completely changed how I code:
 
-- **Postgres MCP** — I can point Claude at a local or remote database. It can inspect schemas and even run queries to help me debug data issues without me leaving the chat.
-- **GitHub MCP** — this allows the model to search through my repositories, list issues, and even create pull requests. It is like having a junior dev who actually knows where the code is.
-- **Google Drive MCP** — perfect for when I need to cross-reference technical documentation stored in docs with the actual implementation in my IDE.
+- **A Postgres server** — I point Claude at a local or remote database so it can inspect schemas and run read-only queries to help me debug data issues without leaving the chat. Anthropic's original reference Postgres server is now archived, so I lean on a maintained community build.
+- **GitHub's official MCP server** — this lets the model search my repositories, list issues, and open pull requests. It is like having a junior dev who actually knows where the code is. GitHub now ships and hosts this itself, with a remote option you authenticate via OAuth.
+- **A Google Drive server** — handy when I need to cross-reference technical docs stored in Drive with the actual implementation in my IDE. The reference server is archived too, so I treat it as a starting point rather than something to trust blindly.
 
 This also solves a massive pain point in [agentic commerce for Shopify](/blog/agentic-commerce-shopify/). Imagine an agent that can talk directly to your Shopify store via MCP to check inventory levels or update product descriptions in real-time, all while maintaining a secure, standardized connection.
 
@@ -76,11 +76,11 @@ This also solves a massive pain point in [agentic commerce for Shopify](/blog/ag
 
 The biggest question I get when I talk about connecting dev tools to an LLM is: "is it safe?"
 
-Security is baked into the design of MCP. Because the server is a separate process, it runs in its own sandbox. It only has access to the specific resources you grant it.
+Security is a first-class concern in MCP's design. The server runs as a separate process that only exposes the specific tools and resources you grant it. (Note: a local stdio server still runs with your normal user privileges — it's process isolation, not a hardened sandbox — so only run servers you trust.)
 
 For local servers, the protocol typically uses `stdio` (stdin/stdout). This means the server can only talk to the host through a very narrow pipe. It doesn't have open network ports listening for connections. It only exists as long as the host is running it.
 
-For remote servers, MCP uses OAuth 2.1. This allows for fine-grained permissions. You can authorize a GitHub MCP server to only read public repositories, or a database server to only access specific tables.
+For remote servers, MCP standardizes on OAuth 2.1 (with PKCE) for authorization. This allows for fine-grained, scope-based permissions. You can authorize a GitHub MCP server to only read public repositories, or a database server to only access specific tables.
 
 This is a huge improvement over the "give me your master API key" approach that we have seen in the past. We can now treat AI tools with the same "least privilege" mindset we use for any other service in our stack. This is especially important when you are trying to avoid [RAG mistakes in production](/blog/7-rag-mistakes-production/), where data leakage is a top-tier risk.
 
@@ -96,9 +96,9 @@ Without a protocol like MCP, that vision is impossible to scale. It would be too
 
 If you are ready to start experimenting with this, here is what I recommend:
 
-- **Install the Claude Desktop app** — it is currently the most mature host for MCP.
+- **Install the Claude Desktop app** — it is one of the most mature MCP hosts, and a low-friction place to start.
 - **Try the filesystem server** — this is the easiest way to feel the power. Give Claude access to a specific folder and watch it navigate your codebase.
-- **Don't build, search first** — check the official MCP GitHub repository. There are already servers for Brave search, Postgres, Slack, and more.
+- **Don't build, search first** — browse the official MCP Registry before writing anything. The reference repo now keeps only a handful of maintained servers (filesystem, fetch, git, memory, and a few others), and most of the well-known integrations are either archived or maintained by the vendor directly — like GitHub's own server.
 - **Think in tools, not just prompts** — start thinking about what "tools" your internal systems could expose. If you have a custom admin panel, could it be an MCP server?
 
 Connecting your dev tools to an LLM isn't just about speed. It is about reducing the cognitive load of switching between tabs, terminals, and documentation. It allows you to stay in the "flow" longer.

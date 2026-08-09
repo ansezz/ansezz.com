@@ -1,6 +1,6 @@
 ---
-title: "GPU-aware load balancing: managing AI compute like a pro"
-description: "Round-robin breaks when LLM requests span 50 to 50,000 tokens. Prefill/decode disaggregation, KV-cache-aware routing, and the four metrics that cut your P99."
+title: "GPU-aware load balancing for AI inference"
+description: "Round-robin breaks when LLM requests span 50 to 50,000 tokens. GPU-aware load balancing with prefill/decode disaggregation and the metrics that cut P99."
 publishDate: 2026-05-24
 category: architecture
 tags:
@@ -22,7 +22,7 @@ heroImage:
   alt: "GPU-aware load balancer routing AI inference traffic across a fleet"
 ---
 
-You just scaled your RAG application to a hundred concurrent users. Suddenly, your latency spikes. Some users get their answers in two seconds, while others are staring at a loading spinner for thirty. You check your load balancer and it says everything is fine. CPU is at 40%. RAM is stable. But your GPUs are screaming, and your P99 latency is in the gutter.
+You just scaled your RAG application to a hundred concurrent users. Suddenly, your latency spikes. Some users get their answers in two seconds, while others are staring at a loading spinner for thirty. You check your load balancer and it says everything is fine. CPU is at 40%. RAM is stable. But your GPUs are screaming, and your P99 latency is in the gutter. This is the problem GPU-aware load balancing exists to solve.
 
 The problem is that you are treating your AI models like traditional web servers. Sending a 4,000-token prompt to the same GPU that is currently generating a 50-token summary is a recipe for disaster. Round-robin routing is a relic of the past when it comes to LLM inference. If you don't account for the unique way GPUs handle compute and memory, you aren't just wasting money. You are killing your user experience.
 
@@ -42,7 +42,7 @@ LLM inference happens in two distinct phases. Understanding the difference betwe
 
 The first phase is **prefill**. This is when the model reads your entire prompt and processes all the tokens at once. It is a heavy, compute-intensive task that builds something called the **KV cache** (key-value cache). Prefill loves big batches and high-performance tensor cores. It is where the "heavy lifting" happens.
 
-![Prefill pool vs decode pool — disaggregated GPU fleet](/blog/gpu-aware-load-balancing/prefill-vs-decode.webp)
+![Diagram comparing the compute-bound prefill phase and memory-bound decode phase of LLM inference](/blog/gpu-aware-load-balancing/prefill-vs-decode.webp)
 
 The second phase is **decode**. This is where the model generates the response one token at a time. Each new token only needs to look at the previously generated tokens and the KV cache. This phase is surprisingly light on compute but incredibly heavy on memory bandwidth. It is slow and long-lived.
 
@@ -59,15 +59,15 @@ To build a better router, you need to stop looking at CPU and start looking at t
 
 I often recommend using tools like [vLLM](https://github.com/vllm-project/vllm) because they expose these metrics out of the box. You can pipe these into a custom gateway that makes routing decisions based on real-time VRAM availability rather than just "is the server up?"
 
-## The prefix-aware hack: SkyWalker-style routing
+## Prefix-aware routing: reuse the KV cache
 
 Here is a secret — the most expensive part of a RAG request is often re-processing the same system prompt or long context over and over again. If you send five consecutive questions about the same document to five different GPUs, each GPU has to perform the "prefill" phase for that document from scratch.
 
-![Prefix matching — routing prompts to GPUs with warm KV cache](/blog/gpu-aware-load-balancing/prefix-routing.webp)
+![Prefix-aware routing sending prompts with a shared prefix to the GPU holding a warm KV cache](/blog/gpu-aware-load-balancing/prefix-routing.webp)
 
-This is where **prefix-aware routing** (sometimes called SkyWalker-style routing) comes in. Instead of routing randomly, your load balancer tokenizes the start of the prompt and looks for a GPU that already has that specific content in its KV cache.
+This is where **prefix-aware routing** (also called KV-cache-aware routing) comes in. Instead of routing randomly, your load balancer tokenizes the start of the prompt and looks for a GPU that already has that specific content in its KV cache.
 
-By matching the "prefix" of a prompt to a specific GPU, you can skip the prefill phase entirely for large chunks of text. This cuts latency from hundreds of milliseconds to almost zero. It is the single most effective way to optimize costs in production RAG systems. I've written before about [common RAG mistakes](/blog/7-rag-mistakes-production/), and ignoring cache locality is definitely one of them.
+By matching the prefix of a prompt to a GPU that already holds those tokens, you skip the prefill work for the shared portion and reuse the cached keys and values directly. That can turn hundreds of milliseconds of TTFT into a near-instant first token, and it is one of the highest-leverage optimizations in a production RAG system. I've written before about [common RAG mistakes](/blog/7-rag-mistakes-production/), and ignoring cache locality is definitely one of them. If you want the layer above this — caching whole responses and embeddings — see [Redis and semantic caching for RAG](/blog/redis-semantic-caching-rag/).
 
 ## Splitting the fleet into specialized pools
 
@@ -75,8 +75,8 @@ As you scale, you should stop treating every GPU as a generalist. A senior move 
 
 I like to split my GPUs into two pools:
 
-- **The prefill pool** — high-compute GPUs (like H100s) optimized for processing massive amounts of context quickly. These nodes handle the initial prompt and then "hand off" the state.
-- **The decode pool** — memory-optimized GPUs (like A100s or even cheaper L40s) that focus on churning out tokens for existing requests.
+- **The prefill pool** — compute-heavy GPUs (like H100s or B200s) optimized for chewing through large prompts fast. These nodes process the initial context, then "hand off" the KV state.
+- **The decode pool** — GPUs you size for memory bandwidth and capacity rather than raw FLOPs (think A100s, or cheaper L40S cards) that focus on churning out tokens for existing requests.
 
 This separation lets you scale based on your specific workload. If your users are uploading huge documents but only asking for short summaries, you scale your prefill pool. If they are having long, chatty conversations, you scale your decode pool.
 
@@ -88,10 +88,10 @@ You don't need to build a custom engine from scratch to start doing this. Here i
 
 1. **Centralize your metrics** — use Prometheus to scrape vLLM or TGI metrics from every GPU node.
 2. **Use a smart gateway** — implement a middleware in Go or Rust (or even a heavy-duty Lua script in OpenResty) that queries these metrics before choosing a target.
-3. **Prioritize KV cache** — check if the `conversation_id` has been seen by a specific node recently. If it has, and that node isn't at 100% KV utilization, send it there.
+3. **Prioritize KV cache** — route on prefix overlap when you can. A cheap first approximation is session stickiness: if a node served this `conversation_id` recently and isn't at 100% KV utilization, send the follow-up there so the warm cache gets reused.
 4. **Set hard limits** — if a GPU reaches 85% VRAM usage, take it out of the rotation for new prompts until some sessions finish.
 
-![SaaS metrics dashboard tracking TTFT, ITL, KV utilization](/blog/gpu-aware-load-balancing/metrics-dashboard.webp)
+![GPU inference dashboard tracking time to first token, inter-token latency, and KV cache utilization](/blog/gpu-aware-load-balancing/metrics-dashboard.webp)
 
 Managing AI compute is about moving from "black box" infrastructure to "context-aware" infrastructure. When your load balancer knows the difference between a 10-token greeting and a 10,000-token context window, your costs go down and your users stay happy.
 

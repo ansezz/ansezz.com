@@ -1,6 +1,6 @@
 ---
-title: "Laravel Octane: making PHP scream on high-traffic apps"
-description: "Laravel Octane boots your app once and keeps it warm in memory, feeding requests through a worker pool — cutting 50ms responses to single digits via Swoole."
+title: "Laravel Octane for high-traffic PHP apps"
+description: "Laravel Octane boots your app once and keeps it warm in memory, feeding requests through a worker pool. How to cut boot overhead and scale to high traffic."
 publishDate: 2026-05-29
 category: laravel
 tags:
@@ -8,16 +8,16 @@ tags:
 featured: false
 heroImage:
   url: "/blog/laravel-octane-high-traffic/hero.webp"
-  alt: "Laravel Octane boosting a PHP application to high throughput"
+  alt: "Laravel Octane keeping a PHP application warm in memory to handle high-traffic throughput"
 ---
 
 Standard PHP is a bit like a restaurant that fires its entire staff and rebuilds the kitchen from scratch for every single customer order. You walk in, they hire a chef, buy a stove, cook your meal, and then demolish the building as soon as you leave. It's consistent and safe, but it's a massive waste of energy when you're trying to serve thousands of people at once.
 
-This is the PHP-FPM lifecycle. Every request boots the entire Laravel framework, loads your service providers, parses your config, and instantiates your objects. For low-traffic sites, it's fine. But when you hit real scale, those milliseconds of "boot time" become a wall you can't climb without throwing excessive amounts of expensive hardware at the problem. Horizontal scaling buys you room, but it doesn't fix the underlying latency.
+This is the PHP-FPM lifecycle. Every request boots the entire Laravel framework, loads your service providers, parses your config, and instantiates your objects. For low-traffic sites, it's fine. But when you hit real scale — say, a busy [multi-tenant SaaS](/blog/laravel-multi-tenancy/) — those milliseconds of "boot time" become a wall you can't climb without throwing excessive amounts of expensive hardware at the problem. Horizontal scaling buys you room, but it doesn't fix the underlying latency.
 
 The solution is to stop rebuilding the kitchen. Laravel Octane changes the game by booting your application once, keeping it in memory, and then feeding requests to it through a high-performance worker pool. It transforms PHP from a "short-lived script" language into a "long-lived process" powerhouse.
 
-## Why your app feels heavy
+## Why your app feels heavy without Laravel Octane
 
 ![PHP-FPM rebuilding the framework each request versus Octane staying warm](/blog/laravel-octane-high-traffic/fpm-vs-octane.webp)
 
@@ -27,17 +27,17 @@ If you're running a complex Laravel monolith with dozens of packages and custom 
 
 Laravel Octane removes this boot cycle. By using high-performance application servers like Swoole or RoadRunner, your app stays resident in memory. The first request boots the framework, and subsequent requests hit a "warm" application. We're talking about moving from 50ms responses to sub-10ms responses just by changing how the process is managed.
 
-## Swoole vs RoadRunner: choosing your engine
+## Choosing your application server
 
-![Swoole and RoadRunner compared as Octane application servers](/blog/laravel-octane-high-traffic/swoole-vs-roadrunner.webp)
+![Swoole and RoadRunner compared as Laravel Octane application servers](/blog/laravel-octane-high-traffic/swoole-vs-roadrunner.webp)
 
-When you drop Octane into your project, you have to choose between two primary engines: Swoole and RoadRunner. I've used both in production, and while they both solve the "persistent state" problem, they do it differently.
+Octane runs on top of a high-performance application server. It supports four: FrankenPHP, Swoole, Open Swoole, and RoadRunner. FrankenPHP (a Go-based server built on Caddy) is the server Octane recommends first when `octane:install` prompts you, and it's the easiest path to HTTP/2, HTTP/3, and automatic HTTPS. But the two I reach for most in production are Swoole and RoadRunner, and they solve the "persistent state" problem differently.
 
 ### Swoole
 
 Swoole is a C extension for PHP. It's essentially a high-performance networking engine that allows PHP to handle asynchronous tasks, coroutines, and long-lived connections.
 
-- **Pros** — it is incredibly fast. Because it lives as an extension, it has deep access to PHP's internals. It also gives you access to the "Octane cache," an in-memory store that's significantly faster than Redis for local data.
+- **Pros** — it is incredibly fast. Because it lives as an extension, it has deep access to PHP's internals. It also unlocks the Octane cache, an in-memory store (backed by Swoole tables) that the docs clock at up to 2 million reads/writes per second, plus concurrent tasks, ticks, and intervals.
 - **Cons** — it can be a bit of a nightmare to install and debug. Because it's a binary extension, you have to compile it or find the right package for your OS. Xdebug doesn't always play nice with it, and it can be picky about your environment.
 
 ### RoadRunner
@@ -47,7 +47,7 @@ RoadRunner is written in Go. It acts as a load balancer and process manager that
 - **Pros** — no extensions required. It's a single binary you drop into your project. It's much easier to set up in a [Docker container](/blog/coolify-docker-saas-hosting/) and generally feels more "cloud-native."
 - **Cons** — it's slightly slower than Swoole because of the communication overhead between the Go binary and the PHP processes, though for 99% of apps, this difference is negligible.
 
-For most developers starting out with Octane, I recommend RoadRunner for the ease of use. If you are chasing every last millisecond and need features like async task workers, go with Swoole.
+For most developers starting out, I'd pick FrankenPHP at the install prompt and not overthink it — it's the smoothest setup and ships HTTP/3 for free. RoadRunner is the easy pick if you want a single Go binary with no PHP extension to manage. Reach for Swoole only when you're chasing every last millisecond or need its concurrency features like async task workers, ticks, and the Octane cache.
 
 ## Tuning your worker pool
 
@@ -65,7 +65,7 @@ A general rule of thumb for sizing your worker pool depends on whether your app 
 php artisan octane:start --server=swoole --workers=16
 ```
 
-Don't forget about **task workers** if you're using Swoole. These are separate from your HTTP workers and are perfect for offloading slow tasks like sending emails or processing webhooks without blocking the main request cycle.
+Don't forget about **task workers** if you're using Swoole or Open Swoole. Sized separately with the `--task-workers` flag, these run in their own processes and are perfect for offloading slow work like sending emails or fanning out concurrent queries without blocking the main request cycle.
 
 ## The danger of persistent state
 
@@ -83,7 +83,7 @@ Laravel helps you by "resetting" some core services between requests, but it can
 
 ### Protecting yourself with max-requests
 
-The best insurance policy against memory leaks is the `--max-requests` flag. This tells Octane to kill and restart a worker after it has handled a certain number of requests.
+The best insurance policy against memory leaks is the `--max-requests` flag. This tells Octane to gracefully restart a worker after it has handled a certain number of requests. Octane already does this every 500 requests by default; tune the number to match how fast your workers accumulate memory.
 
 ```bash
 # Restart workers every 1000 requests to prevent memory bloat
@@ -96,8 +96,8 @@ This keeps your memory usage predictable while still giving you the performance 
 
 Once you have Octane running, there are a few technical levers you can pull to squeeze out even more performance.
 
-1. **Connection pooling** — ensure your database connections are persistent. In Octane, your workers stay alive, so they can hold onto their DB connections instead of reconnecting every time. Check your `database.php` config and ensure you aren't hitting the max connection limit on your DB server.
-2. **Octane cache** — if you're using Swoole, use `Octane::cache()`. It's an in-memory table that's blistering fast. Use it for frequently accessed configuration or small datasets that don't change often.
+1. **Database connections** — in Octane your workers stay alive, so each one holds its own DB connection open between requests instead of reconnecting every time. That's a win, but watch the math: more workers means more open connections, so check your `database.php` config and make sure the worker count doesn't blow past the max connection limit on your DB server. This matters even more once you add [read replicas](/blog/replication-vs-backup-laravel/) to the mix.
+2. **Octane cache** — if you're using Swoole, reach for `Cache::store('octane')`. It's an in-memory Swoole table that's blistering fast and shared across every worker on the box. Use it for frequently accessed configuration or small datasets that don't change often. Just remember it's wiped when the server restarts.
 3. **Bytecode caching** — make sure OPcache is enabled and tuned. Set `opcache.validate_timestamps=0` in production since your code won't be changing while the server is running.
 4. **Graceful reloads** — when you deploy new code, use `php artisan octane:reload`. This will gracefully restart the workers without dropping current connections. It's essential for zero-downtime deployments.
 
@@ -108,7 +108,7 @@ Transitioning to Octane isn't just about installing a package; it's about maturi
 - **Identify the bottleneck** — only use Octane if your boot time is the problem. If your database queries take 2 seconds, Octane won't help you.
 - **Test for leaks** — watch how your app behaves under sustained load and profile its memory growth over time.
 - **Monitor workers** — keep an eye on your CPU and RAM usage to find the "sweet spot" for your worker count.
-- **Leverage concurrency** — use `Octane::concurrently()` to execute multiple tasks at once and return their results, cutting down total response time for complex pages.
+- **Leverage concurrency** — on Swoole, use `Octane::concurrently()` to run independent operations in parallel via task workers and return their results together, cutting total response time for complex pages.
 
 Octane takes PHP to a level where it can compete with Node.js and Go for high-concurrency applications while keeping the developer experience of Laravel intact. If you're building a SaaS that expects a lot of noise, this is your jet engine.
 

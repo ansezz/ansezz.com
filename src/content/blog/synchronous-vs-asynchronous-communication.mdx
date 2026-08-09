@@ -26,7 +26,7 @@ However, synchronous flows become dangerous when you introduce external dependen
 
 Asynchronous communication decouples the request from the processing. The client sends a message or triggers an event and immediately receives a response. The actual work happens "out of band" in a separate process or at a later time.
 
-This is more like sending an email. You hit send and immediately go back to your day. The recipient reads and processes the message whenever they are available. In a technical stack, this is achieved using message queues like Redis or Amazon SQS.
+This is more like sending an email. You hit send and immediately go back to your day. The recipient reads and processes the message whenever they are available. In a technical stack, this is achieved using message queues like Redis or Amazon SQS, or a dedicated broker such as [RabbitMQ](/blog/scaling-with-rabbitmq/).
 
 ![Laravel job queueing architecture showing dispatched jobs flowing through Redis to workers](/blog/synchronous-vs-asynchronous-communication/laravel-queue-architecture.webp)
 
@@ -63,7 +63,7 @@ By using `dispatch()`, you push a payload into Redis. A separate process, manage
 
 For e-commerce developers, understanding asynchronous communication is mandatory when working with Shopify. Shopify uses webhooks to notify your application of events like `orders/create` or `products/update`.
 
-Webhooks are fundamentally asynchronous. Shopify does not wait for your app to process the entire order. It sends the POST request and expects a `200 OK` response within a few seconds. If your code tries to run complex inventory logic or sync data to an ERP synchronously within that webhook route, you risk timing out. Shopify will then retry the webhook multiple times, potentially leading to duplicate data processing or even service suspension.
+Webhooks are fundamentally asynchronous. Shopify does not wait for your app to process the entire order. It sends the POST request and expects a `2xx` response within five seconds. If your code tries to run complex inventory logic or sync data to an ERP synchronously within that webhook route, you risk timing out. Shopify then retries the failed delivery up to eight times over roughly four hours, which can mean duplicate processing if your handler is not idempotent. Worse, if your endpoint keeps failing, Shopify removes the webhook subscription entirely, and you stop receiving events until you re-register it.
 
 ![Shopify webhook delivery feeding a SaaS dashboard integration](/blog/synchronous-vs-asynchronous-communication/shopify-webhook-integration.webp)
 
@@ -75,7 +75,7 @@ Moving to an asynchronous architecture changes how you manage your infrastructur
 
 Tools like [Coolify and Docker](/blog/coolify-docker-saas-hosting/) make it easier to manage these separate services. You can run your web container on one set of resources and your worker containers on another. If you have a massive spike in background jobs, you can spin up more workers without affecting the performance of your main website.
 
-For cross-service communication, GCP Cloud Tasks is a powerful alternative to traditional queues. It allows you to schedule HTTP callbacks with built-in rate limiting and retries. This is particularly useful when building an [API gateway for AI stacks](/blog/api-gateway-ai-stack/), where different microservices need to talk to each other without blocking the main user flow.
+For cross-service communication, Google Cloud Tasks is a strong alternative to a self-hosted queue. It dispatches HTTP callbacks to any endpoint with built-in rate limiting, scheduling, and retries. This is particularly useful when building an [API gateway for AI stacks](/blog/api-gateway-ai-stack/), where different microservices need to talk to each other without blocking the main user flow.
 
 ## When to choose sync vs async
 

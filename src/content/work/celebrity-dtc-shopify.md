@@ -1,6 +1,6 @@
 ---
 title: "Celebrity DTC Shopify Plus storefront"
-description: "Custom Shopify Plus storefront for a high-traffic celebrity brand. Theme engineering for hero merchandising, drop launches, custom product configurators, mobile-first performance budget, and abuse-resistant checkout."
+description: "Custom Shopify Plus storefront for a celebrity DTC brand, engineered for drop launches and traffic spikes with fast, mobile-first, abuse-resistant checkout."
 category: shopify
 stack:
   - "Shopify Plus"

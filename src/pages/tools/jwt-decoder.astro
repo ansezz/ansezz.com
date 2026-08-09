@@ -14,7 +14,7 @@ const breadcrumbLd = breadcrumbList([
 
 <Page
   title="JWT Decoder"
-  description="Free JWT decoder. Paste a JSON Web Token and read its header and payload — claims, algorithm, and expiry — decoded entirely in your browser. Nothing is sent anywhere."
+  description="Free JWT decoder. Paste a JSON Web Token to read its header, payload, claims, algorithm, and expiry — decoded in your browser, nothing sent anywhere."
   eyebrow="Free tool"
   heading="JWT Decoder."
   intro="Paste a JWT to read its header and payload. Decoding happens in your browser — the token never leaves the page."
@@ -44,7 +44,7 @@ const breadcrumbLd = breadcrumbList([
         id="jwt-input"
         rows="5"
         spellcheck="false"
-        placeholder="eyJhbGciOiJIUzI1Ni', '...'"
+        placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.SflKxw..."
         class="w-full border-[3px] border-ink rounded-[4px] bg-paper p-3 font-mono text-sm shadow-neo-sm focus:outline-none resize-y break-all"
       ></textarea>
       <p id="jwt-error" class="text-sm font-bold text-pink-deep" hidden></p>

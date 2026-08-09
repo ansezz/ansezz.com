@@ -1,6 +1,6 @@
 ---
 title: "UAE home-goods Shopify Plus stores"
-description: "Localized Shopify Plus storefronts for UAE-based home and lifestyle brands. RTL + bilingual (Arabic / English) theme architecture, regional payment integrations, custom checkout UX, and shipping-zone tuning for GCC logistics."
+description: "Localized Shopify Plus storefronts for UAE home and lifestyle brands: RTL + bilingual Arabic/English themes, regional payments, and GCC shipping zones."
 category: shopify
 stack:
   - "Shopify Plus"

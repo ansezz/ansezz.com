@@ -138,7 +138,6 @@ const reportUrl = `mailto:${SITE.EMAIL}?subject=${encodeURIComponent("Broken lin
         {destinations.map((d) => (
           <li>
             <NeoCard
-              as="li"
               tone={d.tone}
               href={d.href}
               hover
@@ -178,7 +177,6 @@ const reportUrl = `mailto:${SITE.EMAIL}?subject=${encodeURIComponent("Broken lin
           {recent.map((post) => (
             <li>
               <NeoCard
-                as="li"
                 href={`/blog/${post.id}/`}
                 hover
                 tone="paper"

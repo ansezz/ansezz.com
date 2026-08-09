@@ -1,5 +1,5 @@
 ---
-title: "Replication vs backup: why your Laravel app needs both"
+title: "Replication vs backup: why Laravel needs both"
 description: "Replication protects you from hardware failure; backups protect you from your own mistakes. How read/write splitting and point-in-time recovery fit in."
 publishDate: 2026-06-21
 category: devops
@@ -49,7 +49,7 @@ For a production-grade [Coolify self-hosted SaaS](/blog/coolify-self-hosted-saas
 
 ## Implementing replication in Laravel
 
-Laravel makes it remarkably easy to handle database replication through its native configuration. By defining `read` and `write` connections in your `config/database.php`, the framework automatically routes `SELECT` statements to your replicas while sending `INSERT` and `UPDATE` statements to the primary.
+Laravel handles read/write splitting through native configuration. By defining `read` and `write` connections in your `config/database.php`, the framework automatically routes `SELECT` statements to your replicas while sending `INSERT` and `UPDATE` statements to the primary. This is the same connection layer you tune when designing a [multi-tenant Laravel architecture](/blog/laravel-multi-tenancy/).
 
 ```php
 'mysql' => [
@@ -86,9 +86,9 @@ If you do not have a separate backup strategy that creates daily snapshots of yo
 
 Managing replication manually is a DevOps nightmare. For most Laravel applications, using managed services like AWS RDS or Google Cloud SQL is the correct move. These services handle the binary log replication, failover orchestration, and monitoring out of the box.
 
-When configuring your cloud DB, you will encounter "Multi-AZ" (AWS) or "High Availability" (GCP) settings. This is essentially synchronous replication. It doubles your database cost because you are running a standby instance that does nothing but wait for the primary to die.
+When configuring your cloud DB, you will encounter "Multi-AZ" (AWS) or "High Availability" (GCP) settings. A single-standby Multi-AZ deployment uses synchronous replication, and it roughly doubles your database cost because you are running a standby instance in a second Availability Zone that does nothing but wait for the primary to die. Note that this standby cannot serve read traffic — to scale reads you need separate read replicas (or RDS Multi-AZ DB clusters), not the HA standby.
 
-Backups, by contrast, are extremely cheap. Storing 500GB of compressed database dumps on S3 Glacier costs pennies. The cost of a backup is not in the storage; it is in the testing. A backup that has never been restored is just a collection of random bits. You must automate your restore tests. I recommend using [Coolify and Docker](/blog/coolify-docker-saas-hosting/) to spin up ephemeral environments where you can periodically test your backup restoration process without touching production.
+Backups, by contrast, are extremely cheap. Storing 500GB of compressed dumps in S3 standard runs a few dollars a month; archival tiers like Glacier Deep Archive drop that to cents, at the cost of multi-hour retrieval. The cost of a backup is not in the storage; it is in the testing. A backup that has never been restored is just a collection of random bits. You must automate your restore tests. I recommend using [Coolify and Docker](/blog/coolify-docker-saas-hosting/) to spin up ephemeral environments where you can periodically test your backup restoration process without touching production.
 
 ## Takeaways
 

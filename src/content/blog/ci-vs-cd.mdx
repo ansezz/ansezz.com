@@ -7,7 +7,7 @@ tags: [devops, ci-cd, laravel, shopify, automation]
 featured: false
 heroImage:
   url: "/blog/ci-vs-cd/hero.webp"
-  alt: "A vibrant pop-art comic-style dashboard showing CI vs CD status in a bento grid layout"
+  alt: "Pop-art dashboard contrasting a CI build-and-test panel with a CD release panel in a bento grid"
 ---
 
 Shipping a broken build to production is an expensive way to realize your local environment isn't a mirror of reality. For developers working on Laravel backends or Shopify storefronts, the gap between "it works on my machine" and a stable production release is often filled with manual steps that invite human error. Manual FTP uploads, SSHing into servers to run migrations, or manually publishing Shopify themes are risks that modern engineering cannot afford.
@@ -25,9 +25,9 @@ The goal of CI is to identify "integration hell" before it happens. Instead of w
 - **Automated testing:** Executing unit and feature tests using PHPUnit or Pest.
 - **Security audits:** Scanning for known vulnerabilities in third-party dependencies.
 
-By the time a pull request is ready for review, the CI system has already provided a "green light" confirming that the code is syntactically correct and doesn't break existing features.
+By the time a pull request is ready for review, the CI system has already provided a "green light" confirming that the code is syntactically correct and doesn't break any behavior your tests cover.
 
-![Stylized pop-art bento grid representing the build, test, and deploy stages of a pipeline](/blog/ci-vs-cd/pipeline-stages.webp)
+![Pop-art bento grid showing the build, test, and deploy stages of a CI/CD pipeline flowing left to right](/blog/ci-vs-cd/pipeline-stages.webp)
 
 ## Defining Continuous Delivery and Deployment (CD)
 
@@ -35,7 +35,7 @@ While CI focuses on the quality of the code, Continuous Delivery (CD) focuses on
 
 **Continuous Delivery** ensures that every build that passes the CI pipeline is ready to be deployed to production. However, the actual release to the live environment requires a manual trigger. This is common in regulated industries or for high-stakes storefronts where a marketing manager might want to time a release.
 
-**Continuous Deployment** takes this a step further by removing the manual trigger. Every change that passes the pipeline is automatically pushed to the production environment. This requires a high level of confidence in your test suite and monitoring tools.
+**Continuous Deployment** takes this a step further by removing the manual trigger. Every change that passes the pipeline is automatically pushed to the production environment. This demands deep confidence in your test suite and the [observability to catch regressions fast](/blog/logging-vs-monitoring/) — without it, a bad commit reaches users before anyone notices.
 
 For developers using [Coolify for self-hosted SaaS](/blog/coolify-self-hosted-saas/), CD becomes the engine that powers rapid iteration. Once the CI passes, Coolify can automatically pull the latest Docker image and update the running containers with zero downtime.
 
@@ -92,7 +92,7 @@ jobs:
 
 This simple script ensures that no code can be merged into the main branch unless it passes every test case. It creates a safety net that allows the team to innovate without the fear of breaking the core application logic.
 
-![A pop-art comic-style code editor showing a GitHub Actions YAML file](/blog/ci-vs-cd/github-actions-yaml.webp)
+![Pop-art code editor displaying a GitHub Actions workflow YAML file for a Laravel CI job](/blog/ci-vs-cd/github-actions-yaml.webp)
 
 ## CD best practices for Shopify storefronts
 
@@ -102,11 +102,11 @@ For Shopify, CD is about managing "theme versions" rather than server binaries. 
 
 1. **Staging stores:** Always deploy to a development or staging store first.
 2. **Theme checks:** Use `shopify theme check` in your CI pipeline to catch Liquid errors before they go live.
-3. **Atomic deploys:** Push your code to a new, unpublished theme ID. Once verified, use the CLI to swap the live theme. This acts as a "blue-green" deployment strategy for e-commerce.
+3. **Atomic deploys:** Push your code to a new, unpublished theme ID. Once verified, use the CLI to publish it as the live theme. The cutover is instant, so customers never see a half-deployed storefront — a blue-green flavor of deployment for e-commerce.
 
-This approach ensures that your customers never see a broken layout or a missing "Add to Cart" button due to a syntax error in a Liquid template.
+A broken layout or a missing "Add to Cart" button caused by a Liquid syntax error never reaches the live store.
 
-![A pop-art comic scene showing a Shopify dashboard on a tablet](/blog/ci-vs-cd/shopify-deploy.webp)
+![Pop-art scene of a Shopify theme deployment dashboard on a tablet showing a published theme swap](/blog/ci-vs-cd/shopify-deploy.webp)
 
 ## The bridge: automation and quality
 

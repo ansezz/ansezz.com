@@ -1,6 +1,6 @@
 ---
 title: "Message queues for heavy-duty document processing"
-description: "Stop running embeddings in the request cycle. A document ingestion pipeline with staged workers, backoff, dead-letter queues, and queue-depth autoscaling."
+description: "Stop running embeddings in the request cycle. Build a document pipeline on message queues with staged workers, retries, dead-letter queues, and autoscaling."
 publishDate: 2026-05-22
 category: architecture
 tags:
@@ -22,17 +22,17 @@ heroImage:
   alt: "Document processing pipeline fed by a message queue with multiple worker stages"
 ---
 
-If you are running your document embeddings inside your request-response cycle, you are playing with fire. I have seen too many junior devs build a beautiful RAG application that falls over the second a user uploads a 50MB PDF. The browser spins, the Nginx timeout hits, and the database locks up while your worker tries to chunk 500 pages of legal jargon in real time.
+If you are running your document embeddings inside your request-response cycle instead of behind a message queue, you are playing with fire. I have seen too many junior devs build a beautiful RAG application that falls over the second a user uploads a 50MB PDF. The browser spins, the proxy timeout hits, and the database locks up while your worker tries to chunk 500 pages of legal jargon in real time.
 
 This is the classic "heavy lifting" problem in AI engineering. Document processing — OCR, text extraction, semantic chunking, and embedding — is slow, unpredictable, and resource-heavy. Trying to force it into a synchronous web request is a recipe for a bad user experience and a fragile system.
 
-The solution is decoupling. I'm talking about message queues. In this guide, I'll walk you through why async work belongs in a queue and how to build a production-grade ingestion pipeline that doesn't melt your server.
+The solution is decoupling. I'm talking about message queues. In this guide, I'll walk you through why async work belongs in a queue and how to build a production-grade ingestion pipeline that doesn't melt your server. If you want the broker-level foundations first, I cover them in [scaling with RabbitMQ](/blog/scaling-with-rabbitmq/).
 
 ## The synchronous trap
 
 Imagine a user uploads a document to your SaaS. Your code receives the file, sends it to an extraction API, waits for the response, loops through the text to create chunks, sends each chunk to an embedding model, and finally saves it to pgvector.
 
-If any of those steps take more than 30 seconds, the connection drops. If the embedding API has a momentary blip, the whole process fails, and the user has to start over. Worse, while your server is busy doing this heavy work, it's not responding to other users.
+If the whole chain runs long, you hit a timeout somewhere — a proxy gateway timeout (Nginx defaults to 60s), a PHP `max_execution_time`, or a platform request cap — and the connection drops. If the embedding API has a momentary blip, the whole process fails, and the user has to start over. Worse, while your server is busy doing this heavy work, it's not responding to other users.
 
 This is where we apply the first rule of senior engineering: if it takes more than 100ms, consider making it async. By moving this work to a message queue, you give your users immediate feedback ("we're processing your file!") while the heavy lifting happens safely in the background.
 
@@ -55,13 +55,13 @@ This stage-based approach is exactly what I discuss in my post on [7 RAG mistake
 
 In the real world, things break. APIs time out. PDFs are malformed. Workers crash.
 
-When you use a message queue like Redis (with BullMQ or Laravel Queues) or SQS, you get retries for free. If a worker fails, the message goes back onto the queue to be tried again after a short delay. Exponential backoff is your best friend here — don't hammer a failing API every 5 seconds. Wait 10, then 60, then 300.
+A message queue like Redis (with BullMQ or Laravel Queues) or SQS gives you retries with almost no code — though you do have to opt in. BullMQ defaults to a single attempt, so set `attempts` and a `backoff` strategy explicitly; Laravel queues take `--tries` and `backoff`; SQS retries up to `maxReceiveCount`. When a worker fails, the message goes back onto the queue to be tried again after a delay. Exponential backoff is your best friend here — don't hammer a failing API every 5 seconds. Wait 10, then 60, then 300.
 
 ![Retry strategy and dead-letter quarantine flow](/blog/message-queues-document-processing/dlq-retries.webp)
 
 But what happens when a document simply _cannot_ be processed? Maybe it's a password-protected PDF or a corrupted file. You don't want it retrying forever and clogging up your workers.
 
-This is where a **Dead Letter Queue (DLQ)** comes in. After a certain number of failed attempts, the message is moved to the DLQ. This acts as a "quarantine" zone. I can then inspect these failed jobs, fix the underlying issue, and manually re-queue them. It's a safety net that keeps your main production line moving.
+This is where a **dead-letter queue (DLQ)** comes in. After a certain number of failed attempts, the message is moved to the DLQ — a "quarantine" zone. SQS gives you this natively via the queue's redrive policy; with BullMQ or Laravel you route exhausted jobs there yourself (listen for the `failed` event in BullMQ, or use `failed_jobs` plus a handler in Laravel). I can then inspect these failed jobs, fix the underlying issue, and re-queue them. It's a safety net that keeps your main production line moving.
 
 ## Batching for efficiency
 
@@ -79,7 +79,7 @@ If a user is chatting with an AI agent and the conversation is heading toward a 
 
 By using an event bus, you can decouple the chat interface from these optimization tasks. The chat app just emits a `user_asked_question` event, and a background worker decides whether it should pre-fetch more data or update the semantic cache.
 
-## Monitoring the heart of your app
+## Monitoring your message queue
 
 Once you move to a queue-based system, your most important metric is no longer just "request latency." You need to watch your **queue depth**.
 
@@ -95,6 +95,6 @@ If the queue depth is growing faster than your workers can clear it, you have a 
 - **Scale on queue depth** — set up your autoscaler to add workers based on how many messages are waiting, not just CPU usage.
 - **Separate worker pools** — have one set of workers for "fast" tasks (like metadata updates) and another for "slow" tasks (like OCR/embedding). Don't let a huge PDF upload block a simple name change.
 
-Building a document pipeline is about respecting the time it takes to process data. By moving that work into a queue, you build a system that is resilient, scalable, and — most importantly — provides a smooth experience for your users.
+Building a document pipeline is about respecting the time it takes to process data. Move that work into a queue and you get a system that is resilient, scalable, and smooth for your users — instead of one that buckles on the first big upload.
 
 How are you currently handling long-running AI tasks? Are you still fighting with request timeouts, or have you embraced the queue? Drop a note via [contact](/contact/) — I love this conversation. 🤘

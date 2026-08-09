@@ -1,13 +1,13 @@
 ---
-title: "How agentic commerce changes the way you build Shopify"
-description: "AI agents don't browse, they query. The shift from human-centric Shopify themes to agent-ready infrastructure: Catalog, UCP, Agentic Storefronts, and MCP."
+title: "How agentic commerce changes building on Shopify"
+description: "Agentic commerce is reshaping how you build Shopify. The shift from human-centric themes to agent-ready infrastructure: Catalog, UCP, and MCP."
 publishDate: 2026-05-18
 category: shopify
 tags: [shopify, agentic-commerce, ai, mcp, hydrogen, graphql, ucp, metaobjects]
 featured: true
 heroImage:
   url: "/blog/agentic-commerce-shopify/hero.webp"
-  alt: "Illustration of AI agents shopping on a programmatic storefront"
+  alt: "AI agents querying a Shopify storefront's structured product data instead of browsing the visual theme"
 ---
 
 Your beautiful Shopify theme is about to become invisible.
@@ -24,7 +24,7 @@ Most developers are still stuck in the old way of thinking. We build a site, dri
 
 Today, buyers are increasingly using tools like ChatGPT, Gemini, or Microsoft Copilot to do the "work" of shopping. They ask for a waterproof hiking boot under $150 with specific shipping requirements. The AI doesn't visit your store to browse. It queries data. If your store isn't built to be "read" by an agent, you simply don't exist in that transaction.
 
-![Bento grid of agentic shopping flows](/blog/agentic-commerce-shopify/shopping-flows.webp)
+![Bento grid showing how an AI agent queries product data to handle discovery, comparison, and checkout](/blog/agentic-commerce-shopify/shopping-flows.webp)
 
 ## The agitation: why your current apps aren't enough
 
@@ -38,13 +38,13 @@ When an agent fails to understand your product structure, the buyer gets a "no r
 
 Agentic commerce is a system where AI agents take over the discovery, comparison, and execution phases of shopping. Shopify is already laying the groundwork for this with three major pillars:
 
-1. **Shopify Catalog** — a centralized layer that broadcasts your structured data to AI platforms.
-2. **UCP (Universal Commerce Protocol)** — a standard developed with companies like Google to allow agents to handle the entire journey, from discovery to cart and order.
-3. **Agentic Storefronts** — a layer that packages your catalog and checkout into a form AI agents can consume programmatically.
+1. **Universal Commerce Protocol (UCP)** — the open standard Shopify co-developed with Google for how agents discover, negotiate, and transact with any merchant. It is composable: it defines the conversation, then plugs into MCP for tool access and AP2 for payment authorization. (For a hands-on walkthrough, see my [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/).)
+2. **Catalog API** — UCP's discovery layer. It standardizes products into a universal taxonomy, verifies pricing and inventory in real time, and syndicates that structured data to connected AI surfaces.
+3. **Agentic Storefronts** — the management layer where you configure product data once in the Shopify admin, then distribute and sell across every AI channel (ChatGPT, Microsoft Copilot, Google's AI Mode, the Gemini app).
 
 As developers, our job is shifting. We are no longer just building visual storefronts. We are building "agent-ready" infrastructure.
 
-![UI comparison — human vs agent storefront](/blog/agentic-commerce-shopify/ui-comparison.webp)
+![Side-by-side comparison of a human-facing Shopify theme and the structured data an agent consumes](/blog/agentic-commerce-shopify/ui-comparison.webp)
 
 ## Why schema is the new CSS
 
@@ -60,13 +60,13 @@ The focus for developers must move toward:
 
 ## Building custom agents with MCP and Shopify
 
-The most exciting part of this shift is building our own agents. The Model Context Protocol (MCP) allows us to connect AI models to external data sources like the Shopify API.
+The most exciting part of this shift is building our own agents. The [Model Context Protocol (MCP)](/blog/mcp-context-aware-agents/) lets us connect AI models to external data sources like the Shopify API — and it's the same binding UCP uses to expose commerce tools to agents.
 
 Imagine building an "inventory agent" for a merchant that doesn't just alert them when stock is low. Instead, it queries recent sales trends via the Admin API, checks lead times from a supplier, and suggests a restock amount — all through a chat interface.
 
 This is where tools like Laravel and Docker come in handy. We can build custom middleware that acts as an MCP server, exposing specific Shopify "tools" to an AI agent. This is the type of deep technical work that differentiates a senior engineer from a freelancer who just installs themes.
 
-![MCP + Shopify architecture diagram](/blog/agentic-commerce-shopify/mcp-architecture.webp)
+![Architecture diagram of an MCP server exposing Shopify Admin API tools to an AI agent](/blog/agentic-commerce-shopify/mcp-architecture.webp)
 
 ## The Shopify developer's new roadmap
 
@@ -76,19 +76,19 @@ To thrive in the next five years, I recommend focusing on these specific technic
 Start offering "agent-readiness" audits. Clean up product data, normalize attributes, and ensure all metadata is machine-readable. This is the new SEO.
 
 **2. Headless and API-first builds**
-While Liquid isn't dead, headless architectures using Hydrogen and Oxygen are much more aligned with the agentic future. They force you to think in terms of data and APIs rather than just templates.
+While Liquid isn't dead, headless architectures using Hydrogen and Oxygen are much more aligned with the agentic future. They force you to think in terms of data and APIs rather than just templates. If you're weighing the trade-offs, I broke them down in [Shopify Liquid vs. headless](/blog/shopify-liquid-vs-headless/).
 
 **3. RAG and vector databases**
-Learn how to use RAG (Retrieval-Augmented Generation) and tools like pgvector. This allows you to build agents that can search through thousands of product reviews or support docs to provide "expert" advice to shoppers.
+Learn how to use RAG (retrieval-augmented generation) and tools like pgvector. This lets you build agents that can search through thousands of product reviews or support docs to give "expert" advice to shoppers. If you're new to this, start with [picking the right RAG stack](/blog/picking-the-right-rag-stack/).
 
-**4. Focus on the "agentic plan"**
-Shopify is rolling out levels of agentic integration. Stay ahead by understanding how to implement Level 3 — where your store is fully AI-native and provides direct API access for agents to build carts and checkout.
+**4. Understand agent trust tiers and the Agentic plan**
+Agentic Storefronts gate access by agent trust tier — higher tiers unlock broader capabilities, up to completing checkout directly. There is also a dedicated Agentic plan that lets brands on any platform list products in Shopify Catalog and sell through agentic storefronts. Know where direct checkout is enabled and how to configure it.
 
-![Customer using an AI shopping agent](/blog/agentic-commerce-shopify/shopping-agent.webp)
+![Shopper completing a purchase through an AI shopping agent inside a chat interface](/blog/agentic-commerce-shopify/shopping-agent.webp)
 
 ## Final takeaways for the agentic shift
 
-The change is happening faster than most of us realize. By 2026, AI-driven traffic will be a double-digit percentage of total orders on major platforms.
+The change is happening faster than most of us realize. Shopify reports that in Q1 2026, AI-driven traffic to its stores grew roughly 8x year over year, orders from AI-powered searches climbed nearly 13x, and new buyers are ordering through AI channels at close to twice the rate of other channels.
 
 If you want to stay relevant, here is your checklist:
 

@@ -1,6 +1,6 @@
 ---
 title: "Mshule — multi-tenant LMS for vocational training"
-description: "End-to-end learning management platform serving multiple training providers from one Laravel codebase. Course authoring, cohort management, student progress, assessments, certificate issuance, and per-tenant branding."
+description: "Multi-tenant LMS on Laravel serving many training providers from one codebase: course authoring, cohorts, assessments, certificates, and per-tenant branding."
 category: saas
 stack:
   - "Laravel"

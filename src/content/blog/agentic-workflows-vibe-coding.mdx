@@ -1,5 +1,5 @@
 ---
-title: "Vibe coding and the architectural shift to agentic workflows"
+title: "Vibe coding: the shift to agentic workflows"
 description: "MCP, agentic loops, and intent-based engineering. How vibe coding becomes a real architecture pattern, plus the Laravel and MCP stack I run today."
 publishDate: 2026-03-22
 category: architecture
@@ -7,14 +7,14 @@ tags: [vibe-coding, agentic-ai, mcp, anthropic, claude, laravel, architecture]
 featured: false
 heroImage:
   url: "/blog/agentic-workflows-vibe-coding/hero.webp"
-  alt: "Pop-art illustration of an architect orchestrating agentic AI loops across tools"
+  alt: "Pop-art illustration of an engineer orchestrating agentic AI workflows across connected dev tools"
 ---
 
 I've spent the last decade building Laravel applications, managing Docker clusters, and fine-tuning Shopify stores. For most of that time, "coding" meant one thing: translating a business requirement into a specific syntax that a machine could execute. It was a manual, linear process of writing line by line, debugging stack traces, and managing state.
 
 But recently, the ground has shifted. We're moving away from the era of "writing code" and into the era of "orchestrating intent."
 
-This transition — often playfully called **vibe coding** — is more than just a meme. It represents a fundamental architectural shift in how we build software, moving from sequential instruction to agentic loops powered by protocols like **MCP** (Model Context Protocol). If you are new to the idea, my [intro to vibe coding](/blog/vibe-coding/) covers the philosophy and developer-experience side before this post dives into the architecture.
+This transition — often playfully called **vibe coding** — is more than just a meme. It represents a fundamental architectural shift in how we build software: moving from sequential instruction to **agentic workflows** powered by protocols like **MCP** (Model Context Protocol). If you are new to the idea, my [intro to vibe coding](/blog/vibe-coding/) covers the philosophy and developer-experience side before this post dives into the architecture.
 
 ## The friction of the manual syntax
 
@@ -22,7 +22,7 @@ The traditional development lifecycle is riddled with invisible friction. You ha
 
 In a standard **Laravel** environment, even a simple feature — say, an automated reporting tool — requires you to set up routes, controllers, service classes, and database migrations. You are the compiler. You are the architect. You are the labor.
 
-The problem is that our human cognitive load is being consumed by the "how" rather than the "what." We get stuck in the weeds of **PHP** version compatibility or **Docker** networking issues, losing sight of the actual user value. This manual micromanagement doesn't scale as fast as the demands of modern business.
+The problem is that our cognitive load gets consumed by the "how" rather than the "what." We get stuck in the weeds of **PHP** version compatibility or **Docker** networking issues, losing sight of the actual user value. This manual micromanagement doesn't scale with the demands of modern business.
 
 ## The agitation of the "black box" assistant
 
@@ -32,13 +32,13 @@ It's a broken feedback loop. The AI is a "black box" that doesn't actually know 
 
 This creates a new kind of fatigue. Instead of writing code, you're now a high-speed code reviewer, constantly context-switching between your editor and a chat interface. This isn't "vibe coding" — it's just accelerated manual labor.
 
-![Architecture diagram showing the broken loop between developer, AI, and tools](/blog/agentic-workflows-vibe-coding/architecture-diagram.webp)
+![Diagram of the broken feedback loop where a developer manually bridges an AI assistant and their tools](/blog/agentic-workflows-vibe-coding/architecture-diagram.webp)
 
 ## The solution: agentic workflows and MCP
 
-True **vibe coding** isn't about being lazy; it's about shifting your role to that of a high-level system architect. This becomes possible through **agentic workflows** — systems that don't just "complete text" but "execute tasks in loops."
+True **vibe coding** isn't about being lazy; it's about shifting your role to that of a high-level system architect. This becomes possible through **agentic workflows** — systems that don't just complete text but execute tasks in loops. That jump from a static model to an autonomous actor is exactly the [LLM vs AI agent](/blog/llm-vs-ai-agent/) distinction.
 
-The breakthrough here is the **Model Context Protocol (MCP)** by Anthropic. MCP acts as the "USB port" for AI. Instead of you manually giving the AI context, the AI uses an MCP client to talk directly to your tools — your **PostgreSQL** database, your **Slack** channels, or your **GitHub** repositories.
+The breakthrough here is the **Model Context Protocol (MCP)** by Anthropic. MCP acts as the "USB-C port" for AI applications. Instead of you manually giving the AI context, the AI uses an MCP client to talk directly to your tools — your **PostgreSQL** database, your **Slack** channels, or your **GitHub** repositories.
 
 ### The shift from chains to loops
 
@@ -52,7 +52,7 @@ In a traditional chain, you give a prompt and get a result. In an agentic loop, 
 
 I call this "intent-based engineering." You aren't writing the migration — you are approving the architectural decision.
 
-![Bento grid visual of an agentic loop with intent, reasoning, action, observation, correction](/blog/agentic-workflows-vibe-coding/agentic-loop.webp)
+![Bento grid of the five-stage agentic loop: intent, reasoning, action, observation, and self-correction](/blog/agentic-workflows-vibe-coding/agentic-loop.webp)
 
 ## Implementing the agentic stack
 

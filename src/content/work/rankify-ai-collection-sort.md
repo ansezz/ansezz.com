@@ -1,6 +1,6 @@
 ---
 title: "Rankify — AI-powered Shopify collection sort"
-description: "Shopify app that re-ranks collection pages with smart rules: revenue, inventory pressure, freshness, conversion. Optional AI lane uses semantic embeddings to surface products closer to a shopper's intent than Shopify's default sort."
+description: "Shopify app that re-ranks collection pages by revenue, inventory, freshness, and conversion, plus an AI lane using embeddings to match shopper intent."
 category: shopify
 stack:
   - "Laravel"

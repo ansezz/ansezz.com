@@ -37,7 +37,8 @@ const SPECS: FieldSpec[] = [
   { min: 0, max: 23, name: "hour" },
   { min: 1, max: 31, name: "day-of-month" },
   { min: 1, max: 12, name: "month", labels: MONTHS },
-  { min: 0, max: 6, name: "day-of-week", labels: DOW },
+  // Day-of-week allows 0-7, where both 0 and 7 mean Sunday (crontab(5)).
+  { min: 0, max: 7, name: "day-of-week", labels: DOW },
 ];
 
 function label(spec: FieldSpec, n: number): string {
@@ -59,7 +60,19 @@ function describeField(raw: string, spec: FieldSpec): string {
       const n = Number(step[2]);
       if (!Number.isInteger(n) || n < 1)
         throw new Error(`bad step in "${raw}"`);
-      const range = step[1] === "*" ? "" : ` (within ${step[1]})`;
+      // Validate the step base (the part before "/") against field bounds.
+      const base = step[1];
+      let range = "";
+      if (base !== "*") {
+        const bounds = base.match(/^(\d+)-(\d+)$/);
+        if (bounds) {
+          assertIn(Number(bounds[1]), spec, raw);
+          assertIn(Number(bounds[2]), spec, raw);
+        } else {
+          assertIn(Number(base), spec, raw);
+        }
+        range = ` (within ${base})`;
+      }
       return `every ${n} ${spec.name}s${range}`;
     }
     const range = part.match(/^(\d+)-(\d+)$/);
@@ -115,7 +128,9 @@ function explain(expr: string): Explanation {
     let time: string;
     if (minute === "*" && hour === "*") time = "every minute";
     else if (hour === "*")
-      time = `at ${describeField(minute, SPECS[0])} past every hour`;
+      time = /^\d+$/.test(minute)
+        ? `at minute ${minute} past every hour`
+        : `at ${describeField(minute, SPECS[0])} past every hour`;
     else if (minute === "0" && /^\d+$/.test(hour))
       time = `at ${hour.padStart(2, "0")}:00`;
     else if (/^\d+$/.test(minute) && /^\d+$/.test(hour))

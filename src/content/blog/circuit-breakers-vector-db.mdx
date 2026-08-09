@@ -1,5 +1,5 @@
 ---
-title: "Circuit breakers: stopping cascading vector DB failures"
+title: "Circuit breakers: stopping vector DB failures"
 description: "A slow vector DB kills SaaS faster than a dead one. The circuit-breaker pattern for AI infra — states, fallback tiers, and Laravel-friendly wiring."
 publishDate: 2026-05-23
 category: architecture
@@ -21,17 +21,17 @@ heroImage:
   alt: "Circuit breakers wrapping AI service calls to prevent cascading failures"
 ---
 
-You built a beautiful RAG pipeline. It works perfectly on your machine with a few hundred vectors. Then you launch. Traffic spikes. Suddenly your managed vector database starts sweating. A single similarity search that used to take 50ms is now taking 5 seconds. Your web workers are all tied up waiting for responses that aren't coming. The database isn't technically down — but it is slow enough to kill your entire application. Your users see spinning loaders until the request finally times out. This is a classic cascading failure, and it is the fastest way to drain your "innovation budget" and your users' patience.
+You built a beautiful RAG pipeline. It works perfectly on your machine with a few hundred vectors. Then you launch. Traffic spikes. Suddenly your managed vector database starts sweating. A single similarity search that used to take 50ms is now taking 5 seconds. Your web workers are all tied up waiting for responses that aren't coming. The database isn't technically down — but it is slow enough to kill your entire application. Your users see spinning loaders until the request finally times out. This is a classic cascading failure — the kind a circuit breaker exists to stop — and it is the fastest way to drain your "innovation budget" and your users' patience.
 
 The problem is that we often treat external APIs and databases as if they are always healthy. We write code that assumes the vector DB will return results. When it doesn't, we wait. And while we wait, we hold onto memory and CPU cycles. The solution is an old-school electrical engineering concept applied to software: the circuit breaker.
 
-In this guide I want to show you how to wrap your AI infrastructure in protective logic so a slow dependency doesn't take your whole SaaS down with it.
+This guide shows you how to wrap your AI infrastructure in protective logic so a slow dependency doesn't take your whole SaaS down with it.
 
-## Understanding the three states
+## How the circuit breaker pattern works
 
-The circuit breaker pattern is a state machine that sits between your application code and your external service. It monitors every call you make. It has three specific states that dictate how it handles traffic.
+The circuit breaker pattern is a state machine that sits between your application code and your external service. The idea comes straight out of Michael Nygard's *Release It!* — it monitors every call you make and has three states that dictate how it handles traffic.
 
-![Closed, open, and half-open circuit breaker states](/blog/circuit-breakers-vector-db/states.webp)
+![State machine diagram of the circuit breaker: closed (healthy), open (fail-fast), and half-open (recovery probe) with the transitions between them](/blog/circuit-breakers-vector-db/states.webp)
 
 **Closed — the healthy state.**
 In the closed state, the circuit is complete. Requests flow through to your vector database or LLM provider normally. The breaker is silently watching. It keeps a count of how many requests failed or took too long. As long as the failure rate stays below your threshold, it stays closed. This is the "everything is fine" mode.
@@ -54,13 +54,13 @@ If you have read my previous post on [7 RAG mistakes in production](/blog/7-rag-
 
 Tripping the breaker shouldn't always mean showing an error message to the user. The best AI systems use fallbacks to maintain a level of service even when parts of the stack are failing.
 
-![Architecture flow showing primary path with hot/cold/cache fallbacks](/blog/circuit-breakers-vector-db/fallback-flow.webp)
+![Fallback flow diagram: a tripped circuit routing from the vector DB to keyword search, a Redis cache, and an LLM-only response](/blog/circuit-breakers-vector-db/fallback-flow.webp)
 
 **Hot and cold tiers.**
 You can think of your vector DB as your "hot" knowledge tier. If it fails, you should have a "cold" fallback. Maybe you fall back to a standard keyword search in your primary Postgres or MySQL database. The results might not be as contextually relevant as a vector search, but a "decent" answer is always better than a "timed out" error.
 
 **Cached responses.**
-Another great strategy is semantic caching. If the circuit is open, you can check a Redis cache for similar queries that were answered recently. Even if you can't generate a fresh answer, you might be able to serve a cached one. This keeps the user moving while your backend recovers.
+Another strong strategy is [semantic caching with Redis](/blog/redis-semantic-caching-rag/). If the circuit is open, you can check the cache for similar queries that were answered recently. Even if you can't generate a fresh answer, you might be able to serve a cached one. This keeps the user moving while your backend recovers.
 
 **LLM-only mode.**
 If your retrieval step is what's failing, you can still send the user's prompt to the LLM with a note that external knowledge is currently unavailable. The LLM can then answer based on its general training data. It is a degraded experience, but it is still functional. Transparency here is key — tell the user that the "live" data isn't available so they know to verify the response.
@@ -71,7 +71,7 @@ Since I spend a lot of time in the Laravel ecosystem, I lean on patterns that ma
 
 The goal is to wrap your API calls in a block that understands these states. Here is a simplified look at how that logic looks in practice.
 
-![Circuit breaker wrapper around a vector-db client](/blog/circuit-breakers-vector-db/code.webp)
+![PHP code wrapping a vector DB client in a circuit breaker, catching CircuitBreakerOpenException to return fallback data](/blog/circuit-breakers-vector-db/code.webp)
 
 When you call your vector DB client, you wrap it in the breaker. If the call fails multiple times, the breaker trips. In the `catch` block, you handle the `CircuitBreakerOpenException` by returning your fallback data. This keeps your controllers clean and your architecture robust.
 
@@ -81,7 +81,7 @@ You can also integrate this with your [SaaS hosting on Coolify](/blog/coolify-do
 
 Senior engineers don't just set a circuit breaker and walk away. They monitor it. You need live telemetry to see how often your circuits are tripping. Tools like Prometheus or even simple logs piped to a dashboard can tell you a lot.
 
-If you see that your primary vector DB in `us-east-1` is constantly tripping but your secondary in `eu-west-1` is healthy, you can implement smart routing. Your circuit breaker can act as a signal to your load balancer or your internal router to shift traffic to the healthy region.
+If you see that your primary vector DB in `us-east-1` is constantly tripping but your secondary in `eu-west-1` is healthy, you can implement smart routing. Your circuit breaker can act as a signal to your [load balancer](/blog/gpu-aware-load-balancing/) or internal router to shift traffic to the healthy region.
 
 This kind of [event-driven architecture](/blog/event-driven-pubsub/) makes your system self-healing. It doesn't wait for a human to wake up at 3am to fix a database. It detects the failure, trips the breaker, uses the fallback, and tries to recover automatically.
 

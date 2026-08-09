@@ -1,6 +1,6 @@
 ---
 title: "Caching for speed: Redis and semantic layers in RAG"
-description: "Stop paying for the same LLM call twice. Two-tier caching with Redis keys and semantic lookups via RedisVL cuts RAG latency and API spend by up to 80%."
+description: "Stop paying for the same LLM call twice. Two-tier caching with Redis keys and RedisVL semantic lookups slashes RAG latency and trims your LLM API bill."
 publishDate: 2026-05-26
 category: architecture
 tags:
@@ -25,7 +25,7 @@ You finally shipped your RAG pipeline. It works. The retrieval is accurate. The 
 
 At scale, this is a disaster. You are essentially paying for the same computation over and over again. Your users are waiting two seconds for answers that should take twenty milliseconds. Your "denial of wallet" risk is through the roof.
 
-The solution isn't a bigger model or a faster vector DB. It's a smarter cache. I'm talking about semantic caching with Redis. It cuts latency from hundreds of milliseconds to single digits and slashes your API costs by up to 80 percent.
+The solution isn't a bigger model or a faster vector DB. It's a smarter cache. I'm talking about semantic caching with Redis. It collapses a multi-second chain into a single-digit-millisecond lookup and, at the cache hit rates a busy FAQ bot reaches, can cut your LLM API spend by roughly half.
 
 Here is how I build these systems to handle production traffic.
 
@@ -61,7 +61,7 @@ The trick to a good semantic cache is the similarity threshold. Too low, and you
 I usually start with a distance threshold of 0.1 for cosine distance, which translates to roughly 90 percent similarity. You can implement this quickly using the RedisVL extensions.
 
 ```python
-from redisvl.extensions.llmcache import SemanticCache
+from redisvl.extensions.cache.llm import SemanticCache
 
 # Initialize the cache with a conservative threshold
 llm_cache = SemanticCache(
@@ -132,6 +132,6 @@ Here is your checklist for next week:
 - Add a `tenant_id` or `context_version` to your metadata to avoid cross-talk.
 - Monitor your hit rate and watch your API bill drop.
 
-Building in public means sharing the war stories, not just the successes. For more technical deep dives into modern architecture, I suggest looking at [7 RAG mistakes in production](/blog/7-rag-mistakes-production/) to see what else might be slowing you down.
+For more technical deep dives into modern architecture, look at [7 RAG mistakes in production](/blog/7-rag-mistakes-production/) to see what else might be slowing you down, or browse the rest of the [architecture archive](/blog/category/architecture/).
 
 What is the one query in your system that keeps hitting your LLM unnecessarily? Drop a note via [contact](/contact/) — let's figure out if a semantic cache would have caught it. 🤘

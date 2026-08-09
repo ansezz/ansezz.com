@@ -12,7 +12,7 @@ heroImage:
 
 Shipping software is hard. You build an app that works perfectly on your machine, but the moment it hits production, everything breaks. This "it works on my machine" syndrome is exactly why understanding the difference between Docker vs Kubernetes is essential for modern engineers. Environment inconsistencies create friction, delay releases, and lead to late-night debugging sessions that could have been avoided with the right tooling.
 
-The technical gap between local development and production scale is wide. While one tool helps you package your application into a neat, portable box, the other manages a fleet of those boxes across a cluster of servers. If you are building modern web applications or e-commerce solutions, knowing how to leverage both is non-negotiable.
+The gap between local development and production scale is wide. One tool packages your application into a portable box; the other manages a fleet of those boxes across a cluster of servers. If you are shipping modern web or e-commerce applications, you eventually need both, and knowing where each one stops saves you a lot of wasted effort.
 
 ## The container revolution with Docker
 
@@ -22,11 +22,11 @@ When you use Docker, you are essentially creating an immutable image of your sof
 
 Docker operates on a single-host level. It manages the lifecycle of individual containers. You use the Docker CLI to build, run, and stop these containers. For many small-scale projects or early-stage startups, Docker on a single VPS is often enough. In fact, tools like [Coolify for Docker SaaS hosting](/blog/coolify-docker-saas-hosting/) have made it incredibly easy to manage these deployments without needing a massive orchestration layer.
 
-![Containerization illustration showing an app packaged with its dependencies](/blog/docker-vs-kubernetes/containerization.webp)
+![Diagram of a Docker container packaging application code, runtime, libraries, and config into one portable image](/blog/docker-vs-kubernetes/containerization.webp)
 
 ## Understanding Kubernetes orchestration
 
-If Docker is about the container, Kubernetes is about the cluster. Kubernetes, often abbreviated as K8s, is an open-source platform designed to automate the deployment, scaling, and management of containerized applications. It does not replace Docker. Instead, it works with it to handle the complexities of running containers at scale.
+If Docker is about the container, Kubernetes is about the cluster. Kubernetes, often abbreviated as K8s, is an open-source platform designed to automate the deployment, scaling, and management of containerized applications. It does not compete with Docker. Docker builds the image; Kubernetes schedules and runs it at scale through whatever container runtime sits on each node.
 
 Imagine you have a high-traffic Shopify app that suddenly experiences a surge in users. Managing fifty individual Docker containers across five different servers manually would be a nightmare. You would have to track which server has space, handle load balancing, and manually restart any container that crashes.
 
@@ -40,31 +40,31 @@ Comparing Docker vs Kubernetes is not about choosing one over the other. They op
 | :--------------- | :------------------------------ | :---------------------------------- |
 | **Primary goal** | Containerizing an application   | Managing a cluster of containers    |
 | **Scaling**      | Manual scaling on a single host | Automated horizontal scaling        |
-| **Self-healing** | Minimal (needs manual fixes)    | Automatic restarts and rescheduling |
+| **Self-healing** | Restart policies, single host   | Probe-based restarts and rescheduling |
 | **Networking**   | Basic host-level networking     | Advanced cluster-wide networking    |
 | **Complexity**   | Low to medium                   | High                                |
 
-Docker focuses on the "how" of running an app. Kubernetes focuses on the "where" and "how many" of running those apps across a distributed system. For developers working on complex [AI-driven architectures](/blog/api-gateway-ai-stack/), Kubernetes provides the necessary guardrails for high availability.
+Docker focuses on the "how" of running an app. Kubernetes focuses on the "where" and "how many" of running those apps across a distributed system. If the unit of scheduling is new to you, it helps to understand the [difference between a container and a pod](/blog/container-vs-pod/) before you reach for orchestration.
 
-![Kubernetes orchestration visual with containers scheduled across nodes](/blog/docker-vs-kubernetes/kubernetes-orchestration.webp)
+![Kubernetes control plane scheduling and self-healing container workloads across multiple worker nodes](/blog/docker-vs-kubernetes/kubernetes-orchestration.webp)
 
 ## How they work together in production
 
 In a professional DevOps workflow, Docker and Kubernetes are teammates. The process usually starts with a Dockerfile. You build a Docker image and push it to a private container registry. This image is your "source of truth" for the application.
 
-Next, you create Kubernetes manifests. These files tell the cluster which Docker image to use, how many replicas are needed, and what environment variables to inject. When you apply these manifests to the cluster, the Kubernetes "kubelet" on each node communicates with the container runtime to pull the image and start the container.
+Next, you create Kubernetes manifests. These files tell the cluster which image to use, how many replicas are needed, and what environment variables to inject. When you apply these manifests, the kubelet on each node calls the container runtime to pull the image and start the container. One caveat that trips people up: since version 1.24, Kubernetes removed dockershim, so it no longer talks to Docker Engine directly. Nodes now run a CRI-compliant runtime such as containerd or CRI-O. The image you built with Docker still runs fine because it follows the OCI image spec, but Docker Engine itself is no longer the thing executing it.
 
-This synergy allows for seamless updates. You can perform rolling deployments where Kubernetes replaces old Docker containers with new ones one at a time. This ensures zero downtime for your users. If the new version has a bug, Kubernetes can automatically roll back to the previous stable Docker image.
+This synergy allows for seamless updates. You can perform rolling deployments where Kubernetes replaces old pods with new ones in a controlled rollout. This keeps the service available throughout. If the new version has a bug, Kubernetes can automatically roll back to the previous stable image.
 
 ## Choosing the right path for your project
 
 Not every project needs the overhead of Kubernetes. If you are an entrepreneur or a small team building a simple web application, starting with Docker Compose or a [self-hosted SaaS platform](/blog/coolify-self-hosted-saas/) might be more efficient. It allows you to ship fast without managing a complex cluster.
 
-However, if your business requires high availability, handles massive amounts of data, or uses a microservices architecture, Kubernetes is the industry standard. It provides the scalability needed to grow from a few hundred users to millions without changing your core infrastructure.
+However, if your business requires high availability, handles massive amounts of data, or uses a microservices architecture, Kubernetes is the industry standard. It provides the [horizontal scaling](/blog/horizontal-vs-vertical-scaling/) needed to grow from a few hundred users to millions without changing your core infrastructure.
 
-Large-scale Shopify Plus stores often use Kubernetes to handle unpredictable traffic spikes during sales events. The ability to automatically spin up extra capacity in seconds is a competitive advantage that outweighs the initial setup complexity.
+Shopify itself is a good example of the payoff: its platform runs on Kubernetes across hundreds of clusters on Google Kubernetes Engine, autoscaling stateless workloads to absorb the brutal traffic spikes of Black Friday and Cyber Monday. Most merchants never touch that layer because Shopify owns it, but if you are building custom apps or your own infrastructure at that scale, the ability to declare capacity and let the cluster reconcile it is the competitive advantage that outweighs the setup complexity.
 
-![Docker vs Kubernetes side-by-side comparison illustration](/blog/docker-vs-kubernetes/docker-vs-kubernetes.webp)
+![Side-by-side comparison of Docker as the container runtime and Kubernetes as the orchestration layer](/blog/docker-vs-kubernetes/docker-vs-kubernetes.webp)
 
 ## Takeaways
 

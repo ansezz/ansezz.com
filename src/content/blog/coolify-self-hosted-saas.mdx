@@ -1,6 +1,6 @@
 ---
-title: "Why I ditch expensive cloud providers for self-hosted SaaS"
-description: "The cloud tax kills SaaS margins early. How Coolify and cheap ARM instances on Hetzner or Oracle cut a $500 AWS bill to single digits, lock-in free."
+title: "Ditch expensive cloud providers for self-hosted SaaS"
+description: "The cloud tax kills SaaS margins early. How self-hosted Coolify on cheap ARM instances at Hetzner or Oracle slashes a $500 AWS bill toward zero."
 publishDate: 2026-05-30
 category: devops
 tags:
@@ -8,7 +8,7 @@ tags:
 featured: false
 heroImage:
   url: "/blog/coolify-self-hosted-saas/hero.webp"
-  alt: "Self-hosted SaaS stack running on Coolify instead of expensive cloud providers"
+  alt: "A self-hosted SaaS stack running on Coolify and a cheap ARM VPS instead of expensive managed cloud providers"
 ---
 
 Most SaaS founders are quietly getting robbed by their own cloud provider.
@@ -29,11 +29,11 @@ This is the agitation: managed services feel like a superpower at the start, but
 
 ## Enter Coolify: Heroku's open-source soulmate
 
-![Coolify dashboard showing its core self-hosting features](/blog/coolify-self-hosted-saas/features.webp)
+![Coolify dashboard listing core features: git deploys, automatic SSL, one-click databases, and PR previews](/blog/coolify-self-hosted-saas/features.webp)
 
 The solution I have moved my entire stack to is Coolify.
 
-Coolify is an open-source, self-hostable alternative to Vercel, Heroku, and Railway. It gives you that same "git push to deploy" experience we all love, but it runs on your own hardware. Whether you have a $4 VPS on Hetzner or a massive ARM-based instance on Oracle Cloud, Coolify turns it into a private PaaS.
+Coolify is an open-source, self-hostable alternative to Vercel, Heroku, and Netlify. It gives you that same "git push to deploy" experience we all love, but it runs on your own hardware. Whether you have a small ARM VPS on Hetzner (the CAX11 starts around €6/month) or a free ARM instance on Oracle Cloud, Coolify turns it into a private PaaS.
 
 I recently wrote about how [Coolify and Docker are changing SaaS hosting](/blog/coolify-docker-saas-hosting/), but the shift is deeper than just a tool change. It is a mindset shift toward technical sovereignty.
 
@@ -46,15 +46,15 @@ Here is what makes Coolify a game-changer for a senior engineer:
 
 ## The magic of ARM (Graviton and OCI)
 
-If you want to see a 90% reduction in your infrastructure bill, you need to stop using x86 and start using ARM.
+Once you have self-hosting in place, ARM is the multiplier that takes the bill from "cheap" to "almost free." Stop renting x86 and start renting ARM.
 
-AWS Graviton instances are roughly 20-40% cheaper and more performant than their Intel-based counterparts. But the real "cheat code" right now is Oracle Cloud Infrastructure (OCI). Their "Always Free" tier gives you 4 ARM Ampere A1 cores and 24 GB of RAM for free.
+AWS pegs its Graviton instances at up to 20% lower cost and up to 40% better price-performance than comparable x86 instances. But the real "cheat code" right now is Oracle Cloud Infrastructure (OCI). Its "Always Free" tier gives you 2 ARM Ampere A1 OCPUs and 12 GB of RAM at no cost, forever (Oracle halved this from 4 OCPUs / 24 GB in mid-2026, so size accordingly).
 
-I can run an entire production SaaS — frontend, backend, database, and Redis — on that single free instance using Coolify.
+I can run a small production workload — frontend, backend, database, and Redis — on that single free instance using Coolify.
 
-When you pair ARM efficiency with a self-hosted orchestrator, the math changes. A startup that was paying $500/month on AWS can often move that entire workload to a $40/month ARM instance on Hetzner or OCI. That extra $460 goes back into your pocket or your marketing budget.
+When you pair ARM efficiency with a self-hosted orchestrator, the math changes. A startup that was paying $500/month on AWS can often move that entire workload to a sub-$15/month ARM instance on Hetzner — or to OCI's free tier outright. That difference goes straight back into your runway or your marketing budget.
 
-![Architecture of a self-hosted SaaS running on a single ARM instance](/blog/coolify-self-hosted-saas/architecture.webp)
+![Diagram of a self-hosted SaaS on one ARM instance: frontend, backend, Postgres, and Redis containers behind Coolify](/blog/coolify-self-hosted-saas/architecture.webp)
 
 ## Docker and Nix: the engine room
 
@@ -75,16 +75,16 @@ Let's look at the numbers for a standard Laravel or Node.js app with a database 
 
 **The Coolify path (Hetzner VPS):**
 
-- 4 vCPU ARM / 8GB RAM: $6/month
+- 4 vCPU ARM / 8GB RAM (CAX21): ~$12/month
 - Backups to S3-compatible storage: $1/month
 - Coolify: $0 (open source)
-- **Total: $7/month**
+- **Total: ~$13/month**
 
-The "managed" path is nearly 10x more expensive before you even have your first 100 users. For a senior engineer, the 30 minutes it takes to install Coolify on a fresh Linux box is worth the thousands of dollars saved over the life of the project.
+The "managed" path costs roughly 5x more before you even have your first 100 users — and that gap widens with every teammate and every GB of egress. For a senior engineer, the half hour it takes to install Coolify on a fresh Linux box is worth the thousands of dollars saved over the life of the project.
 
-## Practical steps to join the revolution
+## Practical steps to a self-hosted SaaS stack
 
-![A developer workspace set up for self-hosted deployment](/blog/coolify-self-hosted-saas/workspace.webp)
+![A developer workspace with a terminal mid-deploy, set up for self-hosted Coolify deployment](/blog/coolify-self-hosted-saas/workspace.webp)
 
 If you are tired of the cloud tax, here is my recommended path to freedom:
 
@@ -98,6 +98,6 @@ If you are tired of the cloud tax, here is my recommended path to freedom:
 
 We are entering a cycle where efficiency is the only thing that matters. The days of "VC-subsidized" infrastructure are over. Whether you are building a small tool or a massive enterprise SaaS, you owe it to your bottom line to look at self-hosting.
 
-Coolify has matured to the point where the developer experience is indistinguishable from the big players. The only difference is who owns the keys to the castle.
+Coolify has matured to the point where the developer experience is indistinguishable from the big players. The only difference is who owns the keys to the castle. And when you do outgrow a single box, the platform scales with you — I cover that in [advanced Coolify deployment strategies](/blog/scaling-with-coolify/).
 
 I am curious: what is the most "expensive" mistake you have ever made on a cloud bill — a forgotten NAT gateway or a runaway Lambda function? Drop a note via [contact](/contact/). 🤘

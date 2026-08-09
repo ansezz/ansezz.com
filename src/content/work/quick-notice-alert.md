@@ -1,6 +1,6 @@
 ---
 title: "Quick Notice / Clear Alert — Shopify storefront banners"
-description: "Lightweight storefront alert and announcement bar with targeting (country, device, page), scheduling, and analytics. Built to replace heavier theme-bound banners with a configurable Theme App Extension."
+description: "A lightweight Shopify storefront alert and announcement bar with country, device, and page targeting, scheduling, and analytics, built as a Theme App Extension."
 category: shopify
 stack:
   - "Laravel"
