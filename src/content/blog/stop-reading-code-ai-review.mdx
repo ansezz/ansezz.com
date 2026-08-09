@@ -72,7 +72,7 @@ When a check fails, I do not hand-patch the file. I fix the prompt, tighten the 
 
 ## A multi-agent review pipeline that earns its cost
 
-One giant "review this PR" prompt produces mush. Narrow agents with narrow briefs produce findings you can act on. The setup I run now has three, and they all execute inside CI rather than in my editor:
+One giant "review this PR" prompt produces mush. Narrow agents with narrow briefs produce findings you can act on. This is the verify stage of the [plan, execute, verify, deploy loop](/blog/ai-coding-workflow-levels/), and it deserves its own agents for the same reason it deserves its own step. The setup I run now has three, and they all execute inside CI rather than in my editor:
 
 1. **Correctness.** Runs the suite, static analysis, and the architecture tests. Then reviews the diff strictly against the written acceptance criteria — its brief explicitly forbids style commentary. Output: does this satisfy the spec, and where does it not.
 2. **Security.** Injection paths, authorization gaps on new routes, secrets in config, unsafe deserialization, mass-assignment on new models, anything touching a webhook signature. This one gets the OWASP-shaped checklist and nothing else.

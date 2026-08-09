@@ -68,6 +68,8 @@ The beauty of this modularity is that once a server is built, anyone can use it.
 - **GitHub's official MCP server** — this lets the model search my repositories, list issues, and open pull requests. It is like having a junior dev who actually knows where the code is. GitHub now ships and hosts this itself, with a remote option you authenticate via OAuth.
 - **A Google Drive server** — handy when I need to cross-reference technical docs stored in Drive with the actual implementation in my IDE. The reference server is archived too, so I treat it as a starting point rather than something to trust blindly.
 
+Wiring these up is the step that separates chatting with a model from delegating to one — the point where a workflow crosses into [the agentic levels](/blog/ai-coding-workflow-levels/) instead of staying a faster autocomplete.
+
 This also solves a massive pain point in [agentic commerce for Shopify](/blog/agentic-commerce-shopify/). Imagine an agent that can talk directly to your Shopify store via MCP to check inventory levels or update product descriptions in real-time, all while maintaining a secure, standardized connection.
 
 ## Security first: the sandbox model
