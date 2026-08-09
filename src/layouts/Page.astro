@@ -13,6 +13,7 @@ interface Props {
   image?: string;
   structuredData?: object | object[];
   noindex?: boolean;
+  robots?: string;
   prev?: string;
   next?: string;
   feeds?: { title: string; href: string }[];
@@ -27,6 +28,7 @@ const {
   image,
   structuredData,
   noindex,
+  robots,
   prev,
   next,
   feeds,
@@ -38,7 +40,12 @@ const pageDesc = description ?? SITE.DESCRIPTION;
 const resolvedImage = image ?? pageOgPath(Astro.url.pathname) ?? undefined;
 const autoWebPage = noindex
   ? null
-  : webPage({ url: pageUrl, title, description: pageDesc, image: resolvedImage });
+  : webPage({
+      url: pageUrl,
+      title,
+      description: pageDesc,
+      image: resolvedImage,
+    });
 
 const extra = structuredData
   ? Array.isArray(structuredData)
@@ -54,6 +61,7 @@ const finalStructured = autoWebPage ? [autoWebPage, ...extra] : extra;
   image={resolvedImage}
   structuredData={finalStructured}
   noindex={noindex}
+  robots={robots}
   prev={prev}
   next={next}
   feeds={feeds}
@@ -63,17 +71,17 @@ const finalStructured = autoWebPage ? [autoWebPage, ...extra] : extra;
   >
     {
       eyebrow && (
-        <p class="mono text-sm font-bold uppercase tracking-widest text-pink-deep mb-4">
+        <p class="mono text-pink-deep mb-4 text-sm font-bold tracking-widest uppercase">
           ▸ {eyebrow}
         </p>
       )
     }
-    <h1 class="display text-[clamp(2rem,5.5vw,4rem)] max-w-5xl">
+    <h1 class="display max-w-5xl text-[clamp(2rem,5.5vw,4rem)]">
       {heading}
     </h1>
     {
       intro && (
-        <p class="mt-5 max-w-2xl text-base sm:text-lg md:text-xl text-ink/80 leading-snug">
+        <p class="text-ink/80 mt-5 max-w-2xl text-base leading-snug sm:text-lg md:text-xl">
           {intro}
         </p>
       )

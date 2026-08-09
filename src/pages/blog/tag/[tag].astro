@@ -41,9 +41,15 @@ const breadcrumbLd = breadcrumbList([
 
 const tones = CARD_TONES;
 
+// Below the threshold a tag page is one or two cards of content that
+// already live on the post, the category page and the blog index — thin,
+// near-duplicate pages that dilute the crawl budget. Keep them reachable
+// and followable for humans, but out of the index and out of the sitemap
+// (see the sitemap filter in astro.config.mjs, which uses the same rule).
+const isThin = all.length < TAG_OG_MIN_POSTS;
+
 // Generated tag card only exists above the threshold; else reuse blog card.
-const ogImage =
-  all.length >= TAG_OG_MIN_POSTS ? `/og/tag/${slug}.png` : "/og/page/blog.png";
+const ogImage = isThin ? "/og/page/blog.png" : `/og/tag/${slug}.png`;
 ---
 
 <Page
@@ -54,12 +60,14 @@ const ogImage =
   intro={`${all.length} ${all.length === 1 ? "post" : "posts"} with this tag.`}
   image={ogImage}
   structuredData={breadcrumbLd}
+  noindex={isThin}
+  robots={isThin ? "noindex,follow" : undefined}
 >
-  <div class="mx-auto max-w-4xl px-5 pb-16 space-y-10">
+  <div class="mx-auto max-w-4xl space-y-10 px-5 pb-16">
     <p>
       <a
         href="/blog/"
-        class="mono text-xs font-bold uppercase tracking-widest text-pink-deep hover:bg-yellow hover:text-ink px-1 -mx-1"
+        class="mono text-pink-deep hover:bg-yellow hover:text-ink -mx-1 px-1 text-xs font-bold tracking-widest uppercase"
       >
         ← Back to all posts
       </a>
@@ -79,8 +87,8 @@ const ogImage =
           ))}
         </ul>
       ) : (
-        <div class="border-[3px] border-dashed border-ink rounded-[4px] p-12 text-center">
-          <p class="display text-3xl mb-2">Nothing here yet</p>
+        <div class="border-ink rounded-[4px] border-[3px] border-dashed p-12 text-center">
+          <p class="display mb-2 text-3xl">Nothing here yet</p>
           <p class="opacity-70">No posts with {label}.</p>
         </div>
       )

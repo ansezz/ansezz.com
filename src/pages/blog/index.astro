@@ -20,8 +20,10 @@ import {
   CATEGORY_TONE,
   START_HERE,
   SITE,
+  TAG_OG_MIN_POSTS,
 } from "@/consts";
 import { collectionPage, breadcrumbList } from "@/lib/seo";
+import { tagSlug } from "@/lib/links";
 
 const all = (await getCollection("blog", ({ data }) => !data.draft)).sort(
   (a, b) =>
@@ -43,7 +45,12 @@ const visible = rest.slice(0, PAGE_SIZE);
 const hasMore = rest.length > PAGE_SIZE;
 
 const totalPosts = all.length;
-const latestDate = all[0]?.data.publishDate;
+// `all` is sorted featured-first, so all[0] is whatever is pinned — not the
+// newest post. Take the real max across publish/update dates instead.
+const latestDate = all.reduce<Date | undefined>((newest, p) => {
+  const d = p.data.updatedDate ?? p.data.publishDate;
+  return !newest || d > newest ? d : newest;
+}, undefined);
 const latestDateStr = latestDate
   ? latestDate.toLocaleDateString("en-US", {
       year: "numeric",
@@ -68,9 +75,17 @@ const categoryCounts = Object.fromEntries(
   ]),
 ) as Record<(typeof BLOG_CATEGORIES)[number], number>;
 
-const allTags = new Set<string>();
-all.forEach((p) => p.data.tags.forEach((t) => allTags.add(t)));
-const topTags = [...allTags].slice(0, 12);
+// Most-used tags, not "whichever 12 happened to be seen first" — and only
+// tags with enough posts to be worth a click (thin tag pages are
+// noindex,follow, so don't make them the featured entry points either).
+const tagCounts = new Map<string, number>();
+all.forEach((p) =>
+  p.data.tags.forEach((t) => tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1)),
+);
+const topTags = [...tagCounts.entries()]
+  .filter(([, n]) => n >= TAG_OG_MIN_POSTS)
+  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  .slice(0, 12);
 
 const blogUrl = new URL("/blog/", SITE.URL).href;
 const blogCollectionLd = collectionPage({
@@ -103,14 +118,14 @@ const blogBreadcrumbLd = breadcrumbList([
   <section class="mx-auto max-w-6xl px-5 pb-6">
     <div class="flex flex-wrap items-center gap-4">
       <StickyNote tone="yellow" tilt={-2} class="max-w-[300px]">
-        <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+        <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
           ▸ {totalPosts} posts · last updated
         </p>
-        <p class="text-sm font-bold leading-snug">{latestDateStr}</p>
+        <p class="text-sm leading-snug font-bold">{latestDateStr}</p>
       </StickyNote>
       <a
         href="/rss.xml"
-        class="inline-flex items-center gap-2 border-[2.5px] border-ink rounded-full bg-paper px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm hover:bg-yellow"
+        class="border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm hover:bg-yellow inline-flex items-center gap-2 rounded-full border-[2.5px] px-3.5 py-1.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
       >
         <Icon name="lucide:rss" class="h-3.5 w-3.5" />
         RSS feed
@@ -121,13 +136,13 @@ const blogBreadcrumbLd = breadcrumbList([
   {
     startHere.length > 0 && (
       <section class="mx-auto max-w-6xl px-5 pb-8">
-        <div class="flex items-end justify-between gap-4 flex-wrap mb-4">
-          <p class="mono text-xs font-bold uppercase tracking-widest text-pink-deep">
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-4">
+          <p class="mono text-pink-deep text-xs font-bold tracking-widest uppercase">
             ▸ New here? Start with these
           </p>
           <a
             href="/blog/series/"
-            class="inline-flex items-center gap-1.5 mono text-[11px] font-bold uppercase tracking-widest border-[2px] border-ink rounded-full bg-paper px-3 py-1 shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+            class="mono border-ink bg-paper shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-full border-[2px] px-3 py-1 text-[11px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
           >
             <Icon name="lucide:layers" class="h-3.5 w-3.5" />
             Browse series
@@ -139,15 +154,15 @@ const blogBreadcrumbLd = breadcrumbList([
               <a
                 href={`/blog/${post.id}/`}
                 data-neo-hover
-                class="group flex h-full flex-col gap-2 border-[3px] border-ink rounded-[4px] bg-paper p-4 shadow-neo-sm transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-neo-md hover:bg-yellow"
+                class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex h-full flex-col gap-2 rounded-[4px] border-[3px] p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
               >
                 <span class="display text-2xl leading-none opacity-40">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <span class="heading text-sm uppercase leading-tight">
+                <span class="heading text-sm leading-tight uppercase">
                   {post.data.title}
                 </span>
-                <span class="mono text-[10px] font-bold uppercase tracking-widest opacity-60 mt-auto">
+                <span class="mono mt-auto text-[10px] font-bold tracking-widest uppercase opacity-60">
                   {CATEGORY_LABEL[post.data.category]}
                 </span>
               </a>
@@ -179,18 +194,20 @@ const blogBreadcrumbLd = breadcrumbList([
     </div>
   </HalftoneSection>
 
-  <div class="mx-auto max-w-6xl px-5 pb-16 space-y-14 pt-10">
+  <div class="mx-auto max-w-6xl space-y-14 px-5 pt-10 pb-16">
     <section>
       <div class="mb-6">
         <BurstBadge tone="cyan" size="sm" class="mb-4">01</BurstBadge>
-        <h2 class="display text-2xl md:text-3xl leading-tight">
+        <h2 class="display text-2xl leading-tight md:text-3xl">
           Browse by topic.
         </h2>
-        <p class="mono text-[11px] font-bold uppercase tracking-widest opacity-60 mt-2">
+        <p
+          class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60"
+        >
           ▸ Pick a lane · click a card to filter
         </p>
       </div>
-      <ul class="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+      <ul class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         {
           BLOG_CATEGORIES.map((c, i) => (
             <li>
@@ -200,17 +217,21 @@ const blogBreadcrumbLd = breadcrumbList([
                 shadow="sm"
                 hover
                 tilt={i % 2 === 0 ? -0.4 : 0.4}
-                class="!p-4 text-center flex flex-col gap-2 items-center"
+                class="flex flex-col items-center gap-2 !p-4 text-center"
               >
                 <span
-                  class="inline-flex h-10 w-10 items-center justify-center border-[2.5px] border-ink rounded-full bg-paper text-ink shadow-neo-xs"
+                  class="border-ink bg-paper text-ink shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
                   aria-hidden="true"
                 >
-                  <Icon name={categoryIcons[c] ?? "lucide:tag"} class="h-5 w-5" />
+                  <Icon
+                    name={categoryIcons[c] ?? "lucide:tag"}
+                    class="h-5 w-5"
+                  />
                 </span>
                 <p class="heading text-sm uppercase">{CATEGORY_LABEL[c]}</p>
-                <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-80">
-                  {categoryCounts[c]} {categoryCounts[c] === 1 ? "post" : "posts"}
+                <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-80">
+                  {categoryCounts[c]}{" "}
+                  {categoryCounts[c] === 1 ? "post" : "posts"}
                 </p>
               </NeoCard>
             </li>
@@ -223,22 +244,24 @@ const blogBreadcrumbLd = breadcrumbList([
       featured ? (
         <section>
           <div class="mb-6">
-            <BurstBadge tone="pink" size="sm" class="mb-4">02</BurstBadge>
-            <h2 class="display text-2xl md:text-3xl leading-tight">
+            <BurstBadge tone="pink" size="sm" class="mb-4">
+              02
+            </BurstBadge>
+            <h2 class="display text-2xl leading-tight md:text-3xl">
               Latest drop.
             </h2>
-            <p class="mono text-[11px] font-bold uppercase tracking-widest opacity-60 mt-2">
+            <p class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60">
               ▸ Most recent · or pinned by hand
             </p>
           </div>
           <a
             href={`/blog/${featured.id}/`}
             data-neo-hover
-            class="group block border-[3px] border-ink rounded-[4px] shadow-neo-lg bg-yellow overflow-hidden transition-all duration-150 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-neo-xl"
+            class="group border-ink shadow-neo-lg bg-yellow hover:shadow-neo-xl block overflow-hidden rounded-[4px] border-[3px] transition-all duration-150 hover:-translate-x-1 hover:-translate-y-1"
           >
-            <div class="grid md:grid-cols-[1.1fr_1fr] items-stretch">
+            <div class="grid items-stretch md:grid-cols-[1.1fr_1fr]">
               {featuredHero && (
-                <div class="relative aspect-[2/1] md:aspect-auto md:h-full overflow-hidden border-b-[3px] md:border-b-0 md:border-r-[3px] border-ink bg-ink min-h-[280px]">
+                <div class="border-ink bg-ink relative aspect-[2/1] min-h-[280px] overflow-hidden border-b-[3px] md:aspect-auto md:h-full md:border-r-[3px] md:border-b-0">
                   <img
                     src={featuredHero.url}
                     alt={featuredHero.alt}
@@ -251,17 +274,19 @@ const blogBreadcrumbLd = breadcrumbList([
                   />
                 </div>
               )}
-              <div class="p-6 md:p-10 flex flex-col gap-4">
-                <div class="flex items-center gap-3 flex-wrap">
-                  <BurstBadge tone="pink" size="sm">NEW</BurstBadge>
-                  <span class="mono text-xs font-bold uppercase tracking-widest">
+              <div class="flex flex-col gap-4 p-6 md:p-10">
+                <div class="flex flex-wrap items-center gap-3">
+                  <BurstBadge tone="pink" size="sm">
+                    NEW
+                  </BurstBadge>
+                  <span class="mono text-xs font-bold tracking-widest uppercase">
                     ▸ Featured post
                   </span>
                 </div>
-                <h3 class="display text-3xl md:text-5xl leading-tight">
+                <h3 class="display text-3xl leading-tight md:text-5xl">
                   {featured.data.title}
                 </h3>
-                <p class="text-base md:text-lg leading-snug">
+                <p class="text-base leading-snug md:text-lg">
                   {featured.data.description}
                 </p>
                 <PostMeta
@@ -271,7 +296,7 @@ const blogBreadcrumbLd = breadcrumbList([
                   readingTime={featuredRt}
                   linkCategory={false}
                 />
-                <p class="mt-2 font-bold underline underline-offset-4 decoration-[3px]">
+                <p class="mt-2 font-bold underline decoration-[3px] underline-offset-4">
                   Read post →
                 </p>
               </div>
@@ -279,8 +304,8 @@ const blogBreadcrumbLd = breadcrumbList([
           </a>
         </section>
       ) : (
-        <div class="border-[3px] border-dashed border-ink rounded-[4px] p-12 text-center">
-          <p class="display text-3xl mb-2">No posts yet</p>
+        <div class="border-ink rounded-[4px] border-[3px] border-dashed p-12 text-center">
+          <p class="display mb-2 text-3xl">No posts yet</p>
           <p class="opacity-70">First post lands soon.</p>
         </div>
       )
@@ -289,15 +314,15 @@ const blogBreadcrumbLd = breadcrumbList([
     {
       visible.length > 0 && (
         <section>
-          <div class="mb-6 flex items-end justify-between gap-4 flex-wrap">
+          <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
               <BurstBadge tone="yellow" size="sm" class="mb-4">
                 03
               </BurstBadge>
-              <h2 class="display text-2xl md:text-3xl leading-tight">
+              <h2 class="display text-2xl leading-tight md:text-3xl">
                 More posts.
               </h2>
-              <p class="mono text-[11px] font-bold uppercase tracking-widest opacity-60 mt-2">
+              <p class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60">
                 ▸ {visible.length} of {rest.length} · paginated below
               </p>
             </div>
@@ -324,15 +349,13 @@ const blogBreadcrumbLd = breadcrumbList([
             <BurstBadge tone="purple" size="sm" class="mb-4">
               04
             </BurstBadge>
-            <h2 class="display text-2xl md:text-3xl leading-tight">
-              Tags.
-            </h2>
-            <p class="mono text-[11px] font-bold uppercase tracking-widest opacity-60 mt-2">
+            <h2 class="display text-2xl leading-tight md:text-3xl">Tags.</h2>
+            <p class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60">
               ▸ Search by specific tech
             </p>
           </div>
           <ul class="flex flex-wrap gap-2">
-            {topTags.map((t, i) => {
+            {topTags.map(([t, count], i) => {
               const tones = [
                 "yellow",
                 "pink",
@@ -343,15 +366,14 @@ const blogBreadcrumbLd = breadcrumbList([
                 "purple",
                 "paper",
               ] as const;
-              const tagSlug = t.toLowerCase().replace(/\s+/g, "-");
               return (
                 <li>
                   <TagPill
                     tone={tones[i % tones.length]}
                     size="sm"
-                    href={`/blog/tag/${tagSlug}/`}
+                    href={`/blog/tag/${tagSlug(t)}/`}
                   >
-                    #{t}
+                    #{t} · {count}
                   </TagPill>
                 </li>
               );
@@ -364,13 +386,13 @@ const blogBreadcrumbLd = breadcrumbList([
     {
       hasMore && (
         <nav
-          class="flex items-center justify-between gap-4 flex-wrap border-t-[3px] border-ink pt-8"
+          class="border-ink flex flex-wrap items-center justify-between gap-4 border-t-[3px] pt-8"
           aria-label="Blog pagination"
         >
           <NeoButton variant="secondary" size="md" disabled>
             ← Newer
           </NeoButton>
-          <p class="mono text-xs font-bold uppercase tracking-widest opacity-70">
+          <p class="mono text-xs font-bold tracking-widest uppercase opacity-70">
             Page 1 · {Math.ceil(rest.length / PAGE_SIZE)} total
           </p>
           <NeoButton href="/blog/page/2/" variant="primary" size="md">

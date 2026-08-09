@@ -21,6 +21,8 @@ interface Props {
   canonical?: string;
   structuredData?: object | object[];
   noindex?: boolean;
+  /** Override the robots directive outright, e.g. "noindex,follow". */
+  robots?: string;
   ogType?: "website" | "article" | "profile";
   article?: ArticleMeta;
   /** Pagination — emit <link rel="prev/next"> for paginated sequences. */
@@ -37,12 +39,19 @@ const {
   canonical,
   structuredData,
   noindex = false,
+  robots,
   ogType = "website",
   article,
   prev,
   next,
   feeds = [],
 } = Astro.props;
+
+const robotsContent =
+  robots ??
+  (noindex
+    ? "noindex,nofollow"
+    : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1");
 
 const prevHref = prev ? new URL(prev, Astro.site).href : undefined;
 const nextHref = next ? new URL(next, Astro.site).href : undefined;
@@ -89,11 +98,26 @@ const ldList = structuredData
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    <link rel="alternate" type="application/rss+xml" title={SITE.TITLE} href="/rss.xml" />
-    <link rel="alternate" type="application/feed+json" title={SITE.TITLE} href="/feed.json" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={SITE.TITLE}
+      href="/rss.xml"
+    />
+    <link
+      rel="alternate"
+      type="application/feed+json"
+      title={SITE.TITLE}
+      href="/feed.json"
+    />
     {
       feeds.map((f) => (
-        <link rel="alternate" type="application/rss+xml" title={f.title} href={f.href} />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title={f.title}
+          href={f.href}
+        />
       ))
     }
     {
@@ -102,16 +126,7 @@ const ldList = structuredData
       ))
     }
 
-    {
-      noindex && (
-        <meta name="robots" content="noindex,nofollow" />
-      )
-    }
-    {
-      !noindex && (
-        <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
-      )
-    }
+    <meta name="robots" content={robotsContent} />
 
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalUrl} />
@@ -134,11 +149,20 @@ const ldList = structuredData
     {
       article && (
         <>
-          <meta property="article:published_time" content={article.publishedTime} />
+          <meta
+            property="article:published_time"
+            content={article.publishedTime}
+          />
           {article.modifiedTime && (
-            <meta property="article:modified_time" content={article.modifiedTime} />
+            <meta
+              property="article:modified_time"
+              content={article.modifiedTime}
+            />
           )}
-          <meta property="article:author" content={article.author ?? OWNER.NAME} />
+          <meta
+            property="article:author"
+            content={article.author ?? OWNER.NAME}
+          />
           {article.section && (
             <meta property="article:section" content={article.section} />
           )}
@@ -157,13 +181,23 @@ const ldList = structuredData
     <meta name="twitter:creator" content="@ansezz" />
     <meta name="twitter:site" content="@ansezz" />
 
-    <meta name="theme-color" content="#fafaf5" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#15140e" media="(prefers-color-scheme: dark)" />
+    <meta
+      name="theme-color"
+      content="#fafaf5"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#15140e"
+      media="(prefers-color-scheme: dark)"
+    />
     <meta name="color-scheme" content="light dark" />
 
-    {/* Set theme before first paint — no flash. Default is LIGHT;
+    {
+      /* Set theme before first paint — no flash. Default is LIGHT;
         dark only when the visitor has explicitly chosen it. System
-        preference is intentionally ignored. */}
+        preference is intentionally ignored. */
+    }
     <script is:inline>
       (() => {
         const apply = () => {
@@ -200,10 +234,10 @@ const ldList = structuredData
       ))
     }
   </head>
-  <body class="min-h-screen flex flex-col">
+  <body class="flex min-h-screen flex-col">
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-yellow focus:border-[2px] focus:border-ink focus:px-3 focus:py-1 focus:font-bold"
+      class="focus:bg-yellow focus:border-ink sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:border-[2px] focus:px-3 focus:py-1 focus:font-bold"
     >
       Skip to content
     </a>

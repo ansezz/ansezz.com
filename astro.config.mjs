@@ -10,7 +10,7 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { unified } from "@astrojs/markdown-remark";
 import rehypeImageDims from "./src/lib/rehype-image-dims.mjs";
 
-import { SITE } from "./src/consts";
+import { SITE, TAG_OG_MIN_POSTS } from "./src/consts";
 
 const siteHost = new URL(SITE.URL).hostname;
 
@@ -35,6 +35,36 @@ function blogLastmod() {
   return map;
 }
 const LASTMOD = blogLastmod();
+
+// Tag pages below TAG_OG_MIN_POSTS are noindex,follow (see
+// src/pages/blog/tag/[tag].astro) — keep them out of the sitemap too so we
+// aren't submitting URLs we've asked Google not to index.
+function thinTagPaths() {
+  const dir = join(process.cwd(), "src/content/blog");
+  const counts = new Map();
+  for (const file of readdirSync(dir)) {
+    if (!/\.(md|mdx)$/.test(file)) continue;
+    const src = readFileSync(join(dir, file), "utf8");
+    const fm = src.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? "";
+    if (/^draft:\s*true/m.test(fm)) continue;
+    const list = fm.slice(fm.indexOf("tags:"));
+    const open = list.indexOf("[");
+    const close = list.indexOf("]");
+    if (open === -1 || close === -1) continue;
+    for (const raw of list.slice(open + 1, close).split(",")) {
+      const tag = raw.trim().replace(/^["']|["']$/g, "");
+      if (!tag) continue;
+      const slug = tag.toLowerCase().replace(/\s+/g, "-");
+      counts.set(slug, (counts.get(slug) ?? 0) + 1);
+    }
+  }
+  return new Set(
+    [...counts.entries()]
+      .filter(([, n]) => n < TAG_OG_MIN_POSTS)
+      .map(([slug]) => `/blog/tag/${slug}/`),
+  );
+}
+const THIN_TAGS = thinTagPaths();
 
 // Concatenate the text content of a hast heading node (for anchor aria-labels).
 function headingText(node) {
@@ -136,7 +166,8 @@ export default defineConfig({
       filter: (page) =>
         !page.includes("/styleguide") &&
         !page.includes("/404") &&
-        !page.includes("/og/"),
+        !page.includes("/og/") &&
+        !THIN_TAGS.has(new URL(page).pathname),
       changefreq: "weekly",
       priority: 0.7,
       serialize(item) {
