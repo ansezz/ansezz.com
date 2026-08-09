@@ -1,0 +1,176 @@
+---
+title: "Trust is not a QA strategy: test AI code too"
+description: "AI-generated code is 95% syntactically clean and fails security tests 45% of the time. Half of agentic PRs ship no tests. The verification pipeline I run instead."
+publishDate: 2026-08-09
+category: ai
+tags: [ai, testing, agentic-ai, ci-cd, code-review, quality]
+featured: false
+heroImage:
+  url: "/blog/testing-ai-generated-code/hero.webp"
+  alt: "Pop-art comic illustration of a developer desk covered in failing test badges"
+---
+
+Trust is not a QA strategy.
+
+It does not matter whether you are reviewing a pull request from a junior developer or accepting an entire feature an autonomous agent produced in ninety seconds. The engineering question is identical: does this code actually work, and how do you know?
+
+Somewhere in the shift to [agentic workflows](/blog/agentic-workflows-vibe-coding/), a lot of teams quietly stopped asking the second half of that question. LLMs emit code that compiles, lints clean, and reads better than most of what humans write under deadline. So the code _looks_ reviewed. Teams merge it, ship it, and find out what it does in production.
+
+## Syntax is not semantics
+
+This is the part that catches experienced engineers off guard, because our instincts were trained on human output.
+
+Human code that looks sloppy usually _is_ rough, and we review it accordingly. Human code that looks polished usually got there because someone iterated on it — which means someone thought about it. Polish was a proxy for scrutiny.
+
+LLMs break that correlation completely. Veracode's Spring 2026 GenAI Code Security update measured a syntax correctness rate above 95% across the models it tested, against a security pass rate of 55%. The code is almost always well-formed. It is secure roughly half the time. Formatting stopped carrying any signal about correctness, and most review habits have not caught up.
+
+```typescript
+// Generated in one shot. Clean names, correct types, zero lint warnings.
+function calculateDiscount(user: User, cartTotal: number): number {
+  if (user.isVip) {
+    return cartTotal * 0.2;
+  }
+  return cartTotal * 0.05;
+}
+```
+
+Nothing here is _wrong_, exactly. It is just unfinished in ways that only show up under real traffic: no guard against a negative `cartTotal` from a refund flow, no clamp on the maximum discount, no decision about what happens when `user` arrives undefined from a cache miss. The type signature says those cases cannot happen. The type signature is a claim about the code, not about production.
+
+## What the data actually says
+
+Veracode's Spring 2026 report evaluated 80 coding tasks across Java, JavaScript, C#, and Python. The aggregate numbers are worth internalizing, because the failures are not evenly spread — they cluster hard around exactly the categories where a missing sanitizer is invisible in review.
+
+| CWE category                    | Security pass rate |
+| :------------------------------ | :----------------- |
+| Insecure cryptography (CWE-327) | 86%                |
+| SQL injection (CWE-89)          | 82%                |
+| Cross-site scripting (CWE-80)   | 15%                |
+| Log injection (CWE-117)         | 13%                |
+
+![Dashboard visualization of AI code security pass rates and vulnerability counts by category](/blog/testing-ai-generated-code/security-metrics.webp)
+
+Parameterized queries and modern crypto defaults are baked into the training data — models get those right most of the time because the safe pattern _is_ the common pattern. Output encoding is contextual. Whether a string needs HTML-escaping, attribute-escaping, or JS-escaping depends on where it lands in the template, and the model cannot see the template from inside the function it is writing. So it guesses, and it guesses wrong about six times out of seven.
+
+Language matters too. The same report puts Python at a 62% security pass rate and Java at 29%. If your stack is JVM-heavy, the baseline you are working from is worse than the headline number suggests.
+
+One genuinely encouraging data point: reasoning-focused models with extended thinking hit 70–72% pass rates, the best observed. That is real improvement. It is still a coin flip you would never accept from a human contributor.
+
+## The testing gap in agentic pull requests
+
+Chat completions are one thing. Autonomous agents opening PRs are another, and this is where the accounting gets uncomfortable.
+
+A July 2026 empirical study accepted at ICSME analysed 4,882 agent-generated pull requests from the AIDev dataset — 532 Java, 4,350 Python, across five coding agents. Two findings should reshape how you gate merges:
+
+**Agents included test changes in only 49.6% of PRs that modified code covered by test files.** Not "PRs with no test infrastructure available" — PRs where tests for that code already existed and the agent changed the code without touching them.
+
+**Existing test suites did not pick up the slack.** They executed 61.5% of the agents' changed executable lines in Java and just 27.0% in Python. In 64.8% of Python PRs, _not one changed line_ was executed by any existing test. The safety net people assume is there is mostly hole.
+
+Agents optimize for satisfying the prompt. Ask for a checkout feature and you get a controller, a migration, and a view — because that is what "done" looks like from the prompt's perspective. Boundary conditions, negative assertions, and concurrency cases are not in the prompt, so they are not in the diff.
+
+## Coverage numbers are lying to you
+
+Here is the failure mode I see most often: a team wires up a coverage gate, sees 90%, and concludes the AI-authored code is verified.
+
+Line coverage measures execution, not verification. It tells you a line ran during the test suite. It says nothing about whether anything checked the result.
+
+A separate 2026 study looked specifically at what agent-written tests assert. Across 86,156 test-file patches from 33,596 agent-authored pull requests spanning 2,807 repositories — Codex, Copilot, Devin, Cursor, and Claude Code — 80.2% of those patches contained weak or no explicit oracle signals. An agent rewarded for a green build learns very quickly that the cheapest path to green is an assertion that cannot fail.
+
+```python
+# 100% line coverage on process_payment. Verifies essentially nothing.
+def test_process_payment():
+    result = process_payment(100)
+    assert result is not None
+```
+
+That test passes if `process_payment` charges the right amount. It also passes if it charges zero, double-charges, returns a stale object, or silently swallows a declined card. Coverage went up. Confidence should not have.
+
+The fix is mutation testing, which measures the thing you actually care about: if I break the code, does a test go red? Stryker for JS/TS, Infection for PHP, mutmut for Python, PIT for Java. Mutation score is the only coverage-adjacent metric I have found that agents cannot game by writing more assertions of nothing.
+
+## Error handling that hides the failure
+
+Back in the ICSME coverage study, there is a number that gets less attention than it deserves: existing tests miss 86.0% of the try/catch blocks agents touch in Java, and 81.0% of Python error-handling constructs. The recovery paths are the least-tested code in the diff.
+
+This is the worst possible failure shape. A crash is loud, has a stack trace, and pages someone. A `catch` block that logs a generic string and returns a default value produces a system that keeps running while quietly returning wrong answers. You do not find those in staging. You find them in a reconciliation report three weeks later.
+
+When you review agent output, read the `catch` blocks first. Ask what happens to the caller when the block executes, and whether the log line contains enough context to reconstruct the failure at 3am. That question is also the difference between [logging and monitoring](/blog/logging-vs-monitoring/) — a swallowed exception is logged, and monitored by nobody.
+
+## The throughput and stability trade
+
+Google's 2025 DORA report on AI-assisted development is the macro version of everything above. Its central finding: higher AI adoption correlates with an increase in delivery throughput _and_ an increase in delivery instability, at the same time.
+
+That is not an argument against AI. It is a statement about where the bottleneck moved. When change volume goes up and the control systems — automated testing, version control discipline, fast feedback — stay where they were, instability is the arithmetic result. DORA's own ROI model shows how thin the margin gets: a change failure rate drifting from 5% to 6% wipes out a meaningful chunk of the productivity gain in downtime cost alone.
+
+AI amplifies whatever your delivery process already was. This is the same trade-off I mapped out in [AI vs traditional development](/blog/ai-vs-traditional-development/), now with three years of industry data behind it.
+
+## What I actually measure
+
+Coverage percentage is a vanity metric here. These four are not:
+
+- **Change failure rate, segmented.** Tag agent-authored PRs at open time and compute CFR separately from human-authored changes. If you cannot split the two, you cannot tell whether AI is helping.
+- **Mutation score on the diff.** Not the repo — the changed lines. It answers "would a test catch a regression here" directly.
+- **Test-change ratio.** What share of code-modifying PRs also modify tests. Industry baseline is roughly 50%. Yours should be visible on a dashboard.
+- **Diff coverage, not total coverage.** Total coverage hides new code behind a large tested legacy base. Diff coverage exposes exactly the lines that just arrived.
+
+![Architecture diagram of a CI pipeline with static analysis, diff coverage, and mutation testing gates](/blog/testing-ai-generated-code/verification-pipeline.webp)
+
+## The verification pipeline
+
+Manual review does not scale against agent output. A reviewer facing 800 lines of plausible-looking code per hour is not reviewing — they are skimming for style. The gate has to be automatic, and it has to run on the diff.
+
+```yaml
+name: Agentic PR gate
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sast:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v5
+      - run: semgrep ci --config=p/owasp-top-ten
+
+  diff-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - run: vendor/bin/phpunit --coverage-cobertura=coverage.xml
+      - run: pip install diff-cover
+      # Fail on new lines that no test executes — total coverage is irrelevant here.
+      - run: diff-cover coverage.xml --compare-branch=origin/main --fail-under=90
+
+  mutation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      # Mutate only the changed files, and require tests to actually kill the mutants.
+      - run: vendor/bin/infection --git-diff-filter=AM --min-msi=70 --threads=max
+```
+
+Three layers, each catching what the previous one cannot. Semgrep's OWASP ruleset catches the XSS and injection patterns that dominate the failure table above. `diff-cover` refuses the PR where new lines are unexecuted. Infection refuses the PR where new lines are executed but unasserted — the oracle problem, enforced by a machine rather than by a tired reviewer.
+
+Two practices sit upstream of the pipeline and are worth more than any of it:
+
+**Write the spec first.** Give the agent the test file, the OpenAPI schema, or the behavioral contract before it writes the implementation. It is much better at satisfying an explicit oracle than at inventing one, and you keep authorship of the definition of correct.
+
+**Give the agent real context.** A large share of the XSS failures come from the model not being able to see the rendering context. Wiring your agent into the actual schema, actual codebase, and actual docs — the [MCP tooling story](/blog/claude-mcp-dev-tools/) — measurably reduces guessing. It reduces it. It does not remove the need to verify.
+
+![Software testing workflow illustration with review checklists and coverage graphs](/blog/testing-ai-generated-code/review-workflow.webp)
+
+## Takeaways
+
+- **Polish stopped being a proxy for scrutiny.** 95% syntax correctness against a 55% security pass rate means clean formatting now tells you nothing about whether the logic holds.
+- **Failures cluster in context-dependent categories.** Crypto and SQL injection pass 82–86% of the time. XSS and log injection pass 13–15%. Review output encoding first.
+- **Half of agentic PRs touch code without touching tests**, and existing suites execute as little as 27% of the changed lines. Gate on test presence, not good intentions.
+- **Mutation score over line coverage.** 80.2% of agent-written test patches carry weak or absent oracles. Only mutation testing catches an assertion that cannot fail.
+- **Read the catch blocks first.** Test suites miss over 80% of the error-handling paths agents touch, which means the likely production symptom is a wrong answer, not a crash.
+
+None of this is an argument for writing code by hand. I ship agent-authored code every week. The argument is that verification is the part of the job that did not get automated, and pretending otherwise just moves the discovery of your bugs from CI to your customers.
+
+What is currently standing between an agent-authored PR and production in your pipeline? If the honest answer is "a human skimming the diff," that is worth fixing this quarter — [tell me what your stack looks like](/contact/) and I will tell you where I would put the first gate. 🤘
