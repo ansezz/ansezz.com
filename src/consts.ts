@@ -267,13 +267,17 @@ export const BLOG_SERIES: BlogSeries[] = [
     slug: "vibe-coding-to-agentic",
     title: "From Vibe Coding to Agentic Engineering",
     description:
-      "How AI-assisted development grows up — from conversational vibes, to MCP-driven agentic loops, to a workflow that can actually ship to production.",
+      "How AI-assisted development grows up — from conversational vibes, to MCP-driven agentic loops, to the review and verification gates that let it ship to production.",
     tone: "yellow",
     posts: [
       "vibe-coding",
+      "ai-vs-traditional-development",
       "agentic-workflows-vibe-coding",
       "vibe-coding-vs-agentic-engineering",
+      "claude-mcp-dev-tools",
       "ai-coding-workflow-levels",
+      "stop-reading-code-ai-review",
+      "testing-ai-generated-code",
     ],
   },
   {
