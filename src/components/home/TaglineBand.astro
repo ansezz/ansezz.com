@@ -8,16 +8,14 @@ const remoteYears = new Date().getFullYear() - OWNER.REMOTE_SINCE;
 ---
 
 <HalftoneSection tone="pink" bordered class="py-16 md:py-24">
-  <div class="mx-auto max-w-5xl px-5 text-center text-ink">
-    <p
-      class="mono text-xs font-bold uppercase tracking-widest opacity-70 mb-4"
-    >
+  <div class="text-ink mx-auto max-w-5xl px-5 text-center">
+    <p class="mono mb-4 text-xs font-bold tracking-widest uppercase opacity-70">
       ▸ Operating principle
     </p>
 
     <figure class="relative inline-block max-w-3xl">
       <div
-        class="relative inline-block bg-paper border-[3px] border-ink rounded-[8px] shadow-neo-lg px-6 py-8 md:px-12 md:py-14"
+        class="bg-paper border-ink shadow-neo-lg relative inline-block rounded-[8px] border-[3px] px-6 py-8 md:px-12 md:py-14"
       >
         <blockquote
           class="display text-[clamp(1.75rem,4.5vw,3.5rem)] leading-[1] tracking-tight"
@@ -25,31 +23,27 @@ const remoteYears = new Date().getFullYear() - OWNER.REMOTE_SINCE;
           Ship the thing.
           <span class="block">
             Then make it
-            <span class="bg-yellow inline-block px-2 -mx-1">unfair</span>.
+            <span class="bg-yellow -mx-1 inline-block px-2">unfair</span>.
           </span>
         </blockquote>
 
         <svg
-          class="absolute -bottom-6 left-12 w-12 h-9"
+          class="absolute -bottom-6 left-12 h-9 w-12"
           viewBox="0 0 48 36"
           aria-hidden="true"
         >
-          <path
-            d="M0 0 L48 0 L12 36 Z"
-            fill="var(--color-paper)"
-          />
+          <path d="M0 0 L48 0 L12 36 Z" fill="var(--color-paper)"></path>
           <path
             d="M0 0 L48 0 L12 36 Z"
             fill="none"
             stroke="var(--color-ink)"
             stroke-width="3"
-            stroke-linejoin="round"
-          />
+            stroke-linejoin="round"></path>
         </svg>
       </div>
     </figure>
 
-    <p class="mt-12 text-base md:text-lg max-w-2xl mx-auto opacity-90">
+    <p class="mx-auto mt-12 max-w-2xl text-base opacity-90 md:text-lg">
       Production-ready, observable, opinionated. Backed by tests, types, and
       {remoteYears} years of remote-only scar tissue.
     </p>

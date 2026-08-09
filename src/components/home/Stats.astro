@@ -4,12 +4,12 @@ import { STATS } from "@/consts";
 ---
 
 <HalftoneSection tone="pink" bordered class="py-12 md:py-16">
-  <div class="mx-auto max-w-5xl px-5 grid grid-cols-2 md:grid-cols-4 gap-6">
+  <div class="mx-auto grid max-w-5xl grid-cols-2 gap-6 px-5 md:grid-cols-4">
     {
       STATS.map((s) => (
-        <div class="text-center text-ink">
+        <div class="text-ink text-center">
           <p class="display text-5xl md:text-6xl">{s.value}</p>
-          <p class="mono text-xs font-bold uppercase tracking-widest mt-2">
+          <p class="mono mt-2 text-xs font-bold tracking-widest uppercase">
             {s.label}
           </p>
         </div>

@@ -54,10 +54,12 @@ const externalAttrs = href ? externalLinkAttrs(href) : {};
   href={href}
   {...externalAttrs}
   class:list={[
-    "inline-flex items-center font-bold uppercase tracking-wide border-[2px] border-ink rounded-full whitespace-nowrap",
+    "border-ink inline-flex items-center rounded-full border-[2px] font-bold tracking-wide whitespace-nowrap uppercase",
     toneClass[tone],
     sizeClass[size],
-    href ? "shadow-neo-sm transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-md" : "",
+    href
+      ? "shadow-neo-sm hover:shadow-neo-md transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+      : "",
     active ? "shadow-neo-md -translate-x-0.5 -translate-y-0.5" : "",
     className,
   ]}

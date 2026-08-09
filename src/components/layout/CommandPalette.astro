@@ -22,12 +22,12 @@ const links = [
   aria-modal="true"
   aria-label="Command menu"
 >
-  <div id="cmdk-backdrop" class="absolute inset-0 bg-ink/40 backdrop-blur-sm">
+  <div id="cmdk-backdrop" class="bg-ink/40 absolute inset-0 backdrop-blur-sm">
   </div>
   <div
-    class="relative w-full max-w-xl border-[3px] border-ink bg-paper shadow-neo-xl rounded-[6px] overflow-hidden"
+    class="border-ink bg-paper shadow-neo-xl relative w-full max-w-xl overflow-hidden rounded-[6px] border-[3px]"
   >
-    <div class="flex items-center gap-2 border-b-[3px] border-ink px-4 py-3">
+    <div class="border-ink flex items-center gap-2 border-b-[3px] px-4 py-3">
       <span class="mono text-xs font-bold opacity-60">▸</span>
       <input
         id="cmdk-input"
@@ -35,10 +35,10 @@ const links = [
         placeholder="Jump to a page or search the blog…"
         autocomplete="off"
         spellcheck="false"
-        class="flex-1 bg-transparent font-bold text-base focus:outline-none placeholder:text-ink/40"
+        class="placeholder:text-ink/40 flex-1 bg-transparent text-base font-bold focus:outline-none"
       />
       <kbd
-        class="mono text-[10px] font-bold border-[2px] border-ink rounded px-1.5 py-0.5 bg-bg-alt"
+        class="mono border-ink bg-bg-alt rounded border-[2px] px-1.5 py-0.5 text-[10px] font-bold"
         >esc</kbd
       >
     </div>
@@ -51,10 +51,10 @@ const links = [
               data-cmdk-item
               data-label={l.label.toLowerCase()}
               data-index={i}
-              class="flex items-center justify-between gap-3 px-4 py-2.5 text-sm font-bold transition-colors aria-[selected=true]:bg-yellow hover:bg-yellow"
+              class="aria-[selected=true]:bg-yellow hover:bg-yellow flex items-center justify-between gap-3 px-4 py-2.5 text-sm font-bold transition-colors"
             >
               <span>{l.label}</span>
-              <span class="mono text-[10px] font-bold uppercase tracking-widest opacity-50">
+              <span class="mono text-[10px] font-bold tracking-widest uppercase opacity-50">
                 {l.group}
               </span>
             </a>
@@ -66,10 +66,11 @@ const links = [
           href="/blog/"
           id="cmdk-search-link"
           data-cmdk-item
-          class="flex items-center justify-between gap-3 px-4 py-2.5 text-sm font-bold transition-colors aria-[selected=true]:bg-yellow hover:bg-yellow"
+          class="aria-[selected=true]:bg-yellow hover:bg-yellow flex items-center justify-between gap-3 px-4 py-2.5 text-sm font-bold transition-colors"
         >
           <span id="cmdk-search-label">Search the blog…</span>
-          <span class="mono text-[10px] font-bold uppercase tracking-widest opacity-50"
+          <span
+            class="mono text-[10px] font-bold tracking-widest uppercase opacity-50"
             >Search ↵</span
           >
         </a>

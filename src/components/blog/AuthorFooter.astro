@@ -15,11 +15,11 @@ const { class: className = "" } = Astro.props;
 
 <aside
   class:list={[
-    "relative border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-md p-6 md:p-10",
+    "border-ink bg-paper shadow-neo-md relative rounded-[4px] border-[3px] p-6 md:p-10",
     className,
   ]}
 >
-  <div class="grid gap-6 md:grid-cols-[160px_1fr] md:gap-10 items-start">
+  <div class="grid items-start gap-6 md:grid-cols-[160px_1fr] md:gap-10">
     <div
       class="relative flex justify-center md:justify-start"
       data-mascot="author"
@@ -28,12 +28,12 @@ const { class: className = "" } = Astro.props;
     </div>
     <div>
       <p
-        class="mono text-xs font-bold uppercase tracking-widest text-pink-deep mb-2"
+        class="mono text-pink-deep mb-2 text-xs font-bold tracking-widest uppercase"
       >
         ▸ Written by
       </p>
-      <h2 class="display text-3xl md:text-4xl mb-1">{OWNER.NAME}</h2>
-      <p class="text-base md:text-lg text-ink/80 leading-snug mb-4">
+      <h2 class="display mb-1 text-3xl md:text-4xl">{OWNER.NAME}</h2>
+      <p class="text-ink/80 mb-4 text-base leading-snug md:text-lg">
         {OWNER.TAGLINE}
       </p>
 
@@ -41,7 +41,7 @@ const { class: className = "" } = Astro.props;
         <AvailabilityBadge />
       </div>
 
-      <div class="flex flex-wrap gap-3 items-center">
+      <div class="flex flex-wrap items-center gap-3">
         <NeoButton href="/contact/" variant="primary" size="md">
           <Icon name="lucide:mail" class="h-4 w-4" />
           Let's work together
@@ -50,7 +50,7 @@ const { class: className = "" } = Astro.props;
           More about me →
         </NeoButton>
 
-        <span class="inline-flex items-center gap-2 ml-1">
+        <span class="ml-1 inline-flex items-center gap-2">
           <SocialButton
             href="https://github.com/ansezz"
             icon="lucide:github"

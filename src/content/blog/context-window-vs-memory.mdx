@@ -46,12 +46,12 @@ These chunks are then injected into the context window. This keeps the prompt le
 
 For technical teams using the Laravel ecosystem, implementing RAG has become significantly easier with tools like [pgvector](https://github.com/pgvector/pgvector). You can store embeddings directly in your PostgreSQL database, allowing for seamless integration between your relational data and your AI logic.
 
-| Feature          | Context Window              | Long-Term Memory (RAG)          |
-| :--------------- | :-------------------------- | :------------------------------ |
-| **Duration**     | Session-based (Temporary)   | Persistent (Permanent)          |
-| **Capacity**     | Limited (1M–2M tokens)      | Virtually Unlimited             |
-| **Cost**         | High per-request cost       | Low per-request (fixed storage) |
-| **Update Speed** | Instant for the session     | Requires indexing/embedding     |
+| Feature          | Context Window            | Long-Term Memory (RAG)          |
+| :--------------- | :------------------------ | :------------------------------ |
+| **Duration**     | Session-based (Temporary) | Persistent (Permanent)          |
+| **Capacity**     | Limited (1M–2M tokens)    | Virtually Unlimited             |
+| **Cost**         | High per-request cost     | Low per-request (fixed storage) |
+| **Update Speed** | Instant for the session   | Requires indexing/embedding     |
 
 ## The economics of tokens vs infrastructure
 

@@ -38,7 +38,7 @@ const brands = [
       Shipped for.
     </h2>
     <p
-      class="mono text-[11px] font-bold uppercase tracking-widest opacity-60 mt-3"
+      class="mono mt-3 text-[11px] font-bold tracking-widest uppercase opacity-60"
     >
       ▸ A slice of live brands & platforms I've built and shipped
     </p>
@@ -46,7 +46,7 @@ const brands = [
 
   {
     TESTIMONIALS.length > 0 && (
-      <ul class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+      <ul class="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {TESTIMONIALS.map((t, i) => (
           <li>
             <NeoCard
@@ -55,13 +55,13 @@ const brands = [
               tilt={i % 2 === 0 ? -0.4 : 0.4}
               class="flex h-full flex-col gap-4"
             >
-              <p class="text-base md:text-lg font-medium leading-snug">
-                <span class="display text-2xl align-top mr-1">“</span>
+              <p class="text-base leading-snug font-medium md:text-lg">
+                <span class="display mr-1 align-top text-2xl">“</span>
                 {t.quote}
               </p>
-              <div class="mt-auto pt-2 border-t-[2.5px] border-ink">
-                <p class="font-bold text-sm">{t.name}</p>
-                <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-70">
+              <div class="border-ink mt-auto border-t-[2.5px] pt-2">
+                <p class="text-sm font-bold">{t.name}</p>
+                <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-70">
                   {t.role}
                 </p>
               </div>
@@ -79,22 +79,22 @@ const brands = [
           <a
             href={b.url}
             {...externalLinkAttrs(b.url)}
-            class="group flex items-center gap-3 border-[2.5px] border-ink rounded-[4px] bg-paper p-3 shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm hover:bg-yellow"
+            class="group border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm hover:bg-yellow flex items-center gap-3 rounded-[4px] border-[2.5px] p-3 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
           >
             <span
               class:list={[
-                "inline-flex h-10 w-10 shrink-0 items-center justify-center border-[2px] border-ink rounded-full font-black text-sm",
+                "border-ink inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[2px] text-sm font-black",
                 toneBg[b.tone],
               ]}
             >
               {b.name.slice(0, 1)}
             </span>
-            <span class="flex-1 min-w-0">
-              <span class="block font-bold text-sm truncate">
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-sm font-bold">
                 {b.name}
-                <span class="inline-block align-middle ml-1 opacity-60">↗</span>
+                <span class="ml-1 inline-block align-middle opacity-60">↗</span>
               </span>
-              <span class="block mono text-[10px] uppercase tracking-widest opacity-70 truncate">
+              <span class="mono block truncate text-[10px] tracking-widest uppercase opacity-70">
                 {b.note}
               </span>
             </span>
@@ -107,12 +107,12 @@ const brands = [
   <div class="mt-6 flex flex-wrap items-center gap-3">
     <a
       href="/work/"
-      class="inline-flex items-center gap-2 border-[2.5px] border-ink bg-ink text-bg px-4 py-2 text-sm font-bold uppercase tracking-wide shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm"
+      class="border-ink bg-ink text-bg shadow-neo-xs hover:shadow-neo-sm inline-flex items-center gap-2 border-[2.5px] px-4 py-2 text-sm font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
     >
       <Icon name="lucide:arrow-right" class="h-4 w-4" />
       See all work
     </a>
-    <p class="mono text-[11px] font-bold uppercase tracking-widest opacity-60">
+    <p class="mono text-[11px] font-bold tracking-widest uppercase opacity-60">
       ▸ 60+ production builds total
     </p>
   </div>

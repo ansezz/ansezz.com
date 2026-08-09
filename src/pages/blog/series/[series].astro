@@ -68,16 +68,16 @@ const itemListLd = {
               <NeoCard
                 tone={i === 0 ? series.tone : "paper"}
                 shadow="sm"
-                class="flex gap-4 items-start transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-neo-md"
+                class="hover:shadow-neo-md flex items-start gap-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
               >
-                <span class="display text-3xl md:text-4xl leading-none shrink-0 opacity-50">
+                <span class="display shrink-0 text-3xl leading-none opacity-50 md:text-4xl">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <div class="flex-1 min-w-0">
-                  <h2 class="heading text-lg md:text-xl uppercase leading-tight">
+                <div class="min-w-0 flex-1">
+                  <h2 class="heading text-lg leading-tight uppercase md:text-xl">
                     {entry.data.title}
                   </h2>
-                  <p class="text-sm leading-snug opacity-90 mt-1.5">
+                  <p class="mt-1.5 text-sm leading-snug opacity-90">
                     {entry.data.description}
                   </p>
                   <div class="mt-3">
@@ -92,7 +92,7 @@ const itemListLd = {
                 </div>
                 <Icon
                   name="lucide:arrow-right"
-                  class="h-5 w-5 shrink-0 mt-1 opacity-50"
+                  class="mt-1 h-5 w-5 shrink-0 opacity-50"
                 />
               </NeoCard>
             </a>

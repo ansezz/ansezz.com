@@ -38,7 +38,11 @@ const cols = [
 const rows = [
   { icon: "lucide:zap", label: "Hard shadow", cells: [true, false, false] },
   { icon: "lucide:square", label: "Thick border", cells: [true, true, false] },
-  { icon: "lucide:rotate-cw", label: "Hover lift", cells: [true, false, false] },
+  {
+    icon: "lucide:rotate-cw",
+    label: "Hover lift",
+    cells: [true, false, false],
+  },
   { icon: "lucide:smile", label: "Personality", cells: [true, false, false] },
 ];
 
@@ -63,15 +67,30 @@ const colors: ColorToken[] = [
   { name: "bg-alt", value: "#f0efe6", className: "bg-bg-alt" },
   { name: "paper", value: "#ffffff", className: "bg-paper" },
   { name: "ink", value: "#0a0a0a", className: "bg-ink", text: "text-paper" },
-  { name: "ink-soft", value: "#2a2a2a", className: "bg-ink-soft", text: "text-paper" },
+  {
+    name: "ink-soft",
+    value: "#2a2a2a",
+    className: "bg-ink-soft",
+    text: "text-paper",
+  },
   { name: "yellow", value: "#ffd93d", className: "bg-yellow" },
   { name: "pink", value: "#ff2d87", className: "bg-pink", text: "text-paper" },
-  { name: "pink-deep", value: "#c7005f", className: "bg-pink-deep", text: "text-paper" },
+  {
+    name: "pink-deep",
+    value: "#c7005f",
+    className: "bg-pink-deep",
+    text: "text-paper",
+  },
   { name: "cyan", value: "#3dd9c9", className: "bg-cyan" },
   { name: "green", value: "#7ae582", className: "bg-green" },
   { name: "red", value: "#ff5a5f", className: "bg-red" },
   { name: "blue", value: "#2e6bb8", className: "bg-blue", text: "text-paper" },
-  { name: "purple", value: "#9b5de5", className: "bg-purple", text: "text-paper" },
+  {
+    name: "purple",
+    value: "#9b5de5",
+    className: "bg-purple",
+    text: "text-paper",
+  },
 ];
 
 const shadows = ["xs", "sm", "md", "lg", "xl"] as const;
@@ -102,7 +121,9 @@ const sections = [
 <BaseLayout title="Styleguide" description="Component playground." noindex>
   <section class="relative mx-auto max-w-5xl px-5 py-12">
     <PageNumber n="00" position="tr" />
-    <p class="mono text-sm font-bold uppercase tracking-widest text-pink-deep mb-3">
+    <p
+      class="mono text-pink-deep mb-3 text-sm font-bold tracking-widest uppercase"
+    >
       ▸ Internal · v2
     </p>
     <h1 class="display text-[clamp(3rem,8vw,7rem)] leading-[0.92]">
@@ -116,7 +137,7 @@ const sections = [
         sections.map((s) => (
           <a
             href={`#${s.id}`}
-            class="inline-flex items-center border-[2px] border-ink bg-paper rounded-full px-3 py-1 text-xs font-bold uppercase hover:bg-yellow transition-colors"
+            class="border-ink bg-paper hover:bg-yellow inline-flex items-center rounded-full border-[2px] px-3 py-1 text-xs font-bold uppercase transition-colors"
           >
             {s.label}
           </a>
@@ -125,60 +146,118 @@ const sections = [
     </nav>
   </section>
 
-  <section class="mx-auto max-w-5xl px-5 py-10 space-y-16">
+  <section class="mx-auto max-w-5xl space-y-16 px-5 py-10">
     <div id="tokens-color">
-      <h2 class="display text-3xl mb-5">Color tokens</h2>
-      <ul class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-        {colors.map((c) => (
-          <li class:list={["border-[3px] border-ink rounded-[4px] overflow-hidden shadow-neo-xs", c.className, c.text ?? "text-ink"]}>
-            <div class="h-20 w-full"></div>
-            <div class="bg-paper text-ink border-t-[3px] border-ink px-3 py-2">
-              <p class="mono text-[11px] font-bold uppercase tracking-widest">{c.name}</p>
-              <p class="mono text-[10px] opacity-60">{c.value}</p>
-            </div>
-          </li>
-        ))}
+      <h2 class="display mb-5 text-3xl">Color tokens</h2>
+      <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {
+          colors.map((c) => (
+            <li
+              class:list={[
+                "border-ink shadow-neo-xs overflow-hidden rounded-[4px] border-[3px]",
+                c.className,
+                c.text ?? "text-ink",
+              ]}
+            >
+              <div class="h-20 w-full" />
+              <div class="bg-paper text-ink border-ink border-t-[3px] px-3 py-2">
+                <p class="mono text-[11px] font-bold tracking-widest uppercase">
+                  {c.name}
+                </p>
+                <p class="mono text-[10px] opacity-60">{c.value}</p>
+              </div>
+            </li>
+          ))
+        }
       </ul>
     </div>
 
     <div id="tokens-shadow">
-      <h2 class="display text-3xl mb-5">Shadow tokens</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
-        {shadows.map((s) => (
-          <div class="flex flex-col items-start gap-3">
-            <div class:list={["h-20 w-full border-[3px] border-ink rounded-[4px] bg-paper", `shadow-neo-${s}`]}></div>
-            <p class="mono text-[11px] font-bold uppercase tracking-widest">shadow-neo-{s}</p>
-          </div>
-        ))}
+      <h2 class="display mb-5 text-3xl">Shadow tokens</h2>
+      <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-5">
+        {
+          shadows.map((s) => (
+            <div class="flex flex-col items-start gap-3">
+              <div
+                class:list={[
+                  "border-ink bg-paper h-20 w-full rounded-[4px] border-[3px]",
+                  `shadow-neo-${s}`,
+                ]}
+              />
+              <p class="mono text-[11px] font-bold tracking-widest uppercase">
+                shadow-neo-{s}
+              </p>
+            </div>
+          ))
+        }
       </div>
     </div>
 
     <div id="tokens-type">
-      <h2 class="display text-3xl mb-5">Type scale</h2>
+      <h2 class="display mb-5 text-3xl">Type scale</h2>
       <div class="space-y-5">
-        <div class="border-[3px] border-ink rounded-[4px] bg-paper p-5">
-          <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2">display-xl</p>
-          <p class="display" style="font-size: var(--type-display-xl); line-height: 0.92;">Ship it.</p>
+        <div class="border-ink bg-paper rounded-[4px] border-[3px] p-5">
+          <p
+            class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-60"
+          >
+            display-xl
+          </p>
+          <p
+            class="display"
+            style="font-size: var(--type-display-xl); line-height: 0.92;"
+          >
+            Ship it.
+          </p>
         </div>
-        <div class="border-[3px] border-ink rounded-[4px] bg-paper p-5">
-          <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2">display-l</p>
-          <p class="display" style="font-size: var(--type-display-l); line-height: 1;">Sub-headline goes here.</p>
+        <div class="border-ink bg-paper rounded-[4px] border-[3px] p-5">
+          <p
+            class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-60"
+          >
+            display-l
+          </p>
+          <p
+            class="display"
+            style="font-size: var(--type-display-l); line-height: 1;"
+          >
+            Sub-headline goes here.
+          </p>
         </div>
-        <div class="border-[3px] border-ink rounded-[4px] bg-paper p-5">
-          <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2">display-m</p>
-          <p class="display" style="font-size: var(--type-display-m); line-height: 1.05;">Section heading text.</p>
+        <div class="border-ink bg-paper rounded-[4px] border-[3px] p-5">
+          <p
+            class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-60"
+          >
+            display-m
+          </p>
+          <p
+            class="display"
+            style="font-size: var(--type-display-m); line-height: 1.05;"
+          >
+            Section heading text.
+          </p>
         </div>
-        <div class="border-[3px] border-ink rounded-[4px] bg-paper p-5 space-y-2">
-          <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-60">Body + mono</p>
-          <p class="text-base">Body text — readable body sample with <strong>strong</strong> + <em>emphasis</em>.</p>
+        <div
+          class="border-ink bg-paper space-y-2 rounded-[4px] border-[3px] p-5"
+        >
+          <p
+            class="mono text-[10px] font-bold tracking-widest uppercase opacity-60"
+          >
+            Body + mono
+          </p>
+          <p class="text-base">
+            Body text — readable body sample with <strong>strong</strong> + <em
+              >emphasis</em
+            >.
+          </p>
           <p class="mono text-sm">mono · IBM Plex Mono · keys, code, labels</p>
-          <p class="text-sm opacity-70">text-sm opacity-70 · meta + caption text</p>
+          <p class="text-sm opacity-70">
+            text-sm opacity-70 · meta + caption text
+          </p>
         </div>
       </div>
     </div>
 
     <div id="neocard">
-      <h2 class="display text-3xl mb-5">NeoCard — tones</h2>
+      <h2 class="display mb-5 text-3xl">NeoCard — tones</h2>
       <div class="grid gap-5 sm:grid-cols-2 md:grid-cols-4">
         <NeoCard tone="paper">Paper</NeoCard>
         <NeoCard tone="yellow">Yellow</NeoCard>
@@ -190,7 +269,7 @@ const sections = [
         <NeoCard tone="purple">Purple</NeoCard>
         <NeoCard tone="ink">Ink</NeoCard>
       </div>
-      <h3 class="heading text-lg uppercase mt-8 mb-3">Hoverable + tilted</h3>
+      <h3 class="heading mt-8 mb-3 text-lg uppercase">Hoverable + tilted</h3>
       <div class="grid gap-5 sm:grid-cols-3">
         <NeoCard tone="yellow" hover tilt={-1}>Hover me (tilt -1)</NeoCard>
         <NeoCard tone="pink" hover>Hover me (flat)</NeoCard>
@@ -199,21 +278,21 @@ const sections = [
     </div>
 
     <div id="neobutton">
-      <h2 class="display text-3xl mb-5">NeoButton — variants × sizes</h2>
+      <h2 class="display mb-5 text-3xl">NeoButton — variants × sizes</h2>
       <div class="space-y-4">
-        <div class="flex flex-wrap gap-3 items-center">
+        <div class="flex flex-wrap items-center gap-3">
           <NeoButton variant="primary" size="sm">Primary sm</NeoButton>
           <NeoButton variant="primary" size="md">Primary md</NeoButton>
           <NeoButton variant="primary" size="lg">Primary lg</NeoButton>
         </div>
-        <div class="flex flex-wrap gap-3 items-center">
+        <div class="flex flex-wrap items-center gap-3">
           <NeoButton variant="secondary">Secondary</NeoButton>
           <NeoButton variant="ghost">Ghost</NeoButton>
           <NeoButton variant="danger">Danger</NeoButton>
           <NeoButton variant="ink">Ink</NeoButton>
           <NeoButton variant="primary" disabled>Disabled</NeoButton>
         </div>
-        <div class="flex flex-wrap gap-3 items-center">
+        <div class="flex flex-wrap items-center gap-3">
           <NeoButton variant="primary" href="/blog/">
             <Icon name="lucide:book-open" class="h-4 w-4" />
             With icon
@@ -226,7 +305,7 @@ const sections = [
     </div>
 
     <div id="tagpill">
-      <h2 class="display text-3xl mb-5">TagPill</h2>
+      <h2 class="display mb-5 text-3xl">TagPill</h2>
       <div class="flex flex-wrap gap-2">
         <TagPill tone="yellow">Laravel</TagPill>
         <TagPill tone="pink">AI</TagPill>
@@ -244,7 +323,7 @@ const sections = [
     </div>
 
     <div id="burstbadge">
-      <h2 class="display text-3xl mb-5">BurstBadge — sizes × tones</h2>
+      <h2 class="display mb-5 text-3xl">BurstBadge — sizes × tones</h2>
       <div class="flex flex-wrap items-center gap-6">
         <BurstBadge tone="yellow" size="sm">01</BurstBadge>
         <BurstBadge tone="pink">02</BurstBadge>
@@ -256,7 +335,7 @@ const sections = [
     </div>
 
     <div id="speechbubble">
-      <h2 class="display text-3xl mb-5">SpeechBubble — tones × tails</h2>
+      <h2 class="display mb-5 text-3xl">SpeechBubble — tones × tails</h2>
       <div class="flex flex-wrap gap-8">
         <SpeechBubble tone="yellow">Bottom-left (default).</SpeechBubble>
         <SpeechBubble tone="pink" tail="br">Bottom-right tail.</SpeechBubble>
@@ -267,7 +346,7 @@ const sections = [
     </div>
 
     <div id="stickynote">
-      <h2 class="display text-3xl mb-5">StickyNote — tilt &amp; tones</h2>
+      <h2 class="display mb-5 text-3xl">StickyNote — tilt &amp; tones</h2>
       <div class="flex flex-wrap gap-6">
         <StickyNote tone="yellow" tilt={-3}>
           <p class="font-bold">Remember to ship.</p>
@@ -285,13 +364,13 @@ const sections = [
     </div>
 
     <div id="pagenumber">
-      <h2 class="display text-3xl mb-5">PageNumber — positions</h2>
+      <h2 class="display mb-5 text-3xl">PageNumber — positions</h2>
       <div class="grid gap-5 md:grid-cols-2">
         {
           (["tl", "tr", "bl", "br"] as const).map((p) => (
-            <div class="relative border-[3px] border-ink bg-paper rounded-[4px] h-40 overflow-hidden">
+            <div class="border-ink bg-paper relative h-40 overflow-hidden rounded-[4px] border-[3px]">
               <PageNumber n={p.toUpperCase()} position={p} />
-              <p class="absolute bottom-2 left-3 mono text-xs font-bold uppercase tracking-widest opacity-70">
+              <p class="mono absolute bottom-2 left-3 text-xs font-bold tracking-widest uppercase opacity-70">
                 position="{p}"
               </p>
             </div>
@@ -301,17 +380,19 @@ const sections = [
     </div>
 
     <div id="halftone" class="-mx-5">
-      <h2 class="display text-3xl mb-5 px-5">HalftoneSection</h2>
-      <HalftoneSection tone="blue" bordered class="py-10 text-paper">
-        <p class="text-center display text-2xl px-5">Blue tone, default density</p>
+      <h2 class="display mb-5 px-5 text-3xl">HalftoneSection</h2>
+      <HalftoneSection tone="blue" bordered class="text-paper py-10">
+        <p class="display px-5 text-center text-2xl">
+          Blue tone, default density
+        </p>
       </HalftoneSection>
-      <HalftoneSection tone="yellow" dense bordered class="py-10 mt-1">
-        <p class="text-center display text-2xl px-5">Yellow tone, dense</p>
+      <HalftoneSection tone="yellow" dense bordered class="mt-1 py-10">
+        <p class="display px-5 text-center text-2xl">Yellow tone, dense</p>
       </HalftoneSection>
     </div>
 
     <div id="paneldivider">
-      <h2 class="display text-3xl mb-5">PanelDivider — shapes</h2>
+      <h2 class="display mb-5 text-3xl">PanelDivider — shapes</h2>
       <PanelDivider shape="zigzag" tone="yellow" />
       <PanelDivider shape="bolt" tone="pink" />
       <PanelDivider shape="burst" tone="cyan" />
@@ -319,25 +400,29 @@ const sections = [
     </div>
 
     <div id="checklistbox">
-      <h2 class="display text-3xl mb-5">ChecklistBox</h2>
+      <h2 class="display mb-5 text-3xl">ChecklistBox</h2>
       <div class="grid gap-5 md:grid-cols-2">
         <ChecklistBox title="Phase progress" items={checklist} tone="yellow" />
-        <ChecklistBox title="Cyan variant" items={checklist.slice(0, 3)} tone="cyan" />
+        <ChecklistBox
+          title="Cyan variant"
+          items={checklist.slice(0, 3)}
+          tone="cyan"
+        />
       </div>
     </div>
 
     <div id="comparison">
-      <h2 class="display text-3xl mb-5">ComparisonTable</h2>
+      <h2 class="display mb-5 text-3xl">ComparisonTable</h2>
       <ComparisonTable columns={cols} rows={rows} />
     </div>
 
     <div id="codeblock">
-      <h2 class="display text-3xl mb-5">CodeBlock</h2>
+      <h2 class="display mb-5 text-3xl">CodeBlock</h2>
       <CodeBlock code={sample} lang="ts" filename="anthropic.ts" />
     </div>
 
     <div id="tagpillrow">
-      <h2 class="display text-3xl mb-5">TagPillRow</h2>
+      <h2 class="display mb-5 text-3xl">TagPillRow</h2>
       <TagPillRow label="Scroll on mobile" scrollOnMobile>
         <li><TagPill tone="yellow">Laravel</TagPill></li>
         <li><TagPill tone="pink">PHP</TagPill></li>
@@ -351,8 +436,8 @@ const sections = [
     </div>
 
     <div id="availability">
-      <h2 class="display text-3xl mb-5">AvailabilityBadge</h2>
-      <div class="flex flex-wrap gap-5 items-center">
+      <h2 class="display mb-5 text-3xl">AvailabilityBadge</h2>
+      <div class="flex flex-wrap items-center gap-5">
         <AvailabilityBadge />
         <AvailabilityBadge label="Open · Q3 2026" />
         <AvailabilityBadge label="Booked through August" available={false} />
@@ -360,22 +445,70 @@ const sections = [
     </div>
 
     <div id="socialbutton">
-      <h2 class="display text-3xl mb-5">SocialButton — sizes × tones</h2>
+      <h2 class="display mb-5 text-3xl">SocialButton — sizes × tones</h2>
       <div class="flex flex-wrap items-end gap-5">
-        <SocialButton href="https://github.com/ansezz" icon="lucide:github" label="GitHub" tone="paper" size="sm" />
-        <SocialButton href="https://github.com/ansezz" icon="lucide:github" label="GitHub" tone="paper" size="md" />
-        <SocialButton href="https://github.com/ansezz" icon="lucide:github" label="GitHub" tone="paper" size="lg" />
-        <SocialButton href="https://linkedin.com/in/ansezz" icon="lucide:linkedin" label="LinkedIn" tone="cyan" size="md" />
-        <SocialButton href="mailto:hello@ansezz.com" icon="lucide:mail" label="Email" tone="yellow" size="md" />
-        <SocialButton href="/rss.xml" icon="lucide:rss" label="RSS" tone="pink" size="md" />
-        <SocialButton href="#" icon="lucide:youtube" label="YouTube" tone="purple" size="md" />
-        <SocialButton href="#" icon="lucide:terminal" label="Terminal" tone="ink" size="md" />
+        <SocialButton
+          href="https://github.com/ansezz"
+          icon="lucide:github"
+          label="GitHub"
+          tone="paper"
+          size="sm"
+        />
+        <SocialButton
+          href="https://github.com/ansezz"
+          icon="lucide:github"
+          label="GitHub"
+          tone="paper"
+          size="md"
+        />
+        <SocialButton
+          href="https://github.com/ansezz"
+          icon="lucide:github"
+          label="GitHub"
+          tone="paper"
+          size="lg"
+        />
+        <SocialButton
+          href="https://linkedin.com/in/ansezz"
+          icon="lucide:linkedin"
+          label="LinkedIn"
+          tone="cyan"
+          size="md"
+        />
+        <SocialButton
+          href="mailto:hello@ansezz.com"
+          icon="lucide:mail"
+          label="Email"
+          tone="yellow"
+          size="md"
+        />
+        <SocialButton
+          href="/rss.xml"
+          icon="lucide:rss"
+          label="RSS"
+          tone="pink"
+          size="md"
+        />
+        <SocialButton
+          href="#"
+          icon="lucide:youtube"
+          label="YouTube"
+          tone="purple"
+          size="md"
+        />
+        <SocialButton
+          href="#"
+          icon="lucide:terminal"
+          label="Terminal"
+          tone="ink"
+          size="md"
+        />
       </div>
     </div>
 
     <div id="mascot">
-      <h2 class="display text-3xl mb-5">RobotMascot — tones</h2>
-      <div class="flex flex-wrap gap-6 items-end">
+      <h2 class="display mb-5 text-3xl">RobotMascot — tones</h2>
+      <div class="flex flex-wrap items-end gap-6">
         <RobotMascot tone="yellow" />
         <RobotMascot tone="pink" />
         <RobotMascot tone="cyan" />

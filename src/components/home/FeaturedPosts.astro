@@ -16,15 +16,15 @@ const featured = posts
 const tones = ["yellow", "cyan", "green"] as const;
 ---
 
-<section class="mx-auto max-w-6xl px-5 py-16 md:py-24 relative">
-  <div class="grid gap-8 md:grid-cols-[1fr_auto] md:items-end mb-10">
+<section class="relative mx-auto max-w-6xl px-5 py-16 md:py-24">
+  <div class="mb-10 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
     <div class="max-w-2xl">
       <BurstBadge tone="yellow" size="sm" class="mb-5">04</BurstBadge>
       <h2 class="display text-[clamp(2rem,4.5vw,3.25rem)] leading-[0.95]">
         From the
-        <span class="bg-yellow inline-block px-2 -mx-1">trenches</span>.
+        <span class="bg-yellow -mx-1 inline-block px-2">trenches</span>.
       </h2>
-      <p class="mt-4 text-base md:text-lg text-ink-soft leading-snug">
+      <p class="text-ink-soft mt-4 text-base leading-snug md:text-lg">
         Notes on Laravel internals, AI agent design, Shopify Plus, and the
         occasional hot take. No fluff.
       </p>
@@ -35,7 +35,7 @@ const tones = ["yellow", "cyan", "green"] as const;
   </div>
   {
     featured.length === 0 ? (
-      <p class="border-[3px] border-dashed border-ink rounded-[4px] p-8 text-center font-bold">
+      <p class="border-ink rounded-[4px] border-[3px] border-dashed p-8 text-center font-bold">
         Blog post coming soon. Pinky promise.
       </p>
     ) : (

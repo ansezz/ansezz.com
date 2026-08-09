@@ -23,7 +23,11 @@ const {
 } = Astro.props;
 
 const fmt = (d: Date) =>
-  d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 ---
 
 <div class="flex flex-wrap items-center gap-3 text-sm">
@@ -38,19 +42,16 @@ const fmt = (d: Date) =>
       </TagPill>
     )
   }
-  <time datetime={date.toISOString()} class="mono font-bold uppercase tracking-wider opacity-70">
+  <time
+    datetime={date.toISOString()}
+    class="mono font-bold tracking-wider uppercase opacity-70"
+  >
     {fmt(date)}
   </time>
   {
     updatedDate && (
-      <span class="mono text-xs opacity-60">
-        · Updated {fmt(updatedDate)}
-      </span>
+      <span class="mono text-xs opacity-60">· Updated {fmt(updatedDate)}</span>
     )
   }
-  {
-    showTime && (
-      <span class="mono text-xs opacity-60">· {readingTime}</span>
-    )
-  }
+  {showTime && <span class="mono text-xs opacity-60">· {readingTime}</span>}
 </div>

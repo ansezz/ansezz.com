@@ -3,7 +3,18 @@ title: "Circuit breakers: stopping vector DB failures"
 description: "A slow vector DB kills SaaS faster than a dead one. The circuit-breaker pattern for AI infra — states, fallback tiers, and Laravel-friendly wiring."
 publishDate: 2026-05-23
 category: architecture
-tags: [circuit-breakers, ai, rag, resilience, vector-databases, fallback, laravel, observability, infrastructure]
+tags:
+  [
+    circuit-breakers,
+    ai,
+    rag,
+    resilience,
+    vector-databases,
+    fallback,
+    laravel,
+    observability,
+    infrastructure,
+  ]
 featured: false
 heroImage:
   url: "/blog/circuit-breakers-vector-db/hero.webp"
@@ -18,7 +29,7 @@ This guide shows you how to wrap your AI infrastructure in protective logic so a
 
 ## How the circuit breaker pattern works
 
-The circuit breaker pattern is a state machine that sits between your application code and your external service. The idea comes straight out of Michael Nygard's *Release It!* — it monitors every call you make and has three states that dictate how it handles traffic.
+The circuit breaker pattern is a state machine that sits between your application code and your external service. The idea comes straight out of Michael Nygard's _Release It!_ — it monitors every call you make and has three states that dictate how it handles traffic.
 
 ![State machine diagram of the circuit breaker: closed (healthy), open (fail-fast), and half-open (recovery probe) with the transitions between them](/blog/circuit-breakers-vector-db/states.webp)
 

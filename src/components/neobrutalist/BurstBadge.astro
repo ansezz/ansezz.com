@@ -32,14 +32,14 @@ const burstPath =
 
 <div
   class:list={[
-    "relative inline-flex items-center justify-center display font-black",
+    "display relative inline-flex items-center justify-center font-black",
     sizeClass[size],
     className,
   ]}
 >
   <svg
     viewBox="0 0 100 100"
-    class="absolute inset-0 w-full h-full drop-shadow-[3px_3px_0_var(--color-ink)]"
+    class="absolute inset-0 h-full w-full drop-shadow-[3px_3px_0_var(--color-ink)]"
     aria-hidden="true"
   >
     <path
@@ -47,8 +47,7 @@ const burstPath =
       fill={toneVar[tone]}
       stroke="var(--color-ink)"
       stroke-width="3"
-      stroke-linejoin="round"
-    />
+      stroke-linejoin="round"></path>
   </svg>
-  <span class="relative z-10 text-ink leading-none"><slot /></span>
+  <span class="text-ink relative z-10 leading-none"><slot /></span>
 </div>

@@ -6,26 +6,24 @@ import { SITE } from "@/consts";
 import { externalLinkAttrs } from "@/lib/links";
 ---
 
-<header
-  class="sticky top-0 z-40 border-b-[3px] border-ink bg-bg"
->
+<header class="border-ink bg-bg sticky top-0 z-40 border-b-[3px]">
   <div
-    class="mx-auto flex max-w-5xl items-center justify-between px-5 py-3 gap-4"
+    class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-3"
   >
     <a
       href="/"
-      class="display text-2xl tracking-tight hover:bg-yellow px-1.5 -mx-1.5 transition-colors"
+      class="display hover:bg-yellow -mx-1.5 px-1.5 text-2xl tracking-tight transition-colors"
     >
       {SITE.SHORT_TITLE}<span class="text-pink">.</span>
     </a>
-    <div class="hidden md:flex items-center gap-3">
+    <div class="hidden items-center gap-3 md:flex">
       <Nav />
       <button
         type="button"
         data-cmdk-open
         aria-label="Open command menu (Cmd+K)"
         title="Search & jump — ⌘K"
-        class="inline-flex items-center gap-2 h-10 border-[2px] border-ink bg-paper px-3 text-ink shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+        class="border-ink bg-paper text-ink shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex h-10 items-center gap-2 border-[2px] px-3 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
       >
         <Icon name="lucide:search" class="h-4 w-4" />
         <kbd class="mono text-[10px] font-bold">⌘K</kbd>
@@ -33,7 +31,7 @@ import { externalLinkAttrs } from "@/lib/links";
       <ThemeToggle />
       <a
         href="/contact/"
-        class="inline-flex items-center gap-1.5 border-[2.5px] border-ink bg-pink text-paper px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm"
+        class="border-ink bg-pink text-paper shadow-neo-xs hover:shadow-neo-sm inline-flex items-center gap-1.5 border-[2.5px] px-3.5 py-1.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
         aria-label="Work with me — get in touch"
       >
         <Icon name="lucide:mail" class="h-3.5 w-3.5" />
@@ -49,64 +47,69 @@ import { externalLinkAttrs } from "@/lib/links";
         aria-controls="mobile-menu"
         aria-expanded="false"
         aria-label="Toggle menu"
-        class="inline-flex items-center justify-center h-10 w-10 border-[2px] border-ink bg-paper shadow-neo-sm transition-all hover:bg-yellow"
+        class="border-ink bg-paper shadow-neo-sm hover:bg-yellow inline-flex h-10 w-10 items-center justify-center border-[2px] transition-all"
       >
-        <Icon name="lucide:menu" class="h-5 w-5 menu-icon-open" />
-        <Icon name="lucide:x" class="h-5 w-5 menu-icon-close hidden" />
+        <Icon name="lucide:menu" class="menu-icon-open h-5 w-5" />
+        <Icon name="lucide:x" class="menu-icon-close hidden h-5 w-5" />
       </button>
     </div>
 
-  <div
-    id="mobile-menu"
-    hidden
-    class="md:hidden border-t-[3px] border-ink bg-bg"
-  >
-    <div class="mx-auto max-w-5xl px-5 py-4 space-y-3">
-      <Nav vertical />
-      <a
-        href="/contact/"
-        class="flex items-center justify-center gap-2 border-[3px] border-ink bg-pink text-paper px-4 py-3 font-bold uppercase text-sm shadow-neo-sm transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-md"
-        aria-label="Work with me — get in touch"
-      >
-        <Icon name="lucide:mail" class="h-4 w-4" />
-        Let's work together
-      </a>
-      <a
-        href={SITE.RESUME_URL}
-        {...externalLinkAttrs(SITE.RESUME_URL)}
-        class="flex items-center justify-center gap-2 border-[2.5px] border-ink bg-paper px-4 py-2.5 font-bold uppercase text-xs shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm"
-        aria-label="Download resume PDF"
-      >
-        <Icon name="lucide:download" class="h-4 w-4" />
-        Resume (PDF)
-      </a>
-    </div>
-  </div>
-
-  <noscript>
-    <style>#mobile-menu-toggle { display: none !important; }</style>
-    <div class="md:hidden border-t-[3px] border-ink bg-bg">
-      <div class="mx-auto max-w-5xl px-5 py-4 space-y-3">
+    <div
+      id="mobile-menu"
+      hidden
+      class="border-ink bg-bg border-t-[3px] md:hidden"
+    >
+      <div class="mx-auto max-w-5xl space-y-3 px-5 py-4">
         <Nav vertical />
         <a
           href="/contact/"
-          class="flex items-center justify-center gap-2 border-[3px] border-ink bg-pink text-paper px-4 py-3 font-bold uppercase text-sm shadow-neo-sm"
+          class="border-ink bg-pink text-paper shadow-neo-sm hover:shadow-neo-md flex items-center justify-center gap-2 border-[3px] px-4 py-3 text-sm font-bold uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+          aria-label="Work with me — get in touch"
         >
           <Icon name="lucide:mail" class="h-4 w-4" />
           Let's work together
         </a>
         <a
           href={SITE.RESUME_URL}
-          class="flex items-center justify-center gap-2 border-[2.5px] border-ink bg-paper px-4 py-2.5 font-bold uppercase text-xs shadow-neo-xs"
+          {...externalLinkAttrs(SITE.RESUME_URL)}
+          class="border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm flex items-center justify-center gap-2 border-[2.5px] px-4 py-2.5 text-xs font-bold uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+          aria-label="Download resume PDF"
         >
           <Icon name="lucide:download" class="h-4 w-4" />
           Resume (PDF)
         </a>
       </div>
     </div>
-  </noscript>
-</header>
 
-<script>
-  import "@/scripts/mobile-menu";
-</script>
+    <noscript>
+      <style>
+        #mobile-menu-toggle {
+          display: none !important;
+        }
+      </style>
+      <div class="border-ink bg-bg border-t-[3px] md:hidden">
+        <div class="mx-auto max-w-5xl space-y-3 px-5 py-4">
+          <Nav vertical />
+          <a
+            href="/contact/"
+            class="border-ink bg-pink text-paper shadow-neo-sm flex items-center justify-center gap-2 border-[3px] px-4 py-3 text-sm font-bold uppercase"
+          >
+            <Icon name="lucide:mail" class="h-4 w-4" />
+            Let's work together
+          </a>
+          <a
+            href={SITE.RESUME_URL}
+            class="border-ink bg-paper shadow-neo-xs flex items-center justify-center gap-2 border-[2.5px] px-4 py-2.5 text-xs font-bold uppercase"
+          >
+            <Icon name="lucide:download" class="h-4 w-4" />
+            Resume (PDF)
+          </a>
+        </div>
+      </div>
+    </noscript>
+  </div>
+
+  <script>
+    import "@/scripts/mobile-menu";
+  </script>
+</header>

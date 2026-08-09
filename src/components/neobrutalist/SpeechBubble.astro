@@ -36,24 +36,23 @@ const tailPos: Record<Tail, string> = {
 
 <div
   class:list={[
-    "relative inline-block border-[3px] border-ink rounded-[6px] px-5 py-4 shadow-neo-md font-bold text-ink",
+    "border-ink shadow-neo-md text-ink relative inline-block rounded-[6px] border-[3px] px-5 py-4 font-bold",
     toneClass[tone],
     className,
   ]}
 >
   <slot />
   <svg
-    class:list={["absolute w-8 h-6", tailPos[tail]]}
+    class:list={["absolute h-6 w-8", tailPos[tail]]}
     viewBox="0 0 32 24"
     aria-hidden="true"
   >
-    <path d="M0 0 L32 0 L8 24 Z" fill={toneFill[tone]} />
+    <path d="M0 0 L32 0 L8 24 Z" fill={toneFill[tone]}></path>
     <path
       d="M0 0 L32 0 L8 24 Z"
       fill="none"
       stroke="var(--color-ink)"
       stroke-width="3"
-      stroke-linejoin="round"
-    />
+      stroke-linejoin="round"></path>
   </svg>
 </div>

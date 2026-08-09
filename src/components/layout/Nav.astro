@@ -17,9 +17,7 @@ function isActive(href: string) {
 
 <nav
   aria-label="Primary"
-  class:list={[
-    vertical ? "flex flex-col gap-1" : "flex items-center gap-1",
-  ]}
+  class:list={[vertical ? "flex flex-col gap-1" : "flex items-center gap-1"]}
 >
   {
     NAV.map((item) => {
@@ -29,10 +27,8 @@ function isActive(href: string) {
           href={item.HREF}
           aria-current={active ? "page" : undefined}
           class:list={[
-            "font-bold uppercase border-[2px] border-transparent transition-colors",
-            vertical
-              ? "block px-3 py-2.5 text-base"
-              : "px-3 py-1.5 text-sm",
+            "border-[2px] border-transparent font-bold uppercase transition-colors",
+            vertical ? "block px-3 py-2.5 text-base" : "px-3 py-1.5 text-sm",
             active
               ? "bg-ink text-bg border-ink"
               : "hover:bg-yellow hover:border-ink",

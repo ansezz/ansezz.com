@@ -60,33 +60,37 @@ const reportUrl = `mailto:${SITE.EMAIL}?subject=${encodeURIComponent("Broken lin
 <BaseLayout title="404 — Page not found" description="Page not found." noindex>
   <HalftoneSection tone="bg" class="py-12 md:py-20">
     <section class="relative mx-auto max-w-5xl px-5 text-center">
-      <div class="flex justify-center mb-8">
+      <div class="mb-8 flex justify-center">
         <BurstBadge tone="red" size="lg">404</BurstBadge>
       </div>
 
       <h1 class="display text-[clamp(2.5rem,7vw,5.5rem)] leading-[0.95]">
         Page not
-        <span class="bg-pink text-paper px-3 -mx-1 inline-block">found</span>.
+        <span class="bg-pink text-paper -mx-1 inline-block px-3">found</span>.
       </h1>
 
-      <p class="mt-6 text-base sm:text-lg text-ink-soft max-w-xl mx-auto">
+      <p class="text-ink-soft mx-auto mt-6 max-w-xl text-base sm:text-lg">
         Broken link, archived page, or URL typo. Here's where to go next — or
         flag it so I can fix it.
       </p>
 
-      <div class="relative inline-flex justify-center mt-10" data-mascot="404">
+      <div class="relative mt-10 inline-flex justify-center" data-mascot="404">
         <RobotMascot tone="yellow" size={200} />
-        <div class="absolute -top-3 -right-4 md:-top-4 md:-right-10 rotate-[6deg]">
+        <div
+          class="absolute -top-3 -right-4 rotate-[6deg] md:-top-4 md:-right-10"
+        >
           <StickyNote tone="pink" tilt={4} class="max-w-[180px]">
-            <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+            <p
+              class="mono mb-1 text-[10px] font-bold tracking-widest uppercase"
+            >
               ▸ Status
             </p>
-            <p class="text-xs font-bold leading-snug">
+            <p class="text-xs leading-snug font-bold">
               ERR_NO_PAGE. Rebooting curiosity.
             </p>
           </StickyNote>
         </div>
-        <div class="absolute -bottom-8 -left-4 md:-left-12 rotate-[-6deg]">
+        <div class="absolute -bottom-8 -left-4 rotate-[-6deg] md:-left-12">
           <SpeechBubble tone="cyan" tail="bl">
             <span class="text-sm">Beep boop. 404.</span>
           </SpeechBubble>
@@ -101,11 +105,14 @@ const reportUrl = `mailto:${SITE.EMAIL}?subject=${encodeURIComponent("Broken lin
         <button
           type="button"
           data-cmdk-open
-          class="inline-flex items-center gap-2 border-[3px] border-ink bg-paper px-5 py-2.5 text-sm font-bold uppercase tracking-wide shadow-neo-sm transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-md"
+          class="border-ink bg-paper shadow-neo-sm hover:bg-yellow hover:shadow-neo-md inline-flex items-center gap-2 border-[3px] px-5 py-2.5 text-sm font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
         >
           <Icon name="lucide:search" class="h-4 w-4" />
           Search the site
-          <kbd class="mono text-[10px] font-bold border-[2px] border-ink rounded px-1.5 py-0.5">⌘K</kbd>
+          <kbd
+            class="mono border-ink rounded border-[2px] px-1.5 py-0.5 text-[10px] font-bold"
+            >⌘K</kbd
+          >
         </button>
         <NeoButton href="/contact/" variant="ink" size="lg">
           Email me →
@@ -118,87 +125,93 @@ const reportUrl = `mailto:${SITE.EMAIL}?subject=${encodeURIComponent("Broken lin
 
   <section class="bg-paper py-16 md:py-20">
     <div class="mx-auto max-w-6xl px-5">
-      <div class="flex items-end justify-between flex-wrap gap-4 mb-8">
+      <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p class="mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
+          <p
+            class="mono text-[10px] font-bold tracking-[0.2em] uppercase opacity-60"
+          >
             ▸ Try one of these
           </p>
-          <h2 class="display text-3xl md:text-4xl mt-2">Where to next?</h2>
+          <h2 class="display mt-2 text-3xl md:text-4xl">Where to next?</h2>
         </div>
         <a
           href={reportUrl}
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-full border-[2.5px] border-ink bg-paper shadow-neo-xs hover:-translate-y-0.5 hover:shadow-neo-sm hover:bg-yellow transition-all text-sm font-bold"
+          class="border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm hover:bg-yellow inline-flex items-center gap-2 rounded-full border-[2.5px] px-4 py-2 text-sm font-bold transition-all hover:-translate-y-0.5"
         >
           <Icon name="lucide:flag" class="h-4 w-4" />
           Report broken link
         </a>
       </div>
 
-      <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {destinations.map((d) => (
-          <li>
-            <NeoCard
-              tone={d.tone}
-              href={d.href}
-              hover
-              class="block p-5 h-full text-left"
-            >
-              <div class="flex items-center justify-between mb-3">
-                <div class="inline-flex items-center justify-center h-9 w-9 rounded-[4px] border-[2.5px] border-ink bg-paper text-ink">
-                  <Icon name={d.icon} class="h-4 w-4" />
+      <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {
+          destinations.map((d) => (
+            <li>
+              <NeoCard
+                tone={d.tone}
+                href={d.href}
+                hover
+                class="block h-full p-5 text-left"
+              >
+                <div class="mb-3 flex items-center justify-between">
+                  <div class="border-ink bg-paper text-ink inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px]">
+                    <Icon name={d.icon} class="h-4 w-4" />
+                  </div>
+                  <Icon name="lucide:arrow-up-right" class="h-4 w-4" />
                 </div>
-                <Icon name="lucide:arrow-up-right" class="h-4 w-4" />
-              </div>
-              <p class="display text-lg leading-none">{d.label}</p>
-              <p class="mt-2 text-xs opacity-80 leading-snug">{d.desc}</p>
-            </NeoCard>
-          </li>
-        ))}
+                <p class="display text-lg leading-none">{d.label}</p>
+                <p class="mt-2 text-xs leading-snug opacity-80">{d.desc}</p>
+              </NeoCard>
+            </li>
+          ))
+        }
       </ul>
     </div>
   </section>
 
-  {recent.length > 0 && (
-    <section class="bg-bg-alt border-t-[3px] border-ink py-16 md:py-20">
-      <div class="mx-auto max-w-6xl px-5">
-        <div class="flex items-end justify-between flex-wrap gap-4 mb-8">
-          <div>
-            <p class="mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
-              ▸ While you're here
-            </p>
-            <h2 class="display text-3xl md:text-4xl mt-2">Recent writing</h2>
+  {
+    recent.length > 0 && (
+      <section class="bg-bg-alt border-ink border-t-[3px] py-16 md:py-20">
+        <div class="mx-auto max-w-6xl px-5">
+          <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p class="mono text-[10px] font-bold tracking-[0.2em] uppercase opacity-60">
+                ▸ While you're here
+              </p>
+              <h2 class="display mt-2 text-3xl md:text-4xl">Recent writing</h2>
+            </div>
+            <NeoButton href="/blog/" variant="secondary" size="sm">
+              All posts →
+            </NeoButton>
           </div>
-          <NeoButton href="/blog/" variant="secondary" size="sm">
-            All posts →
-          </NeoButton>
-        </div>
 
-        <ul class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {recent.map((post) => (
-            <li>
-              <NeoCard
-                href={`/blog/${post.id}/`}
-                hover
-                tone="paper"
-                class="block p-5 h-full text-left"
-              >
-                <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-60">
-                  ▸ {post.data.category}
-                </p>
-                <h3 class="display text-lg leading-tight mt-2">
-                  {post.data.title}
-                </h3>
-                <p class="text-sm text-ink-soft mt-3 line-clamp-3">
-                  {post.data.description}
-                </p>
-                <p class="mt-4 mono text-[10px] uppercase tracking-widest opacity-60">
-                  Read →
-                </p>
-              </NeoCard>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  )}
+          <ul class="grid grid-cols-1 gap-5 md:grid-cols-3">
+            {recent.map((post) => (
+              <li>
+                <NeoCard
+                  href={`/blog/${post.id}/`}
+                  hover
+                  tone="paper"
+                  class="block h-full p-5 text-left"
+                >
+                  <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-60">
+                    ▸ {post.data.category}
+                  </p>
+                  <h3 class="display mt-2 text-lg leading-tight">
+                    {post.data.title}
+                  </h3>
+                  <p class="text-ink-soft mt-3 line-clamp-3 text-sm">
+                    {post.data.description}
+                  </p>
+                  <p class="mono mt-4 text-[10px] tracking-widest uppercase opacity-60">
+                    Read →
+                  </p>
+                </NeoCard>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
 </BaseLayout>

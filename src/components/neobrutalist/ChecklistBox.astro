@@ -28,19 +28,19 @@ const pct = items.length ? Math.round((done / items.length) * 100) : 0;
 
 <aside
   class:list={[
-    "border-[3px] border-ink shadow-neo-md p-5",
+    "border-ink shadow-neo-md border-[3px] p-5",
     toneClass,
     className,
   ]}
 >
-  <h3 class="heading text-xl uppercase mb-4">{title}</h3>
+  <h3 class="heading mb-4 text-xl uppercase">{title}</h3>
   <ul class="space-y-2.5">
     {
       items.map((item) => (
         <li class="flex items-start gap-3">
           <span
             class:list={[
-              "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border-[2px] border-ink",
+              "border-ink mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border-[2px]",
               item.done ? "bg-ink text-bg" : "bg-paper",
             ]}
           >
@@ -48,7 +48,7 @@ const pct = items.length ? Math.round((done / items.length) * 100) : 0;
           </span>
           <span
             class:list={[
-              "text-sm font-medium leading-snug",
+              "text-sm leading-snug font-medium",
               item.done && "line-through opacity-70",
             ]}
           >
@@ -59,12 +59,12 @@ const pct = items.length ? Math.round((done / items.length) * 100) : 0;
     }
   </ul>
   <div class="mt-5">
-    <div class="flex justify-between text-xs font-bold uppercase mb-1.5">
+    <div class="mb-1.5 flex justify-between text-xs font-bold uppercase">
       <span>Progress</span>
       <span>{pct}%</span>
     </div>
-    <div class="h-3 border-[2px] border-ink bg-paper">
-      <div class="h-full bg-ink" style={`width:${pct}%`}></div>
+    <div class="border-ink bg-paper h-3 border-[2px]">
+      <div class="bg-ink h-full" style={`width:${pct}%`}></div>
     </div>
   </div>
 </aside>

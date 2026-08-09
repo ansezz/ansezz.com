@@ -9,13 +9,13 @@ const ready =
 {
   ready && (
     <section class="mx-auto max-w-6xl px-5 pb-12">
-      <div class="max-w-4xl mx-auto">
-        <p class="mono text-xs font-bold uppercase tracking-widest text-pink-deep mb-4">
+      <div class="mx-auto max-w-4xl">
+        <p class="mono text-pink-deep mb-4 text-xs font-bold tracking-widest uppercase">
           ▸ Comments
         </p>
         <div
           id="giscus-mount"
-          class="border-[3px] border-ink rounded-[4px] bg-paper p-4 shadow-neo-sm"
+          class="border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px] p-4"
           data-giscus-repo={COMMENTS.REPO}
           data-giscus-repo-id={COMMENTS.REPO_ID}
           data-giscus-category={COMMENTS.CATEGORY}
@@ -28,10 +28,4 @@ const ready =
   )
 }
 
-{
-  ready && (
-    <script>
-      import "@/scripts/giscus";
-    </script>
-  )
-}
+{ready && <script>import "@/scripts/giscus";</script>}

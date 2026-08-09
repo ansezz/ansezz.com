@@ -8,7 +8,11 @@ interface Props {
   class?: string;
 }
 
-const { shape = "zigzag", tone = "yellow", class: className = "" } = Astro.props;
+const {
+  shape = "zigzag",
+  tone = "yellow",
+  class: className = "",
+} = Astro.props;
 
 const toneVar: Record<Tone, string> = {
   ink: "var(--color-ink)",
@@ -23,12 +27,12 @@ const accentColor = tone === "ink" ? "var(--color-yellow)" : toneVar[tone];
 ---
 
 <div
-  class:list={["relative flex items-center w-full my-10", className]}
+  class:list={["relative my-10 flex w-full items-center", className]}
   aria-hidden="true"
 >
-  <span class="block h-[3px] flex-1 bg-ink"></span>
+  <span class="bg-ink block h-[3px] flex-1"></span>
   <span
-    class="relative mx-3 inline-flex h-12 w-12 items-center justify-center border-[3px] border-ink rounded-[4px]"
+    class="border-ink relative mx-3 inline-flex h-12 w-12 items-center justify-center rounded-[4px] border-[3px]"
     style={`background:${accentColor};`}
   >
     {
@@ -74,5 +78,5 @@ const accentColor = tone === "ink" ? "var(--color-yellow)" : toneVar[tone];
       )
     }
   </span>
-  <span class="block h-[3px] flex-1 bg-ink"></span>
+  <span class="bg-ink block h-[3px] flex-1"></span>
 </div>

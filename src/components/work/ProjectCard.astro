@@ -32,21 +32,23 @@ const tagTone = tone === "paper" ? "yellow" : "paper";
 <article
   data-neo-hover
   class:list={[
-    "group relative flex h-full flex-col gap-4 border-[3px] border-ink rounded-[4px] p-6 md:p-7 shadow-neo-md transition-all duration-150 hover:-translate-x-1 hover:-translate-y-1 hover:shadow-neo-lg",
+    "group border-ink shadow-neo-md hover:shadow-neo-lg relative flex h-full flex-col gap-4 rounded-[4px] border-[3px] p-6 transition-all duration-150 hover:-translate-x-1 hover:-translate-y-1 md:p-7",
     toneClass[tone],
   ]}
 >
-  <header class="flex items-start justify-between gap-3 flex-wrap">
+  <header class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-70 mb-2">
+      <p
+        class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70"
+      >
         ▸ {entry.data.category}
       </p>
-      <h3 class="heading text-2xl md:text-3xl leading-tight">
+      <h3 class="heading text-2xl leading-tight md:text-3xl">
         {
           caseStudyHref ? (
             <a
               href={caseStudyHref}
-              class="hover:underline underline-offset-4 decoration-[3px] after:absolute after:inset-0"
+              class="decoration-[3px] underline-offset-4 after:absolute after:inset-0 hover:underline"
             >
               {entry.data.title}
             </a>
@@ -58,21 +60,23 @@ const tagTone = tone === "paper" ? "yellow" : "paper";
     </div>
     {
       entry.data.featured && (
-        <span class={`inline-flex items-center gap-1 border-[2px] border-ink rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase shadow-neo-xs ${tone === "yellow" ? "bg-pink text-ink" : "bg-yellow text-ink"}`}>
+        <span
+          class={`border-ink shadow-neo-xs inline-flex items-center gap-1 rounded-full border-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase ${tone === "yellow" ? "bg-pink text-ink" : "bg-yellow text-ink"}`}
+        >
           ★ Featured
         </span>
       )
     }
   </header>
 
-  <p class="text-sm md:text-base leading-snug opacity-90">
+  <p class="text-sm leading-snug opacity-90 md:text-base">
     {entry.data.description}
   </p>
 
   {
     entry.data.outcome && (
-      <p class="mono inline-flex items-start gap-2 text-xs font-bold uppercase tracking-wider bg-ink text-bg px-3 py-2 w-fit max-w-full break-words">
-        <Icon name="lucide:trending-up" class="h-4 w-4 mt-0.5 shrink-0" />
+      <p class="mono bg-ink text-bg inline-flex w-fit max-w-full items-start gap-2 px-3 py-2 text-xs font-bold tracking-wider break-words uppercase">
+        <Icon name="lucide:trending-up" class="mt-0.5 h-4 w-4 shrink-0" />
         <span>{entry.data.outcome}</span>
       </p>
     )

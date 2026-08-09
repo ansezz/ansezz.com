@@ -6,10 +6,28 @@ import { Icon } from "astro-icon/components";
 import { WHAT_I_DO } from "@/consts";
 
 const cardStacks: Record<string, string[]> = {
-  "Laravel SaaS that scales": ["Laravel", "PostgreSQL", "Octane", "Filament", "Horizon"],
-  "Shopify Plus apps": ["Remix", "GraphQL Admin", "App Bridge", "Polaris", "Functions"],
+  "Laravel SaaS that scales": [
+    "Laravel",
+    "PostgreSQL",
+    "Octane",
+    "Filament",
+    "Horizon",
+  ],
+  "Shopify Plus apps": [
+    "Remix",
+    "GraphQL Admin",
+    "App Bridge",
+    "Polaris",
+    "Functions",
+  ],
   "AI engineering": ["Claude API", "MCP", "RAG", "pgvector", "Evals"],
-  "Architecture & leadership": ["Clean Arch", "DDD", "TDD", "Audits", "Mentorship"],
+  "Architecture & leadership": [
+    "Clean Arch",
+    "DDD",
+    "TDD",
+    "Audits",
+    "Mentorship",
+  ],
 };
 
 const cardTagTones: Record<string, "yellow" | "paper" | "ink"> = {
@@ -20,18 +38,14 @@ const cardTagTones: Record<string, "yellow" | "paper" | "ink"> = {
 };
 ---
 
-<section
-  class="relative mx-auto max-w-6xl px-5 py-16 md:py-24"
->
+<section class="relative mx-auto max-w-6xl px-5 py-16 md:py-24">
   <div class="mb-10 max-w-2xl">
     <BurstBadge tone="cyan" size="sm" class="mb-5">01</BurstBadge>
-    <h2
-      class="display text-[clamp(2rem,4.5vw,3.25rem)] leading-[0.95]"
-    >
+    <h2 class="display text-[clamp(2rem,4.5vw,3.25rem)] leading-[0.95]">
       Four lanes. Let's work together on
-      <span class="bg-yellow inline-block px-2 -mx-1">any of them</span>.
+      <span class="bg-yellow -mx-1 inline-block px-2">any of them</span>.
     </h2>
-    <p class="mt-4 text-base md:text-lg text-ink-soft leading-snug">
+    <p class="text-ink-soft mt-4 text-base leading-snug md:text-lg">
       Scoped, time-boxed, senior. Pick one — or stack two.
     </p>
   </div>
@@ -47,38 +61,38 @@ const cardTagTones: Record<string, "yellow" | "paper" | "ink"> = {
               tone={item.tone}
               hover
               href={item.href}
-              class="flex h-full flex-col gap-4 group"
+              class="group flex h-full flex-col gap-4"
               tilt={i % 2 === 0 ? -0.4 : 0.4}
             >
               <header class="flex items-start gap-3">
                 <span
-                  class="inline-flex h-12 w-12 shrink-0 items-center justify-center border-[2.5px] border-ink rounded-[6px] bg-paper text-ink shadow-neo-xs"
+                  class="border-ink bg-paper text-ink shadow-neo-xs inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[6px] border-[2.5px]"
                   aria-hidden="true"
                 >
                   <Icon name={item.icon} class="h-5 w-5" />
                 </span>
-                <div class="flex-1 min-w-0">
-                  <p class="mono text-[10px] font-bold uppercase tracking-widest">
+                <div class="min-w-0 flex-1">
+                  <p class="mono text-[10px] font-bold tracking-widest uppercase">
                     ▸ Lane {String(i + 1).padStart(2, "0")}
                   </p>
-                  <h3 class="heading text-xl md:text-2xl uppercase leading-tight mt-0.5">
+                  <h3 class="heading mt-0.5 text-xl leading-tight uppercase md:text-2xl">
                     {item.title}
                   </h3>
                 </div>
                 <span
-                  class="inline-flex h-8 w-8 shrink-0 items-center justify-center border-[2px] border-ink rounded-full bg-ink text-bg font-black text-xs"
+                  class="border-ink bg-ink text-bg inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-[2px] text-xs font-black"
                   aria-hidden="true"
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>
               </header>
 
-              <p class="text-sm md:text-base leading-snug opacity-90">
+              <p class="text-sm leading-snug opacity-90 md:text-base">
                 {item.body}
               </p>
 
               {stacks.length > 0 && (
-                <ul class="flex flex-wrap gap-1.5 mt-1">
+                <ul class="mt-1 flex flex-wrap gap-1.5">
                   {stacks.map((s) => (
                     <li>
                       <TagPill tone={tagTone} size="sm">
@@ -89,9 +103,14 @@ const cardTagTones: Record<string, "yellow" | "paper" | "ink"> = {
                 </ul>
               )}
 
-              <p class="mt-auto pt-3 font-bold text-sm flex items-center gap-2 border-t-[2px] border-ink/20 group-hover:border-ink/40 transition-colors">
+              <p class="border-ink/20 group-hover:border-ink/40 mt-auto flex items-center gap-2 border-t-[2px] pt-3 text-sm font-bold transition-colors">
                 <span>{item.cta}</span>
-                <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
+                <span
+                  aria-hidden="true"
+                  class="transition-transform group-hover:translate-x-1"
+                >
+                  →
+                </span>
               </p>
             </NeoCard>
           </li>

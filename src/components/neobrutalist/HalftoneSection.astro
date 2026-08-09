@@ -1,5 +1,13 @@
 ---
-type Tone = "bg" | "paper" | "yellow" | "pink" | "cyan" | "green" | "blue" | "ink";
+type Tone =
+  | "bg"
+  | "paper"
+  | "yellow"
+  | "pink"
+  | "cyan"
+  | "green"
+  | "blue"
+  | "ink";
 
 interface Props {
   tone?: Tone;
@@ -30,16 +38,11 @@ const borderClass = bordered ? "border-y-[3px] border-ink" : "";
 ---
 
 <section
-  class:list={[
-    "relative w-full",
-    toneClass[tone],
-    borderClass,
-    className,
-  ]}
+  class:list={["relative w-full", toneClass[tone], borderClass, className]}
 >
   <div
     class:list={[
-      "absolute inset-0 pointer-events-none opacity-[0.12]",
+      "pointer-events-none absolute inset-0 opacity-[0.12]",
       dense ? "halftone-dense" : "halftone",
     ]}
     aria-hidden="true"

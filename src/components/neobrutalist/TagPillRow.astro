@@ -16,13 +16,15 @@ const {
 
 <div
   class:list={[
-    sticky ? "sticky top-[64px] z-30 bg-bg/95 border-y-[2px] border-ink py-3" : "",
+    sticky
+      ? "bg-bg/95 border-ink sticky top-[64px] z-30 border-y-[2px] py-3"
+      : "",
     className,
   ]}
 >
   {
     label && (
-      <p class="mono text-xs font-bold uppercase tracking-widest opacity-60 mb-2">
+      <p class="mono mb-2 text-xs font-bold tracking-widest uppercase opacity-60">
         {label}
       </p>
     )
@@ -31,7 +33,7 @@ const {
     class:list={[
       "flex gap-2",
       scrollOnMobile
-        ? "tag-row-scroll overflow-x-auto sm:overflow-visible sm:flex-wrap -mx-5 px-5 sm:mx-0 sm:px-0"
+        ? "tag-row-scroll -mx-5 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
         : "flex-wrap",
     ]}
   >
