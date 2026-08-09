@@ -8,16 +8,16 @@ import { SERVICES } from "@/consts";
 
 <section
   id="services"
-  class="relative mx-auto max-w-6xl px-5 py-16 md:py-24 scroll-mt-24"
+  class="relative mx-auto max-w-6xl scroll-mt-24 px-5 py-16 md:py-24"
 >
-  <div class="grid gap-8 md:grid-cols-[1fr_auto] md:items-end mb-10">
+  <div class="mb-10 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
     <div class="max-w-2xl">
       <BurstBadge tone="pink" size="sm" class="mb-5">02</BurstBadge>
       <h2 class="display text-[clamp(2rem,4.5vw,3.5rem)] leading-[0.95]">
         Engagements I
-        <span class="bg-yellow inline-block px-2 -mx-1">say yes to</span>.
+        <span class="bg-yellow -mx-1 inline-block px-2">say yes to</span>.
       </h2>
-      <p class="mt-4 text-base md:text-lg text-ink-soft leading-snug">
+      <p class="text-ink-soft mt-4 text-base leading-snug md:text-lg">
         Scoped, time-boxed, and senior. Pick a lane below, or describe a hybrid
         — I'll tell you honestly if it's a fit.
       </p>
@@ -36,26 +36,26 @@ import { SERVICES } from "@/consts";
             tone={s.tone}
             shadow="md"
             tilt={i % 2 === 0 ? -0.3 : 0.3}
-            class="h-full flex flex-col gap-4"
+            class="flex h-full flex-col gap-4"
           >
-            <h3 class="heading text-xl md:text-2xl uppercase leading-tight">
+            <h3 class="heading text-xl leading-tight uppercase md:text-2xl">
               {s.title}
             </h3>
-            <p class="text-sm md:text-base leading-snug opacity-90">{s.body}</p>
-            <ul class="space-y-1.5 text-sm">
-              {s.bullets.map((b) => (
-                <li class="flex items-start gap-2">
-                  <Icon
-                    name="lucide:check"
-                    class="h-4 w-4 mt-1 shrink-0 opacity-80"
-                  />
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
+            <p class="text-sm leading-snug opacity-90 md:text-base">{s.body}</p>
+            <p class="mono mt-auto pt-2 text-[10px] font-bold tracking-widest uppercase opacity-70">
+              ▸ {s.bullets.length} deliverables · see the breakdown
+            </p>
           </NeoCard>
         </li>
       ))
     }
   </ul>
+
+  <p class="mt-8 text-base md:text-lg">
+    <a
+      href="/services/"
+      class="hover:bg-yellow font-bold underline decoration-[3px] underline-offset-4"
+      >Full scope, deliverables and how the engagement runs →</a
+    >
+  </p>
 </section>
