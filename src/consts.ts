@@ -193,6 +193,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "Ship and scale a SaaS on your own infrastructure with Coolify and Docker — without a platform bill.",
     tone: "green",
     posts: [
+      "coolify-2026-self-hosted-paas",
       "coolify-self-hosted-saas",
       "coolify-docker-saas-hosting",
       "scaling-with-coolify",
