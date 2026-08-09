@@ -1,6 +1,6 @@
 ---
 title: "Coolify in 2026: why 60k developers chose self-hosted PaaS"
-description: "Coolify crossed 60k GitHub stars and 280+ one-click services. What that actually buys you, how it compares to Dokploy, CapRover and Dokku on real numbers, and the security claims you should not believe."
+description: "Coolify crossed 60k GitHub stars. What that buys you, how it really compares to Dokploy, CapRover and Dokku, and the firewall claim to ignore."
 publishDate: 2026-08-09
 category: devops
 tags: [coolify, self-hosting, devops, docker, paas, deployment, dokploy, vps]
@@ -14,7 +14,7 @@ Scaling a web app used to mean signing a blank check. You start on the free tier
 
 That gap is the whole reason Coolify exists, and it's why the project has quietly turned into the default answer for "I want Heroku, but on my server."
 
-As of today the repo sits at **60,298 GitHub stars**. It ships **280+ one-click services**. Version 4 has been the stable line for a while now. It is no longer a hobby project you're brave for running — it's infrastructure with a bus factor above one.
+As of today the repo sits at **60,298 GitHub stars** and ships hundreds of one-click services. Version 4 has been the stable line for a while now. It is no longer a hobby project you're brave for running — it's infrastructure with a bus factor above one.
 
 I run production workloads on it. This post is what I'd tell you over coffee: what the numbers mean, where Coolify genuinely wins, and which of its marketing-adjacent claims you should quietly ignore.
 
@@ -39,7 +39,7 @@ When you push to your repo, Coolify pulls the code, builds an image, and starts 
 What containerization buys you here:
 
 - **Isolation.** One app OOM-ing doesn't take the box down with it.
-- **Portability.** Moving from a $5 droplet to a dedicated Hetzner box is a server swap, not a migration project.
+- **Portability.** Moving from the cheapest droplet your provider sells to a dedicated Hetzner box is a server swap, not a migration project.
 - **Resource control.** Per-container CPU and memory limits, set in the UI, enforced by Docker.
 - **Reproducibility.** The image that passed staging is the image that runs in production.
 
@@ -47,13 +47,13 @@ If you're weighing this against a full orchestrator, my breakdown of [Docker vs 
 
 For the ground-floor version of this setup, I wrote it up in [Coolify and Docker for SaaS hosting](/blog/coolify-docker-saas-hosting/).
 
-## The 280+ one-click services
+## What the one-click service catalog actually contains
 
 This is the part people underrate. The service catalog is not a gimmick — it's the difference between "I'll set up Plausible this weekend" and "Plausible is running, next task."
 
 ![Bento grid of one-click services available in Coolify](/blog/coolify-2026-self-hosted-paas/one-click-services.webp)
 
-Worth splitting into two things that get conflated. **Databases are first-class resources**, not templates — eight of them: PostgreSQL, MySQL, MariaDB, MongoDB, Redis, DragonFly, KeyDB, and ClickHouse. They get their own backup scheduling, their own connection UI, their own lifecycle.
+Worth splitting into two things that get conflated. **Databases are first-class resources**, not templates — eight of them: PostgreSQL, MySQL, MariaDB, MongoDB, Redis, DragonFly, KeyDB, and ClickHouse. They get their own connection UI, their own lifecycle, and — for the SQL and document stores — their own backup scheduling.
 
 Everything else is a compose template, and that's where the breadth lives:
 
@@ -72,14 +72,14 @@ Two caveats worth stating plainly. First, a one-click template is a _starting po
 
 The self-hosted PaaS space stopped being a one-horse race. Here's where the four main projects actually stand today:
 
-| Feature             | Coolify                                  | Dokploy                                             | CapRover                        | Dokku                             |
-| :------------------ | :--------------------------------------- | :-------------------------------------------------- | :------------------------------ | :-------------------------------- |
-| **Interface**       | Web dashboard                            | Web dashboard                                       | Web UI                          | CLI-first                         |
-| **Multi-server**    | Native + Swarm                           | Native + Swarm                                      | Docker Swarm                    | Via plugins                       |
-| **Service catalog** | 362 templates                            | 514 blueprints                                      | 354 one-click apps              | Plugin-based                      |
+| Feature             | Coolify                                  | Dokploy                                                                 | CapRover                        | Dokku                             |
+| :------------------ | :--------------------------------------- | :---------------------------------------------------------------------- | :------------------------------ | :-------------------------------- |
+| **Interface**       | Web dashboard                            | Web dashboard                                                           | Web UI                          | CLI-first                         |
+| **Multi-server**    | Native + Swarm                           | Native + Swarm                                                          | Docker Swarm                    | Via plugins                       |
+| **Service catalog** | 362 templates                            | 514 blueprints                                                          | 354 one-click apps              | Plugin-based                      |
 | **Build sources**   | Dockerfile / Compose / Nixpacks / static | Dockerfile / Compose / Nixpacks / Railpack / Heroku + Paketo buildpacks | Dockerfile / captain-definition | Herokuish buildpacks / Dockerfile |
-| **Backups**         | S3-compatible, scheduled                 | S3-compatible                                       | Manual / scripted               | Plugin-based                      |
-| **GitHub stars**    | 60.3k                                    | 36.5k                                               | 15.1k                           | 32.1k                             |
+| **Backups**         | S3-compatible, scheduled                 | S3-compatible                                                           | Manual / scripted               | Plugin-based                      |
+| **GitHub stars**    | 60.3k                                    | 36.5k                                                                   | 15.1k                           | 32.1k                             |
 
 A few honest reads on that table.
 
@@ -126,7 +126,7 @@ Strip away the features and the case for Coolify is one sentence: you stop renti
 
 ![Illustration of migrating off a managed cloud provider onto owned infrastructure](/blog/coolify-2026-self-hosted-paas/vendor-independence.webp)
 
-The math is not subtle. Ten small projects on a managed platform — a few hobby-tier databases, some build minutes, a bit of bandwidth — lands somewhere around $150–250/month once you're past free tiers. The same ten projects on a €20 Hetzner box with 8 vCPU and 16GB of RAM run comfortably, with headroom, for the price of two coffees.
+The math is not subtle. Ten small projects on a managed platform — a few hobby-tier databases, some build minutes, a bit of bandwidth — lands somewhere around $150–250/month once you're past free tiers. The same ten projects fit on a single mid-tier VPS with 8 vCPU and 16 GB of RAM, with headroom to spare. On Hetzner that's a low-double-digit euro bill on the ARM line, roughly double on x86. Either way it's an order of magnitude, not a percentage.
 
 The catch, stated fairly: you are now the on-call engineer. Kernel updates, disk space, a container that wedges at 3am — that's yours. Coolify reduces that work by maybe 90%, not 100%. For a solo developer or a small team, the trade is usually worth it. For a company where an hour of downtime costs more than a year of managed hosting, it isn't, and you should pay the tax.
 
@@ -140,7 +140,7 @@ If you're considering the move, the order matters more than the tooling:
 - **Start with something you can afford to break.** Staging environments, internal dashboards, side projects. Learn the failure modes on workloads where the blast radius is you.
 - **Get containerized first.** If your app already builds from a Dockerfile, migration is an afternoon. If it doesn't, fix that _before_ you touch Coolify — you'll be debugging one thing instead of two.
 - **Wire up S3 backups on day one.** Before the first production workload lands. A single server with no offsite backup is a countdown, not an architecture.
-- **Put the control plane on its own box.** A €5 server running only Coolify. It's the cheapest insurance in this entire stack.
+- **Put the control plane on its own box.** Coolify's documented minimum is 2 cores, 2 GB of RAM, and 30 GB of disk — the cheapest tier most providers sell. A dedicated instance means a runaway build can never take down the dashboard you'd use to fix it.
 - **Add external monitoring.** Coolify tells you a container is running. It does not tell you your users can check out. Uptime Kuma (one-click, naturally) or Better Stack closes that gap.
 
 Coolify's real achievement is that it made the PaaS experience a commodity. The dashboard, the git integration, the automatic TLS — these were competitive moats five years ago. Now they're a `curl | bash` away, and the only thing you're paying a managed provider for is not thinking about servers.
