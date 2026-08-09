@@ -14,12 +14,12 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
   items.length > 0 && (
     <aside
       class:list={[
-        "border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-md p-5",
+        "border-ink bg-paper shadow-neo-md rounded-[4px] border-[3px] p-5",
         className,
       ]}
       aria-label="Table of contents"
     >
-      <p class="mono text-xs font-bold uppercase tracking-widest text-pink-deep mb-3">
+      <p class="mono text-pink-deep mb-3 text-xs font-bold tracking-widest uppercase">
         ▸ On this page
       </p>
       <ol class="space-y-1.5 text-sm">
@@ -27,7 +27,7 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
           <li class={h.depth === 3 ? "pl-4" : ""}>
             <a
               href={`#${h.slug}`}
-              class="font-bold leading-snug block py-1 hover:bg-yellow hover:text-ink px-1 -mx-1 transition-colors"
+              class="hover:bg-yellow hover:text-ink -mx-1 block px-1 py-1 leading-snug font-bold transition-colors"
               data-toc-link
               data-toc-target={h.slug}
             >
@@ -41,32 +41,5 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
 }
 
 <script>
-  const links = document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]");
-  if (links.length > 0 && "IntersectionObserver" in window) {
-    const map = new Map<string, HTMLAnchorElement>();
-    links.forEach((l) => {
-      const t = l.dataset.tocTarget;
-      if (t) map.set(t, l);
-    });
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const id = entry.target.id;
-          const link = map.get(id);
-          if (!link) return;
-          if (entry.isIntersecting) {
-            links.forEach((l) => l.classList.remove("bg-yellow", "text-ink"));
-            link.classList.add("bg-yellow", "text-ink");
-          }
-        });
-      },
-      { rootMargin: "-30% 0px -55% 0px" },
-    );
-
-    map.forEach((_, slug) => {
-      const heading = document.getElementById(slug);
-      if (heading) observer.observe(heading);
-    });
-  }
+  import "@/scripts/table-of-contents";
 </script>

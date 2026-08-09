@@ -76,28 +76,30 @@ const channels = [
   data-share-url={url}
   data-share-title={title}
 >
-  <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-60">
+  <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-60">
     ▸ {label}
   </p>
-  {channels.map((c) => (
-    <a
-      href={c.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      class:list={[
-        "inline-flex items-center justify-center h-9 w-9 border-[2.5px] border-ink rounded-[4px] bg-paper shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm",
-        c.hover,
-      ]}
-      aria-label={`Share on ${c.name}`}
-      title={`Share on ${c.name}`}
-    >
-      <Icon name={c.icon} class="h-4 w-4" />
-    </a>
-  ))}
+  {
+    channels.map((c) => (
+      <a
+        href={c.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        class:list={[
+          "border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5",
+          c.hover,
+        ]}
+        aria-label={`Share on ${c.name}`}
+        title={`Share on ${c.name}`}
+      >
+        <Icon name={c.icon} class="h-4 w-4" />
+      </a>
+    ))
+  }
   <button
     type="button"
     data-copy-link
-    class="inline-flex items-center justify-center h-9 w-9 border-[2.5px] border-ink rounded-[4px] bg-paper shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm hover:bg-pink hover:text-paper"
+    class="border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm hover:bg-pink hover:text-paper inline-flex h-9 w-9 items-center justify-center rounded-[4px] border-[2.5px] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
     aria-label="Copy link to clipboard"
     title="Copy link"
     data-copy-label="Copy link"
@@ -109,25 +111,5 @@ const channels = [
 </div>
 
 <script>
-  const buttons = document.querySelectorAll<HTMLButtonElement>(
-    "[data-copy-link]",
-  );
-  buttons.forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const bar = btn.closest<HTMLElement>("[data-share-bar]");
-      const url = bar?.dataset.shareUrl ?? window.location.href;
-      try {
-        await navigator.clipboard.writeText(url);
-        btn.classList.add("!bg-green");
-        const status = btn.querySelector<HTMLElement>("[data-copy-status]");
-        if (status) status.textContent = "Copied to clipboard";
-        setTimeout(() => {
-          btn.classList.remove("!bg-green");
-          if (status) status.textContent = "Copy link";
-        }, 1400);
-      } catch {
-        // ignore
-      }
-    });
-  });
+  import "@/scripts/share-bar";
 </script>

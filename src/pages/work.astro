@@ -71,7 +71,15 @@ for (const entry of sorted) {
   if (cat in groups) groups[cat].items.push(entry);
 }
 
-const cardTones = ["paper", "yellow", "cyan", "green", "pink", "red", "purple"] as const;
+const cardTones = [
+  "paper",
+  "yellow",
+  "cyan",
+  "green",
+  "pink",
+  "red",
+  "purple",
+] as const;
 const totalCount = sorted.length;
 const featuredCount = sorted.filter((e) => e.data.featured).length;
 
@@ -98,10 +106,34 @@ const stats: {
   icon: string;
   tone: "yellow" | "pink" | "cyan" | "green" | "red" | "purple";
 }[] = [
-  { v: String(allLinksTotal), l: "Live projects + links", icon: "lucide:link", tone: "yellow" },
-  { v: String(featuredCount), l: "Featured case studies", icon: "lucide:star", tone: "pink" },
-  { v: String(groups.shopify.items.length + OTHER_SHOPIFY_STOREFRONTS.length + OTHER_SHOPIFY_APPS.length), l: "Shopify apps + storefronts", icon: "lucide:shopping-bag", tone: "green" },
-  { v: String(groups.ai.items.length), l: "AI case studies", icon: "lucide:brain-circuit", tone: "purple" },
+  {
+    v: String(allLinksTotal),
+    l: "Live projects + links",
+    icon: "lucide:link",
+    tone: "yellow",
+  },
+  {
+    v: String(featuredCount),
+    l: "Featured case studies",
+    icon: "lucide:star",
+    tone: "pink",
+  },
+  {
+    v: String(
+      groups.shopify.items.length +
+        OTHER_SHOPIFY_STOREFRONTS.length +
+        OTHER_SHOPIFY_APPS.length,
+    ),
+    l: "Shopify apps + storefronts",
+    icon: "lucide:shopping-bag",
+    tone: "green",
+  },
+  {
+    v: String(groups.ai.items.length),
+    l: "AI case studies",
+    icon: "lucide:brain-circuit",
+    tone: "purple",
+  },
 ];
 
 // Featured marquee (top 4)
@@ -114,10 +146,7 @@ const workCollectionLd = collectionPage({
   description: WORK.DESCRIPTION,
   itemType: "CreativeWork",
   items: sorted.map((e) => ({
-    url:
-      e.data.liveUrl ??
-      e.data.githubUrl ??
-      new URL(`/work/`, SITE.URL).href,
+    url: e.data.liveUrl ?? e.data.githubUrl ?? new URL(`/work/`, SITE.URL).href,
     name: e.data.title,
     description: e.data.description,
   })),
@@ -139,10 +168,10 @@ const workBreadcrumbLd = breadcrumbList([
   <section class="mx-auto max-w-6xl px-5 pb-6">
     <div class="flex flex-wrap items-center gap-4">
       <StickyNote tone="yellow" tilt={-2} class="max-w-[320px]">
-        <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+        <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
           ▸ How to read this page
         </p>
-        <p class="text-sm font-bold leading-snug">
+        <p class="text-sm leading-snug font-bold">
           Featured = full case study. The rest = live links. Resume has every
           stack + outcome.
         </p>
@@ -155,7 +184,7 @@ const workBreadcrumbLd = breadcrumbList([
   </section>
 
   <section class="mx-auto max-w-6xl px-5 pb-10">
-    <ul class="grid gap-4 grid-cols-2 md:grid-cols-4">
+    <ul class="grid grid-cols-2 gap-4 md:grid-cols-4">
       {
         stats.map((s, i) => (
           <li>
@@ -163,16 +192,16 @@ const workBreadcrumbLd = breadcrumbList([
               tone={s.tone}
               shadow="sm"
               tilt={i % 2 === 0 ? -0.3 : 0.3}
-              class="text-center flex flex-col gap-2 !p-4"
+              class="flex flex-col gap-2 !p-4 text-center"
             >
               <span
-                class="inline-flex h-10 w-10 mx-auto items-center justify-center border-[2.5px] border-ink rounded-full bg-paper text-ink shadow-neo-xs"
+                class="border-ink bg-paper text-ink shadow-neo-xs mx-auto inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
                 aria-hidden="true"
               >
                 <Icon name={s.icon} class="h-5 w-5" />
               </span>
-              <p class="display text-4xl md:text-5xl leading-none">{s.v}</p>
-              <p class="mono text-[10px] font-bold uppercase tracking-widest opacity-80">
+              <p class="display text-4xl leading-none md:text-5xl">{s.v}</p>
+              <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-80">
                 {s.l}
               </p>
             </NeoCard>
@@ -182,15 +211,17 @@ const workBreadcrumbLd = breadcrumbList([
     </ul>
   </section>
 
-  <div class="mx-auto max-w-6xl px-5 pb-16 space-y-14" data-work-root>
+  <div class="mx-auto max-w-6xl space-y-14 px-5 pb-16" data-work-root>
     <section>
-      <div class="flex items-end justify-between gap-4 flex-wrap mb-6">
+      <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <BurstBadge tone="cyan" size="sm" class="mb-4">01</BurstBadge>
-          <h2 class="display text-2xl md:text-3xl leading-tight">
+          <h2 class="display text-2xl leading-tight md:text-3xl">
             Filter by lane.
           </h2>
-          <p class="mono text-[11px] font-bold uppercase tracking-widest opacity-60 mt-2">
+          <p
+            class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60"
+          >
             ▸ {totalCount} case studies · {featuredCount} featured
           </p>
         </div>
@@ -232,11 +263,13 @@ const workBreadcrumbLd = breadcrumbList([
       featuredEntries.length > 0 && (
         <section data-work-section="all-featured" class="scroll-mt-24">
           <div class="mb-6">
-            <BurstBadge tone="pink" size="sm" class="mb-4">02</BurstBadge>
-            <h2 class="display text-2xl md:text-3xl leading-tight">
+            <BurstBadge tone="pink" size="sm" class="mb-4">
+              02
+            </BurstBadge>
+            <h2 class="display text-2xl leading-tight md:text-3xl">
               Featured case studies.
             </h2>
-            <p class="mono text-[11px] font-bold uppercase tracking-widest opacity-60 mt-2">
+            <p class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60">
               ▸ The ones with the highest signal
             </p>
           </div>
@@ -265,27 +298,27 @@ const workBreadcrumbLd = breadcrumbList([
               id={`work-${group.slug}`}
               class="scroll-mt-24"
             >
-              <div class="flex items-end gap-4 mb-6 flex-wrap">
+              <div class="mb-6 flex flex-wrap items-end gap-4">
                 <BurstBadge tone={group.tone} size="sm">
                   {String(gi + 3).padStart(2, "0")}
                 </BurstBadge>
-                <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
                   <span
-                    class={`inline-flex h-12 w-12 shrink-0 items-center justify-center border-[2.5px] border-ink rounded-[6px] shadow-neo-xs ${toneBg[group.tone]}`}
+                    class={`border-ink shadow-neo-xs inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[6px] border-[2.5px] ${toneBg[group.tone]}`}
                     aria-hidden="true"
                   >
                     <Icon name={group.icon} class="h-5 w-5" />
                   </span>
-                  <div class="flex-1 min-w-0">
-                    <h2 class="display text-2xl md:text-3xl leading-tight">
+                  <div class="min-w-0 flex-1">
+                    <h2 class="display text-2xl leading-tight md:text-3xl">
                       {group.label}
                     </h2>
-                    <p class="mono text-[11px] font-bold uppercase tracking-widest opacity-60 mt-1">
+                    <p class="mono mt-1 text-[11px] font-bold tracking-widest uppercase opacity-60">
                       ▸ {group.eyebrow}
                     </p>
                   </div>
                   <span
-                    class="hidden md:inline-flex h-9 w-9 items-center justify-center border-[2px] border-ink rounded-full bg-ink text-bg font-black text-xs"
+                    class="border-ink bg-ink text-bg hidden h-9 w-9 items-center justify-center rounded-full border-[2px] text-xs font-black md:inline-flex"
                     aria-hidden="true"
                   >
                     {group.items.length}
@@ -309,10 +342,11 @@ const workBreadcrumbLd = breadcrumbList([
 
     {
       sorted.length === 0 && (
-        <div class="border-[3px] border-dashed border-ink rounded-[4px] p-12 text-center">
-          <p class="display text-3xl mb-3">Coming soon</p>
+        <div class="border-ink rounded-[4px] border-[3px] border-dashed p-12 text-center">
+          <p class="display mb-3 text-3xl">Coming soon</p>
           <p class="opacity-70">
-            Case studies in progress. Drop me a line if you'd like an early look.
+            Case studies in progress. Drop me a line if you'd like an early
+            look.
           </p>
         </div>
       )
@@ -323,25 +357,29 @@ const workBreadcrumbLd = breadcrumbList([
     <section class="space-y-10">
       <header>
         <BurstBadge tone="pink" size="sm" class="mb-4">+</BurstBadge>
-        <h2 class="display text-2xl md:text-3xl leading-tight">
+        <h2 class="display text-2xl leading-tight md:text-3xl">
           More live links.
         </h2>
-        <p class="mono text-[11px] font-bold uppercase tracking-widest opacity-60 mt-2">
+        <p
+          class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60"
+        >
           ▸ {totalLinks} more sites in production · short notes only
         </p>
       </header>
 
       <div class="space-y-10">
         <div>
-          <h3 class="heading text-xl uppercase mb-4 flex items-center gap-3">
+          <h3 class="heading mb-4 flex items-center gap-3 text-xl uppercase">
             <span
-              class="inline-flex h-9 w-9 items-center justify-center border-[2.5px] border-ink rounded-full bg-green text-ink shadow-neo-xs"
+              class="border-ink bg-green text-ink shadow-neo-xs inline-flex h-9 w-9 items-center justify-center rounded-full border-[2.5px]"
               aria-hidden="true"
             >
               <Icon name="lucide:shopping-bag" class="h-4 w-4" />
             </span>
             Shopify Plus storefronts
-            <span class="mono text-[10px] font-bold uppercase tracking-widest opacity-60">
+            <span
+              class="mono text-[10px] font-bold tracking-widest uppercase opacity-60"
+            >
               · {OTHER_SHOPIFY_STOREFRONTS.length}
             </span>
           </h3>
@@ -353,24 +391,24 @@ const workBreadcrumbLd = breadcrumbList([
                     href={p.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="group flex items-start gap-3 border-[2.5px] border-ink rounded-[4px] bg-paper p-3 shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm hover:bg-yellow"
+                    class="group border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[2.5px] p-3 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
                   >
                     <span
                       class:list={[
-                        "inline-flex h-9 w-9 shrink-0 items-center justify-center border-[2px] border-ink rounded-full font-black text-xs",
+                        "border-ink inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-[2px] text-xs font-black",
                         toneBg[p.tone],
                       ]}
                     >
                       {p.name.slice(0, 1)}
                     </span>
-                    <span class="flex-1 min-w-0">
-                      <span class="block font-bold text-sm truncate">
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate text-sm font-bold">
                         {p.name}
-                        <span class="inline-block align-middle ml-1 opacity-60">
+                        <span class="ml-1 inline-block align-middle opacity-60">
                           ↗
                         </span>
                       </span>
-                      <span class="block mono text-[10px] uppercase tracking-widest opacity-70 truncate">
+                      <span class="mono block truncate text-[10px] tracking-widest uppercase opacity-70">
                         {p.note}
                       </span>
                     </span>
@@ -382,9 +420,9 @@ const workBreadcrumbLd = breadcrumbList([
         </div>
 
         <div>
-          <h3 class="heading text-xl uppercase mb-4 flex items-center gap-3">
+          <h3 class="heading mb-4 flex items-center gap-3 text-xl uppercase">
             <span
-              class="inline-flex h-9 w-9 items-center justify-center border-[2.5px] border-ink rounded-full bg-red text-ink shadow-neo-xs"
+              class="border-ink bg-red text-ink shadow-neo-xs inline-flex h-9 w-9 items-center justify-center rounded-full border-[2.5px]"
               aria-hidden="true"
             >
               <Icon name="lucide:puzzle" class="h-4 w-4" />
@@ -399,24 +437,24 @@ const workBreadcrumbLd = breadcrumbList([
                     href={p.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="group flex items-start gap-3 border-[2.5px] border-ink rounded-[4px] bg-paper p-3 shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm hover:bg-yellow"
+                    class="group border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[2.5px] p-3 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
                   >
                     <span
                       class:list={[
-                        "inline-flex h-9 w-9 shrink-0 items-center justify-center border-[2px] border-ink rounded-full font-black text-xs",
+                        "border-ink inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-[2px] text-xs font-black",
                         toneBg[p.tone],
                       ]}
                     >
                       {p.name.slice(0, 1)}
                     </span>
-                    <span class="flex-1 min-w-0">
-                      <span class="block font-bold text-sm truncate">
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate text-sm font-bold">
                         {p.name}
-                        <span class="inline-block align-middle ml-1 opacity-60">
+                        <span class="ml-1 inline-block align-middle opacity-60">
                           ↗
                         </span>
                       </span>
-                      <span class="block mono text-[10px] uppercase tracking-widest opacity-70 truncate">
+                      <span class="mono block truncate text-[10px] tracking-widest uppercase opacity-70">
                         {p.note}
                       </span>
                     </span>
@@ -428,15 +466,17 @@ const workBreadcrumbLd = breadcrumbList([
         </div>
 
         <div>
-          <h3 class="heading text-xl uppercase mb-4 flex items-center gap-3">
+          <h3 class="heading mb-4 flex items-center gap-3 text-xl uppercase">
             <span
-              class="inline-flex h-9 w-9 items-center justify-center border-[2.5px] border-ink rounded-full bg-blue text-paper shadow-neo-xs"
+              class="border-ink bg-blue text-paper shadow-neo-xs inline-flex h-9 w-9 items-center justify-center rounded-full border-[2.5px]"
               aria-hidden="true"
             >
               <Icon name="lucide:globe" class="h-4 w-4" />
             </span>
             Other platforms + profiles
-            <span class="mono text-[10px] font-bold uppercase tracking-widest opacity-60">
+            <span
+              class="mono text-[10px] font-bold tracking-widest uppercase opacity-60"
+            >
               · {OTHER_PLATFORMS.length}
             </span>
           </h3>
@@ -448,24 +488,24 @@ const workBreadcrumbLd = breadcrumbList([
                     href={p.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="group flex items-start gap-3 border-[2.5px] border-ink rounded-[4px] bg-paper p-3 shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm hover:bg-yellow"
+                    class="group border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[2.5px] p-3 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
                   >
                     <span
                       class:list={[
-                        "inline-flex h-9 w-9 shrink-0 items-center justify-center border-[2px] border-ink rounded-full font-black text-xs",
+                        "border-ink inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-[2px] text-xs font-black",
                         toneBg[p.tone],
                       ]}
                     >
                       {p.name.slice(0, 1)}
                     </span>
-                    <span class="flex-1 min-w-0">
-                      <span class="block font-bold text-sm truncate">
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate text-sm font-bold">
                         {p.name}
-                        <span class="inline-block align-middle ml-1 opacity-60">
+                        <span class="ml-1 inline-block align-middle opacity-60">
                           ↗
                         </span>
                       </span>
-                      <span class="block mono text-[10px] uppercase tracking-widest opacity-70 truncate">
+                      <span class="mono block truncate text-[10px] tracking-widest uppercase opacity-70">
                         {p.note}
                       </span>
                     </span>
@@ -478,13 +518,15 @@ const workBreadcrumbLd = breadcrumbList([
       </div>
     </section>
 
-    <NeoCard tone="paper" class="text-center space-y-4">
-      <p class="mono text-xs font-bold uppercase tracking-widest text-pink-deep">
+    <NeoCard tone="paper" class="space-y-4 text-center">
+      <p
+        class="mono text-pink-deep text-xs font-bold tracking-widest uppercase"
+      >
         ▸ Need the boring version?
       </p>
-      <p class="text-base md:text-lg max-w-2xl mx-auto leading-snug">
-        Resume has every role, stack, and outcome — including projects under
-        NDA that aren't listed here.
+      <p class="mx-auto max-w-2xl text-base leading-snug md:text-lg">
+        Resume has every role, stack, and outcome — including projects under NDA
+        that aren't listed here.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
         <NeoButton
@@ -504,13 +546,15 @@ const workBreadcrumbLd = breadcrumbList([
     </NeoCard>
   </div>
 
-  <HalftoneSection tone="blue" bordered class="py-14 text-paper">
-    <div class="mx-auto max-w-5xl px-5 grid gap-6 md:grid-cols-[1fr_auto] items-center">
+  <HalftoneSection tone="blue" bordered class="text-paper py-14">
+    <div
+      class="mx-auto grid max-w-5xl items-center gap-6 px-5 md:grid-cols-[1fr_auto]"
+    >
       <div>
-        <p class="display text-3xl md:text-4xl leading-tight">
+        <p class="display text-3xl leading-tight md:text-4xl">
           Got a project that needs a senior engineer who actually ships?
         </p>
-        <p class="mt-3 text-base text-paper/80">
+        <p class="text-paper/80 mt-3 text-base">
           Discovery call is free. I'll tell you honestly if it's a fit.
         </p>
       </div>
@@ -536,31 +580,5 @@ const workBreadcrumbLd = breadcrumbList([
 </style>
 
 <script>
-  const root = document.querySelector<HTMLElement>("[data-work-root]");
-  if (root) {
-    const buttons =
-      root.querySelectorAll<HTMLButtonElement>("[data-work-filter]");
-    const sections =
-      root.querySelectorAll<HTMLElement>("[data-work-section]");
-
-    function setFilter(value: string) {
-      buttons.forEach((btn) => {
-        const pressed = btn.dataset.workFilter === value;
-        btn.setAttribute("aria-pressed", pressed ? "true" : "false");
-      });
-      sections.forEach((section) => {
-        const slug = section.dataset.workSection;
-        // "all" shows every section (featured marquee + each lane);
-        // a specific lane shows only its matching section.
-        section.hidden = value !== "all" && slug !== value;
-      });
-    }
-
-    buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const value = btn.dataset.workFilter ?? "all";
-        setFilter(value);
-      });
-    });
-  }
+  import "@/scripts/work-filter";
 </script>
