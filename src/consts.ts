@@ -149,7 +149,7 @@ export const USES = {
 export const CONTACT = {
   TITLE: "Contact",
   DESCRIPTION:
-    "Hire me for senior / lead / fractional CTO / advisory work — Laravel SaaS, Shopify Plus apps, AI feature integration, architecture audits, MVP builds.",
+    "Work with me on senior / lead / fractional CTO / advisory engagements — Laravel SaaS, Shopify Plus apps, AI feature integration, architecture audits, MVP builds.",
 };
 
 // Web3Forms-backed contact form (no backend). Get a free access key at
