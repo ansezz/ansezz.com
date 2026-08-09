@@ -31,7 +31,7 @@ const prevUrl = page.currentPage === 2 ? "/blog/" : page.url.prev;
 
 <PageLayout
   title={`${BLOG.TITLE} · Page ${page.currentPage}`}
-  description={BLOG.DESCRIPTION}
+  description={`Page ${page.currentPage} of ${page.lastPage} — posts ${page.start + 2}–${page.end + 2} of ${page.total + 1} on Laravel, AI engineering with Claude and MCP, RAG, Shopify Plus, DevOps, and architecture.`}
   eyebrow={`Blog · Page ${page.currentPage}`}
   heading="More from the trenches."
   intro="Older posts. Same hot takes."
@@ -55,17 +55,19 @@ const prevUrl = page.currentPage === 2 ? "/blog/" : page.url.prev;
     </div>
   </HalftoneSection>
 
-  <div class="mx-auto max-w-6xl px-5 pb-16 space-y-12 pt-10">
+  <div class="mx-auto max-w-6xl space-y-12 px-5 pt-10 pb-16">
     <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {page.data.map((post) => (
-        <li>
-          <PostCard post={post} />
-        </li>
-      ))}
+      {
+        page.data.map((post) => (
+          <li>
+            <PostCard post={post} />
+          </li>
+        ))
+      }
     </ul>
 
     <nav
-      class="flex items-center justify-between gap-4 flex-wrap"
+      class="flex flex-wrap items-center justify-between gap-4"
       aria-label="Blog pagination"
     >
       {
@@ -79,7 +81,7 @@ const prevUrl = page.currentPage === 2 ? "/blog/" : page.url.prev;
           </NeoButton>
         )
       }
-      <p class="mono text-xs font-bold uppercase tracking-widest opacity-70">
+      <p class="mono text-xs font-bold tracking-widest uppercase opacity-70">
         Page {page.currentPage} · {page.lastPage} total
       </p>
       {

@@ -613,7 +613,7 @@ export const NOW = {
 export const TOOLS = {
   TITLE: "Tools",
   DESCRIPTION:
-    "Free, no-signup engineering tools that run entirely in your browser — LLM cost and token math, encoding and hashing, JSON tooling, infrastructure sizing, and Shopify helpers. Nothing is uploaded.",
+    "Free, no-signup engineering tools that run entirely in your browser — LLM token and cost math, encoding, hashing, JSON tooling, infra sizing, Shopify helpers.",
 };
 
 export type ToolGroupId =

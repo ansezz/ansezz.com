@@ -22,6 +22,22 @@ type Props = { category: BlogCategory };
 const { category } = Astro.props as Props;
 const label = CATEGORY_LABEL[category];
 
+// "Articles in the X category — N posts." was too thin to earn a snippet.
+// Say what's actually in the category.
+const CATEGORY_BLURB: Record<BlogCategory, string> = {
+  laravel:
+    "Octane and FrankenPHP under load, multi-tenancy, queues, replication and backups — Laravel past the tutorial stage.",
+  ai: "RAG on pgvector, Anthropic Claude and MCP, agentic workflows, evals and cost guardrails — production AI, not demos.",
+  shopify:
+    "Liquid vs headless, storefront web components, UCP, and agentic commerce — building serious Shopify Plus apps and storefronts.",
+  devops:
+    "Self-hosting with Coolify and Docker, CI/CD, observability, scaling and the infrastructure trade-offs behind uptime.",
+  architecture:
+    "Monolith vs microservices, sync vs async, proxies and gateways, statefulness — the decisions you only get to make once.",
+  career:
+    "DevOps vs MLOps, SRE vs platform, ML vs AI engineer — who does what, and which role a team actually needs.",
+};
+
 const all = (await getCollection("blog", ({ data }) => !data.draft))
   .filter((p) => p.data.category === category)
   .sort(
@@ -30,7 +46,15 @@ const all = (await getCollection("blog", ({ data }) => !data.draft))
       b.data.publishDate.getTime() - a.data.publishDate.getTime(),
   );
 
-const tones = ["paper", "yellow", "cyan", "green", "pink", "red", "purple"] as const;
+const tones = [
+  "paper",
+  "yellow",
+  "cyan",
+  "green",
+  "pink",
+  "red",
+  "purple",
+] as const;
 
 const breadcrumbLd = {
   "@context": "https://schema.org",
@@ -55,7 +79,7 @@ const breadcrumbLd = {
 
 <Page
   title={`${label} posts`}
-  description={`Articles in the ${label} category — ${all.length} ${all.length === 1 ? "post" : "posts"}.`}
+  description={`${CATEGORY_BLURB[category]} ${all.length} ${all.length === 1 ? "post" : "posts"}.`}
   eyebrow={`Category · ${label}`}
   heading={`Notes on ${label}.`}
   intro={`${all.length} ${all.length === 1 ? "post" : "posts"} in this category.`}
@@ -63,10 +87,10 @@ const breadcrumbLd = {
   structuredData={breadcrumbLd}
   feeds={[{ title: `${label} — RSS`, href: `/rss/${category}.xml` }]}
 >
-  <div class="mx-auto max-w-4xl px-5 pb-16 space-y-10">
+  <div class="mx-auto max-w-4xl space-y-10 px-5 pb-16">
     <div>
       <p
-        class="mono text-xs font-bold uppercase tracking-widest opacity-60 mb-3"
+        class="mono mb-3 text-xs font-bold tracking-widest uppercase opacity-60"
       >
         Browse other categories
       </p>
@@ -102,11 +126,9 @@ const breadcrumbLd = {
           ))}
         </ul>
       ) : (
-        <div class="border-[3px] border-dashed border-ink rounded-[4px] p-12 text-center">
-          <p class="display text-3xl mb-2">Nothing here yet</p>
-          <p class="opacity-70">
-            No posts in {label} yet. Check back soon.
-          </p>
+        <div class="border-ink rounded-[4px] border-[3px] border-dashed p-12 text-center">
+          <p class="display mb-2 text-3xl">Nothing here yet</p>
+          <p class="opacity-70">No posts in {label} yet. Check back soon.</p>
         </div>
       )
     }
