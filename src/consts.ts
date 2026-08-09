@@ -209,6 +209,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "shopify-storefront-web-components",
       "shopify-ucp-quick-start",
       "agentic-commerce-shopify",
+      "secure-agentic-commerce-shopify",
     ],
   },
   {
