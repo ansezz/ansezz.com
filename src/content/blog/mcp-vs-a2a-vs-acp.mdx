@@ -1,0 +1,116 @@
+---
+title: "MCP vs A2A vs ACP: the agent protocol stack"
+description: "MCP connects agents to tools, A2A connects agents to each other, and ACP has folded into A2A. How the two-layer agent protocol stack fits together in 2026."
+publishDate: 2026-08-09
+category: architecture
+tags: [mcp, a2a, acp, agentic-ai, ai, architecture, protocols]
+featured: false
+heroImage:
+  url: "/blog/mcp-vs-a2a-vs-acp/hero.webp"
+  alt: "Pop-art illustration of a modular agent protocol stack with tool and agent layers plugged together"
+---
+
+You are ready to move past single-prompt chatbots and build a real multi-agent system. Then you look at what you actually have: agents that cannot reach your Postgres database without a bespoke script, and cannot coordinate with the agent another team shipped last quarter without a shared Slack channel and a human in the middle.
+
+The missing piece is not model quality. It is a communication standard. Without one, you spend most of your engineering time writing glue code for integrations and very little on the behavior that makes the agents worth running. Every schema change breaks a hand-rolled adapter somewhere.
+
+The good news is that the landscape has converged. Two protocols now cover the two axes that matter: the Model Context Protocol (MCP) for connecting agents to tools and data, and Agent2Agent (A2A) for connecting agents to each other. The Agent Communication Protocol (ACP), the third name you will still see in older posts, has been folded into A2A. This post breaks down what each layer does and how to wire them together.
+
+## The current state of agent protocols
+
+In early 2025 you had to pick a vendor SDK and live with it. Function calling looked different on every model, and agent frameworks each invented their own message envelope. Two things changed that.
+
+First, Anthropic donated MCP to the Linux Foundation, where it now sits under the Agentic AI Foundation (AAIF) alongside other agentic projects. Second, Google donated A2A to the Linux Foundation in mid-2025. Both protocols are now governed in the open by the same umbrella, which is the main reason the stack finally stopped moving under everyone's feet.
+
+The second shift is architectural. You no longer need one protocol that does everything. You use a **vertical** protocol for reaching data and tools, and a **horizontal** protocol for agents talking to peers.
+
+| Protocol | Primary role       | Governance             | Status                  |
+| :------- | :----------------- | :--------------------- | :---------------------- |
+| **MCP**  | Agent to tool/data | Linux Foundation, AAIF | De-facto standard       |
+| **A2A**  | Agent to agent     | Linux Foundation       | Stable, actively spec'd |
+| **ACP**  | Agent messaging    | Legacy (IBM / BeeAI)   | Merged into A2A         |
+
+## MCP: the universal adapter for tools
+
+![Illustration of MCP acting as a universal adapter between an agent and many tools](/blog/mcp-vs-a2a-vs-acp/mcp-tool-layer.webp)
+
+MCP is the vertical layer. It standardizes how an agent connects to everything that is _not_ another agent: your Shopify store, your Postgres instance, a filesystem, an internal REST service.
+
+Before MCP, giving a model access to a filesystem meant writing a tool definition shaped for that specific model's function-calling format. With MCP you write one server. Any MCP-compatible client — Claude, an IDE assistant, a local model runner — connects and discovers the same capabilities without you rewriting anything.
+
+**Why MCP won the tool layer:**
+
+- **JSON-RPC 2.0 on the wire.** Boring, well-understood, easy to debug.
+- **Transport flexibility.** `stdio` for local servers, Streamable HTTP for remote ones. (The older HTTP+SSE transport is legacy — new remote servers should use Streamable HTTP.)
+- **Three primitives, not thirty.** Servers expose tools the model can call, resources it can read, and prompts the user can invoke. Clients contribute sampling and roots, and a 2025 revision added elicitation so a server can ask the user for missing input mid-call.
+- **Real ecosystem.** Thousands of public servers exist for common SaaS platforms, and the official MCP Registry gives clients a discovery path instead of a README scavenger hunt.
+- **Scoped permissions.** Servers expose only what you register, so an agent sees the slice of data it needs and nothing else.
+
+If you are modernizing how your systems are consumed, exposing your data through MCP is the highest-leverage first move. It decouples your tools from your model choice, which is the coupling that hurts most when you swap models. I went deeper on the mechanics in [API vs MCP](/blog/api-vs-mcp/) and [MCP tool-use for context-aware agents](/blog/mcp-context-aware-agents/).
+
+## A2A: the social fabric for agents
+
+![Illustration of multiple agents discovering and delegating tasks to each other](/blog/mcp-vs-a2a-vs-acp/a2a-agent-mesh.webp)
+
+MCP handles tools. A2A handles peers. When your merchandising agent needs stock levels from an inventory agent owned by another team — one built on a different framework, deployed in a different cluster — that conversation is A2A. This is the horizontal layer.
+
+A2A lets agents discover each other, delegate tasks, stream progress, and hand back results. The anchor of the protocol is the **Agent Card**: a JSON document, conventionally served at `/.well-known/agent-card.json`, that declares who the agent is, which skills it offers, which transports and auth schemes it supports, and what input and output types it accepts. Discovery is fetching that file.
+
+**What A2A gives you:**
+
+- **Capability discovery.** A client reads an Agent Card (or queries a registry) to find an agent that handles the job, instead of hard-coding a hostname.
+- **Task delegation with a real lifecycle.** Tasks move through explicit states — submitted, working, input-required, completed, failed, canceled — so a caller can reason about a long-running job rather than polling a black box.
+- **Streaming and callbacks.** Server-Sent Events for live progress on an open connection, plus webhook-style push notifications for tasks that outlive it.
+- **Framework independence.** The peer on the other side can be LangGraph, CrewAI, a Laravel service wrapping a model, or something homegrown. The wire format is what you agree on, not the runtime.
+- **Standard auth.** Agent Cards declare security schemes, so you authenticate agent-to-agent traffic with the same primitives you already use for APIs.
+
+This is what makes cross-team agents workable. Building [agentic commerce on Shopify](/blog/agentic-commerce-shopify/) already means a checkout flow handing structured instructions to fulfillment logic; A2A is what stops that handoff from being a private contract nobody else can reuse.
+
+## Why ACP merged into A2A
+
+You will still hit references to the Agent Communication Protocol. ACP came out of IBM and the BeeAI team as a REST-native approach to agent messaging, and it was good at exactly the thing A2A was weakest at early on: stateful, long-running, asynchronous work.
+
+The problem was arithmetic. Two competing agent-to-agent protocols meant every framework author had to pick one or implement both, which is how ecosystems stall. During 2025 the ACP maintainers moved to consolidate behind A2A under Linux Foundation governance.
+
+The practical consequence is short. ACP is no longer an architectural choice you need to evaluate — its strong ideas around state management and durable messaging live on in A2A's task model. If you had ACP on a roadmap, substitute A2A. The concepts map closely and the community is now in one place.
+
+## Architecting the two-layer stack
+
+![Diagram of a two-layer agent architecture with MCP underneath and A2A across the top](/blog/mcp-vs-a2a-vs-acp/two-layer-stack.webp)
+
+The mental model that keeps this straight: MCP is the device driver, A2A is the network protocol. One lets a process talk to the hardware it is attached to; the other lets it talk to other machines. You need both, and they do not overlap.
+
+An agent is typically an A2A **server** to its peers and an MCP **client** to its tools, at the same time. That dual role is the whole architecture.
+
+**A workable implementation order:**
+
+1. **Data layer (MCP).** Wrap your internal APIs and databases in MCP servers. This is the step that pays off immediately, even with a single agent, and it is where a lot of [Claude and MCP dev tooling](/blog/claude-mcp-dev-tools/) already lives.
+2. **Coordination layer (A2A).** Put an A2A-compliant interface in front of each agent and publish its Agent Card. This is how [informal agentic workflows](/blog/agentic-workflows-vibe-coding/) graduate into services other teams can call.
+3. **Governance layer.** Route the traffic through an [AI gateway](/blog/api-gateway-ai-stack/) so you get auth, rate limits, cost attribution, and traces on both protocols instead of guessing where the spend went.
+
+One caution: a tool call and an agent delegation are not interchangeable, even when both are technically reachable. Exposing another team's agent as an MCP tool flattens away the task lifecycle and turns a long-running negotiation into a request that either returns or times out. Use MCP for deterministic capabilities you own, and A2A when the other side needs to reason, ask you a follow-up question, or take twenty minutes.
+
+## Practical implementation tips
+
+Moving to a protocol-first architecture is mostly a change in what you consider the unit of work. Stop shipping "an agent" and start shipping services that speak these standards.
+
+**Audit your tools first.** Pick the five tools your agents actually reach for and build or adopt MCP servers for them. Resist wrapping everything — an agent handed forty tools makes worse choices than one handed six.
+
+**Write Agent Cards early.** Even with two agents, defining the card forces you to name each agent's skills and boundaries. Most multi-agent designs fail because responsibilities overlap, and the card is where that shows up before it becomes a runtime problem.
+
+**Standardize transports.** Streamable HTTP for remote MCP servers, HTTP with SSE for A2A streaming. Streaming matters more than it looks: without it you cannot see intermediate reasoning or partial tool output, and debugging a multi-agent failure becomes archaeology.
+
+**Version the contracts, not the prompts.** Agent Cards and tool schemas are public interfaces now. Treat a changed tool signature like a breaking API change, because for every agent calling it, that is exactly what it is.
+
+**Instrument at the boundary.** Every MCP call and A2A task should emit a trace with a correlation ID that survives delegation. When a five-agent chain returns nonsense, the only cheap way to find the bad hop is a trace that spans all of them.
+
+## Takeaways
+
+- **MCP is vertical.** It connects agents to tools, databases, and APIs, and it is the de-facto standard for that layer.
+- **A2A is horizontal.** It handles discovery, delegation, and task lifecycle between agents, across frameworks and teams.
+- **ACP is legacy.** It merged into A2A. Do not start new work on standalone ACP.
+- **Governance is settled.** Both protocols now sit under Linux Foundation stewardship, which is what makes them safe to build against.
+- **Each agent plays two roles.** A2A server to its peers, MCP client to its tools — that dual role is the stack in one sentence.
+- **The boundary matters.** Deterministic capability you own is a tool; another team's reasoning system is a peer. Mixing them up is how the architecture rots.
+
+How are you handling coordination between agent frameworks in your production stack right now? If you are wiring MCP and A2A into a real product, [here's how I help teams ship it](/services/).

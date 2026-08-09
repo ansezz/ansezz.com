@@ -226,6 +226,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "context-window-vs-memory",
       "prompt-engineering-vs-context-engineering",
       "api-vs-mcp",
+      "mcp-vs-a2a-vs-acp",
       "training-vs-inference",
     ],
   },

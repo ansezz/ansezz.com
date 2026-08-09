@@ -86,6 +86,8 @@ When should you stick to direct API calls, and when should you implement MCP? Th
 3. You want your tools to be reusable across different AI clients (e.g., [Claude Desktop and custom IDE tools](/blog/claude-mcp-dev-tools/)).
 4. You need to expose local data or specialized resources to an LLM without building a custom backend for every experiment.
 
+One boundary worth drawing early: MCP covers the agent-to-tool axis only. The moment two agents need to delegate work to each other, you are in a different protocol's territory — see [MCP vs A2A vs ACP](/blog/mcp-vs-a2a-vs-acp/) for how the two layers stack.
+
 ![Side-by-side code comparison of a REST endpoint call and an MCP tool definition](/blog/api-vs-mcp/rest-vs-mcp-code.webp)
 
 ## Takeaways
