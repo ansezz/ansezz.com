@@ -1,0 +1,114 @@
+---
+title: "Vibe coding vs agentic engineering: which ships?"
+description: "Vibe coding is for prototypes, agentic engineering is for production. The daily split I use to ship AI-written code without hidden technical debt."
+publishDate: 2026-07-24
+category: ai
+tags: [vibe-coding, agentic-ai, ai, claude, laravel, shopify]
+featured: false
+heroImage:
+  url: "/blog/vibe-coding-vs-agentic-engineering/hero.webp"
+  alt: "Pop-art comparison of messy vibe-coded scribbles on one side and a structured engineering blueprint on the other"
+---
+
+The era of manual syntax is over. In 2026 the question is no longer whether AI writes your code — it's how you govern the AI that does. Most developers I talk to are caught between two modes: the high-speed thrill of vibe coding and the slower discipline of agentic engineering.
+
+Both are real. Both work. But they don't work for the same job. Vibe coding will conjure a working application in an afternoon. Agentic engineering is what makes that application survive contact with production. Shipping in 2026 means knowing which one you're in at any given moment — and stopping the vibes before they reach `main`.
+
+## The rise and fall of vibe coding
+
+Vibe coding was the breakout habit of 2025. It's a conversational approach where the feel of the interaction takes precedence over the underlying architecture. You describe a feature, the model returns a large block of code, you run it to see whether it works. It breaks, you paste the stack trace back, you ask for a fix. Repeat.
+
+That cycle is fast. It's addictive. It feels like magic right up until you try to scale a system built entirely on vibes.
+
+The real problem isn't the code quality — models are good now. The problem is that vibe coding is **development without verification**. When the model hands you 500 lines and you ship because it looks right, you're operating on faith. You've moved the bottleneck from typing to reviewing, and then you skipped the reviewing.
+
+None of that makes it useless. The first pass of a Shopify storefront section or a Laravel reporting dashboard can come together in an afternoon this way. The trouble shows up six weeks later: no tests, three competing patterns for the same problem, and a `Controller` doing the job of a service, a job, and a repository. That's not a code problem, it's a process problem — and it's the same failure mode I wrote about in [why projects need more than just logic](/blog/vibe-coding/).
+
+## Agentic engineering: the architecture of intent
+
+Agentic engineering is the professional evolution of the same tooling. It isn't chatting with a single model. It's running a system of agents that plan, implement, test, and review under your supervision. Your role changes from coder to architect of intent.
+
+In an agentic workflow you supply a specification, not a vibe: the requirement, the architectural constraints, the acceptance criteria. The system decomposes it. One agent researches the API surface. One writes the implementation. One writes the tests. One reads the diff looking for reasons to reject it.
+
+The spec is the whole trick, and it's usually shorter than people expect:
+
+```md
+## Task: subscription pause endpoint
+
+Constraints
+
+- Laravel 12, existing `SubscriptionService`, no new packages
+- Idempotent: repeat calls with the same `Idempotency-Key` return the first result
+- Authorization via existing `SubscriptionPolicy@pause`
+
+Done when
+
+- Feature test: pause, double-pause, unauthorized, already-cancelled
+- No changes to `routes/api.php` ordering
+- `php artisan test` and `vendor/bin/pint --test` both green
+```
+
+You're no longer reviewing lines. You're reviewing a pull request that other agents already argued about. The human decision shrinks to go/no-go — which is exactly where a human decision is worth the most. That's the architecture side of it, and I go deeper into the MCP and loop mechanics in [the shift to agentic workflows](/blog/agentic-workflows-vibe-coding/).
+
+![AI agent dashboard showing several agents working in parallel on implementation, testing, and refactoring tasks](/blog/vibe-coding-vs-agentic-engineering/agent-dashboard.webp)
+
+## Side by side: vibe coding vs agentic engineering
+
+Most AI-assisted projects that stall share one root cause: vibe coding applied to a problem that needed agentic engineering.
+
+| Dimension        | Vibe coding                  | Agentic engineering                         |
+| :--------------- | :--------------------------- | :------------------------------------------ |
+| **Primary goal** | Speed and exploration        | Correctness and scale                       |
+| **Your role**    | Conversational partner       | Architect, mission control                  |
+| **Verification** | "Does it seem to work?"      | Automated tests plus peer-agent diff review |
+| **Structure**    | Loose, improvised            | Written specs, repeatable SOPs              |
+| **Best for**     | Prototypes, spikes, one-offs | Production SaaS, Shopify Plus apps          |
+| **Tech debt**    | High and invisible           | Managed and visible                         |
+| **Failure mode** | Silent wrongness             | Slow starts, over-specification             |
+
+Note the last row. Agentic engineering has its own failure mode: you can spend an hour writing a spec for something you could have vibed in ten minutes and thrown away. Discipline applied to a throwaway prototype is just waste with better manners.
+
+## The hybrid workflow: mornings vibe, afternoons engineer
+
+The people shipping fastest in 2026 don't pick a side. They split the day. Creative exploration in the high-energy hours, engineering rigor in the disciplined ones.
+
+### Morning: the vibe
+
+Start with exploration. If I'm adding a RAG-backed feature, I don't open a spec document — I open the editor and vibe out the retrieval logic. Try pgvector, try a hosted index, see how the chunking feels against real documents. Wire [Claude and MCP](/blog/claude-mcp-dev-tools/) into the local environment and let it poke at the database directly.
+
+The output of the morning is not code you keep. It's a decision you keep. Nothing from this session is allowed to merge.
+
+### Afternoon: the rigor
+
+Once the shape is proven, the vibes end. The prototype becomes the input to a spec: schema, API contract, error semantics, test coverage. Then the agents refactor that morning code into something documented and tested, and a review agent tries to break it.
+
+The hard rule that makes this work: **the morning branch never merges**. It gets read, summarized into a spec, and deleted. If you let vibe-coded code merge "just this once," you've quietly reverted to mode one — and today's speed becomes next month's outage.
+
+## Building the agentic stack on Laravel and Shopify Plus
+
+Agents need predictable ground to stand on. My stack is Laravel for application logic and Shopify Plus when the surface is commerce, and that's not nostalgia — it's because both are legible to a model.
+
+Laravel's conventions are the point. Service providers, policies, form requests, and a canonical directory layout mean an agent can answer "where does this belong?" without guessing. Shopify's GraphQL Admin API is similarly self-describing: typed, introspectable, versioned. An agent can discover the mutation it needs instead of hallucinating a REST route that was deprecated two versions ago. That predictability is most of what makes [agentic commerce on Shopify](/blog/agentic-commerce-shopify/) tractable.
+
+The other half is memory. Your agents need your codebase, your ADRs, and your incident history — otherwise every session starts from zero and you re-litigate decisions you settled in March. A vector store over your own repository and docs is the cheapest leverage in the stack, provided the retrieval layer is honest. Garbage context produces confident garbage code, which is exactly the failure pattern behind most [RAG mistakes in production](/blog/7-rag-mistakes-production/).
+
+![Architecture diagram showing a Laravel application, a pgvector store, and an agent orchestration layer feeding a CI pipeline](/blog/vibe-coding-vs-agentic-engineering/agentic-stack.webp)
+
+## Deploying with confidence
+
+The last place vibes leak into production is the deploy. If a human is manually clicking ship after an agent wrote the change, the human is the weakest link — they're approving a diff they didn't write against tests they didn't read.
+
+Push the verification into the pipeline instead: migrations checked, feature tests green, a smoke pass against a preview environment, error rate watched for a window after rollout, automatic rollback if it moves. Docker plus Coolify gets you this on your own boxes without a platform bill, which is the whole premise of [self-hosting your SaaS](/blog/coolify-self-hosted-saas/).
+
+The goal isn't zero human involvement. It's that a bad vibe can't reach customers without something automated objecting first.
+
+## Takeaways
+
+- Vibe coding is a discovery tool. Use it for prototypes, UI spikes, and messy ideas — then throw the code away and keep the decision.
+- Agentic engineering is a production tool. Specs, tests, and multi-agent review are what make AI-written code safe to charge money for.
+- The skill that matters in 2026 is writing unambiguous specs. It's the new senior-engineer bottleneck, and it's a writing skill more than a coding one.
+- Give your agents memory. Vector-indexed code, docs, and incident history stop every session from restarting at zero.
+- Split your day, and enforce the boundary. The morning branch does not merge.
+- Watch the opposite failure too: over-specifying a throwaway spike is waste, not discipline.
+
+Which part of your workflow is still running on vibes alone — and what would an agent find if it audited that code tomorrow? If you're trying to get an AI-assisted team from prototypes to production, [here's how I help](/services/).
