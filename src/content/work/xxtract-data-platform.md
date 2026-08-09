@@ -11,6 +11,6 @@ stack:
   - "CI/CD"
 liveUrl: "https://www.xxtract.com/"
 outcome: "Shipped extraction pipelines + integrations for a client-facing data platform"
-order: 17
+order: 18
 featured: false
 ---

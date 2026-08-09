@@ -10,6 +10,6 @@ stack:
   - "App Bridge"
   - "Polaris"
 outcome: "Catalogs structured for AI-driven product discovery and agentic shopping surfaces"
-order: 1
+order: 2
 featured: false
 ---

@@ -146,8 +146,15 @@ const workCollectionLd = collectionPage({
   title: WORK.TITLE,
   description: WORK.DESCRIPTION,
   itemType: "CreativeWork",
+  // Featured entries have their own /work/<id>/ page — point the ItemList
+  // there instead of collapsing every un-linked entry onto /work/ itself,
+  // which emitted the same URL for many different list items.
   items: sorted.map((e) => ({
-    url: e.data.liveUrl ?? e.data.githubUrl ?? new URL(`/work/`, SITE.URL).href,
+    url: e.data.featured
+      ? new URL(`/work/${e.id}/`, SITE.URL).href
+      : (e.data.liveUrl ??
+        e.data.githubUrl ??
+        new URL("/work/", SITE.URL).href),
     name: e.data.title,
     description: e.data.description,
   })),

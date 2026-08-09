@@ -10,6 +10,6 @@ stack:
   - "Polaris"
 outcome: "Page-targeted promo banners without touching theme code"
 liveUrl: "https://apps.shopify.com/quick-notice-clear-alert"
-order: 8
+order: 11
 featured: false
 ---
