@@ -264,6 +264,19 @@ export const BLOG_SERIES: BlogSeries[] = [
     ],
   },
   {
+    slug: "vibe-coding-to-agentic",
+    title: "From Vibe Coding to Agentic Engineering",
+    description:
+      "How AI-assisted development grows up — from conversational vibes, to MCP-driven agentic loops, to a workflow that can actually ship to production.",
+    tone: "yellow",
+    posts: [
+      "vibe-coding",
+      "agentic-workflows-vibe-coding",
+      "vibe-coding-vs-agentic-engineering",
+      "ai-coding-workflow-levels",
+    ],
+  },
+  {
     slug: "engineering-roles",
     title: "Engineering Roles, Compared",
     description:
