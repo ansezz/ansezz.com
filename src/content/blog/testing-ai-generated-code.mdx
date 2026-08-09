@@ -1,6 +1,6 @@
 ---
 title: "Trust is not a QA strategy: test AI code too"
-description: "AI-generated code is 95% syntactically clean and fails security tests 45% of the time. Half of agentic PRs ship no tests. The verification pipeline I run instead."
+description: "AI code is 95% syntactically clean and fails security tests 45% of the time. Half of agentic PRs ship no tests. The verification pipeline I run instead."
 publishDate: 2026-08-09
 category: ai
 tags: [ai, testing, agentic-ai, ci-cd, code-review, quality]
@@ -22,7 +22,7 @@ This is the part that catches experienced engineers off guard, because our insti
 
 Human code that looks sloppy usually _is_ rough, and we review it accordingly. Human code that looks polished usually got there because someone iterated on it — which means someone thought about it. Polish was a proxy for scrutiny.
 
-LLMs break that correlation completely. Veracode's Spring 2026 GenAI Code Security update measured a syntax correctness rate above 95% across the models it tested, against a security pass rate of 55%. The code is almost always well-formed. It is secure roughly half the time. Formatting stopped carrying any signal about correctness, and most review habits have not caught up.
+LLMs break that correlation completely. Veracode's [Spring 2026 GenAI Code Security update](https://www.veracode.com/blog/spring-2026-genai-code-security/) measured a syntax correctness rate above 95% across the models it tested, against a security pass rate of 55%. The code is almost always well-formed. It is secure roughly half the time. Formatting stopped carrying any signal about correctness, and most review habits have not caught up.
 
 ```typescript
 // Generated in one shot. Clean names, correct types, zero lint warnings.
@@ -53,17 +53,17 @@ Parameterized queries and modern crypto defaults are baked into the training dat
 
 Language matters too. The same report puts Python at a 62% security pass rate and Java at 29%. If your stack is JVM-heavy, the baseline you are working from is worse than the headline number suggests.
 
-One genuinely encouraging data point: reasoning-focused models with extended thinking hit 70–72% pass rates, the best observed. That is real improvement. It is still a coin flip you would never accept from a human contributor.
+One genuinely encouraging data point: GPT-5 with extended reasoning hit 70–72%, the best pass rate Veracode has observed. That is real improvement. It is still a coin flip you would never accept from a human contributor.
 
 ## The testing gap in agentic pull requests
 
 Chat completions are one thing. Autonomous agents opening PRs are another, and this is where the accounting gets uncomfortable.
 
-A July 2026 empirical study accepted at ICSME analysed 4,882 agent-generated pull requests from the AIDev dataset — 532 Java, 4,350 Python, across five coding agents. Two findings should reshape how you gate merges:
+A July 2026 empirical study accepted at ICSME, [Test Coverage Analysis of Agentic Pull Requests](https://arxiv.org/abs/2607.18057), analysed 4,882 agent-generated pull requests from the AIDev dataset — 532 Java, 4,350 Python, across five coding agents. Two findings should reshape how you gate merges:
 
-**Agents included test changes in only 49.6% of PRs that modified code covered by test files.** Not "PRs with no test infrastructure available" — PRs where tests for that code already existed and the agent changed the code without touching them.
+**Agents included test changes in only 49.6% of the PRs that touched code under test.** Not greenfield repos with no test infrastructure — code that already sat inside a test suite, changed without the suite being touched.
 
-**Existing test suites did not pick up the slack.** They executed 61.5% of the agents' changed executable lines in Java and just 27.0% in Python. In 64.8% of Python PRs, _not one changed line_ was executed by any existing test. The safety net people assume is there is mostly hole.
+**Existing test suites did not pick up the slack.** They executed 61.5% of the agents' changed executable lines in Java and just 27.0% in Python. In 64.8% of Python PRs, _not one changed line_ was executed by any existing test. The safety net everyone assumes is there is mostly holes.
 
 Agents optimize for satisfying the prompt. Ask for a checkout feature and you get a controller, a migration, and a view — because that is what "done" looks like from the prompt's perspective. Boundary conditions, negative assertions, and concurrency cases are not in the prompt, so they are not in the diff.
 
@@ -73,7 +73,7 @@ Here is the failure mode I see most often: a team wires up a coverage gate, sees
 
 Line coverage measures execution, not verification. It tells you a line ran during the test suite. It says nothing about whether anything checked the result.
 
-A separate 2026 study looked specifically at what agent-written tests assert. Across 86,156 test-file patches from 33,596 agent-authored pull requests spanning 2,807 repositories — Codex, Copilot, Devin, Cursor, and Claude Code — 80.2% of those patches contained weak or no explicit oracle signals. An agent rewarded for a green build learns very quickly that the cheapest path to green is an assertion that cannot fail.
+A separate 2026 study, [All Smoke, No Alarm](https://arxiv.org/abs/2606.18168), looked specifically at what agent-written tests assert. Across 86,156 test-file patches from 33,596 agent-authored pull requests spanning 2,807 repositories — Codex, Copilot, Devin, Cursor, and Claude Code — 80.2% of those patches contained weak or no explicit oracle signals. An agent rewarded for a green build learns very quickly that the cheapest path to green is an assertion that cannot fail.
 
 ```python
 # 100% line coverage on process_payment. Verifies essentially nothing.
@@ -96,11 +96,11 @@ When you review agent output, read the `catch` blocks first. Ask what happens to
 
 ## The throughput and stability trade
 
-Google's 2025 DORA report on AI-assisted development is the macro version of everything above. Its central finding: higher AI adoption correlates with an increase in delivery throughput _and_ an increase in delivery instability, at the same time.
+The [2025 DORA State of AI-assisted Software Development](https://dora.dev/dora-report-2025/) report is the macro version of everything above. Its central finding: higher AI adoption correlates with an increase in delivery throughput _and_ an increase in delivery instability, at the same time.
 
-That is not an argument against AI. It is a statement about where the bottleneck moved. When change volume goes up and the control systems — automated testing, version control discipline, fast feedback — stay where they were, instability is the arithmetic result. DORA's own ROI model shows how thin the margin gets: a change failure rate drifting from 5% to 6% wipes out a meaningful chunk of the productivity gain in downtime cost alone.
+That is not an argument against AI. It is a statement about where the bottleneck moved. When change volume goes up and the control systems — automated testing, version control discipline, fast feedback — stay where they were, instability is the arithmetic result. DORA's own ROI model puts a number on it: in their sample calculation, a change failure rate drifting from 5% to 6% after AI adoption costs $344,000 in downtime.
 
-AI amplifies whatever your delivery process already was. This is the same trade-off I mapped out in [AI vs traditional development](/blog/ai-vs-traditional-development/), now with three years of industry data behind it.
+AI amplifies whatever your delivery process already was. That is the same trade-off I mapped out in [AI vs traditional development](/blog/ai-vs-traditional-development/), now with a large-scale dataset behind it instead of an argument.
 
 ## What I actually measure
 
@@ -138,10 +138,15 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: pcov
+      - run: composer install --no-interaction --prefer-dist
       - run: vendor/bin/phpunit --coverage-cobertura=coverage.xml
-      - run: pip install diff-cover
+      - run: pipx install diff-cover
       # Fail on new lines that no test executes — total coverage is irrelevant here.
-      - run: diff-cover coverage.xml --compare-branch=origin/main --fail-under=90
+      - run: diff-cover coverage.xml --compare-branch=origin/${{ github.base_ref }} --fail-under=90
 
   mutation:
     runs-on: ubuntu-latest
@@ -149,8 +154,18 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: pcov
+      - run: composer install --no-interaction --prefer-dist
       # Mutate only the changed files, and require tests to actually kill the mutants.
-      - run: vendor/bin/infection --git-diff-filter=AM --min-msi=70 --threads=max
+      - run: |
+          vendor/bin/infection \
+            --git-diff-filter=AM \
+            --git-diff-base=origin/${{ github.base_ref }} \
+            --min-msi=70 \
+            --threads=max
 ```
 
 Three layers, each catching what the previous one cannot. Semgrep's OWASP ruleset catches the XSS and injection patterns that dominate the failure table above. `diff-cover` refuses the PR where new lines are unexecuted. Infection refuses the PR where new lines are executed but unasserted — the oracle problem, enforced by a machine rather than by a tired reviewer.
