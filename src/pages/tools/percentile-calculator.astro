@@ -1,0 +1,788 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  {
+    name: "Latency Percentile Calculator",
+    url: "/tools/percentile-calculator/",
+  },
+]);
+
+const DESCRIPTION =
+  "Free latency percentile calculator. Paste response times to get p50, p90, p95, p99 and p99.9, a histogram, and a sample-size check — all in your browser.";
+
+// P(every one of N dependencies is inside its p99) = 0.99^N. Computed here so
+// the numbers in the prose can never drift from the numbers in the table.
+const FANOUT = [1, 5, 10, 20, 50, 100].map((n) => {
+  const allFast = Math.pow(0.99, n);
+  return {
+    n,
+    allFast: `${(allFast * 100).toFixed(1)}%`,
+    slow: `${((1 - allFast) * 100).toFixed(1)}%`,
+  };
+});
+
+const SAMPLES = [
+  { kind: "healthy", label: "Healthy API", note: "n=800, tight tail" },
+  { kind: "tail", label: "Bad tail", note: "n=800, 4% slow path" },
+  { kind: "small", label: "Too few samples", note: "n=40, p99 is noise" },
+];
+
+const faq = [
+  {
+    q: "What is p95 latency?",
+    a: "p95 is the response time that 95% of requests came in under, and 5% came in over. It is a point on the sorted list of your measurements, not an average: sort every request by duration, walk 95% of the way up the list, read the value. Unlike the mean it cannot be dragged around by a single 30-second outlier, and unlike the max it does not report one freak event as if it were normal.",
+  },
+  {
+    q: "How many samples do I need for a reliable p99?",
+    a: "About 1,000. The rule of thumb is 10 divided by (1 minus p): a p99 is determined entirely by the slowest 1% of your data, so you need roughly 100 samples before a 99th percentile exists at all, and around 1,000 before it stops jumping between runs. p95 needs about 200, p99.9 needs about 10,000. Below the first threshold this tool says so outright, because your p99 is just your maximum with a fancier name.",
+  },
+  {
+    q: "Why is p50 different from the median?",
+    a: "Because nearest-rank and linear interpolation disagree on even-sized samples. With four values, nearest-rank p50 returns the second one; the median averages the second and third. Linear interpolation (R-7, the default in numpy and Excel's PERCENTILE.INC) matches the textbook median exactly. This page shows both columns so the gap is visible instead of surprising, and reports the true median separately in the summary.",
+  },
+  {
+    q: "Can I average p99 across servers or time buckets?",
+    a: "No, and it is the most common dashboard bug in the industry. The mean of ten shard p99s is not the fleet p99: if one shard is on fire, averaging dilutes it, and if traffic is uneven the arithmetic is weighted wrong from the start. The same applies to averaging a per-minute p99 over an hour. Merge the raw samples instead, or use a structure built to merge — HdrHistogram, Prometheus histogram buckets via histogram_quantile, t-digest, or DDSketch.",
+  },
+  {
+    q: "Should I use nearest-rank or linear interpolation?",
+    a: "Nearest-rank when you want a number some real request actually produced, which covers most SLO and alerting work — you can go find that request in your traces. Linear interpolation when you need to match numpy, pandas, Excel, or a monitoring backend, because R-7 is what they default to. Above a few thousand samples the two agree to within noise; below a hundred they can differ sharply, which is exactly the regime where neither deserves your trust.",
+  },
+  {
+    q: "Does this percentile calculator upload my data?",
+    a: "No. There is no request, no analytics event, and no storage. The textarea contents are parsed, sorted and summarised by JavaScript inside your tab, so you can paste production latency numbers without them leaving the machine. Cut the network after the page loads and every button still works.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Latency Percentile Calculator",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/percentile-calculator/", SITE.URL).href,
+  description: DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const labelClass =
+  "mono text-[11px] font-bold uppercase tracking-widest block mb-2";
+const inputClass =
+  "border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none";
+const selectClass =
+  "w-full border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-bold shadow-neo-sm focus:outline-none";
+const hintClass = "mono text-[10px] uppercase tracking-widest opacity-70 mt-2";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1";
+const thClass =
+  "border-b-[3px] border-r-[3px] border-ink p-3 mono text-[10px] font-bold uppercase tracking-widest text-left";
+---
+
+<Page
+  title="Latency Percentile Calculator"
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Latency Percentile Calculator."
+  intro="Paste a column of response times. Get p50 through p99.9 by both standard methods, a histogram, and a straight answer about whether your sample is even big enough to have a p99."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Sample size decides everything
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        A p99 computed from 40 requests is your slowest request wearing a hat.
+        This tool flags that instead of printing it with a straight face.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id="percentile-calculator-root">
+    <div class="grid items-start gap-6 md:grid-cols-[1fr_340px]">
+      <!-- Input -->
+      <NeoCard tone="paper" shadow="md" class="space-y-4">
+        <div>
+          <label for="percentile-calculator-input" class={labelClass}>
+            Response times
+          </label>
+          <textarea
+            id="percentile-calculator-input"
+            rows="12"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder={"142\n88\n1204\n96ms\n73, 61, 240"}
+            class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm focus:outline-none"
+          ></textarea>
+          <p class={hintClass}>
+            ▸ One per line, or separated by commas, spaces or tabs. Unit
+            suffixes like <code class={codeClass}>ms</code> are stripped; anything
+            that isn't a number is skipped and counted. Commas always split values,
+            so strip thousands separators before pasting — <code
+              class={codeClass}>1,204</code
+            > reads as two numbers.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          {
+            SAMPLES.map((s) => (
+              <button
+                type="button"
+                data-sample={s.kind}
+                title={s.note}
+                class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+              >
+                {s.label}
+              </button>
+            ))
+          }
+          <button
+            type="button"
+            data-sample="clear"
+            class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-red hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+          >
+            Clear
+          </button>
+        </div>
+
+        <div class="border-ink space-y-2 border-t-[2.5px] pt-4">
+          <p
+            id="percentile-calculator-parse"
+            class="mono text-[11px] font-bold tracking-widest uppercase"
+            aria-live="polite"
+          >
+            Parsed 0 values · skipped 0
+          </p>
+          <ul
+            id="percentile-calculator-notes"
+            hidden
+            class="space-y-1.5 text-xs opacity-80"
+          >
+          </ul>
+        </div>
+
+        <div class="border-ink grid gap-4 border-t-[2.5px] pt-4 sm:grid-cols-3">
+          <div>
+            <label for="percentile-calculator-unit" class={labelClass}>
+              Display unit
+            </label>
+            <select id="percentile-calculator-unit" class={selectClass}>
+              <option value="ms" selected>ms</option>
+              <option value="s">s</option>
+              <option value="us">µs</option>
+              <option value="none">none</option>
+            </select>
+          </div>
+          <div>
+            <label for="percentile-calculator-method" class={labelClass}>
+              Headline method
+            </label>
+            <select id="percentile-calculator-method" class={selectClass}>
+              <option value="nearest" selected>Nearest-rank</option>
+              <option value="linear">Linear (R-7)</option>
+            </select>
+          </div>
+          <div>
+            <label for="percentile-calculator-custom" class={labelClass}>
+              Custom percentile
+            </label>
+            <input
+              id="percentile-calculator-custom"
+              type="number"
+              min="0"
+              max="100"
+              step="any"
+              inputmode="decimal"
+              value="99.5"
+              autocomplete="off"
+              class={`${inputClass} w-full`}
+            />
+            <p
+              id="percentile-calculator-custom-hint"
+              hidden
+              class="mono text-pink-deep mt-2 text-[10px] font-bold tracking-widest uppercase"
+            >
+            </p>
+          </div>
+        </div>
+        <p class={hintClass}>
+          ▸ The unit is a label only — no conversion is applied. Paste values
+          that are already in one unit.
+        </p>
+      </NeoCard>
+
+      <!-- Summary -->
+      <NeoCard tone="cyan" shadow="lg" class="space-y-4 md:sticky md:top-24">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ The sample
+        </p>
+
+        <div aria-live="polite">
+          <p
+            id="percentile-calculator-empty"
+            class="text-sm leading-snug font-bold"
+          >
+            Paste response times above — one per line, or comma separated.
+          </p>
+
+          <dl id="percentile-calculator-stats" hidden class="space-y-2.5">
+            <div
+              class="border-ink flex items-end justify-between border-b-[2.5px] pb-2"
+            >
+              <dt class="text-sm font-bold uppercase">Values</dt>
+              <dd
+                id="percentile-calculator-count"
+                class="display text-pink-deep text-4xl leading-none"
+              >
+                0
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Min</dt>
+              <dd
+                id="percentile-calculator-min"
+                class="text-right font-mono text-sm font-bold"
+              >
+                —
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Max</dt>
+              <dd
+                id="percentile-calculator-max"
+                class="text-right font-mono text-sm font-bold"
+              >
+                —
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Mean</dt>
+              <dd
+                id="percentile-calculator-mean"
+                class="text-right font-mono text-sm font-bold"
+              >
+                —
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Median</dt>
+              <dd
+                id="percentile-calculator-median"
+                class="text-right font-mono text-sm font-bold"
+              >
+                —
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Std dev (n−1)</dt>
+              <dd
+                id="percentile-calculator-stddev"
+                class="text-right font-mono text-sm font-bold"
+              >
+                —
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <button
+          type="button"
+          id="percentile-calculator-copy"
+          class="border-ink bg-paper shadow-neo-sm hover:bg-yellow hover:shadow-neo-md inline-flex w-full items-center justify-center gap-2 rounded-[6px] border-[3px] px-4 py-2.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 disabled:opacity-50"
+        >
+          <Icon name="lucide:copy" class="h-4 w-4" aria-hidden="true" />
+          <span id="percentile-calculator-copy-label">Copy report</span>
+        </button>
+
+        <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+          Runs in your browser · nothing uploaded
+        </p>
+      </NeoCard>
+    </div>
+
+    <!-- Percentiles -->
+    <h2 class="heading mt-10 mb-3 text-xl uppercase">Percentiles.</h2>
+    <div
+      class="mono mb-3 flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-widest uppercase"
+    >
+      <span
+        class="border-ink bg-green text-ink rounded-full border-[2px] px-2 py-0.5"
+        >ok</span
+      >
+      <span class="opacity-70">enough samples ·</span>
+      <span
+        class="border-ink bg-yellow text-ink rounded-full border-[2px] px-2 py-0.5"
+        >noisy</span
+      >
+      <span class="opacity-70">will move between runs ·</span>
+      <span
+        class="border-ink bg-red text-ink rounded-full border-[2px] px-2 py-0.5"
+        >= your max</span
+      >
+      <span class="opacity-70">no data above it</span>
+    </div>
+    <div
+      class="border-ink bg-paper shadow-neo-md overflow-x-auto rounded-[4px] border-[3px]"
+    >
+      <table class="w-full border-collapse text-left">
+        <caption class="sr-only">
+          Percentiles of the pasted sample under both estimators, with a
+          sample-size check for each
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col" class={`${thClass} bg-bg-alt`}>Percentile</th>
+            <th
+              scope="col"
+              id="percentile-calculator-th-nearest"
+              class={`${thClass} bg-yellow`}
+            >
+              Nearest-rank
+            </th>
+            <th
+              scope="col"
+              id="percentile-calculator-th-linear"
+              class={`${thClass} bg-bg-alt`}
+            >
+              Linear (R-7)
+            </th>
+            <th
+              scope="col"
+              class="border-ink mono border-b-[3px] p-3 text-left text-[10px] font-bold tracking-widest uppercase"
+            >
+              Enough samples?
+            </th>
+          </tr>
+        </thead>
+        <tbody id="percentile-calculator-rows"></tbody>
+      </table>
+    </div>
+
+    <div
+      id="percentile-calculator-warning"
+      role="status"
+      hidden
+      class="border-ink bg-red shadow-neo-sm mt-4 rounded-[4px] border-[3px] px-4 py-3"
+    >
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Not enough data for that percentile
+      </p>
+      <p
+        id="percentile-calculator-warning-text"
+        class="text-sm leading-snug font-bold"
+      >
+      </p>
+    </div>
+
+    <!-- Histogram -->
+    <div class="mt-10 mb-3 flex flex-wrap items-center justify-between gap-3">
+      <h2 class="heading text-xl uppercase">Distribution.</h2>
+      <div class="flex items-center gap-2">
+        <label
+          for="percentile-calculator-scale"
+          class="mono text-[10px] font-bold tracking-widest uppercase"
+        >
+          X axis
+        </label>
+        <select
+          id="percentile-calculator-scale"
+          class="mono border-ink bg-paper shadow-neo-xs rounded-[4px] border-[2px] px-2 py-1 text-[10px] font-bold tracking-widest uppercase focus:outline-none"
+        >
+          <option value="linear" selected>Linear</option>
+          <option value="log">Log</option>
+        </select>
+      </div>
+    </div>
+    <NeoCard tone="paper" shadow="md" class="space-y-3">
+      <div
+        id="percentile-calculator-plot"
+        role="img"
+        aria-label="Histogram — no data yet"
+        class="border-ink bg-bg-alt relative h-44 overflow-hidden rounded-[4px] border-[3px]"
+      >
+        <div
+          id="percentile-calculator-hist"
+          class="absolute inset-0 flex items-end gap-px"
+          aria-hidden="true"
+        >
+        </div>
+        <div
+          id="percentile-calculator-markers"
+          class="pointer-events-none absolute inset-0"
+          aria-hidden="true"
+        >
+        </div>
+      </div>
+      <div
+        class="mono flex justify-between text-[10px] font-bold tracking-widest uppercase opacity-70"
+      >
+        <span id="percentile-calculator-axis-min">—</span>
+        <span id="percentile-calculator-axis-mid">—</span>
+        <span id="percentile-calculator-axis-max">—</span>
+      </div>
+      <div
+        class="mono border-ink flex flex-wrap items-center gap-3 border-t-[2.5px] pt-3 text-[10px] font-bold tracking-widest uppercase"
+      >
+        <span class="inline-flex items-center gap-1.5">
+          <span class="bg-ink border-ink inline-block h-3 w-3 border-[2px]"
+          ></span>count
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="bg-cyan border-ink inline-block h-3 w-3 border-[2px]"
+          ></span>p50
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="bg-pink border-ink inline-block h-3 w-3 border-[2px]"
+          ></span>p95
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span
+            class="bg-purple text-paper border-ink inline-block h-3 w-3 border-[2px]"
+          ></span>p99
+        </span>
+      </div>
+      <p
+        id="percentile-calculator-hist-note"
+        class="mono text-[10px] tracking-widest uppercase opacity-70"
+      >
+        Paste values to draw the distribution.
+      </p>
+    </NeoCard>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">Why the mean hides the tail</h2>
+      <p>
+        Take 1,000 requests. 990 finish in 40 ms, ten take four seconds. The
+        mean is 79.6 ms — a number nothing in that sample came close to, and one
+        that looks perfectly healthy on a dashboard. The p99 is 4,000 ms. Ten
+        people sat and waited, and the average quietly absorbed them.
+      </p>
+      <p>
+        Latency distributions are right-skewed by construction. They have a hard
+        floor (you cannot respond in negative time) and no ceiling at all — a
+        retry, a cold cache, a GC pause, a lock, a DNS timeout. Every statistic
+        that assumes symmetry describes a shape your data does not have. That
+        includes standard deviation, which is why this tool prints it but does
+        not lead with it.
+      </p>
+      <p>
+        You can see the skew in the histogram above. On a linear axis a single
+        two-second request stretches the range so far that 90% of your sample
+        collapses into the first bar — which is honest, but not readable. Switch
+        the x axis to log and the tail spreads out into something you can
+        actually inspect. That is the same reason latency dashboards and
+        HdrHistogram bucket logarithmically rather than uniformly.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        p99 is the number your users feel
+      </h2>
+      <p>
+        "Only 1% of requests" sounds like a rounding error until you count per
+        user instead of per request. A page that fires 50 API calls is only fast
+        if all 50 are fast, and the odds of that are 0.99 to the 50th — about
+        61%. Four users in ten hit the slow tail on a single page load. The
+        percentile that covers 1% of your traffic covers something closer to 39%
+        of your sessions.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Tail amplification and fan-out
+      </h2>
+      <p>
+        The same arithmetic runs on the server side. One inbound request that
+        touches N services is only fast when every one of them is fast, and that
+        probability collapses far quicker than people expect:
+      </p>
+      <div
+        class="border-ink bg-paper shadow-neo-md my-2 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full border-collapse text-left">
+          <caption class="sr-only">
+            Probability that every dependency responds inside its p99, by
+            fan-out width
+          </caption>
+          <thead>
+            <tr class="bg-yellow">
+              <th scope="col" class={thClass}>Services touched</th>
+              <th scope="col" class={thClass}>All inside p99</th>
+              <th
+                scope="col"
+                class="border-ink mono border-b-[3px] p-3 text-left text-[10px] font-bold tracking-widest uppercase"
+              >
+                Hits a slow one
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              FANOUT.map((row, i) => (
+                <tr class={i % 2 ? "bg-bg-alt" : "bg-paper"}>
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left font-mono font-bold"
+                  >
+                    {row.n}
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 font-mono text-sm">
+                    {row.allFast}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3 font-mono text-sm font-bold">
+                    {row.slow}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p>
+        At a fan-out of 100 — not unusual for a microservice request graph — a
+        p99 that everybody signed off on becomes the common case. This is the
+        real argument for hedged requests, hard per-dependency timeouts, and
+        deleting calls from the critical path rather than optimising them.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        You cannot average percentiles
+      </h2>
+      <p>
+        The mean of ten shard p99s is not the fleet p99. Percentiles are order
+        statistics; they are not linear, and averaging them is not an
+        approximation, it is a different number with no interpretation. If one
+        shard is melting, the average dilutes it. If traffic is skewed across
+        shards, the weighting is wrong before you start. The same bug shows up
+        in time: taking a per-minute p99 and averaging 60 of them does not give
+        you the hourly p99, and it will usually understate it.
+      </p>
+      <p>
+        The fix is to merge the underlying data, not the summaries. That means
+        keeping raw samples, or keeping something mergeable — HdrHistogram,
+        Prometheus histogram buckets summed and then run through <code
+          class={codeClass}>histogram_quantile</code
+        >, t-digest, or DDSketch. If your dashboard shows an average of p99s, it
+        is lying to you on a schedule.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Nearest-rank vs linear, and how this tool computes both
+      </h2>
+      <p>
+        Nearest-rank takes the value at index <code class={codeClass}
+          >ceil(p ÷ 100 × n)</code
+        > in the sorted sample. It always returns a measurement that actually happened,
+        which means you can go and find that request in your traces. Linear interpolation
+        (R-7, the default in numpy, pandas and Excel's PERCENTILE.INC) computes <code
+          class={codeClass}>h = (n − 1) × p ÷ 100</code
+        > and blends the two neighbouring values. It moves smoothly as data arrives,
+        which is what you want when comparing runs.
+      </p>
+      <p>
+        They diverge most exactly where percentiles are already shaky: small
+        samples. On four values, nearest-rank p50 is the second value while
+        linear p50 is the average of the second and third — the textbook median.
+        That is why the summary panel reports a true median separately from the
+        p50 row, and why both columns are shown side by side rather than hidden
+        behind a toggle. Standard deviation here uses the n−1 denominator, and
+        the mean and variance come from a single Welford pass so large values do
+        not lose precision.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">Turning this into an SLO</h2>
+      <p>
+        "p99 under 300 ms" is a snapshot, not an objective. An SLO is a
+        threshold, a compliance target and a window: 99% of requests complete in
+        under 300 ms, measured over 28 rolling days. That phrasing buys you an
+        error budget — 1% of requests, and when it is spent you stop shipping
+        features and go fix latency. It also sidesteps the averaging trap,
+        because "fraction of requests under 300 ms" is a ratio of counts, and
+        counts add up across shards and time buckets. Percentiles cannot be
+        added. Counts can.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">When not to use this</h2>
+      <p>
+        This page works on a sample you already have in your clipboard: a log
+        slice, a load-test output, a CSV column. For a live system you want
+        streaming quantile structures instead, because you cannot hold every
+        request in memory and you need percentiles that merge across instances.
+        And no percentile of a five-minute window tells you anything about a
+        system whose traffic pattern changes hourly — sample the period you
+        actually care about, or you are measuring the wrong distribution
+        precisely.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">Three numbers, three jobs</h2>
+    </div>
+
+    <ComparisonTable
+      class="mt-6"
+      columns={[
+        { label: "Mean", tone: "yellow" },
+        { label: "p50 / median", tone: "cyan" },
+        { label: "p99", tone: "pink" },
+      ]}
+      rows={[
+        {
+          label: "Answers",
+          cells: [
+            "Total time ÷ requests",
+            "What a typical request feels",
+            "Where the worst 1% begins",
+          ],
+        },
+        {
+          label: "One 30s outlier moves it?",
+          cells: ["A lot", "Barely", "Only on small samples"],
+        },
+        {
+          label: "What it hides",
+          cells: [
+            "The entire tail",
+            "Everything above the middle",
+            "The top 1% and the max",
+          ],
+        },
+        {
+          label: "Safe to average?",
+          cells: [
+            "Only weighted by request count",
+            "No",
+            "No — merge raw data instead",
+          ],
+        },
+        {
+          label: "Use it for",
+          cells: [
+            "Capacity and cost math",
+            "Is the common path healthy",
+            "SLOs, alerting, user pain",
+          ],
+        },
+      ]}
+    />
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <h2 class="display mb-5 text-2xl uppercase">Questions people ask.</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="heading mb-4 text-xl uppercase">Keep reading.</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/logging-vs-monitoring/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Logging vs monitoring: where latency percentiles actually come from
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/load-balancer-vs-api-gateway/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Load balancer vs API gateway: the hop that owns your tail
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/rate-limiting-vs-throttling/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Rate limiting vs throttling: queueing shows up in p99 first
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/tools/capacity-calculator/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Tool
+          </p>
+          <p class="leading-snug font-bold">
+            Capacity Calculator — size the servers behind that latency
+          </p>
+        </NeoCard>
+      </li>
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/percentile-calculator";
+</script>

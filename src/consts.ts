@@ -526,8 +526,62 @@ export const NOW = {
 export const TOOLS = {
   TITLE: "Tools",
   DESCRIPTION:
-    "Free, no-signup engineering tools that run in your browser — LLM cost calculator, token counter, cron explainer, JWT decoder, and a UUID generator.",
+    "Free, no-signup engineering tools that run entirely in your browser — LLM cost and token math, encoding and hashing, JSON tooling, infrastructure sizing, and Shopify helpers. Nothing is uploaded.",
 };
+
+export type ToolGroupId =
+  | "ai"
+  | "encoding"
+  | "data"
+  | "infra"
+  | "shopify"
+  | "reference";
+
+export interface ToolGroup {
+  id: ToolGroupId;
+  label: string;
+  blurb: string;
+}
+
+/** Section order on /tools/. Groups render in this order. */
+export const TOOL_GROUPS: ToolGroup[] = [
+  {
+    id: "ai",
+    label: "AI & LLM",
+    blurb:
+      "Budget a prompt before it bankrupts you: token math, context windows, chunking, and API spend.",
+  },
+  {
+    id: "encoding",
+    label: "Encoding & secrets",
+    blurb:
+      "Encode, decode, hash, and generate. Every one of these runs client-side — nothing is transmitted.",
+  },
+  {
+    id: "data",
+    label: "Data & APIs",
+    blurb:
+      "JSON, URLs, and schemas. The tools you reach for mid-debug with a payload in your clipboard.",
+  },
+  {
+    id: "infra",
+    label: "Infrastructure",
+    blurb:
+      "Cron, timestamps, permissions, bandwidth, latency, capacity. The arithmetic nobody wants to redo by hand.",
+  },
+  {
+    id: "shopify",
+    label: "Shopify",
+    blurb:
+      "Built while shipping Shopify apps — webhook verification and the ID formats that keep changing.",
+  },
+  {
+    id: "reference",
+    label: "Reference",
+    blurb:
+      "Lookup tables I got tired of searching for. Status codes, headers, ports — filterable, no ads.",
+  },
+];
 
 export interface ToolEntry {
   title: string;
@@ -536,9 +590,11 @@ export interface ToolEntry {
   icon: string;
   tone: "yellow" | "pink" | "cyan" | "green" | "purple";
   status: "live" | "soon";
+  group: ToolGroupId;
 }
 
 export const TOOL_LIST: ToolEntry[] = [
+  // ── AI & LLM ──
   {
     title: "LLM Cost Calculator",
     blurb:
@@ -547,6 +603,7 @@ export const TOOL_LIST: ToolEntry[] = [
     icon: "lucide:calculator",
     tone: "yellow",
     status: "live",
+    group: "ai",
   },
   {
     title: "Token Counter",
@@ -556,16 +613,30 @@ export const TOOL_LIST: ToolEntry[] = [
     icon: "lucide:hash",
     tone: "cyan",
     status: "live",
+    group: "ai",
   },
   {
-    title: "Cron Explainer",
+    title: "Context Window Checker",
     blurb:
-      "Decode a cron expression into plain English, field by field. Built it for my own schedulers — paste a 5-field cron and read what it actually does.",
-    href: "/tools/cron-explainer/",
-    icon: "lucide:clock",
+      "Will the prompt fit? Paste it and see tokens used, headroom left, and what's still free for the answer across Claude, GPT and Gemini windows.",
+    href: "/tools/context-window-checker/",
+    icon: "lucide:ruler",
+    tone: "purple",
+    status: "live",
+    group: "ai",
+  },
+  {
+    title: "RAG Chunk Splitter",
+    blurb:
+      "Split text into retrieval chunks — fixed, sentence, paragraph, or markdown-heading aware — and see every chunk's token count and overlap seam.",
+    href: "/tools/rag-chunk-splitter/",
+    icon: "lucide:scissors",
     tone: "pink",
     status: "live",
+    group: "ai",
   },
+
+  // ── Encoding & secrets ──
   {
     title: "JWT Decoder",
     blurb:
@@ -574,6 +645,37 @@ export const TOOL_LIST: ToolEntry[] = [
     icon: "lucide:key-round",
     tone: "purple",
     status: "live",
+    group: "encoding",
+  },
+  {
+    title: "Base64 Encoder / Decoder",
+    blurb:
+      "Encode and decode base64 without the UTF-8 bugs — emoji and accents round-trip correctly. base64url and file-to-data-URI included.",
+    href: "/tools/base64-encoder/",
+    icon: "lucide:binary",
+    tone: "cyan",
+    status: "live",
+    group: "encoding",
+  },
+  {
+    title: "SHA Hash Generator",
+    blurb:
+      "SHA-1, SHA-256, SHA-384 and SHA-512 for text or a file, in hex or base64. Web Crypto, in your browser. No MD5 — on purpose.",
+    href: "/tools/hash-generator/",
+    icon: "lucide:shield-check",
+    tone: "green",
+    status: "live",
+    group: "encoding",
+  },
+  {
+    title: "Secret & API Key Generator",
+    blurb:
+      "Keys, hex secrets and passphrases from crypto.getRandomValues — never Math.random. Unbiased sampling, entropy readout, nothing logged.",
+    href: "/tools/secret-generator/",
+    icon: "lucide:key-square",
+    tone: "pink",
+    status: "live",
+    group: "encoding",
   },
   {
     title: "UUID Generator",
@@ -583,6 +685,155 @@ export const TOOL_LIST: ToolEntry[] = [
     icon: "lucide:fingerprint",
     tone: "green",
     status: "live",
+    group: "encoding",
+  },
+
+  // ── Data & APIs ──
+  {
+    title: "URL Parser & Encoder",
+    blurb:
+      "Break a URL into every part, edit query params and watch it rebuild. Plus the four encode/decode functions people keep mixing up.",
+    href: "/tools/url-parser/",
+    icon: "lucide:link",
+    tone: "yellow",
+    status: "live",
+    group: "data",
+  },
+  {
+    title: "JSON Formatter & Validator",
+    blurb:
+      "Format, minify, sort keys — and when it breaks, get the line, the column, and a caret under the exact character, not just “Unexpected token”.",
+    href: "/tools/json-formatter/",
+    icon: "lucide:braces",
+    tone: "cyan",
+    status: "live",
+    group: "data",
+  },
+  {
+    title: "JSON to TypeScript & Zod",
+    blurb:
+      "Paste a JSON sample, get typed interfaces plus a Zod v4 schema — unions merged, optionals inferred, dates and emails detected.",
+    href: "/tools/json-to-typescript/",
+    icon: "lucide:file-code",
+    tone: "purple",
+    status: "live",
+    group: "data",
+  },
+
+  // ── Infrastructure ──
+  {
+    title: "Cron Explainer",
+    blurb:
+      "Decode a cron expression into plain English, field by field. Built it for my own schedulers — paste a 5-field cron and read what it actually does.",
+    href: "/tools/cron-explainer/",
+    icon: "lucide:clock",
+    tone: "pink",
+    status: "live",
+    group: "infra",
+  },
+  {
+    title: "Epoch Converter",
+    blurb:
+      "Unix timestamp in, human date out — UTC, local, ISO 8601, relative. Auto-detects seconds vs milliseconds, which is the bug you actually had.",
+    href: "/tools/epoch-converter/",
+    icon: "lucide:calendar-clock",
+    tone: "yellow",
+    status: "live",
+    group: "infra",
+  },
+  {
+    title: "Chmod Calculator",
+    blurb:
+      "Tick boxes or type 755 — both stay in sync. Setuid, setgid and sticky included, with the S/T rendering most calculators get wrong.",
+    href: "/tools/chmod-calculator/",
+    icon: "lucide:lock",
+    tone: "purple",
+    status: "live",
+    group: "infra",
+  },
+  {
+    title: "Transfer Time Calculator",
+    blurb:
+      "How long to move X at Y bandwidth. Bits vs bytes, GB vs GiB, and the protocol overhead that line-rate maths always forgets.",
+    href: "/tools/transfer-time-calculator/",
+    icon: "lucide:gauge",
+    tone: "cyan",
+    status: "live",
+    group: "infra",
+  },
+  {
+    title: "Latency Percentile Calculator",
+    blurb:
+      "Paste response times, get p50 through p99.9 with a histogram — and a warning when your sample is too small for the percentile you asked for.",
+    href: "/tools/percentile-calculator/",
+    icon: "lucide:activity",
+    tone: "green",
+    status: "live",
+    group: "infra",
+  },
+  {
+    title: "Server Capacity Calculator",
+    blurb:
+      "Little's Law sizing: requests/sec × latency → workers you actually need. Includes the Erlang C queue math for what happens near full utilization.",
+    href: "/tools/capacity-calculator/",
+    icon: "lucide:server",
+    tone: "pink",
+    status: "live",
+    group: "infra",
+  },
+
+  // ── Shopify ──
+  {
+    title: "Shopify Webhook HMAC Verifier",
+    blurb:
+      "Check a webhook signature against your client secret, constant-time, in the browser. When it fails, it tells you which of the usual causes it was.",
+    href: "/tools/shopify-hmac-verifier/",
+    icon: "lucide:store",
+    tone: "purple",
+    status: "live",
+    group: "shopify",
+  },
+  {
+    title: "Shopify GID Decoder",
+    blurb:
+      "gid://shopify/Product/123 in, resource type and legacy numeric ID out — or the reverse. Handles the base64-encoded IDs older APIs still return.",
+    href: "/tools/shopify-gid-decoder/",
+    icon: "lucide:shopping-bag",
+    tone: "green",
+    status: "live",
+    group: "shopify",
+  },
+
+  // ── Reference ──
+  {
+    title: "HTTP Status Codes",
+    blurb:
+      "Every 1xx–5xx code with what it means and when to actually use it — including 307 vs 302, 401 vs 403, and the non-standard ones. Filterable.",
+    href: "/tools/http-status-codes/",
+    icon: "lucide:list-ordered",
+    tone: "yellow",
+    status: "live",
+    group: "reference",
+  },
+  {
+    title: "HTTP Headers Cheat Sheet",
+    blurb:
+      "Request and response headers that matter in production — caching, CORS, security, forwarding — each with a real example value. Filterable.",
+    href: "/tools/http-headers/",
+    icon: "lucide:network",
+    tone: "cyan",
+    status: "live",
+    group: "reference",
+  },
+  {
+    title: "Common Ports",
+    blurb:
+      "TCP and UDP ports for web, databases, caches, Docker, Kubernetes and dev servers — each with a practical note on what listens there and why.",
+    href: "/tools/common-ports/",
+    icon: "lucide:plug",
+    tone: "pink",
+    status: "live",
+    group: "reference",
   },
 ];
 

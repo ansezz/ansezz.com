@@ -1,0 +1,704 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import NeoButton from "@/components/neobrutalist/NeoButton.astro";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const PAGE_DESCRIPTION =
+  "Free epoch converter. Turn a Unix timestamp into UTC, local, ISO 8601 and RFC 2822 — or a date back into epoch seconds. Auto-detects ms, runs in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: "Epoch / Unix Timestamp Converter", url: "/tools/epoch-converter/" },
+]);
+
+const presets = [
+  { kind: "now", label: "Now", hint: "The current instant" },
+  {
+    kind: "today-utc",
+    label: "Today 00:00 UTC",
+    hint: "Midnight UTC at the start of today",
+  },
+  { kind: "plus-1d", label: "+1 day", hint: "Add 24 hours to the value above" },
+  {
+    kind: "plus-30d",
+    label: "+30 days",
+    hint: "Add 30 days to the value above",
+  },
+  {
+    kind: "y2038",
+    label: "2038 boundary",
+    hint: "2147483647 — the last second a signed 32-bit time_t can hold",
+  },
+  { kind: "zero", label: "Epoch 0", hint: "1970-01-01T00:00:00Z" },
+];
+
+// Output rows for the timestamp → date card. `copy` adds a copy button.
+const outputRows = [
+  { id: "epoch-out-utc", label: "UTC", copy: false },
+  { id: "epoch-out-local", label: "Your local time", copy: false },
+  { id: "epoch-out-iso", label: "ISO 8601 (UTC)", copy: true },
+  { id: "epoch-out-isolocal", label: "ISO 8601 (local offset)", copy: true },
+  { id: "epoch-out-rfc", label: "RFC 2822", copy: true },
+  { id: "epoch-out-weekday", label: "Day of week", copy: false },
+  { id: "epoch-out-calendar", label: "Day of year / ISO week", copy: false },
+  { id: "epoch-out-normalized", label: "Normalised", copy: false },
+];
+
+const faq = [
+  {
+    q: "How do I know if a timestamp is in seconds or milliseconds?",
+    a: "Count the digits. Right now a seconds timestamp has 10 digits, milliseconds has 13, microseconds 16, and nanoseconds 19. Seconds stay at 10 digits until November 2286, so the digit count is a reliable signal for any timestamp you will realistically meet. This converter applies that rule automatically, and you can override it with the unit dropdown when you know better.",
+  },
+  {
+    q: "Does this epoch converter handle milliseconds and microseconds?",
+    a: "Yes — seconds, milliseconds, microseconds and nanoseconds, detected from the magnitude of the number or forced with the unit dropdown. Microsecond and nanosecond inputs are converted to a JavaScript Date, which only stores whole milliseconds, so sub-millisecond precision is shown in the normalised row but not in the formatted dates.",
+  },
+  {
+    q: "What is the 2038 problem and does it still affect me?",
+    a: "A signed 32-bit time_t can only count to 2147483647, which is 03:14:07 UTC on 19 January 2038. One second later it wraps to negative and the date reads December 1901. Modern 64-bit Linux, macOS and Windows builds are fine, but 32-bit embedded targets, old C libraries, and MySQL's four-byte TIMESTAMP column are not. The bug arrives early for anything that computes far-future dates, like a 20-year certificate expiry.",
+  },
+  {
+    q: "Is a Unix timestamp the same thing as UTC?",
+    a: "Not quite. A Unix timestamp is a count of seconds; UTC is a way of writing a calendar date. The timestamp carries no timezone at all, and it is defined relative to UTC, so converting it to a wall-clock time always requires you to pick a timezone. That is why the same timestamp shows two different clock readings on this page: one in UTC, one in whatever IANA zone your browser reports.",
+  },
+  {
+    q: "Does Unix time account for leap seconds?",
+    a: "No, and that is deliberate. Unix time is defined as days since the epoch multiplied by 86400 plus seconds in the day, so every day is exactly 86400 seconds long even though 27 leap seconds have been inserted into UTC since 1972. Systems either repeat a second or smear it across a day. If you need true elapsed physical time, use a monotonic clock rather than subtracting two epoch timestamps.",
+  },
+  {
+    q: "Is my timestamp data sent to a server?",
+    a: "No. Every conversion on this page runs in your browser using the built-in Date and Intl APIs. There is no request, no logging, and no analytics on the values you type. You can open devtools, watch the network tab, and confirm it — or disconnect from the internet and the page still works.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Epoch / Unix Timestamp Converter",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/epoch-converter/", SITE.URL).href,
+  description: PAGE_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const fieldClass =
+  "w-full border-[3px] border-ink rounded-[4px] bg-paper px-4 py-3 font-mono text-base font-bold shadow-neo-sm focus:outline-none";
+const pillClass =
+  "border-[2px] border-ink rounded-full bg-bg-alt px-3 py-1 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm";
+const copyPillClass =
+  "shrink-0 border-[2px] border-ink rounded-full bg-paper px-2.5 py-0.5 mono text-[9px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm";
+const chunkyButtonClass =
+  "inline-flex items-center justify-center border-[3px] border-ink rounded-[6px] bg-paper px-4 py-2 text-xs font-bold uppercase tracking-wide shadow-neo-sm transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-md";
+const errorClass =
+  "border-[3px] border-ink rounded-[4px] bg-paper px-3 py-2 text-sm font-bold text-pink-deep";
+---
+
+<Page
+  title="Epoch / Unix Timestamp Converter"
+  description={PAGE_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Epoch Converter."
+  intro="Paste a Unix timestamp and read it back as UTC, your local time, ISO 8601, RFC 2822 and plain English — or go the other way and turn a date into epoch seconds. Nothing leaves your browser."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Seconds or milliseconds?
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        The unit is guessed from the magnitude: 10 digits reads as seconds, 13
+        as milliseconds, 16 as microseconds, 19 as nanoseconds. Override it with
+        the dropdown when the guess is wrong.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-16" id="epoch-root">
+    <!-- Live ticker -->
+    <NeoCard tone="yellow" shadow="md" class="mb-10">
+      <div class="flex flex-wrap items-end justify-between gap-5">
+        <div>
+          <p class="mono text-[11px] font-bold tracking-widest uppercase">
+            ▸ Current Unix time
+          </p>
+          <p
+            id="epoch-now-seconds"
+            class="display mt-2 text-4xl leading-none md:text-5xl"
+            aria-live="off"
+          >
+            —
+          </p>
+          <p class="mono mt-2 text-xs opacity-80">
+            <span id="epoch-now-ms">—</span> ms · <span id="epoch-now-iso"
+              >—</span
+            >
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            id="epoch-pause"
+            aria-pressed="false"
+            class={chunkyButtonClass}>Pause</button
+          >
+          <button
+            type="button"
+            data-epoch-copy="epoch-now-seconds"
+            class={chunkyButtonClass}>Copy</button
+          >
+        </div>
+      </div>
+      <p
+        class="mono border-ink mt-4 border-t-[2.5px] pt-3 text-[10px] tracking-widest uppercase opacity-75"
+      >
+        Your browser reports <span id="epoch-tz" class="font-bold">—</span> ·
+        <span id="epoch-offset" class="font-bold">—</span>
+      </p>
+    </NeoCard>
+
+    <!-- Timestamp → date -->
+    <h2 class="heading mb-4 text-xl uppercase">Timestamp → date</h2>
+    <div class="grid items-start gap-6 md:grid-cols-2">
+      <NeoCard tone="paper" shadow="md" class="space-y-4">
+        <div>
+          <label
+            for="epoch-ts-input"
+            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
+          >
+            Unix timestamp
+          </label>
+          <input
+            id="epoch-ts-input"
+            type="text"
+            inputmode="numeric"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="1700000000"
+            class={fieldClass}
+          />
+        </div>
+
+        <div>
+          <label
+            for="epoch-ts-unit"
+            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
+          >
+            Unit
+          </label>
+          <select
+            id="epoch-ts-unit"
+            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-bold focus:outline-none"
+          >
+            <option value="auto">Auto-detect from magnitude</option>
+            <option value="seconds">Seconds</option>
+            <option value="milliseconds">Milliseconds</option>
+            <option value="microseconds">Microseconds</option>
+            <option value="nanoseconds">Nanoseconds</option>
+          </select>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          {
+            presets.map((p) => (
+              <button
+                type="button"
+                data-epoch-preset={p.kind}
+                title={p.hint}
+                class={pillClass}
+              >
+                {p.label}
+              </button>
+            ))
+          }
+        </div>
+
+        <p id="epoch-ts-error" hidden class={errorClass}></p>
+      </NeoCard>
+
+      <NeoCard tone="cyan" shadow="lg" class="space-y-3">
+        <div class="flex items-center justify-between gap-3">
+          <p class="mono text-[11px] font-bold tracking-widest uppercase">
+            ▸ That instant
+          </p>
+          <p
+            id="epoch-out-detected"
+            class="mono text-right text-[10px] font-bold tracking-widest uppercase opacity-75"
+          >
+            —
+          </p>
+        </div>
+
+        <div id="epoch-ts-out" aria-live="polite" class="space-y-2.5">
+          <div class="border-ink border-b-[2.5px] pb-2.5">
+            <p
+              class="mono text-[10px] font-bold tracking-widest uppercase opacity-75"
+            >
+              Relative
+            </p>
+            <p
+              id="epoch-out-relative"
+              class="mt-1 text-lg leading-snug font-bold"
+            >
+              —
+            </p>
+            <p
+              id="epoch-out-relative-exact"
+              class="mono text-[11px] opacity-75"
+            >
+              —
+            </p>
+          </div>
+
+          {
+            outputRows.map((row) => (
+              <div class="border-ink border-b-[2.5px] pb-2.5 last:border-b-0 last:pb-0">
+                <div class="flex items-center justify-between gap-3">
+                  <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-75">
+                    {row.label}
+                  </p>
+                  {row.copy && (
+                    <button
+                      type="button"
+                      data-epoch-copy={row.id}
+                      class={copyPillClass}
+                    >
+                      Copy
+                    </button>
+                  )}
+                </div>
+                <p
+                  id={row.id}
+                  class="mt-1 font-mono text-sm font-bold break-all"
+                >
+                  —
+                </p>
+              </div>
+            ))
+          }
+        </div>
+      </NeoCard>
+    </div>
+
+    <!-- Date → timestamp -->
+    <h2 class="heading mt-12 mb-4 text-xl uppercase">Date → timestamp</h2>
+    <div class="grid items-start gap-6 md:grid-cols-2">
+      <NeoCard tone="paper" shadow="md" class="space-y-4">
+        <div>
+          <label
+            for="epoch-dt-input"
+            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
+          >
+            Date and time
+          </label>
+          <input
+            id="epoch-dt-input"
+            type="datetime-local"
+            step="1"
+            class={fieldClass}
+          />
+        </div>
+
+        <div>
+          <label
+            for="epoch-dt-zone"
+            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
+          >
+            Interpret that clock reading as
+          </label>
+          <select
+            id="epoch-dt-zone"
+            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-bold focus:outline-none"
+          >
+            <option value="local">Local time (your timezone)</option>
+            <option value="utc">UTC</option>
+          </select>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button type="button" id="epoch-dt-now" class={chunkyButtonClass}>
+            Use current time
+          </button>
+          <button type="button" id="epoch-dt-send" class={chunkyButtonClass}>
+            ↑ Send to converter
+          </button>
+        </div>
+
+        <p id="epoch-dt-error" hidden class={errorClass}></p>
+      </NeoCard>
+
+      <NeoCard tone="green" shadow="lg" class="space-y-3">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Epoch value
+        </p>
+        <div id="epoch-dt-out" aria-live="polite" class="space-y-2.5">
+          <div class="border-ink border-b-[2.5px] pb-2.5">
+            <div class="flex items-center justify-between gap-3">
+              <p
+                class="mono text-[10px] font-bold tracking-widest uppercase opacity-75"
+              >
+                Seconds
+              </p>
+              <button
+                type="button"
+                data-epoch-copy="epoch-dt-seconds"
+                class={copyPillClass}>Copy</button
+              >
+            </div>
+            <p
+              id="epoch-dt-seconds"
+              class="display mt-1 text-3xl leading-none break-all"
+            >
+              —
+            </p>
+          </div>
+          <div class="border-ink border-b-[2.5px] pb-2.5">
+            <div class="flex items-center justify-between gap-3">
+              <p
+                class="mono text-[10px] font-bold tracking-widest uppercase opacity-75"
+              >
+                Milliseconds
+              </p>
+              <button
+                type="button"
+                data-epoch-copy="epoch-dt-ms"
+                class={copyPillClass}>Copy</button
+              >
+            </div>
+            <p
+              id="epoch-dt-ms"
+              class="mt-1 font-mono text-sm font-bold break-all"
+            >
+              —
+            </p>
+          </div>
+          <div class="border-ink border-b-[2.5px] pb-2.5">
+            <div class="flex items-center justify-between gap-3">
+              <p
+                class="mono text-[10px] font-bold tracking-widest uppercase opacity-75"
+              >
+                ISO 8601 (UTC)
+              </p>
+              <button
+                type="button"
+                data-epoch-copy="epoch-dt-iso"
+                class={copyPillClass}>Copy</button
+              >
+            </div>
+            <p
+              id="epoch-dt-iso"
+              class="mt-1 font-mono text-sm font-bold break-all"
+            >
+              —
+            </p>
+          </div>
+          <div>
+            <p
+              class="mono text-[10px] font-bold tracking-widest uppercase opacity-75"
+            >
+              Same instant, other side
+            </p>
+            <p id="epoch-dt-echo" class="mt-1 text-sm font-bold">—</p>
+          </div>
+        </div>
+      </NeoCard>
+    </div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-4 text-2xl uppercase">
+      Seconds or milliseconds — the bug that eats a sprint
+    </h2>
+    <div class="space-y-4 text-base leading-relaxed">
+      <p>
+        Unix time is one number: how many seconds have elapsed since
+        1970-01-01T00:00:00Z, ignoring leap seconds. The trouble is that half
+        the ecosystem decided seconds were too coarse.
+        <code class="mono">date +%s</code>, <code class="mono">time()</code> in C
+        and PHP, and Postgres <code class="mono">EXTRACT(EPOCH FROM ts)</code> give
+        you seconds. <code class="mono">Date.now()</code> in JavaScript and <code
+          class="mono">System.currentTimeMillis()</code
+        > in Java give you milliseconds. Go's <code class="mono"
+          >UnixNano()</code
+        > and Prometheus give you nanoseconds. Nothing in the value says which.
+      </p>
+      <p>
+        So the classic failure is silent: pass milliseconds to a seconds API and
+        your record lands in the year 55,840; pass seconds to a milliseconds API
+        and every row in your table says 20 January 1970. Neither throws. Both
+        pass code review. You find out when a customer asks why their invoice is
+        dated before the moon landing.
+      </p>
+      <p>
+        The fix is boring and it works: name the variable
+        <code class="mono">expiresAtMs</code>, not
+        <code class="mono">expiresAt</code>. Put the unit in the column name,
+        the JSON key, and the function signature. This converter counts digits
+        for you, but a digit count is a guess — your schema shouldn't need one.
+      </p>
+    </div>
+
+    <ComparisonTable
+      class="mt-7"
+      columns={[
+        { label: "Seconds", tone: "yellow" },
+        { label: "Millis", tone: "cyan" },
+        { label: "Micros", tone: "green" },
+        { label: "Nanos", tone: "pink" },
+      ]}
+      rows={[
+        { label: "Digits today", cells: ["10", "13", "16", "19"] },
+        {
+          label: "Typical source",
+          cells: ["date +%s", "Date.now()", "time.time_ns()/1e3", "UnixNano()"],
+        },
+        {
+          label: "1700000000 means",
+          cells: ["2023-11-14", "1970-01-20", "1970-01-01", "1970-01-01"],
+        },
+        {
+          label: "Fits in int32 until",
+          cells: ["2038-01-19", "1970-01-25", "1970-01-01", "1970-01-01"],
+        },
+      ]}
+    />
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      2038 is an integer overflow, not a calendar quirk
+    </h2>
+    <div class="space-y-4 text-base leading-relaxed">
+      <p>
+        Historic C implementations typed <code class="mono">time_t</code> as a signed
+        32-bit integer. The largest value it holds is 2,147,483,647 — which as a Unix
+        timestamp is 03:14:07 UTC on 19 January 2038. Add one second and the sign
+        bit flips: the value becomes −2,147,483,648 and the date reads 13 December
+        1901. Nothing crashes. Sorting inverts, TTLs go negative, and cache entries
+        look infinitely stale.
+      </p>
+      <p>
+        Y2K was a display problem — two digits instead of four. This is an
+        arithmetic one, which makes it harder to paper over. 64-bit builds of
+        Linux, macOS and Windows already use a 64-bit
+        <code class="mono">time_t</code> and are fine for the next 292 billion years.
+        What is not fine: 32-bit embedded firmware, older glibc without
+        <code class="mono">_TIME_BITS=64</code>, and MySQL's four-byte
+        <code class="mono">TIMESTAMP</code> column, whose documented range stops dead
+        at 2038-01-19 03:14:07 UTC. Use
+        <code class="mono">DATETIME</code> or <code class="mono">BIGINT</code> there.
+      </p>
+      <p>
+        The deadline is earlier than 2038 for anything that projects forward. A
+        20-year certificate, a mortgage amortisation table, or a
+        <code class="mono">now + 15 years</code> retention policy overflows today.
+        Click the 2038 preset above and step past it with +1 day to see where the
+        boundary sits.
+      </p>
+    </div>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      Store UTC, render local — never the reverse
+    </h2>
+    <div class="space-y-4 text-base leading-relaxed">
+      <p>
+        A Unix timestamp has no timezone. That is its best property: it names an
+        instant, and the timezone is purely a rendering decision made at the
+        edge. Store epoch integers or <code class="mono">timestamptz</code>, and
+        convert once, in the UI, using the viewer's IANA zone — which is what
+        the "your local time" row above does with
+        <code class="mono"
+          >Intl.DateTimeFormat().resolvedOptions().timeZone</code
+        >.
+      </p>
+      <p>
+        The moment you store wall-clock strings instead, DST eats you. On the
+        spring-forward night one local hour does not exist; on the fall-back
+        night one local hour happens twice. "02:30" is either impossible or
+        ambiguous, and no amount of parsing fixes a value that was never unique.
+        There is one exception worth knowing: for <em>future</em> events where a human
+        picked the wall-clock time ("stand-up at 09:00 in Paris"), store the local
+        time plus the IANA zone id — not the UTC instant and not a fixed <code
+          class="mono">+01:00</code
+        > offset. Governments move DST rules, and when they do, the meeting should
+        follow the clock, not the physics.
+      </p>
+    </div>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      Unix time skips leap seconds on purpose
+    </h2>
+    <div class="space-y-4 text-base leading-relaxed">
+      <p>
+        POSIX defines a timestamp as <code class="mono"
+          >days_since_epoch × 86400 + seconds_of_day</code
+        >. Every day is exactly 86,400 seconds, which means Unix time is not a
+        count of physical seconds elapsed — 27 leap seconds have been inserted
+        into UTC since 1972 and Unix time contains none of them. During a leap
+        second a system either repeats a timestamp or, more commonly now, smears
+        the extra second across a 24-hour window (Google and AWS both do this on
+        their public NTP).
+      </p>
+      <p>
+        The practical consequence: subtracting two epoch timestamps gives you
+        calendar elapsed time, not true elapsed time, and it can go backwards
+        when NTP steps the clock. If you are measuring a duration — request
+        latency, a timeout, a rate-limit window — use a monotonic clock:
+        <code class="mono">performance.now()</code>,
+        <code class="mono">CLOCK_MONOTONIC</code>, or
+        <code class="mono">time.monotonic()</code>. Save epoch timestamps for
+        the thing they are good at: naming an instant that two machines can
+        agree on.
+      </p>
+    </div>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      What this converter actually does
+    </h2>
+    <div class="space-y-4 text-base leading-relaxed">
+      <p>
+        Digits in, unit inferred by magnitude, multiplied into milliseconds,
+        handed to a <code class="mono">Date</code>, then formatted with
+        <code class="mono">Intl.DateTimeFormat</code> for UTC and for your detected
+        zone, and <code class="mono">Intl.RelativeTimeFormat</code> for the "3 hours
+        ago" line. ISO 8601 and RFC 2822 are built by hand so the output is stable
+        rather than locale-dependent. Two limits are worth knowing: a JavaScript <code
+          class="mono">Date</code
+        > tops out at ±8.64e15 ms (about ±273,790 years around 1970), and it stores
+        whole milliseconds — so microsecond and nanosecond input keeps its precision
+        in the normalised row but not in the formatted dates. No request is made at
+        any point; unplug the network and the page still converts.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions people ask</h2>
+    <div class="space-y-4">
+      {
+        faq.map((item) => (
+          <div class="border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px] p-5">
+            <h3 class="heading mb-2 text-lg leading-tight uppercase">
+              {item.q}
+            </h3>
+            <p class="text-sm leading-relaxed opacity-90">{item.a}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Related</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/tools/cron-explainer/"
+          class="h-full"
+        >
+          <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+            ▸ Tool
+          </p>
+          <p class="heading text-base uppercase">Cron Explainer</p>
+          <p class="mt-2 text-sm opacity-80">
+            The other half of scheduling — read a 5-field cron expression in
+            plain English.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/tools/jwt-decoder/"
+          class="h-full"
+        >
+          <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+            ▸ Tool
+          </p>
+          <p class="heading text-base uppercase">JWT Decoder</p>
+          <p class="mt-2 text-sm opacity-80">
+            <code class="mono">exp</code>, <code class="mono">iat</code> and
+            <code class="mono">nbf</code> are epoch seconds — decode a token and see
+            them as dates.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/logging-vs-monitoring/"
+          class="h-full"
+        >
+          <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+            ▸ Blog
+          </p>
+          <p class="heading text-base uppercase">Logging vs Monitoring</p>
+          <p class="mt-2 text-sm opacity-80">
+            Where these timestamps end up, and why clock skew across services
+            ruins a correlation.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/rate-limiting-vs-throttling/"
+          class="h-full"
+        >
+          <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+            ▸ Blog
+          </p>
+          <p class="heading text-base uppercase">Rate Limiting vs Throttling</p>
+          <p class="mt-2 text-sm opacity-80">
+            Fixed and sliding windows are computed straight off epoch seconds.
+          </p>
+        </NeoCard>
+      </li>
+    </ul>
+
+    <div class="mt-8">
+      <NeoButton href="/tools/" variant="secondary" size="sm">
+        ← All free tools
+      </NeoButton>
+    </div>
+  </section>
+</Page>
+
+<style>
+  /* Inline code only gets prose styling inside articles — give it the same
+     neobrutalist treatment here. */
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--color-bg-alt);
+    border: 1.5px solid var(--color-ink);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    overflow-wrap: anywhere;
+  }
+</style>
+
+<script>
+  import "@/scripts/epoch-converter";
+</script>

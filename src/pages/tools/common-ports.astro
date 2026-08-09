@@ -1,0 +1,2281 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const PAGE_TITLE = "Common Ports Reference";
+const PAGE_DESCRIPTION =
+  "Free TCP and UDP port reference: web, databases, caches, Docker, Kubernetes, mail and dev servers, each with a practical note. Filter it all in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: PAGE_TITLE, url: "/tools/common-ports/" },
+]);
+
+type Flag = "never-public" | "legacy" | "local";
+
+interface PortRow {
+  /** May list several related ports, separated by a middot. */
+  port: string;
+  proto: "TCP" | "UDP" | "TCP/UDP";
+  service: string;
+  note: string;
+  flag?: Flag;
+  /** Extra search terms for the filter box; never rendered. */
+  keywords?: string;
+}
+
+const FLAG_LABEL: Record<Flag, string> = {
+  "never-public": "Never public",
+  legacy: "Legacy",
+  local: "Local only",
+};
+
+const FLAG_CLASS: Record<Flag, string> = {
+  "never-public": "bg-pink",
+  legacy: "bg-yellow",
+  local: "bg-bg-alt",
+};
+
+const WEB: PortRow[] = [
+  {
+    port: "80",
+    proto: "TCP",
+    service: "HTTP",
+    note: "Plaintext. Its only honest job now is a 301 to 443 — an API that still serves real responses here is handing bearer tokens to whoever owns the café Wi-Fi.",
+    keywords: "http web plaintext redirect nginx apache",
+  },
+  {
+    port: "443",
+    proto: "TCP/UDP",
+    service: "HTTPS · HTTP/3 (QUIC)",
+    note: "TLS over TCP, and QUIC over UDP for HTTP/3. When HTTP/3 silently never negotiates, it is almost always UDP/443 dropped by a firewall someone only ever wrote a TCP rule for.",
+    keywords: "https tls ssl quic http3 web secure",
+  },
+  {
+    port: "8080",
+    proto: "TCP",
+    service: "HTTP alternate",
+    note: "Tomcat, Spring Boot, Jenkins, cAdvisor, Weaviate and the Traefik dashboard all want it. The most over-subscribed number on any developer laptop.",
+    keywords: "tomcat spring jenkins traefik proxy alternate cadvisor",
+  },
+  {
+    port: "8443",
+    proto: "TCP",
+    service: "HTTPS alternate",
+    note: "The TLS twin of 8080. Unprivileged, so a JVM or an ingress controller can bind it without root — which is exactly why it exists.",
+    keywords: "https tls alternate ingress tomcat appliance",
+  },
+  {
+    port: "3128",
+    proto: "TCP",
+    service: "Squid forward proxy",
+    note: "The classic corporate egress proxy. If a container resolves DNS fine but every outbound request hangs, check whether HTTPS_PROXY should be pointing here.",
+    keywords: "squid proxy egress corporate http_proxy forward",
+  },
+  {
+    port: "1080",
+    proto: "TCP",
+    service: "SOCKS proxy",
+    note: "SOCKS5. ssh -D 1080 user@bastion gives you one for free, and it is the cheapest way to reach a private subnet from a laptop without provisioning a VPN.",
+    keywords: "socks socks5 tunnel ssh dynamic bastion",
+  },
+  {
+    port: "2019",
+    proto: "TCP",
+    service: "Caddy admin API",
+    note: "Loopback by default, and it must stay there: anyone who reaches it can rewrite the entire config and get certificates issued for any hostname you control.",
+    flag: "local",
+    keywords: "caddy admin config api reverse proxy",
+  },
+];
+
+const DATABASES: PortRow[] = [
+  {
+    port: "3306",
+    proto: "TCP",
+    service: "MySQL · MariaDB",
+    note: "The classic protocol. Exposed to the internet it gets credential-stuffed continuously — bind it to a private address and let the app reach it inside the VPC.",
+    flag: "never-public",
+    keywords: "mysql mariadb percona sql database rds",
+  },
+  {
+    port: "33060",
+    proto: "TCP",
+    service: "MySQL X Protocol",
+    note: "MySQL 8's document protocol, enabled by default. People firewall 3306, forget this exists, and leave the same server reachable through the side door.",
+    flag: "never-public",
+    keywords: "mysqlx document protocol mysql shell 8",
+  },
+  {
+    port: "5432",
+    proto: "TCP",
+    service: "PostgreSQL",
+    note: "listen_addresses and pg_hba.conf are two independent gates. Opening the port without a matching pg_hba line only changes which error you get.",
+    flag: "never-public",
+    keywords: "postgres postgresql pgsql database supabase neon",
+  },
+  {
+    port: "6432",
+    proto: "TCP",
+    service: "PgBouncer",
+    note: "The pooler that fronts 5432. Past a few hundred clients your app should talk to this instead — and remember transaction mode breaks session state and server-side prepared statements.",
+    keywords: "pgbouncer pooler postgres connection pool pgcat",
+  },
+  {
+    port: "1433",
+    proto: "TCP",
+    service: "Microsoft SQL Server",
+    note: "The default instance. Named instances get dynamic ports and are found through 1434/UDP, which is why so many SQL Server firewall rules are subtly wrong.",
+    flag: "never-public",
+    keywords: "mssql sqlserver tds azure sql database",
+  },
+  {
+    port: "1434",
+    proto: "UDP",
+    service: "SQL Server Browser",
+    note: "Instance discovery, and a historic amplification vector. Pin your named instances to static ports and you can switch it off entirely.",
+    keywords: "mssql browser discovery amplification named instance",
+  },
+  {
+    port: "1521",
+    proto: "TCP",
+    service: "Oracle TNS listener",
+    note: "The listener, not the database. It can redirect a client to another port entirely, so one firewall rule for 1521 is frequently not enough.",
+    flag: "never-public",
+    keywords: "oracle tns listener database sqlnet",
+  },
+  {
+    port: "27017",
+    proto: "TCP",
+    service: "MongoDB",
+    note: "Binds localhost by default since 3.6 — the ransom-note era came from builds that did not. Verify with ss rather than trusting whatever your distro packaged.",
+    flag: "never-public",
+    keywords: "mongo mongodb nosql document atlas",
+  },
+  {
+    port: "27018 · 27019",
+    proto: "TCP",
+    service: "MongoDB shard · config server",
+    note: "Shard members and config servers in a sharded cluster. Cluster-internal traffic only; nothing outside should ever dial these.",
+    keywords: "mongodb sharding config replica set mongos",
+  },
+  {
+    port: "9042",
+    proto: "TCP",
+    service: "Cassandra · ScyllaDB (CQL)",
+    note: "The client protocol. Inter-node gossip runs on 7000, or 7001 with TLS, and it has to be open between nodes or the ring never forms.",
+    keywords: "cassandra scylla cql gossip ring datastax",
+  },
+  {
+    port: "8123 · 9000",
+    proto: "TCP",
+    service: "ClickHouse HTTP · native",
+    note: "9000 is the fast native protocol, and it collides with php-fpm, MinIO and Portainer. On a shared box, somebody is moving.",
+    keywords: "clickhouse olap analytics native http columnar",
+  },
+  {
+    port: "9200 · 9300",
+    proto: "TCP",
+    service: "Elasticsearch · OpenSearch",
+    note: "9200 is the REST API, 9300 the inter-node transport. An open, unauthenticated 9200 is still one of the most-indexed data leaks on Shodan.",
+    flag: "never-public",
+    keywords: "elastic elasticsearch opensearch search elk lucene index",
+  },
+  {
+    port: "7687 · 7474",
+    proto: "TCP",
+    service: "Neo4j Bolt · HTTP",
+    note: "Bolt is the binary driver protocol, 7474 the browser UI. Change the default password before that container lives anywhere but your laptop.",
+    keywords: "neo4j bolt graph cypher database",
+  },
+  {
+    port: "6333 · 6334",
+    proto: "TCP",
+    service: "Qdrant REST · gRPC",
+    note: "Vector store. The API key is opt-in, so an unset key means anyone who reaches 6333 can read — and quietly rewrite — your embeddings.",
+    keywords: "qdrant vector embeddings rag similarity search",
+  },
+  {
+    port: "19530",
+    proto: "TCP",
+    service: "Milvus",
+    note: "The gRPC endpoint for the vector database; 9091 serves metrics and health, which collides with the Prometheus Pushgateway.",
+    keywords: "milvus vector embeddings rag ann index",
+  },
+];
+
+const CACHES: PortRow[] = [
+  {
+    port: "6379",
+    proto: "TCP",
+    service: "Redis · Valkey",
+    note: "The most abused open port on the internet. An unauthenticated instance is a write primitive: CONFIG SET dir, SAVE, and your authorized_keys file belongs to someone else.",
+    flag: "never-public",
+    keywords: "redis valkey cache kv memory elasticache session",
+  },
+  {
+    port: "26379",
+    proto: "TCP",
+    service: "Redis Sentinel",
+    note: "Failover coordination. Clients ask Sentinel who the master is, so when this is unreachable your app fails over to nothing at all.",
+    keywords: "redis sentinel failover ha master replica",
+  },
+  {
+    port: "16379",
+    proto: "TCP",
+    service: "Redis cluster bus",
+    note: "Always the data port plus 10000. Open 6379 between nodes but not 16379 and the cluster never finishes forming — the classic first-cluster bug.",
+    keywords: "redis cluster bus gossip shard slots",
+  },
+  {
+    port: "11211",
+    proto: "TCP/UDP",
+    service: "Memcached",
+    note: "No authentication in the default build. Its UDP listener drove the 1.3 Tbps amplification attacks of 2018 and now ships disabled — check anything older than that.",
+    flag: "never-public",
+    keywords: "memcached cache amplification ddos udp",
+  },
+  {
+    port: "5672 · 5671",
+    proto: "TCP",
+    service: "RabbitMQ AMQP · AMQPS",
+    note: "5671 is the TLS listener. Publisher confirms and consumer acks are what make delivery reliable — an open port only proves the socket works.",
+    keywords: "rabbitmq amqp queue broker messaging celery",
+  },
+  {
+    port: "15672",
+    proto: "TCP",
+    service: "RabbitMQ management UI",
+    note: "guest/guest is restricted to loopback, but a reverse proxy on the same host makes every request look like loopback. That is how an exposed dashboard becomes an open one.",
+    flag: "never-public",
+    keywords: "rabbitmq management dashboard ui guest plugin",
+  },
+  {
+    port: "15692",
+    proto: "TCP",
+    service: "RabbitMQ Prometheus metrics",
+    note: "From the rabbitmq_prometheus plugin. Scrape this instead of polling the management HTTP API, which gets expensive on a vhost with thousands of queues.",
+    keywords: "rabbitmq prometheus metrics scrape exporter",
+  },
+  {
+    port: "25672 · 4369",
+    proto: "TCP",
+    service: "Erlang distribution · epmd",
+    note: "Cluster traffic and the Erlang port mapper. A reachable epmd plus a guessable cookie is remote code execution on the node — keep both cluster-internal.",
+    flag: "never-public",
+    keywords: "rabbitmq erlang epmd cookie cluster elixir beam",
+  },
+  {
+    port: "9092",
+    proto: "TCP",
+    service: "Kafka broker",
+    note: "The advertised.listeners value matters more than the port number: clients are told where to reconnect, and inside Docker that answer is usually wrong.",
+    keywords: "kafka broker redpanda streaming bootstrap servers",
+  },
+  {
+    port: "9093",
+    proto: "TCP",
+    service: "Kafka TLS · KRaft controller",
+    note: "Kafka's second listener by convention, and the KRaft controller quorum port. Also Alertmanager's default — do not put both on one host without thinking about it.",
+    keywords: "kafka kraft controller tls sasl listener",
+  },
+  {
+    port: "2181",
+    proto: "TCP",
+    service: "ZooKeeper",
+    note: "Client port for pre-KRaft Kafka, HBase and friends. Peer traffic is 2888 and leader election 3888, and all three need to be open between ensemble members.",
+    keywords: "zookeeper ensemble quorum kafka hbase",
+  },
+  {
+    port: "4222 · 6222 · 8222",
+    proto: "TCP",
+    service: "NATS client · route · monitoring",
+    note: "8222 is an unauthenticated monitoring endpoint listing connections and subjects. Useful internally, embarrassing publicly.",
+    keywords: "nats jetstream messaging monitor cluster",
+  },
+  {
+    port: "1883 · 8883",
+    proto: "TCP",
+    service: "MQTT · MQTT over TLS",
+    note: "1883 is plaintext. Mosquitto allowed anonymous publish by default for years, which is how strangers ended up toggling other people's devices.",
+    keywords: "mqtt mosquitto iot broker emqx telemetry",
+  },
+];
+
+const CONTAINERS: PortRow[] = [
+  {
+    port: "2375",
+    proto: "TCP",
+    service: "Docker daemon (plaintext)",
+    note: "Unauthenticated root on the host, dressed up as an HTTP API. One request starts a container with the host filesystem mounted. Bots find a fresh one within minutes.",
+    flag: "never-public",
+    keywords: "docker daemon api socket tcp rce cryptominer",
+  },
+  {
+    port: "2376",
+    proto: "TCP",
+    service: "Docker daemon (TLS)",
+    note: "The same API with mutual TLS. Correct if you genuinely need remote access — but DOCKER_HOST=ssh://host is simpler and has one fewer certificate to expire.",
+    keywords: "docker tls remote daemon context mtls",
+  },
+  {
+    port: "2377",
+    proto: "TCP",
+    service: "Swarm cluster management",
+    note: "The manager-to-manager control plane. Open it between managers only, never to workers and never to the internet.",
+    keywords: "docker swarm manager cluster raft",
+  },
+  {
+    port: "7946",
+    proto: "TCP/UDP",
+    service: "Swarm node gossip",
+    note: "Both protocols, both directions. Half-open here is the classic cause of a Swarm service that reports as running but never receives a single request.",
+    keywords: "docker swarm gossip serf overlay membership",
+  },
+  {
+    port: "4789",
+    proto: "UDP",
+    service: "VXLAN overlay data plane",
+    note: "The tunnel carrying container-to-container traffic between hosts. Cloud firewalls written for TCP only will break every overlay network silently.",
+    keywords: "vxlan overlay docker swarm tunnel encapsulation",
+  },
+  {
+    port: "6443",
+    proto: "TCP",
+    service: "Kubernetes API server",
+    note: "The entire cluster behind one port. kubeadm and k3s both default here; some managed distributions front it on 443 instead.",
+    keywords: "kubernetes k8s apiserver kubectl k3s control plane",
+  },
+  {
+    port: "10250",
+    proto: "TCP",
+    service: "kubelet API",
+    note: "Logs and exec for every pod on that node. Left with anonymous auth enabled it has been a full cluster takeover more than once — control plane and node-internal only.",
+    flag: "never-public",
+    keywords: "kubelet kubernetes exec logs node metrics anonymous",
+  },
+  {
+    port: "10256 · 10257 · 10259",
+    proto: "TCP",
+    service: "kube-proxy · controller-manager · scheduler",
+    note: "Health and metrics endpoints for the control plane components. Worth scraping from inside the cluster, never worth exposing outside it.",
+    keywords: "kubernetes control plane healthz metrics kube-proxy",
+  },
+  {
+    port: "2379 · 2380",
+    proto: "TCP",
+    service: "etcd client · peer",
+    note: "etcd holds every Secret in the cluster, base64-encoded rather than encrypted unless you enabled encryption at rest. Read access here is total compromise.",
+    flag: "never-public",
+    keywords: "etcd kubernetes secrets quorum raft backup",
+  },
+  {
+    port: "30000–32767",
+    proto: "TCP/UDP",
+    service: "Kubernetes NodePort range",
+    note: "Every NodePort service opens its port on every node. Fine for a demo, a liability in a cluster with public node IPs — use an ingress or a LoadBalancer.",
+    keywords: "nodeport kubernetes service range externaltrafficpolicy",
+  },
+  {
+    port: "8472",
+    proto: "UDP",
+    service: "Flannel VXLAN",
+    note: "Flannel's tunnel port and the k3s default. Same failure mode as 4789: pod-to-pod traffic across nodes disappears without a single error message.",
+    keywords: "flannel vxlan k3s cni overlay pod network",
+  },
+  {
+    port: "5000",
+    proto: "TCP",
+    service: "Docker registry (distribution)",
+    note: "Serves plain HTTP out of the box, so clients refuse it until you add TLS or an insecure-registries entry. On macOS it also fights AirPlay Receiver.",
+    keywords: "registry distribution docker push pull harbor airplay",
+  },
+];
+
+const OBSERVABILITY: PortRow[] = [
+  {
+    port: "9090",
+    proto: "TCP",
+    service: "Prometheus",
+    note: "UI and query API on one port, unauthenticated by design — it expects a proxy in front. Your metrics are an org chart and a topology map for anyone who reads them.",
+    flag: "never-public",
+    keywords: "prometheus metrics promql tsdb scrape monitoring",
+  },
+  {
+    port: "9091",
+    proto: "TCP",
+    service: "Pushgateway",
+    note: "For batch jobs that die before a scrape can happen. Every other use is a mistake: it never expires series and becomes a graveyard of stale metrics.",
+    keywords: "prometheus pushgateway batch cron metrics",
+  },
+  {
+    port: "9093",
+    proto: "TCP",
+    service: "Alertmanager",
+    note: "Also Kafka's usual TLS listener, so read the process name before you conclude anything. Peering between Alertmanager replicas is 9094, TCP and UDP.",
+    keywords: "alertmanager alerts prometheus silence notification",
+  },
+  {
+    port: "9100",
+    proto: "TCP",
+    service: "node_exporter",
+    note: "Host metrics. The informal exporter range starts here and climbs: 9104 for MySQL, 9121 for Redis, 9187 for Postgres.",
+    keywords: "node exporter prometheus host metrics cpu disk",
+  },
+  {
+    port: "3000",
+    proto: "TCP",
+    service: "Grafana",
+    note: "Shares its number with roughly every JavaScript dev server ever written. On a box that also runs a Node app, one of the two is moving to 3001.",
+    keywords: "grafana dashboards ui visualization",
+  },
+  {
+    port: "3100",
+    proto: "TCP",
+    service: "Loki",
+    note: "Push and query API for logs. Multi-tenancy is a header, not a port, so an open 3100 reads every tenant you have.",
+    keywords: "loki logs grafana promtail alloy",
+  },
+  {
+    port: "3200",
+    proto: "TCP",
+    service: "Tempo",
+    note: "The query API for traces. Ingest is separate and usually OTLP on 4317 or 4318 — that is the half people forget to open.",
+    keywords: "tempo traces grafana tracing spans",
+  },
+  {
+    port: "4317 · 4318",
+    proto: "TCP",
+    service: "OTLP gRPC · HTTP",
+    note: "The OpenTelemetry collector's two receivers. 4317 is gRPC, 4318 is HTTP/protobuf; sending one to the other gives you a socket that opens and then says nothing useful.",
+    keywords: "opentelemetry otel collector otlp traces metrics grpc",
+  },
+  {
+    port: "16686",
+    proto: "TCP",
+    service: "Jaeger UI",
+    note: "The trace query UI. Modern deployments ingest over OTLP on 4317/4318 rather than Jaeger's own legacy collector ports.",
+    keywords: "jaeger tracing ui query spans",
+  },
+  {
+    port: "9411",
+    proto: "TCP",
+    service: "Zipkin",
+    note: "Still the fallback exporter in plenty of Spring and Micrometer stacks. Most collectors accept the Zipkin format here purely for compatibility.",
+    keywords: "zipkin tracing spring brave micrometer",
+  },
+  {
+    port: "8125",
+    proto: "UDP",
+    service: "StatsD",
+    note: "Fire and forget. Lost packets are invisible, which is precisely the trade you accepted in exchange for never blocking the request path.",
+    keywords: "statsd datadog dogstatsd metrics udp counters",
+  },
+  {
+    port: "24224",
+    proto: "TCP/UDP",
+    service: "Fluentd · Fluent Bit forward",
+    note: "The forward protocol between log agents and aggregators. Docker's fluentd log driver targets it — and blocks the container when the aggregator is down.",
+    keywords: "fluentd fluentbit forward logs docker driver",
+  },
+  {
+    port: "5601",
+    proto: "TCP",
+    service: "Kibana · OpenSearch Dashboards",
+    note: "The window onto 9200. Locking down Kibana while leaving Elasticsearch itself open is the ELK equivalent of bolting the door and opening the window.",
+    keywords: "kibana elk dashboards opensearch discover",
+  },
+  {
+    port: "514",
+    proto: "UDP",
+    service: "syslog",
+    note: "Unauthenticated, unencrypted and lossy — anyone who can reach it can forge log lines. Use 6514 for syslog over TLS when the data has to be trustworthy.",
+    flag: "legacy",
+    keywords: "syslog rsyslog syslog-ng logs udp facility",
+  },
+];
+
+const MAIL: PortRow[] = [
+  {
+    port: "25",
+    proto: "TCP",
+    service: "SMTP relay (MTA to MTA)",
+    note: "Server-to-server delivery. Every major cloud blocks outbound 25 by default to fight spam, which is why your app's mail silently vanished on a fresh VM.",
+    keywords: "smtp mail relay mx outbound blocked postfix",
+  },
+  {
+    port: "587",
+    proto: "TCP",
+    service: "SMTP submission (STARTTLS)",
+    note: "Where an application should submit authenticated mail. STARTTLS starts in plaintext, so the client has to require the upgrade rather than merely accept it.",
+    keywords: "smtp submission starttls mail send auth",
+  },
+  {
+    port: "465",
+    proto: "TCP",
+    service: "SMTPS (implicit TLS)",
+    note: "Deprecated for a decade, then formally recommended again by RFC 8314. TLS from the first byte with nothing to downgrade — prefer it when the provider offers both.",
+    keywords: "smtps implicit tls 465 mail ssl",
+  },
+  {
+    port: "2525",
+    proto: "TCP",
+    service: "SMTP submission (alternate)",
+    note: "Not a standard, just a convention. SendGrid, Mailgun and Postmark listen here because so many networks block 25 and some block 587 too.",
+    keywords: "smtp alternate sendgrid mailgun postmark ses",
+  },
+  {
+    port: "143 · 993",
+    proto: "TCP",
+    service: "IMAP · IMAPS",
+    note: "993 is implicit TLS and the only one worth enabling. 143 with STARTTLS exists mostly for clients that stopped being updated in 2009.",
+    keywords: "imap imaps mail inbox dovecot sync",
+  },
+  {
+    port: "110 · 995",
+    proto: "TCP",
+    service: "POP3 · POP3S",
+    note: "POP3 downloads and forgets. If something still needs it, give it 995 — plaintext 110 hands credentials to the network on every poll.",
+    flag: "legacy",
+    keywords: "pop3 pop3s mail download legacy",
+  },
+  {
+    port: "1025 · 8025",
+    proto: "TCP",
+    service: "Mailpit · MailHog SMTP + UI",
+    note: "Local mail traps for development: point the app at 1025 and read what it tried to send at 8025. Nothing leaves the machine, which is the point.",
+    flag: "local",
+    keywords: "mailpit mailhog dev smtp catcher testing",
+  },
+];
+
+const REMOTE: PortRow[] = [
+  {
+    port: "22",
+    proto: "TCP",
+    service: "SSH · SFTP · SCP",
+    note: "Moving it to 2222 reduces log noise, not risk. Keys only, PasswordAuthentication no, and put it behind a bastion or a VPN if the host is anywhere public.",
+    keywords: "ssh sftp scp openssh bastion tunnel port forward",
+  },
+  {
+    port: "3389",
+    proto: "TCP/UDP",
+    service: "RDP",
+    note: "The most common ransomware entry point there is. This is not a rule to be casual about: gateway or VPN, never a raw public listener.",
+    flag: "never-public",
+    keywords: "rdp remote desktop windows terminal services",
+  },
+  {
+    port: "5900",
+    proto: "TCP",
+    service: "VNC",
+    note: "5900 plus the display number, so :1 is 5901. The protocol's own password is capped at eight characters — tunnel it over SSH instead of trusting it.",
+    flag: "never-public",
+    keywords: "vnc remote desktop screen sharing display",
+  },
+  {
+    port: "445",
+    proto: "TCP",
+    service: "SMB",
+    note: "File sharing, and the port EternalBlue and WannaCry rode across the world. It should never cross a network boundary; consumer ISPs block it for good reason.",
+    flag: "never-public",
+    keywords: "smb cifs windows file sharing eternalblue samba",
+  },
+  {
+    port: "139 · 137/138",
+    proto: "TCP/UDP",
+    service: "NetBIOS session · name service",
+    note: "Pre-SMB2 legacy. Still enabled across plenty of Windows estates, still handing hostnames and share lists to anyone on the LAN.",
+    flag: "legacy",
+    keywords: "netbios smb windows legacy name service samba",
+  },
+  {
+    port: "111",
+    proto: "TCP/UDP",
+    service: "rpcbind · portmapper",
+    note: "The directory that tells clients which random ports NFS's helper daemons landed on. Also a UDP amplification source, which makes it a scanner favourite.",
+    flag: "never-public",
+    keywords: "rpcbind portmapper nfs sunrpc amplification mountd",
+  },
+  {
+    port: "2049",
+    proto: "TCP",
+    service: "NFS",
+    note: "NFSv4 needs this port alone. v3 also needs 111 plus mountd, statd and lockd on whatever ports they happened to pick, which is why v3 firewall rules are miserable.",
+    keywords: "nfs mount storage nas share efs v4",
+  },
+  {
+    port: "21 · 20",
+    proto: "TCP",
+    service: "FTP control · data",
+    note: "Credentials in the clear, plus a second connection on a port negotiated at runtime — the reason FTP and NAT never got along. Use SFTP over 22.",
+    flag: "legacy",
+    keywords: "ftp passive active data transfer vsftpd",
+  },
+  {
+    port: "990",
+    proto: "TCP",
+    service: "FTPS (implicit TLS)",
+    note: "FTP wrapped in TLS. It still drags the two-connection design along with it; SFTP avoids the entire problem for free.",
+    flag: "legacy",
+    keywords: "ftps tls ftp implicit secure transfer",
+  },
+  {
+    port: "23",
+    proto: "TCP",
+    service: "Telnet",
+    note: "A plaintext shell. If something on your network still answers here it is a switch, a printer, or an IoT device that belongs on its own VLAN.",
+    flag: "legacy",
+    keywords: "telnet plaintext legacy iot switch console",
+  },
+  {
+    port: "5985 · 5986",
+    proto: "TCP",
+    service: "WinRM HTTP · HTTPS",
+    note: "How Ansible and PowerShell Remoting drive Windows hosts. 5985 is called HTTP but the payload is usually encrypted at the protocol layer — which is not the same as TLS.",
+    keywords: "winrm powershell ansible windows remoting kerberos",
+  },
+];
+
+const NETWORK: PortRow[] = [
+  {
+    port: "53",
+    proto: "TCP/UDP",
+    service: "DNS",
+    note: "UDP for most answers, TCP for anything over 512 bytes and for zone transfers. Blocking TCP/53 because “DNS is UDP” breaks DNSSEC and large answers in ways that look like random flakiness.",
+    keywords: "dns resolver bind coredns unbound zone transfer resolve",
+  },
+  {
+    port: "853",
+    proto: "TCP",
+    service: "DNS over TLS (DoT)",
+    note: "Encrypted DNS on a port of its own, so a network operator can see it and decide. DNS over HTTPS hides inside 443 instead, which is the entire argument about it.",
+    keywords: "dot doh dns tls encrypted privacy resolver",
+  },
+  {
+    port: "5353",
+    proto: "UDP",
+    service: "mDNS · Bonjour",
+    note: "How .local names resolve with no server involved. Chatty, LAN-scoped, and the reason a discovery trick that works at the office dies in the VPC.",
+    keywords: "mdns bonjour avahi zeroconf local discovery",
+  },
+  {
+    port: "123",
+    proto: "UDP",
+    service: "NTP",
+    note: "Clock sync — and clock skew is what quietly breaks TLS handshakes, JWT validation and TOTP codes. Historic amplification vector; modern configs disable the query that caused it.",
+    keywords: "ntp time clock skew chrony amplification drift",
+  },
+  {
+    port: "161 · 162",
+    proto: "UDP",
+    service: "SNMP · SNMP traps",
+    note: "v1 and v2c authenticate with a plaintext community string, and “public” is still live on real hardware today. Use v3, or keep it on a management VLAN.",
+    keywords: "snmp traps monitoring community string mib switch",
+  },
+  {
+    port: "389 · 636",
+    proto: "TCP",
+    service: "LDAP · LDAPS",
+    note: "389 can be upgraded with StartTLS, 636 is TLS from the start. Active Directory adds the global catalog on 3268 and 3269, which is what most integrations actually query.",
+    keywords: "ldap ldaps active directory bind auth openldap",
+  },
+  {
+    port: "88",
+    proto: "TCP/UDP",
+    service: "Kerberos",
+    note: "Ticket granting. It is also why clock skew beyond five minutes locks an entire domain out of everything — see NTP above.",
+    keywords: "kerberos kdc ticket active directory spn",
+  },
+  {
+    port: "67 · 68",
+    proto: "UDP",
+    service: "DHCP server · client",
+    note: "Broadcast, so it does not cross a router without a relay. A rogue DHCP server on a flat network is a trivial man-in-the-middle.",
+    keywords: "dhcp bootp lease relay ipam",
+  },
+  {
+    port: "8500 · 8600",
+    proto: "TCP/UDP",
+    service: "Consul HTTP API · DNS",
+    note: "8600 answers DNS for .consul names and 8301 carries the LAN gossip. An 8500 with ACLs left disabled is read-write access to your service catalog.",
+    keywords: "consul service discovery gossip serf catalog hashicorp",
+  },
+  {
+    port: "8200 · 8201",
+    proto: "TCP",
+    service: "Vault API · cluster",
+    note: "8200 is the API and UI, 8201 replication between nodes. The unseal keys are the real perimeter here — the port is just where the conversation happens.",
+    keywords: "vault hashicorp secrets unseal kv transit",
+  },
+  {
+    port: "5060 · 5061",
+    proto: "TCP/UDP",
+    service: "SIP · SIP over TLS",
+    note: "An open 5060 gets brute-forced for toll fraud within hours. Media does not ride SIP either — RTP takes its own UDP range, typically 10000–20000.",
+    flag: "never-public",
+    keywords: "sip voip asterisk freeswitch rtp toll fraud pbx",
+  },
+  {
+    port: "51820",
+    proto: "UDP",
+    service: "WireGuard",
+    note: "It never answers an unauthenticated packet, so a port scan finds nothing at all. The endpoint is effectively invisible unless you hold a key.",
+    keywords: "wireguard vpn tunnel tailscale peer",
+  },
+  {
+    port: "1194",
+    proto: "UDP",
+    service: "OpenVPN",
+    note: "UDP by default. The TCP-on-443 fallback exists to get through hostile networks and pays for it with TCP-over-TCP meltdown the moment there is packet loss.",
+    keywords: "openvpn vpn tunnel udp tcp fallback",
+  },
+];
+
+const DEV: PortRow[] = [
+  {
+    port: "3000",
+    proto: "TCP",
+    service: "Node.js dev servers",
+    note: "Next.js, Express, NestJS, Rails, Create React App — and Grafana. Next increments to 3001 when 3000 is busy, which is why your OAuth callback URL suddenly stopped matching.",
+    flag: "local",
+    keywords: "node next express nest rails react dev server localhost",
+  },
+  {
+    port: "3001",
+    proto: "TCP",
+    service: "Second app or API",
+    note: "Where the API goes once the front end has claimed 3000. Nothing standard about it — it is just the number everyone reaches for second.",
+    flag: "local",
+    keywords: "api second app dev proxy localhost",
+  },
+  {
+    port: "4321",
+    proto: "TCP",
+    service: "Astro dev server",
+    note: "Counts down 4-3-2-1, which is the whole joke. astro preview uses it too, so with a dev server already running preview lands on 4322.",
+    flag: "local",
+    keywords: "astro dev preview static site generator",
+  },
+  {
+    port: "5173",
+    proto: "TCP",
+    service: "Vite",
+    note: "Vite and everything built on it: SvelteKit, Nuxt, modern React Router. Takes 5174 next, and HMR shares the port unless you split it explicitly.",
+    flag: "local",
+    keywords: "vite sveltekit nuxt remix hmr dev server",
+  },
+  {
+    port: "4200",
+    proto: "TCP",
+    service: "Angular CLI",
+    note: "ng serve, unchanged since the AngularJS-era tooling. One of the few dev ports you can still guess correctly on the first try.",
+    flag: "local",
+    keywords: "angular ng serve dev cli",
+  },
+  {
+    port: "8000",
+    proto: "TCP",
+    service: "Python · PHP dev servers",
+    note: "Django runserver, uvicorn, FastAPI, php -S, python -m http.server, Chroma. Wildly overloaded — check what is already bound before blaming your framework.",
+    flag: "local",
+    keywords: "django fastapi uvicorn php laravel chroma http.server",
+  },
+  {
+    port: "8888",
+    proto: "TCP",
+    service: "Jupyter",
+    note: "The token in the startup URL is the only authentication there is. Publishing this port without setting a password is publishing a Python shell.",
+    flag: "never-public",
+    keywords: "jupyter notebook lab token python kernel",
+  },
+  {
+    port: "9000",
+    proto: "TCP",
+    service: "php-fpm (FastCGI)",
+    note: "Not HTTP — a browser aimed at it gets nothing, because only a FastCGI client speaks the protocol. Prefer the Unix socket; an exposed 9000 is remote code execution.",
+    flag: "never-public",
+    keywords: "php-fpm fastcgi nginx laravel socket minio portainer sonarqube",
+  },
+  {
+    port: "9229",
+    proto: "TCP",
+    service: "Node.js inspector",
+    note: "--inspect binds loopback deliberately: the debug protocol has no auth and evaluates arbitrary code. --inspect=0.0.0.0 in a published container is a backdoor.",
+    flag: "never-public",
+    keywords: "node inspect debugger devtools chrome nodejs",
+  },
+  {
+    port: "6006",
+    proto: "TCP",
+    service: "Storybook · TensorBoard",
+    note: "Storybook's default, and TensorBoard's as well. Both are viewers people start once and leave running for a fortnight.",
+    flag: "local",
+    keywords: "storybook tensorboard ui dev components",
+  },
+  {
+    port: "5000",
+    proto: "TCP",
+    service: "Flask · macOS AirPlay Receiver",
+    note: "Flask's default, and since Monterey macOS claims 5000 and 7000 for AirPlay. The mysterious “address already in use” with nothing in ps is System Settings, not you.",
+    flag: "local",
+    keywords: "flask airplay macos monterey address already in use",
+  },
+  {
+    port: "11434",
+    proto: "TCP",
+    service: "Ollama",
+    note: "The local model API. It answers with no authentication, so setting OLLAMA_HOST to 0.0.0.0 on a shared network lends your GPU to the entire office.",
+    flag: "local",
+    keywords: "ollama llm local model gpu inference llama",
+  },
+  {
+    port: "7860 · 8501",
+    proto: "TCP",
+    service: "Gradio · Streamlit",
+    note: "The two default demo-app ports of the ML world. Gradio's share links tunnel through a public relay — understand what that means before using one at work.",
+    flag: "local",
+    keywords: "gradio streamlit demo ml app huggingface",
+  },
+];
+
+const GROUPS = [
+  WEB,
+  DATABASES,
+  CACHES,
+  CONTAINERS,
+  OBSERVABILITY,
+  MAIL,
+  REMOTE,
+  NETWORK,
+  DEV,
+];
+const TOTAL = GROUPS.reduce((sum, group) => sum + group.length, 0);
+
+const JUMP = [
+  { href: "#web", label: "Web & proxies" },
+  { href: "#databases", label: "Databases" },
+  { href: "#caches", label: "Caches & queues" },
+  { href: "#containers", label: "Containers" },
+  { href: "#observability", label: "Observability" },
+  { href: "#mail", label: "Mail" },
+  { href: "#remote", label: "Remote access" },
+  { href: "#network", label: "DNS & discovery" },
+  { href: "#dev", label: "Dev servers" },
+];
+
+const listenSnippet = `# Linux, the modern one.  -t TCP  -u UDP  -l listening  -p process  -n numeric
+ss -tulpn
+ss -tulpn | grep ':5432'
+
+# Only the sockets reachable from outside this box
+ss -tulpn | grep -v '127.0.0.1' | grep -v '\\[::1\\]'
+
+# macOS (and Linux) — who is holding 8080
+lsof -nP -iTCP:8080 -sTCP:LISTEN
+
+# Older hosts, or when ss is missing. Deprecated on most distros.
+netstat -tulpn
+
+# Evict whatever is squatting on 3000
+fuser -k 3000/tcp`;
+
+const containerSnippet = `# What a container actually published, and on which interface
+docker port my-api
+docker ps --format 'table {{.Names}}\\t{{.Ports}}'
+
+# 0.0.0.0:6379->6379/tcp   the whole internet
+# 127.0.0.1:6379->6379/tcp loopback only  <- what you almost always want
+
+# The app binds inside the container, so check there too
+docker exec my-api ss -tulpn
+
+# Kubernetes: what the service claims vs what the pod listens on
+kubectl get svc -A
+kubectl exec deploy/api -- ss -tulpn
+
+# Windows
+netstat -ano | findstr :3000
+Get-NetTCPConnection -LocalPort 3000 -State Listen`;
+
+const reachSnippet = `# Can I reach it at all? Fast, no payload sent.
+nc -vz db.internal 5432
+
+# UDP: silence proves nothing. A closed port answers with ICMP
+# that the firewall in between probably swallowed.
+nc -vzu ntp.internal 123
+
+# Refused vs timed out, with a timeout you control
+curl -v --connect-timeout 3 telnet://db.internal:5432
+
+# Where does the packet actually die
+sudo traceroute -T -p 443 api.example.com`;
+
+const faq = [
+  {
+    q: "What port does PostgreSQL use?",
+    a: "5432/TCP, and MySQL or MariaDB use 3306/TCP. Those are defaults rather than requirements — a PgBouncer pooler usually answers on 6432, and any of them can be moved in config. If the port is open but the connection is still rejected, that is Postgres working correctly: listen_addresses and pg_hba.conf are separate gates and both have to allow you.",
+  },
+  {
+    q: "Why do I need root to bind to port 80?",
+    a: "On Unix, ports below 1024 are privileged: only root, or a process holding the CAP_NET_BIND_SERVICE capability, is allowed to bind them. The rule exists so that any user on a shared machine cannot impersonate a system service. You do not have to run as root to get there — grant AmbientCapabilities=CAP_NET_BIND_SERVICE in the systemd unit, lower net.ipv4.ip_unprivileged_port_start on Linux, or bind 8080 and let a reverse proxy or a port mapping own 80.",
+  },
+  {
+    q: "How do I find out which process is using a port?",
+    a: "On Linux, ss -tulpn lists every listening socket with its process, though you need sudo to see processes you do not own. On macOS the equivalent is lsof -nP -iTCP:8080 -sTCP:LISTEN. On Windows, netstat -ano | findstr :3000 gives you a PID to look up with tasklist. If nothing shows up, the listener is probably inside a container — docker port tells you what was actually published and on which interface.",
+  },
+  {
+    q: "What is the difference between connection refused and connection timed out?",
+    a: "Refused means a TCP RST came back: your packet reached the host and either nothing was listening on that port or a firewall explicitly rejected it. Timed out means nothing came back at all, so packets are being dropped somewhere — a security group, a DROP rule, the wrong IP, or a missing route. Refused points at the service, timed out points at the network in between.",
+  },
+  {
+    q: "Is it safe to expose Redis or the Docker socket to the internet?",
+    a: "No, and both are scanned continuously. An open Docker API on 2375 is unauthenticated root on the host: one request can start a container with the filesystem mounted. An open Redis on 6379 can be told to write its dump file into an SSH authorized_keys file. Bind them to 127.0.0.1 or a private interface and reach them through an SSH tunnel or a VPN instead.",
+  },
+  {
+    q: "What is the ephemeral port range?",
+    a: "It is the pool the kernel draws from for the source port of outbound connections. IANA suggests 49152–65535, Linux defaults to 32768–60999 via net.ipv4.ip_local_port_range, and Windows uses the IANA range. It starts to matter when a busy proxy or NAT gateway exhausts the pool and connections fail with “cannot assign requested address” — the fixes are widening the range, reusing TIME_WAIT sockets, or spreading traffic over more source addresses.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: PAGE_TITLE,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/common-ports/", SITE.URL).href,
+  description: PAGE_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const related = [
+  {
+    href: "/blog/docker-vs-kubernetes/",
+    label: "Docker vs Kubernetes",
+    note: "Where 2375, 6443, 10250 and 2379 come from — and which of them you are actually responsible for.",
+  },
+  {
+    href: "/blog/container-vs-pod/",
+    label: "Container vs pod",
+    note: "A pod shares one network namespace, which is why two containers inside it cannot both bind 8080.",
+  },
+  {
+    href: "/blog/dns-vs-service-discovery/",
+    label: "DNS vs service discovery",
+    note: "Port 53 gives you a name. Service discovery gives you a name, a port, and whether the thing is healthy.",
+  },
+  {
+    href: "/blog/forward-proxy-vs-reverse-proxy/",
+    label: "Forward vs reverse proxy",
+    note: "3128 or 443: which way the proxy faces changes every firewall rule you write around it.",
+  },
+  {
+    href: "/tools/http-status-codes/",
+    label: "HTTP Status Codes",
+    note: "Once the port answers, this is the other half of the debugging session.",
+  },
+  {
+    href: "/tools/http-headers/",
+    label: "HTTP Headers Reference",
+    note: "What the request and response actually carry over 80 and 443.",
+  },
+];
+---
+
+<Page
+  title={PAGE_TITLE}
+  description={PAGE_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Common Ports."
+  intro="The TCP and UDP ports you actually grep for at 2am, grouped by what runs on them, with a note on each one that matters. Type in the box to filter the whole reference."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Static page
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Every table here is server-rendered HTML. The only script on the page is
+        the filter box, and it never sends anything anywhere.
+      </p>
+    </StickyNote>
+  </section>
+
+  <div id="common-ports-root">
+    <section class="mx-auto max-w-5xl px-5 pb-10">
+      <div id="common-ports-controls" hidden>
+        <NeoCard tone="paper" shadow="md" class="space-y-4">
+          <div>
+            <label
+              for="common-ports-input"
+              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
+            >
+              Filter the reference
+            </label>
+            <div class="flex flex-wrap items-center gap-2">
+              <input
+                id="common-ports-input"
+                type="search"
+                placeholder="5432, redis, kubernetes, smtp…"
+                spellcheck="false"
+                autocomplete="off"
+                class="min-w-0 flex-1 rounded-[4px] border-[3px] border-ink bg-paper px-4 py-3 font-mono text-base font-bold shadow-neo-sm focus:outline-none"
+              />
+              <button
+                type="button"
+                id="common-ports-clear"
+                hidden
+                class="inline-flex items-center gap-2 rounded-[4px] border-[2.5px] border-ink bg-bg-alt px-3 py-2.5 text-xs font-bold tracking-wide uppercase shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+              >
+                <Icon name="lucide:x" class="h-3.5 w-3.5" aria-hidden="true" />
+                Clear
+              </button>
+            </div>
+            <p
+              id="common-ports-count"
+              aria-live="polite"
+              class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-70"
+            >
+              Showing all {TOTAL} ports.
+            </p>
+          </div>
+
+          <div class="border-t-[2.5px] border-ink pt-4">
+            <p
+              class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70"
+            >
+              Jump to
+            </p>
+            <div class="flex flex-wrap gap-2">
+              {
+                JUMP.map((j) => (
+                  <a
+                    href={j.href}
+                    class="mono rounded-full border-[2px] border-ink bg-bg-alt px-3 py-1 text-[10px] font-bold tracking-widest uppercase shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+                  >
+                    {j.label}
+                  </a>
+                ))
+              }
+            </div>
+          </div>
+
+          <div class="border-t-[2.5px] border-ink pt-4">
+            <p
+              class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70"
+            >
+              Badges
+            </p>
+            <ul class="flex flex-wrap items-center gap-2">
+              {
+                (["never-public", "legacy", "local"] as const).map((flag) => (
+                  <li
+                    class:list={[
+                      "mono border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                      FLAG_CLASS[flag],
+                    ]}
+                  >
+                    {FLAG_LABEL[flag]}
+                  </li>
+                ))
+              }
+              <li class="text-[12px] leading-snug opacity-70">
+                Never public means an open listener on a routable address is a
+                breach waiting to be automated. Legacy means plaintext or
+                superseded. Local only means it has no business leaving your
+                machine.
+              </li>
+            </ul>
+          </div>
+        </NeoCard>
+      </div>
+
+      <div id="common-ports-empty" class="mt-6" hidden>
+        <NeoCard tone="yellow" shadow="md">
+          <p class="heading text-xl uppercase">
+            Nothing matches “<span id="common-ports-term"></span>”
+          </p>
+          <p class="mt-2 text-sm leading-relaxed">
+            The filter matches on the port number, the protocol, the service,
+            the note, and a pile of synonyms. Try a bare number (<span
+              class="mono">6379</span
+            >), a product (<span class="mono">kafka</span>, <span class="mono"
+              >vault</span
+            >), or a job (<span class="mono">smtp</span>, <span class="mono"
+              >tracing</span
+            >).
+          </p>
+        </NeoCard>
+      </div>
+    </section>
+
+    <!-- Web & proxies -->
+    <section id="web" data-port-group class="mx-auto max-w-5xl px-5 pb-14">
+      <h2 class="display text-2xl uppercase">Web, proxies & HTTP</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          Two of these carry almost all of your traffic, and the rest exist
+          because 80 and 443 are privileged. Anything that cannot bind below
+          1024 — a JVM, a Node process, a container running as a non-root user —
+          picks 8080 or 8443 and lets a proxy or a port mapping do the
+          translation. That is the entire reason those numbers are so crowded.
+        </p>
+        <p>
+          The one that catches people is 443 being <strong
+            >both TCP and UDP</strong
+          >. HTTP/3 runs over QUIC on UDP/443, and a firewall written by
+          somebody who has only ever thought about TCP will let the site work
+          perfectly while quietly forcing every client back down to HTTP/2.
+        </p>
+      </div>
+      <div
+        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+      >
+        <table class="w-full min-w-[48rem] border-collapse text-left">
+          <caption class="sr-only">Web, proxy and HTTP ports</caption>
+          <thead>
+            <tr class="bg-cyan">
+              <th
+                scope="col"
+                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Port</th
+              >
+              <th
+                scope="col"
+                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Proto</th
+              >
+              <th
+                scope="col"
+                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Service</th
+              >
+              <th
+                scope="col"
+                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Note</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              WEB.map((p) => (
+                <tr
+                  data-port-row
+                  data-port-keywords={p.keywords}
+                  class="align-top transition-colors hover:bg-bg-alt"
+                >
+                  <th
+                    scope="row"
+                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                  >
+                    <span class="display text-lg leading-tight">{p.port}</span>
+                    {p.flag && (
+                      <span
+                        class:list={[
+                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[p.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[p.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                    {p.proto}
+                  </td>
+                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                    {p.service}
+                  </td>
+                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                    {p.note}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Databases -->
+    <section
+      id="databases"
+      data-port-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">Databases & search</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          Nothing in this table belongs on a public address. Databases are the
+          most reliably profitable thing to find open, so they are scanned
+          constantly — and the default configuration of most of them assumes it
+          is sitting on a trusted network, because in 1998 it was.
+        </p>
+        <p>
+          Two habits make the whole table safe: bind to a private interface or
+          loopback and let the app reach it over the VPC, and reach it yourself
+          through an SSH tunnel rather than a firewall exception you meant to
+          remove. <span class="mono">ssh -L 5432:127.0.0.1:5432 bastion</span>
+          takes three seconds and expires when you close the terminal.
+        </p>
+      </div>
+      <div
+        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+      >
+        <table class="w-full min-w-[48rem] border-collapse text-left">
+          <caption class="sr-only">Database and search engine ports</caption>
+          <thead>
+            <tr class="bg-yellow">
+              <th
+                scope="col"
+                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Port</th
+              >
+              <th
+                scope="col"
+                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Proto</th
+              >
+              <th
+                scope="col"
+                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Service</th
+              >
+              <th
+                scope="col"
+                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Note</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              DATABASES.map((p) => (
+                <tr
+                  data-port-row
+                  data-port-keywords={p.keywords}
+                  class="align-top transition-colors hover:bg-bg-alt"
+                >
+                  <th
+                    scope="row"
+                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                  >
+                    <span class="display text-lg leading-tight">{p.port}</span>
+                    {p.flag && (
+                      <span
+                        class:list={[
+                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[p.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[p.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                    {p.proto}
+                  </td>
+                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                    {p.service}
+                  </td>
+                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                    {p.note}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Caches & queues -->
+    <section id="caches" data-port-group class="mx-auto max-w-5xl px-5 pb-14">
+      <h2 class="display text-2xl uppercase">Caches, queues & streaming</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          The pattern to notice here is that clustered systems need more ports
+          than the one you configured. Redis Cluster needs its data port plus
+          10000. RabbitMQ needs epmd on 4369 and the Erlang distribution port
+          alongside AMQP. Kafka needs whatever its listeners advertise, which is
+          rarely what you typed. Half your first-cluster problems are one
+          missing firewall rule between nodes.
+        </p>
+        <p>
+          The second pattern: the management interface is usually the softest
+          part. 15672, 8222 and a Kafka UI container are all far easier to get
+          into than the broker protocol itself, and they all hand over enough to
+          drain a queue.
+        </p>
+      </div>
+      <div
+        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+      >
+        <table class="w-full min-w-[48rem] border-collapse text-left">
+          <caption class="sr-only">Cache, queue and streaming ports</caption>
+          <thead>
+            <tr class="bg-green">
+              <th
+                scope="col"
+                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Port</th
+              >
+              <th
+                scope="col"
+                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Proto</th
+              >
+              <th
+                scope="col"
+                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Service</th
+              >
+              <th
+                scope="col"
+                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Note</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              CACHES.map((p) => (
+                <tr
+                  data-port-row
+                  data-port-keywords={p.keywords}
+                  class="align-top transition-colors hover:bg-bg-alt"
+                >
+                  <th
+                    scope="row"
+                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                  >
+                    <span class="display text-lg leading-tight">{p.port}</span>
+                    {p.flag && (
+                      <span
+                        class:list={[
+                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[p.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[p.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                    {p.proto}
+                  </td>
+                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                    {p.service}
+                  </td>
+                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                    {p.note}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Containers -->
+    <section
+      id="containers"
+      data-port-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">Containers & orchestration</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          This is the highest-consequence table on the page. 2375 is root on the
+          host. 6443 is every workload in the cluster. 10250 is exec into any
+          pod on the node. 2379 is every Secret you have. None of these has a
+          safe failure mode, and all of them are in the standard scan list.
+        </p>
+        <p>
+          The other trap is the overlay network. Container-to-container traffic
+          between hosts rides <strong>UDP</strong> — 4789 for VXLAN, 8472 for flannel
+          and k3s — and a security group that only allows TCP produces the worst kind
+          of outage: everything reports healthy, and nothing can talk to anything
+          on another node.
+        </p>
+      </div>
+      <div
+        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+      >
+        <table class="w-full min-w-[48rem] border-collapse text-left">
+          <caption class="sr-only"> Container and orchestration ports </caption>
+          <thead>
+            <tr class="bg-pink">
+              <th
+                scope="col"
+                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Port</th
+              >
+              <th
+                scope="col"
+                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Proto</th
+              >
+              <th
+                scope="col"
+                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Service</th
+              >
+              <th
+                scope="col"
+                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Note</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              CONTAINERS.map((p) => (
+                <tr
+                  data-port-row
+                  data-port-keywords={p.keywords}
+                  class="align-top transition-colors hover:bg-bg-alt"
+                >
+                  <th
+                    scope="row"
+                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                  >
+                    <span class="display text-lg leading-tight">{p.port}</span>
+                    {p.flag && (
+                      <span
+                        class:list={[
+                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[p.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[p.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                    {p.proto}
+                  </td>
+                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                    {p.service}
+                  </td>
+                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                    {p.note}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Observability -->
+    <section
+      id="observability"
+      data-port-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">Observability</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          Almost everything in this stack ships unauthenticated, because the
+          assumption is that it lives on a private network behind a proxy that
+          handles identity. That assumption is load-bearing: an open Prometheus
+          hands over your internal hostnames, your service topology and your
+          traffic patterns, and an open Loki hands over whatever your
+          application logs — which, if anyone was careless, includes tokens.
+        </p>
+        <p>
+          The numbers also collide more than anywhere else. 3000 is Grafana and
+          every JavaScript dev server. 9093 is Alertmanager and Kafka's TLS
+          listener. 9091 is the Pushgateway and Milvus metrics. Read the process
+          name from <span class="mono">ss -tulpn</span>, not the port number.
+        </p>
+      </div>
+      <div
+        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+      >
+        <table class="w-full min-w-[48rem] border-collapse text-left">
+          <caption class="sr-only">
+            Metrics, logging and tracing ports
+          </caption>
+          <thead>
+            <tr class="bg-purple text-paper">
+              <th
+                scope="col"
+                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Port</th
+              >
+              <th
+                scope="col"
+                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Proto</th
+              >
+              <th
+                scope="col"
+                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Service</th
+              >
+              <th
+                scope="col"
+                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Note</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              OBSERVABILITY.map((p) => (
+                <tr
+                  data-port-row
+                  data-port-keywords={p.keywords}
+                  class="align-top transition-colors hover:bg-bg-alt"
+                >
+                  <th
+                    scope="row"
+                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                  >
+                    <span class="display text-lg leading-tight">{p.port}</span>
+                    {p.flag && (
+                      <span
+                        class:list={[
+                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[p.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[p.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                    {p.proto}
+                  </td>
+                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                    {p.service}
+                  </td>
+                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                    {p.note}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Mail -->
+    <section id="mail" data-port-group class="mx-auto max-w-5xl px-5 pb-14">
+      <h2 class="display text-2xl uppercase">Mail</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          Mail has two jobs on two different sets of ports, and mixing them up
+          is why so much application mail disappears. <strong>Relay</strong> is server-to-server
+          on 25, and every major cloud blocks it outbound by default. <strong
+            >Submission</strong
+          > is your app authenticating to a provider, and that is 587 with STARTTLS
+          or 465 with implicit TLS.
+        </p>
+        <p>
+          If mail works on your laptop and silently fails on the VM, you are
+          almost certainly submitting on 25 and being dropped by the provider's
+          egress policy. Switch to 587 or 465, or 2525 if both are filtered —
+          and never treat a successful TCP connect as proof that a message was
+          accepted.
+        </p>
+      </div>
+      <div
+        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+      >
+        <table class="w-full min-w-[48rem] border-collapse text-left">
+          <caption class="sr-only">Mail transport and retrieval ports</caption>
+          <thead>
+            <tr class="bg-cyan">
+              <th
+                scope="col"
+                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Port</th
+              >
+              <th
+                scope="col"
+                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Proto</th
+              >
+              <th
+                scope="col"
+                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Service</th
+              >
+              <th
+                scope="col"
+                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Note</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              MAIL.map((p) => (
+                <tr
+                  data-port-row
+                  data-port-keywords={p.keywords}
+                  class="align-top transition-colors hover:bg-bg-alt"
+                >
+                  <th
+                    scope="row"
+                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                  >
+                    <span class="display text-lg leading-tight">{p.port}</span>
+                    {p.flag && (
+                      <span
+                        class:list={[
+                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[p.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[p.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                    {p.proto}
+                  </td>
+                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                    {p.service}
+                  </td>
+                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                    {p.note}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Remote access -->
+    <section id="remote" data-port-group class="mx-auto max-w-5xl px-5 pb-14">
+      <h2 class="display text-2xl uppercase">Remote access & file transfer</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          One of these is fine on a public address if you configure it properly,
+          and it is 22. The rest — RDP, VNC, SMB, Telnet, FTP — belong behind a
+          VPN, a bastion, or an identity-aware proxy. RDP in particular is the
+          most common initial access vector in ransomware incident reports, year
+          after year.
+        </p>
+        <p>
+          SSH is also the tool that makes everything else on this page
+          unnecessary. <span class="mono"
+            >ssh -L 5432:127.0.0.1:5432 bastion</span
+          > gives you a database on localhost with no firewall change, no exception
+          to forget about, and an audit trail. Reach for that before you open a port.
+        </p>
+      </div>
+      <div
+        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+      >
+        <table class="w-full min-w-[48rem] border-collapse text-left">
+          <caption class="sr-only">
+            Remote access and file transfer ports
+          </caption>
+          <thead>
+            <tr class="bg-yellow">
+              <th
+                scope="col"
+                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Port</th
+              >
+              <th
+                scope="col"
+                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Proto</th
+              >
+              <th
+                scope="col"
+                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Service</th
+              >
+              <th
+                scope="col"
+                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Note</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              REMOTE.map((p) => (
+                <tr
+                  data-port-row
+                  data-port-keywords={p.keywords}
+                  class="align-top transition-colors hover:bg-bg-alt"
+                >
+                  <th
+                    scope="row"
+                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                  >
+                    <span class="display text-lg leading-tight">{p.port}</span>
+                    {p.flag && (
+                      <span
+                        class:list={[
+                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[p.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[p.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                    {p.proto}
+                  </td>
+                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                    {p.service}
+                  </td>
+                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                    {p.note}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- DNS & discovery -->
+    <section id="network" data-port-group class="mx-auto max-w-5xl px-5 pb-14">
+      <h2 class="display text-2xl uppercase">
+        DNS, discovery & network services
+      </h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          These are the services that make everything else findable, and they
+          are almost all UDP-first, which changes how they fail. A dropped UDP
+          packet produces a timeout and a retry, not an error — so a broken DNS
+          or NTP path shows up as “the app is slow sometimes” rather than
+          anything that looks like a network fault.
+        </p>
+        <p>
+          They are also the classic amplification sources: 53, 123, 161, 111 and
+          11211 all answer small questions with large responses, which is
+          exactly what a reflection attack needs. If you run any of them on a
+          public address, rate-limit them and disable the verbose queries.
+        </p>
+      </div>
+      <div
+        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+      >
+        <table class="w-full min-w-[48rem] border-collapse text-left">
+          <caption class="sr-only">
+            DNS, discovery and network service ports
+          </caption>
+          <thead>
+            <tr class="bg-green">
+              <th
+                scope="col"
+                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Port</th
+              >
+              <th
+                scope="col"
+                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Proto</th
+              >
+              <th
+                scope="col"
+                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Service</th
+              >
+              <th
+                scope="col"
+                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Note</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              NETWORK.map((p) => (
+                <tr
+                  data-port-row
+                  data-port-keywords={p.keywords}
+                  class="align-top transition-colors hover:bg-bg-alt"
+                >
+                  <th
+                    scope="row"
+                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                  >
+                    <span class="display text-lg leading-tight">{p.port}</span>
+                    {p.flag && (
+                      <span
+                        class:list={[
+                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[p.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[p.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                    {p.proto}
+                  </td>
+                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                    {p.service}
+                  </td>
+                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                    {p.note}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Dev servers -->
+    <section id="dev" data-port-group class="mx-auto max-w-5xl px-5 pb-14">
+      <h2 class="display text-2xl uppercase">Dev servers & local ports</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          None of these are standardised — they are conventions that stuck, and
+          they collide constantly. 3000 is Next.js and Grafana. 5000 is Flask
+          and a Docker registry and, on any recent Mac, AirPlay Receiver. 9000
+          is php-fpm and MinIO and Portainer and ClickHouse's native protocol.
+          When a framework tells you the port is in use, it is usually telling
+          the truth about somebody else's process.
+        </p>
+        <p>
+          The rule that keeps this table harmless: dev servers bind
+          <span class="mono">127.0.0.1</span> and stay there. The moment one binds
+          <span class="mono">0.0.0.0</span> on a café network — a Jupyter notebook,
+          an Ollama instance, a Node process with the inspector attached — it is an
+          unauthenticated remote shell with a friendly UI.
+        </p>
+      </div>
+      <div
+        class="mt-6 overflow-x-auto rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-md"
+      >
+        <table class="w-full min-w-[48rem] border-collapse text-left">
+          <caption class="sr-only">Development server ports</caption>
+          <thead>
+            <tr class="bg-pink">
+              <th
+                scope="col"
+                class="mono w-[9rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Port</th
+              >
+              <th
+                scope="col"
+                class="mono w-[6rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Proto</th
+              >
+              <th
+                scope="col"
+                class="mono w-[13rem] border-r-[3px] border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Service</th
+              >
+              <th
+                scope="col"
+                class="mono border-b-[3px] border-ink p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Note</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              DEV.map((p) => (
+                <tr
+                  data-port-row
+                  data-port-keywords={p.keywords}
+                  class="align-top transition-colors hover:bg-bg-alt"
+                >
+                  <th
+                    scope="row"
+                    class="border-r-[3px] border-b-[2px] border-ink p-3 text-left"
+                  >
+                    <span class="display text-lg leading-tight">{p.port}</span>
+                    {p.flag && (
+                      <span
+                        class:list={[
+                          "mono mt-2 block w-fit border-[2px] border-ink px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[p.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[p.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-r-[3px] border-b-[2px] border-ink p-3 text-[11px] font-bold whitespace-nowrap">
+                    {p.proto}
+                  </td>
+                  <td class="border-r-[3px] border-b-[2px] border-ink p-3 text-sm font-bold">
+                    {p.service}
+                  </td>
+                  <td class="border-b-[2px] border-ink p-3 text-sm leading-relaxed">
+                    {p.note}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Ranges -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase">
+      The three ranges, and why 80 needs root
+    </h2>
+    <div class="mt-4 space-y-4 leading-relaxed">
+      <p>
+        A port is 16 bits, so there are 65,535 usable ones per protocol per
+        address. IANA splits them into three ranges, and only the first one is
+        enforced by anything.
+      </p>
+      <ul class="space-y-3">
+        <li>
+          <strong>0–1023, well-known.</strong> Assigned by IANA, and privileged on
+          every Unix: binding one requires root or the CAP_NET_BIND_SERVICE capability.
+          The rule dates to multi-user machines, where the point was stopping an ordinary
+          user from standing up a fake telnet or SMTP daemon on the port everyone
+          trusted.
+        </li>
+        <li>
+          <strong>1024–49151, registered.</strong> IANA keeps a list, but registration
+          is a filing, not a reservation. Nothing stops you binding 3306 with something
+          that is not MySQL, and plenty of software squats on numbers it never registered.
+          Treat every entry here as a strong convention rather than a guarantee.
+        </li>
+        <li>
+          <strong>49152–65535, dynamic and private.</strong> Officially the ephemeral
+          range — the pool the kernel picks from for the source port of an outbound
+          connection. In practice Linux ignores IANA and defaults to 32768–60999 (net.ipv4.ip_local_port_range);
+          Windows uses the IANA range.
+        </li>
+      </ul>
+      <p>
+        The privileged-port rule has three normal escapes and you should pick
+        one deliberately. In systemd, give the unit
+        <span class="mono">AmbientCapabilities=CAP_NET_BIND_SERVICE</span> and keep
+        running as a normal user. On Linux, lower
+        <span class="mono">net.ipv4.ip_unprivileged_port_start</span> if you would
+        rather change the policy than the process. Or do what almost everyone does:
+        bind 8080 and let nginx, a load balancer, or a container port mapping own
+        80 and 443. Inside a container the question mostly disappears — the process
+        is root in its own namespace and gets NET_BIND_SERVICE by default — but rootless
+        Docker and Podman run into the host's rule again when they try to publish
+        a port under 1024.
+      </p>
+      <p>
+        Two more facts worth having. A listening socket is unique per protocol,
+        address and port, not per port alone: TCP/53 and UDP/53 are different
+        sockets, and two processes can both bind 8080 on different addresses.
+        And ephemeral exhaustion is real — a busy NAT gateway or forward proxy
+        runs out of source ports and starts failing with “cannot assign
+        requested address”, which reads like a bug in your code and is not.
+      </p>
+    </div>
+  </section>
+
+  <!-- Exposure -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase">The ports that get people owned</h2>
+    <div class="mt-4 space-y-4 leading-relaxed">
+      <p>
+        There is no grace period on a public IPv4 address. Mass scanners sweep
+        the entire address space in minutes, and a handful of ports are
+        profitable enough that they are checked first, every time. These are the
+        ones that turn a misconfiguration into an incident.
+      </p>
+    </div>
+
+    <NeoCard tone="red" shadow="lg" class="mt-6">
+      <p class="mono text-[11px] font-bold tracking-widest uppercase">
+        ▸ Never on a public address
+      </p>
+      <ul class="mt-3 space-y-2.5 text-sm leading-relaxed">
+        <li>
+          <strong>2375 — Docker daemon.</strong> No authentication at all. A single
+          request starts a privileged container with the host filesystem mounted,
+          which is root. This is the fastest full compromise on the list.
+        </li>
+        <li>
+          <strong>6379 — Redis.</strong> Before Redis 6 there was no user model, and
+          protected mode only helps when you have not overridden the bind address.
+          The classic exploit does not even need a bug: point the dump file at an
+          SSH authorized_keys file, write a key as a value, SAVE, log in.
+        </li>
+        <li>
+          <strong>9200 — Elasticsearch.</strong> An unauthenticated REST API over
+          the whole index. This is where the “hacker leaves a ransom note in your
+          database” stories come from.
+        </li>
+        <li>
+          <strong>27017 — MongoDB.</strong> Same story, same decade. Newer builds
+          bind loopback by default, which is why the incidents thinned out rather
+          than stopped.
+        </li>
+        <li>
+          <strong>10250 and 2379 — kubelet and etcd.</strong> Exec into any pod, or
+          read every Secret in the cluster. Both have been the root cause of published
+          breaches.
+        </li>
+        <li>
+          <strong>3389 — RDP.</strong> The single most common ransomware entry point.
+          Credential stuffing does not need an exploit.
+        </li>
+        <li>
+          <strong>5060 — SIP.</strong> Brute-forced within hours for toll fraud, which
+          bills in real money while you sleep.
+        </li>
+      </ul>
+    </NeoCard>
+
+    <div class="mt-6 space-y-4 leading-relaxed">
+      <h3 class="heading text-xl uppercase">
+        The Docker publish trap nobody warns you about
+      </h3>
+      <p>
+        Publishing a port with <span class="mono">-p 6379:6379</span> binds 0.0.0.0,
+        not localhost. Worse, Docker writes its own iptables rules into the DOCKER
+        chain, and those are evaluated before the rules UFW manages — so <span
+          class="mono">ufw deny 6379</span
+        > can be sitting there looking correct while the container is happily reachable
+        from the internet. People discover this after the fact, in logs.
+      </p>
+      <p>
+        The fix is one prefix: <span class="mono">-p 127.0.0.1:6379:6379</span>
+        publishes to loopback only. For anything that genuinely needs to be reachable
+        from another host, put the rule in the DOCKER-USER chain, which is evaluated
+        first and is the officially supported hook. And if you only need it from your
+        laptop, do not publish it at all — <span class="mono">docker exec</span> or
+        an SSH tunnel gets you there without opening anything.
+      </p>
+      <h3 class="heading text-xl uppercase">What to do instead</h3>
+      <p>
+        Bind to <span class="mono">127.0.0.1</span> or a private interface by default,
+        and make the exception the thing you have to justify. Reach internal services
+        through an SSH tunnel or a VPN rather than a firewall rule you will forget
+        to remove. If something truly has to be public, put an authenticating proxy
+        in front of it — not a password field bolted onto an admin UI that was never
+        designed to face the internet. Then verify from outside: run a scan against
+        your own public address and read the result, because your firewall config
+        is a description of intent and the scan is the truth.
+      </p>
+    </div>
+  </section>
+
+  <!-- Finding listeners -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase">
+      Finding what is actually listening
+    </h2>
+    <div class="mt-4 space-y-4 leading-relaxed">
+      <p>
+        Every one of these answers a slightly different question, and the flags
+        matter more than the command. <span class="mono">-t</span> is TCP,
+        <span class="mono">-u</span> is UDP, <span class="mono">-l</span> is listening
+        sockets only, <span class="mono">-p</span> shows the owning process, and
+        <span class="mono">-n</span> skips DNS resolution so the output appears instantly
+        instead of after a timeout. Without sudo you will see the sockets but not
+        the process names of other users.
+      </p>
+    </div>
+    <div class="mt-8">
+      <CodeBlock code={listenSnippet} lang="bash" filename="listeners" />
+    </div>
+    <div class="mt-8 space-y-4 leading-relaxed">
+      <p>
+        Read the <em>address</em> column, not just the port.
+        <span class="mono">127.0.0.1:5432</span> is loopback only.
+        <span class="mono">0.0.0.0:5432</span> is every IPv4 interface including the
+        public one. <span class="mono">[::]:5432</span> is every IPv6 interface —
+        and on most Linux systems that covers IPv4 too, via mapped addresses, which
+        is a detail that has surprised a lot of people who thought they were bound
+        to v6 only.
+      </p>
+    </div>
+    <div class="mt-8">
+      <CodeBlock
+        code={containerSnippet}
+        lang="bash"
+        filename="containers-and-windows"
+      />
+    </div>
+    <div class="mt-8 space-y-4 leading-relaxed">
+      <p>
+        The container case has its own classic failure: the port mapping is
+        correct, the container is running, and connections still fail — because
+        the process inside bound <span class="mono">127.0.0.1</span> instead of
+        <span class="mono">0.0.0.0</span>. Inside a container, loopback means
+        the container's own loopback, so the mapping has nothing to forward to.
+        Frameworks that default to localhost in development (Flask, Rails,
+        plenty of Node setups) need an explicit host flag once containerised.
+      </p>
+    </div>
+    <div class="mt-8">
+      <CodeBlock code={reachSnippet} lang="bash" filename="reachability" />
+    </div>
+  </section>
+
+  <!-- Refused vs timed out -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase">
+      Refused vs timed out — the free diagnosis
+    </h2>
+    <div class="mt-4 space-y-4 leading-relaxed">
+      <p>
+        Two failures that look identical in an application log tell you
+        completely different things, and the difference is free. It is the
+        single most useful five seconds in network debugging: one says the
+        packets are arriving and the service is not there, the other says the
+        packets are not arriving at all.
+      </p>
+    </div>
+
+    <ComparisonTable
+      class="mt-6"
+      columns={[
+        { label: "Connection refused", tone: "yellow" },
+        { label: "Connection timed out", tone: "pink" },
+      ]}
+      rows={[
+        {
+          label: "What came back",
+          cells: [
+            "A TCP RST. Something answered you.",
+            "Nothing at all. The SYN was swallowed.",
+          ],
+        },
+        {
+          label: "How long it took",
+          cells: [
+            "Instant — one round trip.",
+            "Seconds, until your connect timeout fires.",
+          ],
+        },
+        {
+          label: "What it proves",
+          cells: [
+            "Routing, DNS and the firewall path are fine. No process is listening on that port, or a rule is REJECTing it.",
+            "Packets are being dropped: security group, DROP rule, wrong address, or no route to the host.",
+          ],
+        },
+        {
+          label: "Check first",
+          cells: [
+            "Is the service up? ss -tulpn. Is it bound to 127.0.0.1 rather than 0.0.0.0?",
+            "Security group and firewall rules, then the path: sudo traceroute -T -p PORT host.",
+          ],
+        },
+        {
+          label: "Classic cause",
+          cells: [
+            "Container publishes the port; the app inside binds loopback.",
+            "AWS security group missing the inbound rule, or you are on the wrong VPN.",
+          ],
+        },
+      ]}
+    />
+
+    <div class="mt-6 space-y-4 leading-relaxed">
+      <p>
+        There are two more states worth naming. <strong
+          >Connects, then hangs</strong
+        > means the TCP handshake worked and the protocols disagree — you spoke HTTP
+        to php-fpm on 9000, or plaintext to a TLS-only listener, and both sides are
+        now waiting for the other to say something. <strong
+          >Connection reset by peer</strong
+        > mid-stream means it worked and then stopped: a proxy timeout, a TLS version
+        the server rejected after the handshake started, or the process dying under
+        you.
+      </p>
+      <p>
+        UDP does not play this game. A closed UDP port is supposed to answer
+        with an ICMP port-unreachable, but firewalls drop ICMP as a matter of
+        habit, so silence means either “nothing is there” or “it is fine and the
+        service simply had nothing to say”. Tools like
+        <span class="mono">nc -vzu</span> are guessing. Test UDP services with a real
+        client — <span class="mono">dig @host</span> for DNS,
+        <span class="mono">ntpdate -q</span> for NTP — not a port probe.
+      </p>
+      <p>
+        And if the error is “could not resolve host”, stop looking at ports
+        entirely. That is DNS, it failed before a packet was ever addressed, and
+        no firewall rule you write will change it.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-5 text-2xl uppercase">Questions people ask</h2>
+    <div class="space-y-3">
+      {
+        faq.map((f) => (
+          <details class="group rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-sm">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-5 text-2xl uppercase">Related</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      {
+        related.map((r) => (
+          <li>
+            <NeoCard
+              href={r.href}
+              tone="paper"
+              shadow="sm"
+              hover
+              class="h-full space-y-1.5"
+            >
+              <p class="heading text-lg uppercase">{r.label}</p>
+              <p class="text-sm leading-snug opacity-80">{r.note}</p>
+            </NeoCard>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/common-ports";
+</script>

@@ -2,23 +2,161 @@
 import Page from "@/layouts/Page.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
 import { SITE } from "@/consts";
-import { breadcrumbList } from "@/lib/seo";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_NAME = "Token Counter";
+const TOOL_DESCRIPTION =
+  "Token counter for LLM prompts — free and instant. Paste text to estimate tokens, characters, words, and per-call cost for Claude and GPT, in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
   { name: "Tools", url: "/tools/" },
   { name: "Token Counter", url: "/tools/token-counter/" },
 ]);
+
+const estimateColumns = [
+  { label: "This page's estimate", tone: "yellow" as const },
+  { label: "The provider's tokenizer", tone: "cyan" as const },
+];
+
+const estimateRows = [
+  {
+    label: "What it does",
+    cells: [
+      "Blends chars ÷ 4 with a word-count estimate",
+      "Runs the model's real merge table",
+    ],
+  },
+  {
+    label: "Where it runs",
+    cells: ["In this tab, as you type", "An API call or a local library"],
+  },
+  {
+    label: "English prose",
+    cells: ["Usually within 10–20%", "Exact"],
+  },
+  {
+    label: "Code and JSON",
+    cells: ["Undercounts", "Exact"],
+  },
+  {
+    label: "Chinese, Japanese, Arabic",
+    cells: ["Undercounts, often by 3× or more", "Exact"],
+  },
+  {
+    label: "Counts images and tool schemas",
+    cells: [false, true],
+  },
+  {
+    label: "Portable across model families",
+    cells: [false, false],
+  },
+  {
+    label: "Use it for",
+    cells: [
+      "Sizing a prompt, sanity checks",
+      "Billing, hard limits, chunking",
+    ],
+  },
+];
+
+const faq = [
+  {
+    q: "How accurate is this token counter?",
+    a: "It is a heuristic, not a tokenizer. The page blends the four-characters-per-token rule with a word-based estimate, which lands within roughly 10–20% for ordinary English prose and drifts much further for code, JSON, and non-Latin scripts. Use it to size a prompt or sanity-check a chunking strategy, and use the provider's own tokenizer before you commit to a billing forecast or a hard context limit.",
+  },
+  {
+    q: "How many tokens is 1,000 words?",
+    a: "Roughly 1,300 to 1,400 tokens for ordinary English prose, since the working ratio is about 0.75 words per token or four characters per token. Documentation and marketing copy sit close to that. Code, JSON, and tables run well above it for the same word count, and Chinese or Arabic can multiply it several times over.",
+  },
+  {
+    q: "Why does my code use more tokens than the estimate?",
+    a: "Because source code has almost none of the properties the four-characters-per-token rule assumes. An identifier like getUserById is not a vocabulary entry, so it splits into several subword fragments, and brackets, operators, and punctuation are tokens in their own right. High-entropy strings are the worst case: UUIDs, hashes, and base64 blobs have no useful merges and shatter into something close to one token per character or two.",
+  },
+  {
+    q: "Do Claude and GPT count tokens the same way?",
+    a: "No. Each model family ships its own tokenizer with its own vocabulary and merge table, so the same paragraph produces different counts on each one. OpenAI publishes tiktoken, with cl100k_base for the GPT-4 generation and o200k_base for newer models; Anthropic does not publish Claude's tokenizer and exposes a count_tokens endpoint on the Messages API instead; Google offers countTokens for Gemini. A number you measured on one model is only an estimate on any other.",
+  },
+  {
+    q: "Does Chinese, Japanese, or Arabic text cost more tokens?",
+    a: "Yes, usually several times more per character. Tokenizer vocabularies are dominated by English, so English prose compresses to about four characters per token while a Chinese or Japanese character often costs a full token on its own. Arabic, Hebrew, Thai, and Devanagari tend to fragment further, sometimes down to individual UTF-8 bytes. Larger vocabularies like o200k_base narrowed that gap but did not close it, so budget extra context and extra money for non-English workloads.",
+  },
+  {
+    q: "Does this token counter send my text anywhere?",
+    a: "No. The estimate runs entirely in your browser, so the text never leaves the page, there is no request, and there is no server that could log it. Open the network tab and watch it stay empty, or load the page once and then go offline.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/token-counter/", SITE.URL).href,
+  description: TOOL_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const related = [
+  {
+    kind: "Tool",
+    title: "LLM Cost Calculator",
+    href: "/tools/llm-cost-calculator/",
+    tone: "yellow" as const,
+    blurb:
+      "Turn a token count into a monthly bill: requests, input and output split, and a model price.",
+  },
+  {
+    kind: "Tool",
+    title: "Context Window Checker",
+    href: "/tools/context-window-checker/",
+    tone: "cyan" as const,
+    blurb:
+      "Will the prompt fit, and how much of the window is left for the answer once retrieval and history land?",
+  },
+  {
+    kind: "Tool",
+    title: "RAG Chunk Splitter",
+    href: "/tools/rag-chunk-splitter/",
+    tone: "green" as const,
+    blurb:
+      "See how a document splits, how big each chunk is, and how much overlap you pay to embed twice.",
+  },
+  {
+    kind: "Post",
+    title: "Context window vs memory",
+    href: "/blog/context-window-vs-memory/",
+    tone: "purple" as const,
+    blurb:
+      "Why a bigger window is not memory, and what actually falls out of the prompt between turns.",
+  },
+  {
+    kind: "Post",
+    title: "Prompt vs context engineering",
+    href: "/blog/prompt-engineering-vs-context-engineering/",
+    tone: "pink" as const,
+    blurb:
+      "Wording is the small half of the job. Deciding what gets into the token budget is the big half.",
+  },
+];
 ---
 
 <Page
-  title="Token Counter"
-  description="Free, no-signup token counter. Paste text and estimate tokens for Claude and GPT models, plus characters, words, and a rough per-call cost — all client-side."
+  title={TOOL_NAME}
+  description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="Token Counter."
   intro="Paste text, get an instant estimate of how many tokens it costs across Claude and GPT models. Nothing leaves your browser."
-  structuredData={breadcrumbLd}
+  structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
@@ -80,6 +218,198 @@ const breadcrumbLd = breadcrumbList([
         </div>
       </NeoCard>
     </div>
+  </section>
+
+  <!-- EXPLAINER -->
+  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">A token is not a word</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Tokenizers are trained, not designed. Byte Pair Encoding starts from raw
+        bytes and repeatedly merges the most frequent adjacent pair until it has
+        a vocabulary of somewhere between 50,000 and 200,000 entries. What comes
+        out is a table of subword fragments: common English words survive as a
+        single token, rarer ones come apart into stem and suffix, and anything
+        the training corpus barely saw falls back toward individual bytes.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Two consequences catch people out. The leading space is usually part of
+        the token, so <code class="mono font-bold">hello</code> and <code
+          class="mono font-bold">" hello"</code
+        > are different entries and gluing strings together can change the count.
+        And modern tokenizers are byte-level, so there is no unknown-token failure
+        case — everything encodes, some things just encode expensively.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Where four characters per token falls apart
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        The ~4 chars/token rule comes from English prose and holds up there.
+        Everywhere else it leaks:
+      </p>
+      <ul class="space-y-2 text-base leading-relaxed opacity-90">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Code.</strong> Identifiers are not vocabulary entries — <code
+              class="mono font-bold">getUserById</code
+            > splits into several fragments, and every bracket, operator, and dot
+            is a token of its own. Real source usually lands nearer three characters
+            per token.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>JSON.</strong> Braces, quotes, colons, and commas are all
+            tokens, and every record repeats every key. A 200-row API response
+            spends a serious share of its budget re-stating field names.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Whitespace.</strong> Newer OpenAI vocabularies added
+            multi-space tokens precisely because indented Python was brutal
+            under the GPT-2 tokenizer, where a run of indentation cost roughly
+            one token per space. Which tokenizer you are on decides what your
+            formatting costs.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>High-entropy strings.</strong> UUIDs, hashes, base64 blobs,
+            minified bundles. There are no useful merges to find, so they
+            shatter — a single UUID can cost more than a dozen tokens.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Non-Latin scripts.</strong> A Chinese or Japanese character
+            often costs a full token on its own, against roughly four English
+            characters per token. Arabic, Hebrew, and Devanagari usually do
+            worse, fragmenting toward individual UTF-8 bytes. Per character,
+            that is several times the price for the same meaning.</span
+          >
+        </li>
+      </ul>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Counts do not port between model families
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        There is no universal token. Every model family ships its own tokenizer,
+        and a bigger vocabulary means fewer tokens for the same string — which
+        is why the same paragraph can differ by a double-digit percentage across
+        providers, and by much more if it is not English. OpenAI publishes
+        <code class="mono font-bold">tiktoken</code> (<code class="mono font-bold"
+          >cl100k_base</code
+        > for the GPT-4 generation, <code class="mono font-bold">o200k_base</code
+        > for newer models). Anthropic does not publish Claude's tokenizer and gives
+        you a <code class="mono font-bold">count_tokens</code> endpoint on the Messages
+        API instead. Google exposes <code class="mono font-bold">countTokens</code
+        > for Gemini. Open-weight models ship their tokenizer with the checkpoint,
+        so <code class="mono font-bold">AutoTokenizer</code> gives you an exact count
+        locally.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        So a count measured on one model is an estimate on every other one.
+        Migrating a prompt across providers can quietly change both your bill
+        and whether it still fits.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Tokens are the unit of your bill and your window
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Both limits that matter are denominated in tokens, and neither one is
+        measured in characters. Pricing is per million input and output tokens,
+        with output typically several times the price of input. The context
+        window is a token budget shared by the system prompt, tool definitions,
+        retrieved chunks, conversation history, the user turn, and the reply —
+        so every token you spend on context is one the model cannot spend on an
+        answer. Prompt caching, embedding limits, and rate limits are all
+        measured the same way.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Which is why a text-only count is a floor, not a total. Tool and
+        function schemas are serialised into the request and billed as input.
+        Images are converted to tokens based on their dimensions. Neither shows
+        up in the box above.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">When to stop estimating</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Estimates are for sizing decisions: is this prompt roughly 2k tokens or
+        roughly 200k, is this chunk in the right ballpark, is this feature going
+        to cost cents or hundreds. The moment a number becomes load-bearing,
+        switch to the real tokenizer — before a budget forecast at volume,
+        before anything that can hard-fail on a context limit in a batch job,
+        before you settle on a chunk size for a vector index, and always when
+        the content is code, JSON, or a non-Latin script.
+      </p>
+      <ComparisonTable columns={estimateColumns} rows={estimateRows} />
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase mb-6">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
+            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- RELATED -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="heading text-xl uppercase mb-5">Keep going</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      {
+        related.map((r) => (
+          <li>
+            <NeoCard href={r.href} tone={r.tone} shadow="sm" hover>
+              <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5 opacity-70">
+                ▸ {r.kind}
+              </p>
+              <p class="heading text-lg uppercase leading-tight flex items-center gap-2">
+                {r.title}
+                <Icon
+                  name="lucide:arrow-right"
+                  class="h-4 w-4 shrink-0"
+                  aria-hidden="true"
+                />
+              </p>
+              <p class="mt-2 text-sm leading-snug opacity-90">{r.blurb}</p>
+            </NeoCard>
+          </li>
+        ))
+      }
+    </ul>
   </section>
 </Page>
 

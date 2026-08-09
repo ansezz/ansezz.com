@@ -2,13 +2,32 @@
 import Page from "@/layouts/Page.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import { Icon } from "astro-icon/components";
-import { TOOLS, TOOL_LIST, SITE } from "@/consts";
-import { breadcrumbList } from "@/lib/seo";
+import { TOOLS, TOOL_LIST, TOOL_GROUPS, SITE } from "@/consts";
+import { breadcrumbList, collectionPage } from "@/lib/seo";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
   { name: "Tools", url: "/tools/" },
 ]);
+
+const live = TOOL_LIST.filter((t) => t.status === "live");
+
+const collectionLd = collectionPage({
+  url: new URL("/tools/", SITE.URL).href,
+  title: TOOLS.TITLE,
+  description: TOOLS.DESCRIPTION,
+  items: live.map((t) => ({
+    url: t.href,
+    name: t.title,
+    description: t.blurb,
+  })),
+});
+
+// Only render a section if it actually has tools in it.
+const groups = TOOL_GROUPS.map((g) => ({
+  ...g,
+  tools: TOOL_LIST.filter((t) => t.group === g.id),
+})).filter((g) => g.tools.length > 0);
 ---
 
 <Page
@@ -17,56 +36,82 @@ const breadcrumbLd = breadcrumbList([
   eyebrow="Free tools"
   heading="Tools I built because I needed them."
   intro={TOOLS.DESCRIPTION}
-  structuredData={breadcrumbLd}
+  structuredData={[breadcrumbLd, collectionLd]}
 >
-  <section class="mx-auto max-w-5xl px-5 pb-16">
-    <ul class="grid gap-6 sm:grid-cols-2">
-      {
-        TOOL_LIST.map((t, i) => {
-          const live = t.status === "live";
-          const Wrapper = live ? "a" : "div";
-          return (
-            <li>
-              <Wrapper
-                href={live ? t.href : undefined}
-                data-neo-hover={live ? "" : undefined}
-                class:list={[
-                  "block h-full",
-                  live ? "" : "opacity-60 cursor-default",
-                ]}
-              >
-                <NeoCard
-                  tone={t.tone}
-                  shadow="md"
-                  tilt={i % 2 === 0 ? -0.4 : 0.4}
-                  class="flex h-full flex-col gap-3"
-                >
-                  <div class="flex items-center justify-between">
-                    <span
-                      class="inline-flex h-11 w-11 items-center justify-center border-[2.5px] border-ink rounded-[6px] bg-paper text-ink shadow-neo-xs"
-                      aria-hidden="true"
-                    >
-                      <Icon name={t.icon} class="h-5 w-5" />
-                    </span>
-                    <span class="mono text-[10px] font-bold uppercase tracking-widest border-[2px] border-ink rounded-full px-2 py-0.5 bg-paper">
-                      {live ? "Live" : "Soon"}
-                    </span>
-                  </div>
-                  <h2 class="heading text-xl uppercase leading-tight">
-                    {t.title}
-                  </h2>
-                  <p class="text-sm leading-snug opacity-90">{t.blurb}</p>
-                  {live && (
-                    <p class="mono text-xs font-bold uppercase tracking-widest mt-auto pt-2 inline-flex items-center gap-1">
-                      Open <Icon name="lucide:arrow-right" class="h-3.5 w-3.5" />
-                    </p>
-                  )}
-                </NeoCard>
-              </Wrapper>
-            </li>
-          );
-        })
-      }
-    </ul>
+  <section class="mx-auto max-w-5xl px-5 pb-10">
+    <NeoCard tone="yellow" shadow="md" class="flex flex-wrap gap-x-8 gap-y-3">
+      <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        ▸ {live.length} tools · free · no signup
+      </p>
+      <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        ▸ 100% client-side
+      </p>
+      <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        ▸ Nothing uploaded, nothing logged
+      </p>
+    </NeoCard>
   </section>
+
+  {
+    groups.map((group) => (
+      <section class="mx-auto max-w-5xl px-5 pb-14">
+        <div class="mb-6 border-b-[3px] border-ink pb-4">
+          <h2 class="display text-2xl uppercase leading-none md:text-3xl">
+            {group.label}
+          </h2>
+          <p class="mt-2 max-w-2xl text-sm leading-snug text-ink/80">
+            {group.blurb}
+          </p>
+        </div>
+
+        <ul class="grid gap-6 sm:grid-cols-2">
+          {group.tools.map((t, i) => {
+            const isLive = t.status === "live";
+            const Wrapper = isLive ? "a" : "div";
+            return (
+              <li>
+                <Wrapper
+                  href={isLive ? t.href : undefined}
+                  data-neo-hover={isLive ? "" : undefined}
+                  class:list={[
+                    "block h-full",
+                    isLive ? "" : "opacity-60 cursor-default",
+                  ]}
+                >
+                  <NeoCard
+                    tone={t.tone}
+                    shadow="md"
+                    tilt={i % 2 === 0 ? -0.4 : 0.4}
+                    class="flex h-full flex-col gap-3"
+                  >
+                    <div class="flex items-center justify-between">
+                      <span
+                        class="inline-flex h-11 w-11 items-center justify-center border-[2.5px] border-ink rounded-[6px] bg-paper text-ink shadow-neo-xs"
+                        aria-hidden="true"
+                      >
+                        <Icon name={t.icon} class="h-5 w-5" />
+                      </span>
+                      <span class="mono text-[10px] font-bold uppercase tracking-widest border-[2px] border-ink rounded-full px-2 py-0.5 bg-paper">
+                        {isLive ? "Live" : "Soon"}
+                      </span>
+                    </div>
+                    <h3 class="heading text-xl uppercase leading-tight">
+                      {t.title}
+                    </h3>
+                    <p class="text-sm leading-snug opacity-90">{t.blurb}</p>
+                    {isLive && (
+                      <p class="mono text-xs font-bold uppercase tracking-widest mt-auto pt-2 inline-flex items-center gap-1">
+                        Open
+                        <Icon name="lucide:arrow-right" class="h-3.5 w-3.5" />
+                      </p>
+                    )}
+                  </NeoCard>
+                </Wrapper>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    ))
+  }
 </Page>

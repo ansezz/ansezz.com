@@ -1,0 +1,745 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: "RAG Chunk Splitter", url: "/tools/rag-chunk-splitter/" },
+]);
+
+const DESCRIPTION =
+  "Free RAG chunk splitter. Split text into retrieval chunks by tokens or characters — fixed, sentence, paragraph, or markdown-heading aware — in your browser.";
+
+// Starting points I actually use, rather than whatever the library default is.
+const PRESETS = [
+  {
+    label: "Technical docs",
+    note: "512 tokens · 10% overlap · sentence-aware",
+    strategy: "sentence",
+    unit: "tokens",
+    size: "512",
+    overlap: "51",
+  },
+  {
+    label: "Long-form prose",
+    note: "1024 tokens · 15% overlap · paragraph-aware",
+    strategy: "paragraph",
+    unit: "tokens",
+    size: "1024",
+    overlap: "154",
+  },
+  {
+    label: "Markdown handbook",
+    note: "800 tokens · 8% overlap · heading-aware",
+    strategy: "markdown",
+    unit: "tokens",
+    size: "800",
+    overlap: "64",
+  },
+  {
+    label: "Naive baseline",
+    note: "1000 chars · 200 overlap · fixed window",
+    strategy: "fixed",
+    unit: "chars",
+    size: "1000",
+    overlap: "200",
+  },
+];
+
+const faq = [
+  {
+    q: "What is the best chunk size for RAG?",
+    a: "There is no universal number, but 512–1024 tokens with 10–15% overlap is a sane starting point for technical documentation, and it is what I reach for first. Go smaller (256–384) when your corpus is FAQ-style and answers are one or two sentences, because precision matters more than context. Go larger (1024–1536) when answers need surrounding narrative to make sense. Then measure retrieval recall on a real question set instead of guessing again.",
+  },
+  {
+    q: "How much overlap should RAG chunks have?",
+    a: "Ten to fifteen percent of the chunk size, and zero is a legitimate answer once your splitter respects sentence or paragraph boundaries. Overlap exists to stop a fixed-size window from slicing an answer in half; if you are already cutting on real boundaries, most of that risk is gone. Anything above 30% mostly buys you near-duplicate chunks that compete with each other for the top-k slots.",
+  },
+  {
+    q: "Is the token count in this chunk splitter accurate?",
+    a: "It is an estimate, not a tokenizer. The tool blends the ~4-characters-per-token rule with a word-count estimate, which lands within roughly 10–20% of a real BPE tokenizer on English prose. Code, JSON, non-Latin scripts, and heavy punctuation drift further. Use it to size chunks and compare strategies; use the provider's own tokenizer before you commit a number to a billing forecast.",
+  },
+  {
+    q: "What is the difference between fixed-size and semantic chunking?",
+    a: "Fixed-size chunking counts characters or tokens and cuts when the counter hits the limit, wherever that lands — often mid-sentence, mid-table, or between a code block and the paragraph explaining it. Structure-aware chunking cuts on boundaries the document already has: sentences, paragraphs, or markdown headings. Semantic chunking goes one step further and cuts where the embedding of consecutive sentences drifts apart. This tool covers the first two, which is where most of the win is.",
+  },
+  {
+    q: "How do I chunk markdown documents for RAG?",
+    a: "Split on heading boundaries first so each chunk covers one topic, keep the heading line with its body, and only fall back to paragraph or sentence packing inside a section that is still too big. When one section spills into several chunks, re-inject the heading at the top of each continuation chunk — otherwise chunk three of the 'Rate limits' section reads like it belongs to nothing. The markdown mode here does exactly that, and it ignores headings inside fenced code blocks.",
+  },
+  {
+    q: "Does this chunk splitter send my text anywhere?",
+    a: "No. There is no upload, no API call, and no analytics on the text. The splitting, the token estimate, and the cost maths all run in JavaScript inside your tab, so the page keeps working with the network switched off once it has loaded. Paste internal documentation without thinking about it.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "RAG Chunk Splitter",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/rag-chunk-splitter/", SITE.URL).href,
+  description: DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const inputClass =
+  "border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none";
+const selectClass =
+  "border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-bold shadow-neo-sm focus:outline-none";
+const labelClass =
+  "mono text-[11px] font-bold uppercase tracking-widest block mb-2";
+const hintClass = "mono text-[10px] uppercase tracking-widest opacity-70 mt-2";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1";
+const pillClass =
+  "mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5";
+---
+
+<Page
+  title="RAG Chunk Splitter"
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="RAG Chunk Splitter."
+  intro="Paste a document, pick a strategy, and see exactly how it splits — every chunk, its token estimate, and the overlap you end up embedding twice. Nothing leaves your browser."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Token counts are estimates
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        This uses the ~4 chars/token heuristic, not a real BPE tokenizer. Good
+        enough to size chunks and compare strategies — not for billing.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id="rag-chunk-splitter-root">
+    <div class="grid items-start gap-6 md:grid-cols-[1fr_340px]">
+      <!-- Inputs -->
+      <NeoCard tone="paper" shadow="md" class="space-y-5">
+        <div>
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <label
+              for="rag-chunk-splitter-input"
+              class="mono block text-[11px] font-bold tracking-widest uppercase"
+            >
+              Source text
+            </label>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                id="rag-chunk-splitter-sample"
+                class={pillClass}
+              >
+                Load sample
+              </button>
+              <button
+                type="button"
+                id="rag-chunk-splitter-clear"
+                class={pillClass}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          <textarea
+            id="rag-chunk-splitter-input"
+            rows="12"
+            spellcheck="false"
+            placeholder="Paste the document you are about to embed…"
+            class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm focus:outline-none"
+          ></textarea>
+          <p class={hintClass} id="rag-chunk-splitter-source-stats">
+            ▸ 0 characters · ~0 tokens
+          </p>
+        </div>
+
+        <div>
+          <label for="rag-chunk-splitter-strategy" class={labelClass}>
+            Splitting strategy
+          </label>
+          <select
+            id="rag-chunk-splitter-strategy"
+            class={`${selectClass} w-full`}
+          >
+            <option value="sentence" selected>Sentence-aware</option>
+            <option value="paragraph">Paragraph-aware</option>
+            <option value="markdown">Markdown heading-aware</option>
+            <option value="fixed">Fixed-size window</option>
+          </select>
+          <p class={hintClass} id="rag-chunk-splitter-strategy-hint">
+            ▸ Packs whole sentences up to the target. Never cuts mid-sentence.
+          </p>
+        </div>
+
+        <div>
+          <span class={labelClass}>Measure chunk size in</span>
+          <div
+            class="flex gap-2"
+            role="group"
+            aria-label="Chunk size unit"
+            id="rag-chunk-splitter-unit"
+          >
+            <button
+              type="button"
+              id="rag-chunk-splitter-unit-tokens"
+              data-unit="tokens"
+              aria-pressed="true"
+              class={pillClass}
+            >
+              Tokens
+            </button>
+            <button
+              type="button"
+              id="rag-chunk-splitter-unit-chars"
+              data-unit="chars"
+              aria-pressed="false"
+              class={pillClass}
+            >
+              Characters
+            </button>
+          </div>
+          <p class={hintClass}>
+            ▸ Switching converts your numbers at 4 characters per token.
+          </p>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="rag-chunk-splitter-size" class={labelClass}>
+              Chunk size (<span data-unit-label>tokens</span>)
+            </label>
+            <input
+              id="rag-chunk-splitter-size"
+              type="number"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              value="512"
+              autocomplete="off"
+              class={`${inputClass} w-full`}
+            />
+          </div>
+          <div>
+            <label for="rag-chunk-splitter-overlap" class={labelClass}>
+              Overlap (<span data-unit-label>tokens</span>)
+            </label>
+            <input
+              id="rag-chunk-splitter-overlap"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              value="51"
+              autocomplete="off"
+              class={`${inputClass} w-full`}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label for="rag-chunk-splitter-price" class={labelClass}>
+            Embedding price ($ / 1M tokens)
+          </label>
+          <input
+            id="rag-chunk-splitter-price"
+            type="number"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            value="0.13"
+            autocomplete="off"
+            class={`${inputClass} w-full sm:max-w-[200px]`}
+          />
+          <p class={hintClass}>
+            ▸ Varies by provider — roughly $0.02 to $0.13 per million tokens.
+            Check the current price page.
+          </p>
+        </div>
+
+        <div class="border-ink border-t-[2.5px] pt-4">
+          <p
+            class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-80"
+          >
+            Presets
+          </p>
+          <div class="flex flex-wrap gap-2">
+            {
+              PRESETS.map((p) => (
+                <button
+                  type="button"
+                  title={p.note}
+                  data-preset-strategy={p.strategy}
+                  data-preset-unit={p.unit}
+                  data-preset-size={p.size}
+                  data-preset-overlap={p.overlap}
+                  class={pillClass}
+                >
+                  {p.label}
+                </button>
+              ))
+            }
+          </div>
+        </div>
+      </NeoCard>
+
+      <!-- Summary -->
+      <NeoCard tone="cyan" shadow="lg" class="space-y-4 md:sticky md:top-24">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Chunk stats
+        </p>
+
+        <div
+          id="rag-chunk-splitter-summary"
+          aria-live="polite"
+          class="space-y-4"
+        >
+          <div>
+            <p
+              id="rag-chunk-splitter-count"
+              class="display text-pink-deep text-4xl leading-none"
+            >
+              0
+            </p>
+            <p
+              class="mono mt-2 text-[11px] tracking-widest uppercase opacity-80"
+            >
+              chunks
+            </p>
+          </div>
+
+          <dl class="border-ink space-y-2.5 border-t-[2.5px] pt-3">
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Avg tokens</dt>
+              <dd
+                id="rag-chunk-splitter-avg"
+                class="text-right font-mono text-sm font-bold"
+              >
+                —
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Min / max</dt>
+              <dd
+                id="rag-chunk-splitter-minmax"
+                class="text-right font-mono text-sm font-bold"
+              >
+                —
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Tokens embedded</dt>
+              <dd
+                id="rag-chunk-splitter-total"
+                class="text-right font-mono text-sm font-bold"
+              >
+                —
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Overlap tax</dt>
+              <dd
+                id="rag-chunk-splitter-dupe"
+                class="text-right font-mono text-sm font-bold"
+              >
+                —
+              </dd>
+            </div>
+            <div
+              class="border-ink flex items-baseline justify-between gap-3 border-t-[2.5px] pt-2.5"
+            >
+              <dt class="text-xs font-bold uppercase">Embedding cost</dt>
+              <dd
+                id="rag-chunk-splitter-cost"
+                class="text-right font-mono text-sm font-bold"
+              >
+                —
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <button
+          type="button"
+          id="rag-chunk-splitter-copy"
+          class="border-ink bg-paper shadow-neo-sm hover:bg-yellow hover:shadow-neo-md inline-flex w-full items-center justify-center gap-2 rounded-[6px] border-[3px] px-4 py-2.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 disabled:opacity-50"
+          disabled
+        >
+          <Icon name="lucide:copy" class="h-4 w-4" aria-hidden="true" />
+          <span id="rag-chunk-splitter-copy-label">Copy chunks as JSON</span>
+        </button>
+
+        <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+          Runs in your browser · nothing uploaded
+        </p>
+      </NeoCard>
+    </div>
+
+    <!-- Warnings -->
+    <div
+      id="rag-chunk-splitter-warnings"
+      role="status"
+      hidden
+      class="border-ink bg-red shadow-neo-sm mt-6 rounded-[4px] border-[3px] px-4 py-3"
+    >
+      <p class="mono mb-2 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Worth fixing
+      </p>
+      <ul
+        id="rag-chunk-splitter-warnings-list"
+        class="list-disc space-y-1.5 pl-5 text-sm leading-snug font-bold"
+      >
+      </ul>
+    </div>
+
+    <!-- Chunks -->
+    <div class="mt-10 mb-3 flex flex-wrap items-end justify-between gap-3">
+      <h2 class="heading text-xl uppercase">The chunks.</h2>
+      <p
+        class="mono flex flex-wrap items-center gap-3 text-[10px] font-bold tracking-widest uppercase"
+      >
+        <span class="inline-flex items-center gap-1.5">
+          <span
+            class="border-ink bg-pink/30 inline-block h-3 w-6 border-[2px]"
+            aria-hidden="true"></span>
+          overlap
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span
+            class="border-ink bg-cyan/40 inline-block h-3 w-6 border-[2px]"
+            aria-hidden="true"></span>
+          injected heading
+        </span>
+      </p>
+    </div>
+    <p class={hintClass} id="rag-chunk-splitter-note" hidden></p>
+    <div
+      id="rag-chunk-splitter-list"
+      class="mt-3 space-y-4"
+      aria-label="Generated chunks"
+    >
+    </div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">
+        Chunk size is the highest-leverage knob in RAG
+      </h2>
+      <p>
+        Almost every RAG debugging session I get pulled into starts at the wrong
+        end of the pipeline. Someone is swapping embedding models, bolting on a
+        reranker, or arguing about hybrid search — and all of those operate on
+        whatever the splitter already handed them. If the answer got cut in half
+        at ingestion time, no amount of retrieval cleverness reassembles it.
+      </p>
+      <p>
+        Chunking happens once, upstream of everything, and every query pays for
+        it forever. It is also the cheapest thing in the stack to change: adjust
+        the splitter, re-embed, done. That is why it is the first thing I touch.
+        My default for technical documentation is 512–1024 tokens with 10–15%
+        overlap on real sentence or paragraph boundaries — then I measure
+        retrieval recall against an actual question set instead of guessing
+        twice.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Big chunks buy recall, small chunks buy precision
+      </h2>
+      <p>
+        This is the trade you are actually making, and it is not a matter of
+        taste. A large chunk is more likely to contain the answer somewhere
+        inside it, but its embedding is an average of several topics, so it sits
+        in a mushy region of vector space and matches vaguely. A small chunk
+        embeds sharply and ranks well, but the answer may be split across two of
+        them and only one will make the cut.
+      </p>
+    </div>
+
+    <ComparisonTable
+      class="mt-6"
+      columns={[
+        { label: "Small (128–384)", tone: "cyan" },
+        { label: "Medium (512–1024)", tone: "yellow" },
+        { label: "Large (1536+)", tone: "pink" },
+      ]}
+      rows={[
+        {
+          label: "Retrieval behaviour",
+          cells: [
+            "Sharp match, high precision",
+            "Balanced",
+            "Broad match, high recall",
+          ],
+        },
+        {
+          label: "Failure mode",
+          cells: [
+            "Answer split across chunks",
+            "Occasional near-miss",
+            "Right chunk, buried answer",
+          ],
+        },
+        {
+          label: "Context sent to the LLM",
+          cells: [
+            "Fragmentary — needs top-10",
+            "Usually self-contained",
+            "Padded with irrelevant text",
+          ],
+        },
+        {
+          label: "Index size and cost",
+          cells: ["Largest", "Moderate", "Smallest"],
+        },
+        {
+          label: "Good fit",
+          cells: [
+            "FAQs, product specs, logs",
+            "Docs, runbooks, guides",
+            "Contracts, papers, narrative",
+          ],
+        },
+      ]}
+    />
+
+    <div class="text-ink/90 mt-6 space-y-4 text-base leading-relaxed">
+      <p>
+        A useful rule: if your top-k results keep containing the right document
+        but not the right sentence, chunks are too large. If they keep
+        containing half the answer, chunks are too small. Those two symptoms
+        point in opposite directions, so diagnose before you turn the dial.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Overlap is insurance, and you pay the premium on every chunk
+      </h2>
+      <p>
+        Overlap exists for exactly one reason: a fixed-size window cuts blind,
+        so you duplicate the seam to make sure a sentence straddling the cut
+        survives in at least one chunk. That is a real problem and overlap is a
+        real fix — for fixed-size splitting.
+      </p>
+      <p>
+        The moment your splitter respects sentence or paragraph boundaries, most
+        of what overlap protects against has already been handled, and the
+        premium starts looking expensive. Twenty percent overlap means 20% more
+        vectors to store, 20% more index to search, and a top-k list where two
+        of your five slots are near-duplicates of each other. The
+        <strong>overlap tax</strong> figure in the stats panel is the number to watch:
+        it is total tokens across all chunks minus the tokens in your source, i.e.
+        exactly what you are embedding twice. The one-off embedding bill is usually
+        pocket change; the permanent index bloat and the crowded top-k are what actually
+        hurt.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Splitting mid-sentence wrecks the embedding, not just the text
+      </h2>
+      <p>
+        An embedding model compresses the whole chunk into one vector. Feed it a
+        fragment that ends "…therefore the migration must run before" and it
+        produces a vector for a statement that has no meaning. That vector does
+        not merely fail to retrieve — it pollutes the index, because a
+        semantically incoherent chunk lands somewhere near everything and near
+        nothing, and it will surface for queries it has no business answering.
+      </p>
+      <p>
+        The nasty part is that this survives eyeball review. The chunk still
+        reads like text, so the ingestion pipeline looks fine right up until
+        someone asks the question that needed the second half. Tables lose their
+        header row and become unretrievable columns of numbers. Code blocks get
+        separated from the paragraph that explains what they do. Both are
+        invisible in a chunk dump and obvious in production.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Structure-aware splitting for markdown and code
+      </h2>
+      <p>
+        Most documents already contain the boundaries you want, and you get them
+        for free. Markdown headings mark topic changes better than any
+        similarity threshold you could tune, which is why the heading-aware mode
+        here starts a new chunk at every <code class={codeClass}>#</code>,
+        <code class={codeClass}>##</code>, or <code class={codeClass}>###</code>
+        and keeps the heading attached to its body. When a section is still too big
+        and has to spill into several chunks, the heading is re-injected at the top
+        of each continuation chunk — otherwise chunk three of "Rate limits" retrieves
+        as an orphan paragraph belonging to nothing. Headings inside fenced code blocks
+        are ignored, because
+        <code class={codeClass}>#!/bin/sh</code> is not a section.
+      </p>
+      <p>
+        For source code, apply the same principle with different boundaries:
+        split on function, class, or module, never mid-body, and carry the
+        imports or the class signature into each chunk as context. For HTML and
+        PDFs, strip to structure first — a splitter fed raw PDF text extraction
+        is splitting page furniture as often as it is splitting content.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">How this tool splits</h2>
+      <ul class="marker:text-pink list-disc space-y-3 pl-5">
+        <li>
+          <strong>Fixed-size</strong> slides a hard window across the raw text with
+          a step of size minus overlap. In token mode the window is converted to characters
+          using the document's own characters-per-token ratio, so the window tracks
+          your text rather than a generic constant.
+        </li>
+        <li>
+          <strong>Sentence and paragraph</strong> modes split into whole units first,
+          then greedily pack units until the next one would blow the budget. Overlap
+          is built by walking backwards over complete units, so you never get half
+          a sentence of overlap. A unit that is larger than the target on its own
+          is recursively broken down — paragraph to sentences, sentence to a hard
+          window — which is the only point where a mid-sentence cut can happen.
+        </li>
+        <li>
+          <strong>Markdown</strong> sections each pack independently. That means a
+          document with many short sections produces many short chunks, and the tool
+          will not glue two unrelated sections together to hit a target. That is deliberate:
+          a chunk with two topics in it is worse than a chunk that is simply small.
+        </li>
+        <li>
+          <strong>Token counts</strong> blend the ~4-characters-per-token rule with
+          a word-based estimate — the same heuristic as my
+          <a
+            href="/tools/token-counter/"
+            class="font-bold underline decoration-2 underline-offset-2"
+            >token counter</a
+          >. Expect ±10–20% against a real BPE tokenizer on English, and more
+          drift on code, JSON, and non-Latin scripts.
+        </li>
+      </ul>
+      <p>
+        Two guardrails worth knowing about. Any chunk over 8,192 tokens is
+        flagged, because that is the input ceiling on most current embedding
+        models and anything past it gets silently truncated by the API rather
+        than rejected. And an overlap greater than or equal to the chunk size is
+        the classic infinite-loop footgun in hand-rolled splitters — this one
+        clamps it, warns you, and stops after a hard chunk ceiling instead of
+        locking up your tab.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <h2 class="display mb-5 text-2xl uppercase">Questions people ask.</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="heading mb-4 text-xl uppercase">Keep reading.</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/7-rag-mistakes-production/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            7 RAG mistakes in production — naive chunking is number one
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/why-your-rag-is-failing/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Why your RAG is failing — and it usually isn't the model
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/picking-the-right-rag-stack/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Picking the right RAG stack for what you're actually building
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/tools/token-counter/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Tool
+          </p>
+          <p class="leading-snug font-bold">
+            Token Counter — the same estimate, on one blob of text
+          </p>
+        </NeoCard>
+      </li>
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/rag-chunk-splitter";
+</script>

@@ -1,0 +1,544 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_NAME = "Base64 Encoder / Decoder";
+const TOOL_DESCRIPTION =
+  "Free base64 encoder and decoder that is UTF-8 safe — emoji and accents round-trip correctly. Supports base64url and file-to-data-URI, all in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: "Base64 Encoder", url: "/tools/base64-encoder/" },
+]);
+
+const samples = [
+  { label: "Hello", text: "Hello, world!" },
+  { label: "Unicode", text: "Café — naïve 🚀 日本語" },
+  { label: "Basic auth", text: "demo:s3cr3t" },
+  { label: "JSON", text: '{"sub":"1234567890","role":"admin"}' },
+];
+
+const alphabetColumns = [
+  { label: "Standard base64", tone: "cyan" as const },
+  { label: "base64url", tone: "green" as const },
+];
+
+const alphabetRows = [
+  { label: "Spec", cells: ["RFC 4648 §4", "RFC 4648 §5"] },
+  { label: "Character 62", cells: ["+", "-"] },
+  { label: "Character 63", cells: ["/", "_"] },
+  { label: "Padding", cells: ["= required", "usually stripped"] },
+  { label: "Safe in a URL", cells: [false, true] },
+  { label: "Safe in a filename", cells: [false, true] },
+  {
+    label: "Where you meet it",
+    cells: ["MIME, data URIs, Basic auth", "JWT, JWK, WebAuthn, OAuth PKCE"],
+  },
+];
+
+const faq = [
+  {
+    q: "Is base64 encryption?",
+    a: "No. Base64 is a reversible encoding with no key — anyone holding the string can decode it, including this page. It exists to move bytes through text-only channels, not to hide them. If you need secrecy, encrypt the data first and treat base64 as the envelope around the ciphertext.",
+  },
+  {
+    q: "Why does btoa() throw InvalidCharacterError?",
+    a: "Because btoa() is a Latin-1 function: it only accepts code units from U+0000 to U+00FF, so emoji, CJK, and most non-Latin scripts throw. Worse, characters between U+0080 and U+00FF do not throw — é gets encoded as the single byte 0xE9 instead of the UTF-8 pair C3 A9, which decodes to garbage later. The fix is to run the string through TextEncoder first, which is what this tool does.",
+  },
+  {
+    q: "How much bigger does base64 make a file?",
+    a: "Exactly one third bigger, plus padding: every 3 bytes become 4 characters, so the output length is 4 × ceil(n / 3). A 100 KB image becomes roughly 133 KB of text, and a data URI adds the data:<mime>;base64, prefix on top. Compression claws some of it back for text, and almost none of it back for already-compressed images.",
+  },
+  {
+    q: "What is the difference between base64 and base64url?",
+    a: "The encoding is identical; only the last two characters of the alphabet change. Standard base64 uses + and /, while base64url uses - and _ and usually drops the = padding, which makes it safe in URLs, query strings, and filenames. JWTs, JWKs, WebAuthn, and OAuth PKCE all use base64url. This tool lets you pick the alphabet on the way out, and accepts either one on the way in.",
+  },
+  {
+    q: "Does this base64 encoder upload my data?",
+    a: "No. Encoding, decoding, and the file-to-data-URI conversion all run in your browser using TextEncoder, btoa, atob, and FileReader. There is no request and no server involved — open the network tab and watch it stay empty, or load the page once and then go offline.",
+  },
+  {
+    q: "Can I base64 encode an image or a PDF here?",
+    a: "Yes. Use the file panel — it reads the file with FileReader and returns a complete data: URI you can paste straight into HTML or CSS, without uploading anything. Watch the size warning: past about 100 KB, an inline data URI usually costs more in lost caching than it saves in round trips.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/base64-encoder/", SITE.URL).href,
+  description: TOOL_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const paneClass =
+  "w-full border-[3px] border-ink rounded-[4px] bg-paper p-3 font-mono text-sm shadow-neo-sm focus:outline-none resize-y break-all";
+const copyBtnClass =
+  "inline-flex items-center gap-2 border-[2.5px] border-ink rounded-[4px] bg-paper px-3 py-1.5 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm";
+---
+
+<Page
+  title={TOOL_NAME}
+  description={TOOL_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Base64 Encoder / Decoder."
+  intro="Encode and decode base64 without the UTF-8 bugs — emoji and accents round-trip correctly. base64url and file-to-data-URI included. Nothing leaves your browser."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="pink" tilt={-1.5} class="max-w-md">
+      <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+        ▸ Encoding, not encryption
+      </p>
+      <p class="text-sm font-bold leading-snug">
+        Base64 has no key. Anyone who can read the string can read the bytes.
+        Never use it to "hide" a secret.
+      </p>
+    </StickyNote>
+  </section>
+
+  <!-- TOOL -->
+  <section class="mx-auto max-w-5xl px-5 pb-16 space-y-6" id="base64-root">
+    <NeoCard tone="paper" shadow="md" class="space-y-5">
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
+        <div
+          role="group"
+          aria-label="Conversion direction"
+          class="inline-flex border-[3px] border-ink rounded-[4px] shadow-neo-xs overflow-hidden"
+        >
+          <button
+            type="button"
+            data-base64-dir="encode"
+            aria-pressed="true"
+            class="bg-yellow px-3.5 py-2 mono text-[10px] font-bold uppercase tracking-widest border-r-[3px] border-ink transition-colors"
+          >
+            Text → Base64
+          </button>
+          <button
+            type="button"
+            data-base64-dir="decode"
+            aria-pressed="false"
+            class="bg-paper px-3.5 py-2 mono text-[10px] font-bold uppercase tracking-widest transition-colors"
+          >
+            Base64 → Text
+          </button>
+        </div>
+
+        <label class="flex cursor-pointer items-center gap-2 text-sm font-bold">
+          <input
+            id="base64-urlsafe"
+            type="checkbox"
+            class="h-5 w-5 border-[2.5px] border-ink accent-pink"
+          />
+          URL-safe (base64url)
+        </label>
+
+        <button
+          type="button"
+          id="base64-clear"
+          class="ml-auto inline-flex items-center gap-2 border-[2.5px] border-ink rounded-[4px] bg-paper px-3 py-1.5 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+        >
+          <Icon name="lucide:eraser" class="h-3.5 w-3.5" aria-hidden="true" />
+          Clear
+        </button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <span
+          class="mono text-[10px] font-bold uppercase tracking-widest opacity-70"
+        >
+          Try
+        </span>
+        {
+          samples.map((s) => (
+            <button
+              type="button"
+              data-base64-sample={s.text}
+              class="border-[2px] border-ink rounded-full bg-bg-alt px-3 py-1 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+            >
+              {s.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <p class="mono text-[10px] uppercase tracking-widest opacity-60">
+        Type in either box — the direction follows you. Decoding accepts both
+        alphabets.
+      </p>
+    </NeoCard>
+
+    <div class="grid gap-5 md:grid-cols-2">
+      <NeoCard tone="paper" shadow="md" class="space-y-3">
+        <label
+          for="base64-text"
+          class="mono text-[11px] font-bold uppercase tracking-widest block"
+        >
+          Plain text
+        </label>
+        <textarea
+          id="base64-text"
+          rows="9"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="Café — naïve 🚀"
+          class={paneClass}></textarea>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p
+            id="base64-text-stats"
+            aria-live="polite"
+            class="mono text-[10px] uppercase tracking-widest opacity-70"
+          >
+            0 characters · 0 bytes UTF-8
+          </p>
+          <button type="button" id="base64-copy-text" class={copyBtnClass}>
+            <Icon name="lucide:copy" class="h-3.5 w-3.5" aria-hidden="true" />
+            <span id="base64-copy-text-label">Copy</span>
+          </button>
+        </div>
+      </NeoCard>
+
+      <NeoCard tone="green" shadow="lg" class="space-y-3">
+        <label
+          for="base64-b64"
+          class="mono text-[11px] font-bold uppercase tracking-widest block"
+        >
+          Base64
+        </label>
+        <textarea
+          id="base64-b64"
+          rows="9"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="Q2Fmw6kg4oCUIG5hw692ZSDwn5qA"
+          class={paneClass}></textarea>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p
+            id="base64-b64-stats"
+            aria-live="polite"
+            class="mono text-[10px] uppercase tracking-widest opacity-70"
+          >
+            0 characters
+          </p>
+          <button type="button" id="base64-copy-b64" class={copyBtnClass}>
+            <Icon name="lucide:copy" class="h-3.5 w-3.5" aria-hidden="true" />
+            <span id="base64-copy-b64-label">Copy</span>
+          </button>
+        </div>
+      </NeoCard>
+    </div>
+
+    <p
+      id="base64-error"
+      role="alert"
+      class="border-[3px] border-ink rounded-[4px] bg-paper p-3.5 text-sm font-bold leading-snug text-pink-deep shadow-neo-sm"
+      hidden
+    >
+    </p>
+
+    <NeoCard tone="yellow" shadow="md" class="space-y-4">
+      <h2 class="heading text-xl uppercase">File → data URI</h2>
+      <p class="text-sm leading-relaxed">
+        Pick a local file and get a complete <code class="mono font-bold"
+          >data:</code
+        > URI you can paste into HTML or CSS. The file is read with <code
+          class="mono font-bold">FileReader</code
+        > in this tab — it is never uploaded.
+      </p>
+      <div>
+        <label
+          for="base64-file"
+          class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+        >
+          File
+        </label>
+        <input
+          id="base64-file"
+          type="file"
+          class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-3 py-2.5 text-sm font-bold shadow-neo-sm file:mr-3 file:border-[2.5px] file:border-ink file:rounded-[4px] file:bg-paper file:px-3 file:py-1.5 file:text-xs file:font-bold file:uppercase focus:outline-none"
+        />
+      </div>
+      <p
+        id="base64-file-meta"
+        aria-live="polite"
+        class="mono text-[10px] uppercase tracking-widest opacity-70"
+      >
+        No file selected.
+      </p>
+      <p
+        id="base64-file-warn"
+        role="alert"
+        class="border-[3px] border-ink rounded-[4px] bg-paper p-3 text-sm font-bold leading-snug shadow-neo-xs"
+        hidden
+      >
+      </p>
+      <textarea
+        id="base64-file-out"
+        rows="5"
+        readonly
+        placeholder="data:image/png;base64,…"
+        class="w-full border-[3px] border-ink rounded-[4px] bg-paper p-3 font-mono text-xs shadow-neo-sm focus:outline-none resize-y break-all"
+      ></textarea>
+      <button type="button" id="base64-file-copy" class={copyBtnClass}>
+        <Icon name="lucide:copy" class="h-3.5 w-3.5" aria-hidden="true" />
+        <span id="base64-file-copy-label">Copy data URI</span>
+      </button>
+    </NeoCard>
+  </section>
+
+  <!-- EXPLAINER -->
+  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">What base64 actually does</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Base64 takes arbitrary bytes and re-spells them using 64 characters that
+        survive any channel that treats data as text. Three bytes — 24 bits — go
+        in, four 6-bit groups come out, each mapped to <code
+          class="mono font-bold">A–Z a–z 0–9 + /</code
+        >. When the input is not a multiple of three, the tail is padded with
+        <code class="mono font-bold">=</code> so the decoder knows where the real
+        bytes stop.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        That is the whole trick, and it exists because large parts of the
+        internet are still text-only by contract. SMTP was defined for 7-bit
+        ASCII. HTTP header values cannot carry raw bytes. JSON strings cannot
+        hold a null byte. Base64 buys you a channel-safe representation at a
+        fixed, predictable cost.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">The 33% tax</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Four characters per three bytes means base64 output is always 4/3 the
+        input size — a flat 33% increase, plus up to two padding characters. A
+        3 MB image becomes 4 MB of text. Three places where that bill lands and
+        people are surprised:
+      </p>
+      <ul class="space-y-2 text-base leading-relaxed opacity-90">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Over the wire.</strong> Gzip and brotli claw some of it back
+            for text, but base64 of already-compressed data — JPEG, PNG, WebP,
+            zip — compresses badly, so you eat most of the 33%.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>In a database.</strong> A text column full of base64 blobs
+            is a third larger on disk, in every index that touches it, and in
+            every backup you keep.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>In an LLM prompt.</strong> Base64 tokenizes terribly — a
+            high-entropy character soup fragments into far more tokens than the
+            underlying bytes would suggest. Paste some into the <a
+              href="/tools/token-counter/"
+              class="font-bold underline decoration-2 underline-offset-2"
+              >token counter</a
+            > and watch.</span
+          >
+        </li>
+      </ul>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Base64 is encoding, not encryption
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        This has to be said plainly because a surprising amount of production
+        code gets it wrong. Base64 has no key, no secret, and no integrity
+        guarantee. The <code class="mono font-bold">Authorization: Basic</code> header
+        is nothing but base64 of <code class="mono font-bold"
+          >username:password</code
+        > — that is exactly why Basic auth is only acceptable over TLS. A JWT payload
+        is base64url too, which is why you can read anyone's claims in the <a
+          href="/tools/jwt-decoder/"
+          class="font-bold underline decoration-2 underline-offset-2"
+          >JWT decoder</a
+        > without a key. Encoding hides nothing from anyone who has the string. If
+        you need secrecy, encrypt, then base64 the ciphertext for transport.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">base64url, and where it is required</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        <code class="mono font-bold">+</code> and <code class="mono font-bold"
+          >/</code
+        > are hostile in URLs: a <code class="mono font-bold">+</code> decodes back
+        to a space in form-encoded query strings, and a <code
+          class="mono font-bold">/</code
+        > splits a path segment. RFC 4648 §5 defines base64url, which swaps them for
+        <code class="mono font-bold">-</code> and <code class="mono font-bold"
+          >_</code
+        > and usually drops the <code class="mono font-bold">=</code> padding, since
+        padding has to be percent-encoded as <code class="mono font-bold"
+          >%3D</code
+        >. All three JWT segments use it, as do JWK, WebAuthn, and OAuth PKCE
+        code challenges.
+      </p>
+      <ComparisonTable columns={alphabetColumns} rows={alphabetRows} />
+      <p class="text-base leading-relaxed opacity-90">
+        Decoding here normalises <code class="mono font-bold">-</code> and <code
+          class="mono font-bold">_</code
+        > back to <code class="mono font-bold">+</code> and <code
+          class="mono font-bold">/</code
+        > and re-adds padding, so you can paste either flavour without thinking
+        about it. The toggle only controls what comes out.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">Data URIs vs a second request</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        A <code class="mono font-bold">data:</code> URI embeds the asset in the document
+        that references it. You save a round trip; you pay for it in cacheability.
+        Those bytes cannot be cached independently, cannot be served from a CDN edge,
+        cannot be revalidated with an ETag, and are re-downloaded with every copy
+        of the HTML or CSS that carries them — and they are 33% bigger while doing
+        it. The trade only pays off for small, stable, render-blocking assets: a
+        1 KB SVG icon, a tiny placeholder, a background pattern. Everything else
+        belongs in a separate file behind a long cache lifetime, which is the
+        whole argument in <a
+          href="/blog/cdn-vs-cache/"
+          class="font-bold underline decoration-2 underline-offset-2"
+          >CDN vs cache</a
+        >. That is why the file panel above starts warning at 100 KB.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">Why UTF-8 breaks naive encoders</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Most half-broken base64 tools call <code class="mono font-bold"
+          >btoa()</code
+        > on the raw string. <code class="mono font-bold">btoa()</code> is a Latin-1
+        function: it only accepts code units up to U+00FF. Give it <code
+          class="mono font-bold">🚀</code
+        > and it throws <code class="mono font-bold">InvalidCharacterError</code
+        >. Give it <code class="mono font-bold">é</code> and it does something worse
+        — it quietly emits the single byte <code class="mono font-bold">0xE9</code
+        >, which is Latin-1, not the UTF-8 pair <code class="mono font-bold"
+          >C3 A9</code
+        >, so the string decodes to mojibake somewhere downstream.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        This tool runs every string through <code class="mono font-bold"
+          >TextEncoder</code
+        > first, so <code class="mono font-bold">é</code> becomes <code
+          class="mono font-bold">C3 A9</code
+        > and <code class="mono font-bold">🚀</code> becomes <code
+          class="mono font-bold">F0 9F 9A 80</code
+        > before base64 ever sees them. Decoding reverses it — <code
+          class="mono font-bold">atob</code
+        > to a byte array, then <code class="mono font-bold">TextDecoder</code> in
+        fatal mode — so a payload that is not valid UTF-8 raises a real error instead
+        of handing you a string full of replacement characters. Try the Unicode sample
+        button and round-trip it both ways.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase mb-6">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
+            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- RELATED -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="heading text-xl uppercase mb-5">Keep reading</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      <li>
+        <NeoCard tone="purple" shadow="sm" hover href="/tools/jwt-decoder/">
+          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+            ▸ Tool
+          </p>
+          <p class="heading text-lg uppercase leading-tight">JWT Decoder</p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            The base64url case you hit most: read a token's header, payload, and
+            expiry without a key.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard tone="cyan" shadow="sm" hover href="/tools/token-counter/">
+          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+            ▸ Tool
+          </p>
+          <p class="heading text-lg uppercase leading-tight">Token Counter</p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            See exactly how badly base64 tokenizes before you paste a blob into
+            a prompt.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard tone="yellow" shadow="sm" hover href="/blog/cdn-vs-cache/">
+          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+            ▸ Post
+          </p>
+          <p class="heading text-lg uppercase leading-tight">CDN vs cache</p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            Why inlining an asset as a data URI throws away the caching layer
+            you actually wanted.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard tone="pink" shadow="sm" hover href="/blog/rest-vs-grpc/">
+          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+            ▸ Post
+          </p>
+          <p class="heading text-lg uppercase leading-tight">REST vs gRPC</p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            The other answer to binary-over-text: pick a transport that carries
+            bytes natively and skip the 33%.
+          </p>
+        </NeoCard>
+      </li>
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/base64-encoder";
+</script>

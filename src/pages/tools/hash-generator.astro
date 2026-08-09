@@ -1,0 +1,523 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_NAME = "SHA Hash Generator";
+const TOOL_PATH = "/tools/hash-generator/";
+const TOOL_DESCRIPTION =
+  "Free SHA hash generator. Hash text or a file and get SHA-1, SHA-256, SHA-384, and SHA-512 digests in hex or base64 — computed in your browser, never uploaded.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const algorithms = [
+  {
+    algo: "SHA-1",
+    bits: 160,
+    note: "Collision-broken. Checksums and dedupe only — never signatures.",
+  },
+  {
+    algo: "SHA-256",
+    bits: 256,
+    note: "The default. Use this unless you have a specific reason not to.",
+  },
+  {
+    algo: "SHA-384",
+    bits: 384,
+    note: "SHA-512 truncated — immune to length-extension. Used by SRI and TLS.",
+  },
+  {
+    algo: "SHA-512",
+    bits: 512,
+    note: "Same design as SHA-256 on 64-bit words. Faster on 64-bit CPUs.",
+  },
+];
+
+const presets = [
+  { label: "hello world", value: "hello world" },
+  { label: "abc", value: "abc" },
+  {
+    label: "Quick brown fox",
+    value: "The quick brown fox jumps over the lazy dog",
+  },
+  { label: "Empty string", value: "" },
+];
+
+const formats = [
+  { id: "hex", label: "Lowercase hex" },
+  { id: "base64", label: "Base64" },
+];
+
+const comparisonRows = [
+  {
+    icon: "lucide:undo-2",
+    label: "Reversible?",
+    cells: ["No — one-way", "Yes, trivially", "Yes, with the key"],
+  },
+  { icon: "lucide:key", label: "Needs a key", cells: [false, false, true] },
+  {
+    icon: "lucide:ruler",
+    label: "Output size",
+    cells: ["Fixed (160–512 bits)", "Grows with input", "Grows with input"],
+  },
+  {
+    icon: "lucide:target",
+    label: "What it buys you",
+    cells: ["Integrity, fingerprinting", "Safe transport", "Confidentiality"],
+  },
+  {
+    icon: "lucide:box",
+    label: "Examples",
+    cells: ["SHA-256, BLAKE3", "Base64, hex, URL-encode", "AES-GCM, ChaCha20"],
+  },
+];
+
+const faq = [
+  {
+    q: "Is this SHA hash generator safe for sensitive data?",
+    a: "Yes. Your input is never sent anywhere — hashing runs locally through crypto.subtle.digest(), the browser's own Web Crypto implementation. There is no server call, no analytics, and no logging. Open DevTools and watch the network tab stay empty while you type.",
+  },
+  {
+    q: "Why is there no MD5 option?",
+    a: "Because the Web Crypto API deliberately does not implement MD5. MD5 has been collision-broken since 2004, and today two different files with the same MD5 can be produced in seconds on a laptop, so browsers refuse to offer it at all. Any online MD5 tool is shipping its own JavaScript implementation. If a legacy system forces MD5 on you, use md5sum locally and treat the result as a non-security identifier.",
+  },
+  {
+    q: "Can a SHA-256 hash be decrypted or reversed?",
+    a: "No. A hash is not encryption: there is no key and no inverse function, and the digest is a fixed 256 bits no matter how big the input was. Sites that advertise SHA-256 decryption are simply looking your digest up in a table of precomputed hashes of common strings. That works for password123 and never for a random 32-byte secret.",
+  },
+  {
+    q: "Should I use SHA-256 to store passwords?",
+    a: "No. SHA-256 is designed to be fast, and a single commodity GPU tests billions of candidates per second against it. Use a deliberately slow, memory-hard password hash instead — argon2id first, then scrypt or bcrypt — with a unique salt per user and a work factor you raise as hardware improves. That is Hash::make() in Laravel, password_hash() in PHP, and the argon2 or bcrypt packages in Node.",
+  },
+  {
+    q: "What is the difference between SHA-256 and SHA-512?",
+    a: "They are the same SHA-2 design at different word sizes: SHA-256 operates on 32-bit words and SHA-512 on 64-bit words, which makes SHA-512 noticeably faster on 64-bit CPUs despite the longer digest. SHA-384 is SHA-512 truncated to 384 bits, which also makes it immune to the length-extension trick that affects SHA-1 and SHA-256. For interoperability, SHA-256 remains the safe default.",
+  },
+  {
+    q: "How do I verify a file checksum with this tool?",
+    a: "Pick the file with the file input, wait for the digest, then compare the SHA-256 row against the checksum the publisher published — hex comparison is case-insensitive, so only the characters matter. The file is read locally with File.arrayBuffer(), so nothing is uploaded. Remember that a matching checksum only proves your copy matches the value you were shown; if the download mirror and the checksum page were both compromised, they agree and you learn nothing, which is why distributions sign their checksum file with GPG.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: TOOL_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const checksumSnippet = `# macOS / Linux
+shasum -a 256 ubuntu.iso
+
+# Windows (cmd)
+certutil -hashfile ubuntu.iso SHA256
+
+# Windows (PowerShell)
+Get-FileHash ubuntu.iso -Algorithm SHA256`;
+
+const related = [
+  {
+    href: "/tools/base64-encoder/",
+    kind: "Tool",
+    title: "Base64 Encoder",
+    blurb:
+      "The other half of the hex/base64 toggle — encode and decode text and files without a round trip to a server.",
+    tone: "yellow" as const,
+  },
+  {
+    href: "/tools/jwt-decoder/",
+    kind: "Tool",
+    title: "JWT Decoder",
+    blurb:
+      "Read a token's header and payload. Its signature is usually HMAC-SHA-256 — the same hash family, with a key.",
+    tone: "purple" as const,
+  },
+  {
+    href: "/blog/cdn-vs-cache/",
+    kind: "Article",
+    title: "CDN vs cache",
+    blurb:
+      "Where content hashes end up doing real work: cache keys, cache busting, and ETags.",
+    tone: "cyan" as const,
+  },
+  {
+    href: "/blog/redis-semantic-caching-rag/",
+    kind: "Article",
+    title: "Redis semantic caching for RAG",
+    blurb:
+      "Why hashing a prompt into an exact-match cache key stops working, and what to do instead.",
+    tone: "green" as const,
+  },
+];
+---
+
+<Page
+  title={TOOL_NAME}
+  description={TOOL_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="SHA Hash Generator."
+  intro="Paste text or pick a file — get SHA-1, SHA-256, SHA-384, and SHA-512 side by side. It runs on the Web Crypto API in your browser; nothing is uploaded."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-4xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ No MD5 — on purpose
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        The Web Crypto API does not implement MD5, because MD5 collisions take
+        seconds to produce. If you need it for a legacy checksum, run
+        <code>md5sum</code> locally.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-4xl px-5 pb-16" id="hash-root">
+    <NeoCard tone="paper" shadow="md" class="space-y-5">
+      <div class="space-y-3">
+        <label
+          for="hash-input"
+          class="mono block text-[11px] font-bold tracking-widest uppercase"
+        >
+          Text to hash
+        </label>
+        <textarea
+          id="hash-input"
+          rows="5"
+          spellcheck="false"
+          placeholder="Type or paste anything…"
+          class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm focus:outline-none"
+          >hello world</textarea
+        >
+        <div class="flex flex-wrap gap-2">
+          {
+            presets.map((p) => (
+              <button
+                type="button"
+                data-hash-preset={p.value}
+                class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+              >
+                {p.label}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="border-ink space-y-3 border-t-[2.5px] pt-4">
+        <label
+          for="hash-file"
+          class="mono block text-[11px] font-bold tracking-widest uppercase"
+        >
+          …or hash a file
+        </label>
+        <div class="flex flex-wrap items-center gap-3">
+          <input
+            id="hash-file"
+            type="file"
+            class="mono border-ink bg-bg-alt shadow-neo-sm file:border-ink file:bg-yellow max-w-full rounded-[4px] border-[3px] px-3 py-2 text-xs font-bold file:mr-3 file:cursor-pointer file:rounded-[3px] file:border-[2px] file:px-3 file:py-1 file:text-[10px] file:font-bold file:tracking-widest file:uppercase focus:outline-none"
+          />
+          <button
+            type="button"
+            id="hash-file-clear"
+            hidden
+            class="mono border-ink bg-paper shadow-neo-xs hover:bg-pink hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+          >
+            <Icon name="lucide:x" class="h-3 w-3" aria-hidden="true" />
+            Clear file
+          </button>
+        </div>
+        <p
+          id="hash-file-info"
+          hidden
+          class="mono text-pink-deep text-[11px] font-bold tracking-widest uppercase"
+        >
+        </p>
+      </div>
+
+      <div
+        class="border-ink flex flex-wrap items-end justify-between gap-4 border-t-[2.5px] pt-4"
+      >
+        <fieldset>
+          <legend
+            class="mono mb-2 text-[11px] font-bold tracking-widest uppercase"
+          >
+            Output format
+          </legend>
+          <div class="flex flex-wrap gap-2">
+            {
+              formats.map((f) => (
+                <span class="inline-flex">
+                  <input
+                    type="radio"
+                    id={`hash-format-${f.id}`}
+                    name="hash-format"
+                    value={f.id}
+                    checked={f.id === "hex"}
+                    class="peer sr-only"
+                  />
+                  <label
+                    for={`hash-format-${f.id}`}
+                    class="mono border-ink bg-bg-alt shadow-neo-xs peer-checked:bg-yellow peer-checked:shadow-neo-sm cursor-pointer rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2"
+                  >
+                    {f.label}
+                  </label>
+                </span>
+              ))
+            }
+          </div>
+        </fieldset>
+        <p
+          id="hash-status"
+          aria-live="polite"
+          class="mono text-[11px] font-bold tracking-widest uppercase opacity-70"
+        >
+          Ready
+        </p>
+      </div>
+
+      <p
+        id="hash-error"
+        hidden
+        aria-live="polite"
+        class="border-ink bg-red rounded-[4px] border-[3px] p-3 text-sm leading-snug font-bold"
+      >
+      </p>
+    </NeoCard>
+
+    <NeoCard tone="cyan" shadow="lg" class="mt-6 space-y-4">
+      <p class="mono text-[11px] font-bold tracking-widest uppercase">
+        ▸ Digests
+      </p>
+      <ul class="space-y-3">
+        {
+          algorithms.map((a) => (
+            <li
+              data-hash-row={a.algo}
+              class="border-ink bg-paper rounded-[4px] border-[2.5px] p-3"
+            >
+              <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <span class="mono text-[11px] font-bold tracking-widest uppercase">
+                  {a.algo} · {a.bits} bits
+                </span>
+                <button
+                  type="button"
+                  data-hash-copy="1"
+                  class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-full border-[2px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+                >
+                  <Icon name="lucide:copy" class="h-3 w-3" aria-hidden="true" />
+                  <span data-hash-copy-label="1">Copy</span>
+                </button>
+              </div>
+              <code
+                data-hash-value="1"
+                class="block font-mono text-sm leading-relaxed break-all"
+              >
+                —
+              </code>
+              <p class="mt-1.5 text-[11px] leading-snug opacity-70">{a.note}</p>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+        All four digests computed locally · nothing leaves this page
+      </p>
+    </NeoCard>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-4 text-2xl uppercase">
+      Hashing, encoding, encryption
+    </h2>
+    <p class="text-base leading-relaxed">
+      A hash is a one-way fingerprint. Feed SHA-256 a single byte, a novel, or a
+      4 GB disk image and you get exactly 256 bits back. Flip one bit of input
+      and roughly half the output bits change. There is no key, and there is no
+      way back — the input is almost always longer than the digest, so the
+      information is simply not in there anymore.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      Encoding — base64, hex, URL-escaping — is reversible by design and holds
+      no secret at all; it exists to move bytes through channels that only
+      accept text. Encryption is reversible with a key; it exists to keep bytes
+      private. The three get conflated constantly, usually in the sentence "how
+      do I decrypt this hash".
+    </p>
+
+    <ComparisonTable
+      class="mt-6"
+      columns={[
+        { label: "Hashing", tone: "cyan" },
+        { label: "Encoding", tone: "yellow" },
+        { label: "Encryption", tone: "pink" },
+      ]}
+      rows={comparisonRows}
+    />
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      How this page computes it
+    </h2>
+    <p class="text-base leading-relaxed">
+      Text goes through <code class="mono font-bold">TextEncoder</code>, which
+      emits UTF-8 bytes — so an emoji or an accented character is hashed as its
+      UTF-8 encoding, exactly the way <code class="mono font-bold">shasum</code>
+      would treat the same file. A file is read with <code
+        class="mono font-bold">File.arrayBuffer()</code
+      > and handed to <code class="mono font-bold">crypto.subtle.digest()</code>
+      untouched: no re-encoding, no line-ending normalisation. Both paths hit the
+      browser's native implementation — the same code that verifies TLS certificates
+      — not a JavaScript reimplementation of the algorithm.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      Two consequences worth knowing.
+      <code class="mono font-bold">digest()</code> returns a promise, so results arrive
+      asynchronously and a stale run is discarded if you keep typing. And <code
+        class="mono font-bold">crypto.subtle</code
+      > only exists in a secure context — HTTPS or localhost — so on plain HTTP this
+      page tells you instead of quietly producing nothing.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      The most common "the checksum doesn't match" bug is not a bug:
+      <code class="mono font-bold">shasum file.txt</code> hashes the exact bytes on
+      disk, trailing newline included. Paste the same text into a textarea without
+      that newline and you get a different digest. One byte is all it takes.
+    </p>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      SHA-1: dead for signatures, fine for checksums
+    </h2>
+    <p class="text-base leading-relaxed">
+      SHA-1 is still on this page because "broken" is not one thing. The 2017
+      SHAttered result produced two different PDFs with the same SHA-1 digest;
+      by 2020 a chosen-prefix collision was demonstrated for a five-figure cloud
+      bill. Collisions are practical. Preimages — given a digest, find an input
+      that produces it — are not, and are not close.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      So the rule is about who controls the input. If an attacker can influence
+      the bytes being hashed and a trust decision hangs on the result, SHA-1 is
+      out: TLS certificates, code signing, document signing, anything wearing a
+      "verified" badge. If you are hashing your own artefacts for a cache key, a
+      dedupe check, or bit-rot detection, SHA-1 is fine and fast. Git is the
+      canonical example — it uses SHA-1, shipped collision detection in 2.13,
+      and has been migrating to SHA-256 ever since.
+    </p>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      Never hash a password with plain SHA
+    </h2>
+    <p class="text-base leading-relaxed">
+      Speed is the whole point of SHA and the whole disaster of password
+      storage. One modern GPU tests billions of SHA-256 guesses per second, so a
+      leaked table of SHA-256 password hashes is a wordlist with extra steps.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      Salting is necessary but not sufficient. A unique random salt per user
+      kills rainbow tables and stops two people with the same password sharing a
+      digest — but it does not make any individual guess more expensive. What
+      does that is a purpose-built key derivation function with a tunable cost:
+      argon2id (memory-hard, first choice), then scrypt or bcrypt. You raise the
+      cost factor as hardware gets cheaper.
+      <code class="mono font-bold">Hash::make()</code> in Laravel,
+      <code class="mono font-bold">password_hash()</code> in PHP, the
+      <code class="mono font-bold">argon2</code> or
+      <code class="mono font-bold">bcrypt</code> packages in Node — all of them already
+      do this correctly. Do not reach past them for a raw SHA call.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      Same class of mistake: do not authenticate a message with
+      <code class="mono font-bold">sha256(secret + message)</code>. SHA-1 and
+      SHA-256 are Merkle–Damgård constructions and leak enough internal state
+      for a length-extension attack, letting someone append data and forge a
+      valid tag without ever knowing the secret. Use HMAC-SHA-256 — or SHA-384,
+      which is truncated and therefore not extendable.
+    </p>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      Verifying a downloaded file
+    </h2>
+    <p class="mb-6 text-base leading-relaxed">
+      Drop the file into the box above and read the SHA-256 row, or do it from a
+      terminal and compare — hex comparison is case-insensitive, so only the
+      characters matter:
+    </p>
+    <CodeBlock code={checksumSnippet} lang="bash" filename="checksum" />
+    <p class="mt-6 text-base leading-relaxed">
+      Know the limit of that check. It proves your copy matches the checksum you
+      were shown. If the mirror and the checksum page were compromised together,
+      they agree with each other and you have learned nothing. That is why
+      distributions publish a signed <code class="mono font-bold"
+        >SHA256SUMS</code
+      > file and ask you to verify it with GPG: the hash proves integrity, the signature
+      proves origin. Two different jobs, two different tools.
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered.</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Keep going</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {
+        related.map((r) => (
+          <NeoCard href={r.href} tone={r.tone} shadow="sm" hover>
+            <p class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70">
+              {r.kind}
+            </p>
+            <p class="heading mb-2 flex items-center gap-2 text-lg uppercase">
+              {r.title}
+              <Icon
+                name="lucide:arrow-right"
+                class="h-4 w-4"
+                aria-hidden="true"
+              />
+            </p>
+            <p class="text-sm leading-snug">{r.blurb}</p>
+          </NeoCard>
+        ))
+      }
+    </div>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/hash-generator";
+</script>

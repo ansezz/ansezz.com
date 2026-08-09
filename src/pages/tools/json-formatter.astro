@@ -1,0 +1,614 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_NAME = "JSON Formatter & Validator";
+const TOOL_DESCRIPTION =
+  "Free JSON formatter and validator that points at the actual error — line, column, a caret under the character, and the fix. Format, minify and sort keys in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: "JSON Formatter", url: "/tools/json-formatter/" },
+]);
+
+const PREFILL =
+  '{"order":{"id":4242,"total":{"amount":"49.90","currency":"EUR"},"items":[{"sku":"AZ-01","qty":2},{"sku":"AZ-07","qty":1}],"tags":["priority","eu"],"paid":true,"note":null}}';
+
+const samples = [
+  {
+    label: "Valid",
+    json: PREFILL,
+  },
+  {
+    label: "Trailing comma",
+    json: '{\n  "retries": 3,\n  "timeout_ms": 2000,\n}',
+  },
+  {
+    label: "Single quotes",
+    json: "{'host': 'db.internal', 'port': 5432}",
+  },
+  {
+    label: "Unquoted key",
+    json: '{ id: 42, name: "ansezz" }',
+  },
+  {
+    label: "Comments",
+    json: '{\n  // tsconfig-style config\n  "strict": true\n}',
+  },
+  {
+    label: "Big ID",
+    json: '{"tweet_id":1889076543210987654,"user_id":9007199254740993}',
+  },
+  {
+    label: "Duplicate keys",
+    json: '{"role":"user","id":17,"role":"admin"}',
+  },
+  {
+    label: "NDJSON",
+    json: '{"lvl":"info","msg":"boot"}\n{"lvl":"warn","msg":"retry"}',
+  },
+];
+
+const dialectColumns = [
+  { label: "JSON (RFC 8259)", tone: "cyan" as const },
+  { label: "JSONC", tone: "yellow" as const },
+  { label: "JSON5", tone: "green" as const },
+];
+
+const dialectRows = [
+  { label: "Comments", cells: [false, true, true] },
+  { label: "Trailing commas", cells: [false, "usually tolerated", true] },
+  { label: "Unquoted keys", cells: [false, false, true] },
+  { label: "Single-quoted strings", cells: [false, false, true] },
+  { label: "NaN / Infinity", cells: [false, false, true] },
+  { label: "Hex numbers, leading +", cells: [false, false, true] },
+  { label: "JSON.parse accepts it", cells: [true, false, false] },
+  {
+    label: "Where you meet it",
+    cells: [
+      "APIs, webhooks, config, logs",
+      "tsconfig.json, VS Code settings, .eslintrc",
+      "hand-edited config files",
+    ],
+  },
+];
+
+const faq = [
+  {
+    q: "Why doesn't JSON.parse tell me which line the error is on?",
+    a: 'Because the message is not standardised. V8 (Chrome, Node, Edge) appends "at position 42 (line 3 column 5)", SpiderMonkey (Firefox) says "at line 3 column 5 of the JSON data", and JavaScriptCore (Safari) often gives you a bare "JSON Parse error: Expected \'}\'" with no position at all. This tool does not rely on any of that: it scans the document itself, so you always get the line, the column, a caret under the exact character, and a plain explanation of what is wrong.',
+  },
+  {
+    q: "Are trailing commas allowed in JSON?",
+    a: "No. RFC 8259 has no trailing commas anywhere — not after the last array element, not after the last object member. JavaScript, JSON5 and most JSONC parsers accept them, which is why they show up constantly in files copied out of an editor. Delete the comma before the closing bracket and the document parses.",
+  },
+  {
+    q: "Does minifying JSON make my API faster?",
+    a: "Barely, if you have gzip or brotli switched on — compression already collapses repeated whitespace, so stripping it usually buys a few percent of the compressed payload. Minifying pays where compression does not run: browser storage quotas, queue message size limits, database columns, Redis memory, and LLM prompts where every space is billed as a token. Turn on compression first, then worry about whitespace.",
+  },
+  {
+    q: "Why did my large ID change after JSON.parse?",
+    a: "JSON numbers become IEEE-754 doubles, which hold integers exactly only up to 2^53 - 1 (9007199254740991). Anything larger is rounded to the nearest representable value with no error and no warning: 9007199254740993 comes back as 9007199254740992. Snowflake IDs, Postgres bigint keys and payment references all land in that range, which is why serious APIs send them as strings. This tool flags every integer in your document that fails to round-trip.",
+  },
+  {
+    q: "Is my JSON uploaded anywhere?",
+    a: "No. The scanner, JSON.parse, the formatter and the key sort all run in this tab — there is no request, no logging and no server involved. Open your network tab while you paste, or load the page once and switch off your network. That matters here more than on most tools: the fastest way to leak a production payload is to paste it into a formatter that posts it to a backend.",
+  },
+  {
+    q: "Can this tool handle comments in JSON, like tsconfig.json?",
+    a: "It detects them and tells you exactly where they are, but it will not parse them, because // and /* */ are JSONC, not JSON. tsconfig.json, .eslintrc and VS Code settings are read by JSONC-aware parsers; JSON.parse rejects all three. If you need to keep the comments, use a JSONC reader such as jsonc-parser or json5; if you need to ship the file over the wire, strip them.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/json-formatter/", SITE.URL).href,
+  description: TOOL_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const paneClass =
+  "w-full border-[3px] border-ink rounded-[4px] bg-paper p-3 font-mono text-sm shadow-neo-sm focus:outline-none resize-y";
+const actionClass =
+  "inline-flex items-center gap-2 border-[2.5px] border-ink rounded-[4px] bg-paper px-3 py-1.5 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm";
+const statLabelClass =
+  "mono text-[10px] font-bold uppercase tracking-widest opacity-70";
+const statValueClass = "heading text-lg leading-none mt-1";
+---
+
+<Page
+  title={TOOL_NAME}
+  description={TOOL_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="JSON Formatter & Validator."
+  intro="Format, minify and validate JSON — and when it breaks, get the line, the column, a caret under the offending character, and a straight answer about what to fix. Nothing leaves your browser."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+        ▸ Strict on purpose
+      </p>
+      <p class="text-sm font-bold leading-snug">
+        This validates against RFC 8259 — no comments, no trailing commas, no
+        single quotes. If your file needs those, it is JSONC or JSON5, not JSON.
+      </p>
+    </StickyNote>
+  </section>
+
+  <!-- TOOL -->
+  <section class="mx-auto max-w-5xl px-5 pb-16 space-y-6" id="jsonf-root">
+    <NeoCard tone="paper" shadow="md" class="space-y-5">
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <div
+          role="group"
+          aria-label="Output mode"
+          class="inline-flex border-[3px] border-ink rounded-[4px] shadow-neo-xs overflow-hidden"
+        >
+          <button
+            type="button"
+            data-jsonf-mode="format"
+            aria-pressed="true"
+            class="bg-yellow px-3.5 py-2 mono text-[10px] font-bold uppercase tracking-widest border-r-[3px] border-ink transition-colors"
+          >
+            Format
+          </button>
+          <button
+            type="button"
+            data-jsonf-mode="minify"
+            aria-pressed="false"
+            class="bg-paper px-3.5 py-2 mono text-[10px] font-bold uppercase tracking-widest transition-colors"
+          >
+            Minify
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label
+            for="jsonf-indent"
+            class="mono text-[11px] font-bold uppercase tracking-widest"
+          >
+            Indent
+          </label>
+          <select
+            id="jsonf-indent"
+            class="border-[3px] border-ink rounded-[4px] bg-paper px-2.5 py-1.5 text-sm font-bold shadow-neo-xs focus:outline-none"
+          >
+            <option value="2">2 spaces</option>
+            <option value="4">4 spaces</option>
+            <option value="tab">Tab</option>
+          </select>
+        </div>
+
+        <button
+          type="button"
+          id="jsonf-sort"
+          aria-pressed="false"
+          class="inline-flex items-center gap-2 border-[2.5px] border-ink rounded-[4px] bg-paper px-3 py-1.5 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm"
+        >
+          <Icon
+            name="lucide:arrow-down-up"
+            class="h-3.5 w-3.5"
+            aria-hidden="true"
+          />
+          Sort keys
+        </button>
+
+        <button type="button" id="jsonf-validate" class={actionClass}>
+          <Icon
+            name="lucide:check-check"
+            class="h-3.5 w-3.5"
+            aria-hidden="true"
+          />
+          Validate
+        </button>
+
+        <button type="button" id="jsonf-copy" class={actionClass}>
+          <Icon name="lucide:copy" class="h-3.5 w-3.5" aria-hidden="true" />
+          <span id="jsonf-copy-label">Copy</span>
+        </button>
+
+        <button type="button" id="jsonf-clear" class={`${actionClass} ml-auto`}>
+          <Icon name="lucide:eraser" class="h-3.5 w-3.5" aria-hidden="true" />
+          Clear
+        </button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <span
+          class="mono text-[10px] font-bold uppercase tracking-widest opacity-70"
+        >
+          Try
+        </span>
+        {
+          samples.map((s) => (
+            <button
+              type="button"
+              data-jsonf-sample={s.json}
+              class="border-[2px] border-ink rounded-full bg-bg-alt px-3 py-1 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+            >
+              {s.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <p class="mono text-[10px] uppercase tracking-widest opacity-60">
+        Runs in this tab · nothing is uploaded · validation is live under 2 MB
+      </p>
+    </NeoCard>
+
+    <div class="grid gap-5 md:grid-cols-2">
+      <NeoCard tone="paper" shadow="md" class="space-y-3">
+        <label
+          for="jsonf-input"
+          class="mono text-[11px] font-bold uppercase tracking-widest block"
+        >
+          Input JSON
+        </label>
+        <textarea
+          id="jsonf-input"
+          rows="18"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder={'{"paste": "your JSON here"}'}
+          class={paneClass}>{PREFILL}</textarea
+        >
+      </NeoCard>
+
+      <NeoCard tone="green" shadow="lg" class="space-y-3">
+        <label
+          for="jsonf-output"
+          class="mono text-[11px] font-bold uppercase tracking-widest block"
+        >
+          Output
+        </label>
+        <textarea id="jsonf-output" rows="18" readonly class={paneClass}
+        ></textarea>
+        <p
+          id="jsonf-status"
+          aria-live="polite"
+          class="mono text-[10px] uppercase tracking-widest opacity-70"
+        >
+          Paste JSON above to validate it.
+        </p>
+      </NeoCard>
+    </div>
+
+    <div id="jsonf-error" role="alert" hidden>
+      <NeoCard tone="pink" shadow="lg" class="space-y-3">
+        <p class="mono text-[11px] font-bold uppercase tracking-widest">
+          ▸ <span id="jsonf-error-title">—</span>
+        </p>
+        <p id="jsonf-error-message" class="text-lg font-bold leading-snug">—</p>
+        <pre
+          id="jsonf-error-context"
+          class="overflow-x-auto border-[2.5px] border-ink rounded-[4px] bg-paper p-3 font-mono text-xs leading-relaxed">
+        </pre>
+        <p id="jsonf-error-hint" class="text-sm leading-relaxed"></p>
+      </NeoCard>
+    </div>
+
+    <NeoCard tone="cyan" shadow="md" class="space-y-4">
+      <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        ▸ Document stats
+      </p>
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+        <div>
+          <dt class={statLabelClass}>Input</dt>
+          <dd id="jsonf-stat-input" class={statValueClass}>—</dd>
+        </div>
+        <div>
+          <dt class={statLabelClass}>Output</dt>
+          <dd id="jsonf-stat-output" class={statValueClass}>—</dd>
+        </div>
+        <div>
+          <dt class={statLabelClass}>Minified</dt>
+          <dd id="jsonf-stat-minified" class={statValueClass}>—</dd>
+        </div>
+        <div>
+          <dt class={statLabelClass}>Saved by minify</dt>
+          <dd id="jsonf-stat-saved" class={statValueClass}>—</dd>
+        </div>
+        <div>
+          <dt class={statLabelClass}>Keys</dt>
+          <dd id="jsonf-stat-keys" class={statValueClass}>—</dd>
+        </div>
+        <div>
+          <dt class={statLabelClass}>Max depth</dt>
+          <dd id="jsonf-stat-depth" class={statValueClass}>—</dd>
+        </div>
+        <div>
+          <dt class={statLabelClass}>Objects</dt>
+          <dd id="jsonf-stat-objects" class={statValueClass}>—</dd>
+        </div>
+        <div>
+          <dt class={statLabelClass}>Arrays</dt>
+          <dd id="jsonf-stat-arrays" class={statValueClass}>—</dd>
+        </div>
+      </dl>
+      <ul
+        id="jsonf-notes"
+        aria-live="polite"
+        class="space-y-2 border-t-[2.5px] border-ink pt-3 empty:hidden empty:border-0 empty:pt-0"
+      >
+      </ul>
+    </NeoCard>
+  </section>
+
+  <!-- EXPLAINER -->
+  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        The error message is the whole product
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Formatting JSON is a one-liner — <code class="mono font-bold"
+          >JSON.stringify(JSON.parse(text), null, 2)</code
+        >. What actually costs you time is a 4,000-line payload that will not
+        parse and an engine that says <code class="mono font-bold"
+          >Unexpected token</code
+        > and nothing else. Every engine words it differently: V8 gives you a byte
+        offset, SpiderMonkey gives you a line and column, JavaScriptCore usually gives
+        you neither.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        So this tool does not lean on the engine. It runs its own scanner over
+        the document first, stops at the first thing the grammar forbids, and
+        reports the line, the column, the surrounding lines, a caret under the
+        exact character, and what to change. Trailing comma, single quotes,
+        unquoted key, missing comma, stray BOM, <code class="mono font-bold"
+          >NaN</code
+        >, a Python <code class="mono font-bold">repr</code> that was printed instead
+        of serialized — each one gets its own explanation instead of a generic parse
+        failure. <code class="mono font-bold">JSON.parse</code> still does the real
+        decoding afterwards; the scanner exists so the failure is legible.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        One honest limit: a browser textarea is the wrong place for a very large
+        file. Live validation switches off above 2 MB and the buttons take over.
+        Past a few megabytes, <code class="mono font-bold">jq</code> or <code
+          class="mono font-bold">python -m json.tool</code
+        > will be faster and will not fight your scroll position.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">JSON vs JSONC vs JSON5</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Most "invalid JSON" is valid something-else. Comments are the clearest
+        case: <code class="mono font-bold">tsconfig.json</code>, <code
+          class="mono font-bold">.eslintrc.json</code
+        > and VS Code's settings all carry <code class="mono font-bold">//</code
+        >
+        lines, and they all parse — because the tools reading them use a JSONC parser,
+        not <code class="mono font-bold">JSON.parse</code>. The file extension
+        lies.
+      </p>
+      <ComparisonTable columns={dialectColumns} rows={dialectRows} />
+      <p class="text-base leading-relaxed opacity-90">
+        The rule of thumb: if a human edits the file, a dialect with comments is
+        a kindness. If a machine sends it over a wire or stores it in a column,
+        stay on strict JSON, because you do not control which parser is at the
+        other end.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Minifying matters less than compression
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Pretty-printing a document with 2-space indent typically adds 10–20% to
+        its size, and the stats bar above shows you exactly how much. Then gzip
+        or brotli comes along and eats almost all of it, because indentation is
+        the most compressible thing in the file — a long run of identical bytes.
+        Minifying a response that is already served with <code
+          class="mono font-bold">Content-Encoding: gzip</code
+        > usually moves the transferred size by a couple of percent.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Minifying does pay where compression is not in the path: values written
+        into <code class="mono font-bold">localStorage</code> or IndexedDB against
+        a quota, queue payloads bumping a size ceiling (SQS caps a message at 256
+        KB), JSON stuffed into a database column, cached blobs in Redis, and prompts
+        sent to an LLM — where whitespace is billed as tokens, which you can measure
+        with the <a
+          href="/tools/token-counter/"
+          class="font-bold underline decoration-2 underline-offset-2"
+          >token counter</a
+        >. Turn compression on first. Then argue about whitespace.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">Key order is not data</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        RFC 8259 says an object is an <em>unordered</em> collection of name/value
+        pairs. Most parsers preserve insertion order anyway, which teaches people
+        to rely on it — right up until JavaScript does not. Any object key that looks
+        like an array index is hoisted to the front in ascending numeric order, so
+        <code class="mono font-bold">{'{"10":"a","2":"b"}'}</code> re-serializes as
+        <code class="mono font-bold">{'{"2":"b","10":"a"}'}</code>. That is the
+        language specification, not a bug in this tool, and the stats bar flags
+        documents where it can bite.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Sorting keys is still useful — for diffs that stop churning, for cache
+        keys that stay stable, for snapshot tests that stop flapping. The sort
+        here is recursive and compares by code unit rather than <code
+          class="mono font-bold">localeCompare</code
+        >, so you get the same output on every machine in every locale. What it
+        is not is a canonicalization scheme: if you need a hash or a signature
+        over JSON, either hash the exact bytes you received — which is what
+        every webhook HMAC check does, and why you must never re-serialize
+        before verifying — or use a real canonical form such as JCS (RFC 8785).
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        The 2<sup>53</sup> bug that silently corrupts IDs
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        JSON numbers have no integer type. Every one of them lands in an
+        IEEE-754 double, which represents integers exactly only up to
+        <code class="mono font-bold">Number.MAX_SAFE_INTEGER</code> — 9007199254740991.
+        One past that,
+        <code class="mono font-bold"
+          >{"JSON.parse('{\"id\":9007199254740993}')"}</code
+        >
+        hands you 9007199254740992. No exception, no warning, just a different record.
+        Snowflake IDs from X and Discord, Postgres <code class="mono font-bold"
+          >bigint</code
+        > primary keys, order references and ledger amounts in minor units all live
+        in that range, which is exactly why mature APIs ship them as strings.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        This tool scans the raw text for integer literals and reports every one
+        that fails to round-trip, with the value you will actually get back —
+        paste the "Big ID" sample and watch. Newer V8 can hand a
+        <code class="mono font-bold">JSON.parse</code> reviver the untouched source
+        text (with <code class="mono font-bold">JSON.rawJSON</code> for the trip back
+        out), but support is not universal yet. The portable fix has not changed:
+        serialize big identifiers as strings, and never let one make a round trip
+        through a JavaScript number.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Duplicate keys, and NDJSON for logs
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        RFC 8259 says names within an object <em>should</em> be unique — should, not
+        must. So parsers improvise. JavaScript and Python keep the last occurrence,
+        some libraries keep the first, a few return both. When a proxy validates a
+        request with one parser and the backend reads it with another, that disagreement
+        becomes a real attack: <code class="mono font-bold"
+          >{'{"role":"user","role":"admin"}'}</code
+        > passes the check and lands as something else. The stats bar names every
+        duplicate key and the line it is on.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        The other thing people paste in here is not one document at all. Logs,
+        exports and streaming APIs usually emit NDJSON — one complete JSON value
+        per line, no wrapping array, no commas between records. It appends
+        cheaply, it survives truncation (you lose the last line, not the file),
+        and it streams line by line instead of forcing a reader to hold the
+        whole array in memory, which is the same argument as structured logging
+        in <a
+          href="/blog/logging-vs-monitoring/"
+          class="font-bold underline decoration-2 underline-offset-2"
+          >logging vs monitoring</a
+        >. A strict parser rejects it, correctly. When this tool sees a second
+        top-level value it says so instead of pointing at a random bracket —
+        split on newlines and parse each line on its own.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase mb-6">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
+            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- RELATED -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="heading text-xl uppercase mb-5">Keep reading</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      <li>
+        <NeoCard
+          tone="purple"
+          shadow="sm"
+          hover
+          href="/tools/json-to-typescript/"
+        >
+          <p
+            class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5"
+          >
+            ▸ Tool
+          </p>
+          <p class="heading text-lg uppercase leading-tight">
+            JSON to TypeScript
+          </p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            Once the payload parses, turn it into interfaces instead of typing
+            them out by hand.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard tone="cyan" shadow="sm" hover href="/blog/rest-vs-grpc/">
+          <p
+            class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5"
+          >
+            ▸ Post
+          </p>
+          <p class="heading text-lg uppercase leading-tight">REST vs gRPC</p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            What you give up with text-over-the-wire — and what a schema-first
+            binary format buys back, including real integers.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="yellow"
+          shadow="sm"
+          hover
+          href="/blog/logging-vs-monitoring/"
+        >
+          <p
+            class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5"
+          >
+            ▸ Post
+          </p>
+          <p class="heading text-lg uppercase leading-tight">
+            Logging vs monitoring
+          </p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            Why your logs should be one JSON document per line, and what you get
+            once they are.
+          </p>
+        </NeoCard>
+      </li>
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/json-formatter";
+</script>

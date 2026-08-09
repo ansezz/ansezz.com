@@ -1,0 +1,775 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import NeoButton from "@/components/neobrutalist/NeoButton.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const PAGE_DESCRIPTION =
+  "Free Shopify GID decoder. Parse gid://shopify/Product/123 into resource type and legacy numeric ID, build GIDs, and decode base64 IDs — all in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: "Shopify GID Decoder", url: "/tools/shopify-gid-decoder/" },
+]);
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Shopify GID Decoder",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/shopify-gid-decoder/", SITE.URL).href,
+  description: PAGE_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faq = [
+  {
+    q: "How do I get the numeric ID from a Shopify GID?",
+    a: "Take the last path segment: gid://shopify/Product/1234567890 gives 1234567890. In GraphQL you should not parse it yourself — most Admin API objects expose legacyResourceId, which returns that same number as a string. In webhook payloads the numeric id is already the top-level id field, sitting next to admin_graphql_api_id which holds the full GID.",
+  },
+  {
+    q: "What does gid://shopify/Product/1234567890 mean?",
+    a: "It is a Relay-style global ID. gid:// is the scheme, shopify is the namespace, Product is the GraphQL type, and 1234567890 is the legacy numeric ID that REST, Liquid and admin URLs use. The type is baked into the identifier, which is what lets a single node(id:) query fetch any object without knowing in advance what it is.",
+  },
+  {
+    q: "Why are some Shopify IDs base64-encoded?",
+    a: "The Storefront API used to return every ID base64-encoded, so gid://shopify/Product/123 arrived as Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0LzEyMw==. Shopify stopped doing that in API version 2022-04, and the Admin API never did it at all. Old code, cached rows and copy-pasted snippets still carry the encoded form, which is why this tool detects and decodes it — do not assume either encoding in your own code.",
+  },
+  {
+    q: "Can I build a Shopify GID by hand from a numeric ID?",
+    a: "It usually works and Shopify still tells you not to rely on it. GIDs are opaque: the type name must be exactly right and PascalCase, some resources need a query parameter (an InventoryLevel GID carries ?inventory_item_id=...), and some IDs are not numeric at all — a Storefront cart ID is an opaque string. Build them here to debug, and in production read the GID from the API.",
+  },
+  {
+    q: "Does this Shopify GID decoder send my IDs anywhere?",
+    a: "No. Parsing, base64 decoding and the bulk conversion all run in your browser with plain string operations, atob and TextDecoder. There is no API call, no logging and no storage — load the page, go offline, and it still works. GIDs are not secrets, but customer and order IDs still do not belong in a random web form.",
+  },
+  {
+    q: "What is admin_graphql_api_id in a Shopify webhook?",
+    a: "Webhook payloads are REST-shaped, so their id field is the legacy number. Shopify adds admin_graphql_api_id alongside it holding the full GID, so you can pass it straight into a GraphQL query with no string concatenation. If you are matching webhook events against records you stored from GraphQL, that is the field to key on.",
+  },
+];
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const RESOURCE_TYPES = [
+  "Product",
+  "ProductVariant",
+  "Order",
+  "Customer",
+  "Collection",
+  "DraftOrder",
+  "Fulfillment",
+  "InventoryItem",
+  "InventoryLevel",
+  "Location",
+  "Metafield",
+  "MediaImage",
+  "Shop",
+  "DiscountCodeNode",
+  "PriceRule",
+  "Refund",
+  "AppSubscription",
+  "Company",
+  "Market",
+];
+
+const PRESETS = [
+  { label: "Product", value: "gid://shopify/Product/1234567890" },
+  { label: "Variant", value: "gid://shopify/ProductVariant/45678901234" },
+  {
+    label: "Metafield + params",
+    value: "gid://shopify/Metafield/9876543210?namespace=custom&key=fit_guide",
+  },
+  {
+    label: "InventoryLevel",
+    value: "gid://shopify/InventoryLevel/112233?inventory_item_id=445566",
+  },
+  { label: "Base64", value: "Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0LzEyMzQ1Njc4OTA=" },
+  {
+    label: "Admin URL",
+    value: "https://admin.shopify.com/store/my-store/products/1234567890",
+  },
+  { label: "Cart (non-numeric)", value: "gid://shopify/Cart/c1-a1b2c3d4e5f6" },
+  { label: "Broken", value: "gid:/shopify/product/1234" },
+];
+
+const PARSED_ROWS = [
+  { id: "shopify-gid-source", label: "Input form", note: "what you pasted" },
+  {
+    id: "shopify-gid-namespace",
+    label: "Namespace",
+    note: "always shopify for Shopify's own IDs",
+  },
+  {
+    id: "shopify-gid-type",
+    label: "Resource type",
+    note: "the GraphQL type, PascalCase",
+  },
+  {
+    id: "shopify-gid-legacy",
+    label: "Legacy ID",
+    note: "what REST, Liquid and admin URLs use",
+  },
+];
+
+// Kept out of the markup so Prettier can't reflow the newlines away.
+const BULK_SAMPLE = [
+  "gid://shopify/Product/1234567890",
+  "gid://shopify/Order/5544332211",
+  "Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0LzEyMzQ1Njc4OTA=",
+  "https://admin.shopify.com/store/my-store/customers/778899",
+  "99887766",
+].join("\n");
+
+const BULK_MODES = [
+  { mode: "id", label: "→ Legacy IDs" },
+  { mode: "gid", label: "→ Plain GIDs" },
+  { mode: "base64", label: "→ Base64 GIDs" },
+];
+
+const idColumns = [
+  { label: "Numeric ID (REST / Liquid)", tone: "cyan" as const },
+  { label: "GID (GraphQL)", tone: "yellow" as const },
+];
+
+const idRows = [
+  {
+    label: "Shape",
+    cells: ["1234567890", "gid://shopify/Product/1234567890"],
+  },
+  { label: "Type is part of the ID", cells: [false, true] },
+  {
+    label: "Where you get it",
+    cells: [
+      "Admin URLs, webhook id, Liquid, CSV and report exports, REST responses",
+      "GraphQL responses, bulk operation JSONL, webhook admin_graphql_api_id",
+    ],
+  },
+  {
+    label: "Fetching one by ID",
+    cells: [
+      "A different REST endpoint per resource",
+      "node(id:) and nodes(ids:) for anything",
+    ],
+  },
+  {
+    label: "Safe to assemble yourself",
+    cells: [
+      "n/a — it is just an integer",
+      "No — treat it as opaque, read it from the API",
+    ],
+  },
+];
+
+const RELATED = [
+  {
+    href: "/blog/agentic-commerce-shopify/",
+    kind: "Blog",
+    title: "Agentic commerce on Shopify",
+    blurb:
+      "Where GIDs show up when an agent is the thing calling the Admin API instead of a person.",
+    tone: "cyan" as const,
+  },
+  {
+    href: "/blog/shopify-liquid-vs-headless/",
+    kind: "Blog",
+    title: "Shopify Liquid vs headless",
+    blurb:
+      "Liquid hands you numeric IDs, the Storefront API hands you GIDs. Picking a stack means picking which one you live with.",
+    tone: "yellow" as const,
+  },
+  {
+    href: "/blog/shopify-ucp-quick-start/",
+    kind: "Blog",
+    title: "Shopify UCP quick start",
+    blurb:
+      "Getting a catalog and its identifiers out of Shopify and into something a model can use.",
+    tone: "green" as const,
+  },
+  {
+    href: "/tools/shopify-hmac-verifier/",
+    kind: "Tool",
+    title: "Shopify HMAC Verifier",
+    blurb:
+      "The other half of webhook handling — check the signature before you trust the IDs inside the payload.",
+    tone: "purple" as const,
+  },
+];
+---
+
+<Page
+  title="Shopify GID Decoder"
+  description={PAGE_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Shopify GID Decoder."
+  intro="Paste a Shopify global ID and get the resource type and legacy numeric ID back. Paste a numeric ID and get a GID. Base64, admin URLs and newline-separated lists all work."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-4xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Read this first
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        A GID is meant to be opaque. This tool takes it apart because you are
+        debugging — production code should read GIDs from the API, not build
+        them with string concatenation. Nothing you paste leaves the page.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-4xl space-y-5 px-5 pb-16" id="shopify-gid-root">
+    <!-- Decode -->
+    <NeoCard tone="paper" shadow="md" class="space-y-3">
+      <label
+        for="shopify-gid-input"
+        class="mono block text-[11px] font-bold tracking-widest uppercase"
+      >
+        GID, base64 GID, or admin URL
+      </label>
+      <textarea
+        id="shopify-gid-input"
+        rows="2"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder="gid://shopify/Product/1234567890"
+        class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm break-all focus:outline-none"
+        >gid://shopify/Product/1234567890</textarea
+      >
+      <div class="flex flex-wrap gap-2">
+        {
+          PRESETS.map((preset) => (
+            <button
+              type="button"
+              data-shopify-gid-preset={preset.value}
+              class="mono border-ink bg-bg-alt hover:bg-yellow shadow-neo-xs hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            >
+              {preset.label}
+            </button>
+          ))
+        }
+      </div>
+      <p
+        id="shopify-gid-error"
+        class="text-pink-deep text-sm font-bold"
+        role="status"
+        hidden
+      >
+      </p>
+    </NeoCard>
+
+    <!-- Parsed -->
+    <NeoCard tone="cyan" shadow="lg" class="space-y-4">
+      <p class="mono text-[11px] font-bold tracking-widest uppercase">
+        ▸ Parsed
+      </p>
+      <dl aria-live="polite" class="space-y-0">
+        {
+          PARSED_ROWS.map((row) => (
+            <div class="border-ink/20 grid gap-0.5 border-b-[2px] py-2 sm:grid-cols-[190px_1fr] sm:items-baseline sm:gap-3">
+              <dt class="mono text-[11px] font-bold tracking-widest uppercase">
+                {row.label}
+                <span class="mt-0.5 block text-[10px] font-normal tracking-normal normal-case opacity-60">
+                  {row.note}
+                </span>
+              </dt>
+              <dd id={row.id} class="font-mono text-sm break-all">
+                —
+              </dd>
+            </div>
+          ))
+        }
+        <div
+          class="border-ink/20 grid gap-0.5 border-b-[2px] py-2 sm:grid-cols-[190px_1fr] sm:items-baseline sm:gap-3"
+        >
+          <dt class="mono text-[11px] font-bold tracking-widest uppercase">
+            Query params
+            <span
+              class="mt-0.5 block text-[10px] font-normal tracking-normal normal-case opacity-60"
+            >
+              metafields and inventory levels carry these
+            </span>
+          </dt>
+          <dd class="text-sm">
+            <div id="shopify-gid-params" class="space-y-1"></div>
+            <span id="shopify-gid-params-empty" class="font-mono opacity-50"
+              >—</span
+            >
+          </dd>
+        </div>
+      </dl>
+
+      <div
+        id="shopify-gid-notes-wrap"
+        class="border-ink border-t-[2.5px] pt-3"
+        hidden
+      >
+        <p class="mono mb-2 text-[11px] font-bold tracking-widest uppercase">
+          ▸ Notes
+        </p>
+        <ul id="shopify-gid-notes" class="space-y-1.5"></ul>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label
+              for="shopify-gid-plain"
+              class="mono text-[11px] font-bold tracking-widest uppercase"
+            >
+              Plain GID
+            </label>
+            <button
+              type="button"
+              id="shopify-gid-plain-copy"
+              class="mono border-ink bg-paper hover:bg-yellow shadow-neo-xs hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-[3px] border-[2.5px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            >
+              <Icon name="lucide:copy" class="h-3 w-3" aria-hidden="true" />
+              <span id="shopify-gid-plain-copy-label">Copy</span>
+            </button>
+          </div>
+          <textarea
+            id="shopify-gid-plain"
+            rows="2"
+            readonly
+            aria-live="polite"
+            class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm break-all focus:outline-none"
+          ></textarea>
+        </div>
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label
+              for="shopify-gid-b64"
+              class="mono text-[11px] font-bold tracking-widest uppercase"
+            >
+              Base64 GID
+            </label>
+            <button
+              type="button"
+              id="shopify-gid-b64-copy"
+              class="mono border-ink bg-paper hover:bg-yellow shadow-neo-xs hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-[3px] border-[2.5px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            >
+              <Icon name="lucide:copy" class="h-3 w-3" aria-hidden="true" />
+              <span id="shopify-gid-b64-copy-label">Copy</span>
+            </button>
+          </div>
+          <textarea
+            id="shopify-gid-b64"
+            rows="2"
+            readonly
+            aria-live="polite"
+            class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm break-all focus:outline-none"
+          ></textarea>
+        </div>
+      </div>
+    </NeoCard>
+
+    <!-- Build -->
+    <NeoCard tone="paper" shadow="md" class="space-y-4">
+      <p class="mono text-[11px] font-bold tracking-widest uppercase">
+        ▸ Build a GID
+      </p>
+      <p class="text-xs leading-snug opacity-70">
+        Numeric ID in, GID out. The query field is for the parameters a few
+        resources need — <code>namespace=custom&amp;key=fit_guide</code> for a metafield,
+        <code>inventory_item_id=445566</code> for an inventory level.
+      </p>
+      <div class="grid gap-4 sm:grid-cols-[1fr_1fr_1fr]">
+        <div>
+          <label
+            for="shopify-gid-build-type"
+            class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase"
+          >
+            Resource type
+          </label>
+          <select
+            id="shopify-gid-build-type"
+            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-2.5 text-sm font-bold focus:outline-none"
+          >
+            {RESOURCE_TYPES.map((type) => <option value={type}>{type}</option>)}
+          </select>
+        </div>
+        <div>
+          <label
+            for="shopify-gid-build-id"
+            class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase"
+          >
+            Legacy ID
+          </label>
+          <input
+            id="shopify-gid-build-id"
+            type="text"
+            inputmode="numeric"
+            spellcheck="false"
+            autocomplete="off"
+            value="1234567890"
+            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-2.5 font-mono text-sm focus:outline-none"
+          />
+        </div>
+        <div>
+          <label
+            for="shopify-gid-build-query"
+            class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase"
+          >
+            Query params (optional)
+          </label>
+          <input
+            id="shopify-gid-build-query"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="namespace=custom&key=fit_guide"
+            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-2.5 font-mono text-sm focus:outline-none"
+          />
+        </div>
+      </div>
+      <p
+        id="shopify-gid-build-error"
+        class="text-pink-deep text-sm font-bold"
+        role="status"
+        hidden
+      >
+      </p>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label
+              for="shopify-gid-build-out"
+              class="mono text-[11px] font-bold tracking-widest uppercase"
+            >
+              GID
+            </label>
+            <button
+              type="button"
+              id="shopify-gid-build-copy"
+              class="mono border-ink bg-paper hover:bg-yellow shadow-neo-xs hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-[3px] border-[2.5px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            >
+              <Icon name="lucide:copy" class="h-3 w-3" aria-hidden="true" />
+              <span id="shopify-gid-build-copy-label">Copy</span>
+            </button>
+          </div>
+          <textarea
+            id="shopify-gid-build-out"
+            rows="2"
+            readonly
+            aria-live="polite"
+            class="border-ink bg-bg-alt shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm break-all focus:outline-none"
+          ></textarea>
+        </div>
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label
+              for="shopify-gid-build-b64"
+              class="mono text-[11px] font-bold tracking-widest uppercase"
+            >
+              Base64 GID
+            </label>
+            <button
+              type="button"
+              id="shopify-gid-build-b64-copy"
+              class="mono border-ink bg-paper hover:bg-yellow shadow-neo-xs hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-[3px] border-[2.5px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            >
+              <Icon name="lucide:copy" class="h-3 w-3" aria-hidden="true" />
+              <span id="shopify-gid-build-b64-copy-label">Copy</span>
+            </button>
+          </div>
+          <textarea
+            id="shopify-gid-build-b64"
+            rows="2"
+            readonly
+            aria-live="polite"
+            class="border-ink bg-bg-alt shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm break-all focus:outline-none"
+          ></textarea>
+        </div>
+      </div>
+    </NeoCard>
+
+    <!-- Bulk -->
+    <NeoCard tone="green" shadow="lg" class="space-y-4">
+      <p class="mono text-[11px] font-bold tracking-widest uppercase">
+        ▸ Bulk convert
+      </p>
+      <p class="text-xs leading-snug opacity-80">
+        One value per line — GIDs, base64 GIDs, admin URLs and bare numbers can
+        be mixed. Lines that fail come back blank so row order still matches
+        your spreadsheet, and the count below names what broke.
+      </p>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div
+          class="flex flex-wrap gap-2"
+          role="group"
+          aria-label="Output format"
+        >
+          {
+            BULK_MODES.map((m) => (
+              <button
+                type="button"
+                data-shopify-gid-bulk-mode={m.mode}
+                aria-pressed="false"
+                class="mono border-ink bg-paper shadow-neo-xs hover:shadow-neo-sm rounded-[3px] border-[2.5px] px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+              >
+                {m.label}
+              </button>
+            ))
+          }
+        </div>
+        <div class="min-w-[190px] flex-1">
+          <label
+            for="shopify-gid-bulk-type"
+            class="mono mb-1.5 block text-[10px] font-bold tracking-widest uppercase"
+          >
+            Type for bare numbers
+          </label>
+          <select
+            id="shopify-gid-bulk-type"
+            class="border-ink bg-paper shadow-neo-xs w-full rounded-[3px] border-[2.5px] px-2.5 py-2 text-sm font-bold focus:outline-none"
+          >
+            {RESOURCE_TYPES.map((type) => <option value={type}>{type}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-2">
+          <label
+            for="shopify-gid-bulk-input"
+            class="mono block text-[11px] font-bold tracking-widest uppercase"
+          >
+            Input
+          </label>
+          <textarea
+            id="shopify-gid-bulk-input"
+            rows="8"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="One GID, base64 GID, admin URL or number per line"
+            class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-xs break-all focus:outline-none"
+            >{BULK_SAMPLE}</textarea
+          >
+        </div>
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label
+              for="shopify-gid-bulk-output"
+              class="mono text-[11px] font-bold tracking-widest uppercase"
+            >
+              Output
+            </label>
+            <button
+              type="button"
+              id="shopify-gid-bulk-copy"
+              class="mono border-ink bg-paper hover:bg-yellow shadow-neo-xs hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-[3px] border-[2.5px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            >
+              <Icon name="lucide:copy" class="h-3 w-3" aria-hidden="true" />
+              <span id="shopify-gid-bulk-copy-label">Copy all</span>
+            </button>
+          </div>
+          <textarea
+            id="shopify-gid-bulk-output"
+            rows="8"
+            readonly
+            class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-xs break-all focus:outline-none"
+          ></textarea>
+        </div>
+      </div>
+      <p
+        id="shopify-gid-bulk-status"
+        class="text-sm leading-snug font-bold"
+        aria-live="polite"
+      >
+      </p>
+    </NeoCard>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase">
+      Why Shopify moved from numeric IDs to GIDs
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      REST gave every resource a plain 64-bit integer. <code>1234567890</code> is
+      a fine primary key and a terrible identifier: on its own it does not tell you
+      whether it points at a product, an order or a customer, so the type has to travel
+      next to it in a separate field, a separate column, or somebody's head. GraphQL
+      cannot work that way. A single field can return several types, and a client-side
+      cache needs one string it can use as a key.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      So Shopify adopted Relay's global object identification pattern:
+      <code>gid://shopify/Product/1234567890</code>. Scheme, namespace, type,
+      legacy ID. One string that is unique across the whole API, carries its own
+      type, and can be handed to <code>node(id:)</code> or
+      <code>nodes(ids: [...])</code> to fetch anything without knowing up front what
+      it is. That is also why Apollo and urql can normalise a Shopify response without
+      configuration — the <code>id</code> field is already globally unique.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">
+      When you still need the legacy numeric ID
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      GIDs did not replace the numeric IDs; they wrap them. The number is still
+      what half of the platform speaks, and you will keep converting between the
+      two for as long as you work on Shopify.
+    </p>
+    <ComparisonTable columns={idColumns} rows={idRows} class="mt-5 text-sm" />
+    <p class="mt-4 text-base leading-relaxed opacity-90">
+      The places it bites: <strong>webhook payloads</strong> are REST-shaped, so
+      <code>id</code> is the number — but Shopify also ships
+      <code>admin_graphql_api_id</code> in the same object, so reach for that instead
+      of concatenating. <strong>Liquid</strong> gives you
+      <code>product.id</code> as an integer. <strong>Admin URLs</strong> are all numeric,
+      which is why this tool accepts one and pulls the ID out.
+      <strong>CSV and report exports</strong> that include an Id column give you the
+      number. And any ERP, 3PL or legacy database you integrated with in 2019 has
+      a column full of integers. Going the other way, the GraphQL field you want is
+      <code>legacyResourceId</code> — it returns the numeric ID as a string, and it
+      means you never parse a GID yourself.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">
+      The base64 era, and why encoding assumptions rot
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      For years the Storefront API base64-encoded every ID it returned, so
+      <code>gid://shopify/Product/1234567890</code> came back as
+      <code>Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0LzEyMzQ1Njc4OTA=</code>. The Admin API
+      never did. Shopify dropped the encoding in API version 2022-04, and both
+      forms are still accepted as input — which is a friendly API and a nasty
+      source of bugs.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      The failure mode is comparison, not decoding. Two rows hold the same
+      product, one written by an old storefront and one by a new webhook
+      handler, and <code>a === b</code> is false. Deduplication silently doubles the
+      catalogue. A cache keyed on the encoded string never hits. If you store IDs,
+      normalise on write: decode base64 if it decodes to something starting with
+      <code>gid://</code>, keep the plain form, and never assume the shape of
+      what the next API version hands you. This tool decodes with
+      <code>atob</code> plus <code>TextDecoder</code> in fatal mode, so a string that
+      merely looks like base64 fails loudly instead of producing mojibake.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">
+      A GID is opaque — including the one this tool just built you
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Shopify's position is that a GID is an opaque token: read it from a
+      response, pass it back, do not manufacture it. The builder above ignores
+      that on purpose, because when you are staring at a support ticket with a
+      numeric order ID in it you need a GID in ten seconds, not a query.
+      Shipping that pattern into production is a different matter.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Three concrete reasons it breaks. The type name has to be exactly right
+      and exactly PascalCase — <code>gid://shopify/product/1</code> is not a typo
+      the API forgives, and <code>MediaImage</code>, <code>ProductImage</code> and
+      <code>Image</code> are three different things. Some resources need query parameters
+      as part of the identifier: an inventory level is the pair of a location and
+      an inventory item, so its GID carries
+      <code>?inventory_item_id=…</code>. And some IDs are not numbers at all — a
+      Storefront cart ID is an opaque token, so any code doing
+      <code>"gid://shopify/Cart/" + parseInt(x)</code> is already broken. When a bulk
+      migration really does force your hand, build the strings, then validate them
+      through <code>nodes(ids: [...])</code> and treat every
+      <code>null</code> in the response as a mapping you got wrong.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">What this page accepts</h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Parsing is a string split, not a regex guess: everything after
+      <code>gid://</code> is cut at the first <code>?</code>, the path must be
+      exactly three segments, and the query is read with
+      <code>URLSearchParams</code> so repeated and empty values survive. Anything
+      that fails names the reason — one slash instead of two, a stray fragment, a
+      space in the middle, four segments because a URL got pasted in. Inputs that
+      are not GIDs are tried in order: a Shopify admin URL (the last
+      <code>/segment/12345</code> pair wins, so
+      <code>/products/1/variants/2</code> resolves to the variant), a bare integer,
+      then base64. The notes panel flags the things that parse but still look wrong
+      — a non-<code>shopify</code> namespace, a lowercase type, a leading zero, an
+      <code>InventoryLevel</code> missing its parameter. All of it runs locally; the
+      page works with the network unplugged.
+    </p>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions people ask</h2>
+    <div class="space-y-4">
+      {
+        faq.map((item) => (
+          <div class="border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px] p-5">
+            <h3 class="heading mb-2 text-lg leading-tight uppercase">
+              {item.q}
+            </h3>
+            <p class="text-sm leading-relaxed opacity-90">{item.a}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-4xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Related</h2>
+    <ul class="grid gap-5 sm:grid-cols-2">
+      {
+        RELATED.map((item) => (
+          <li>
+            <NeoCard
+              href={item.href}
+              tone={item.tone}
+              shadow="sm"
+              hover
+              class="flex h-full flex-col gap-2"
+            >
+              <span class="mono text-[10px] font-bold tracking-widest uppercase opacity-70">
+                ▸ {item.kind}
+              </span>
+              <span class="heading text-lg leading-tight uppercase">
+                {item.title}
+              </span>
+              <span class="text-sm leading-snug opacity-90">{item.blurb}</span>
+            </NeoCard>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="mt-8">
+      <NeoButton href="/tools/" variant="secondary" size="sm">
+        ← All free tools
+      </NeoButton>
+    </div>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/shopify-gid-decoder";
+</script>
+
+<style>
+  /* Inline code only gets prose styling inside articles — give it the same
+     neobrutalist treatment here. */
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--color-bg-alt);
+    border: 1.5px solid var(--color-ink);
+    border-radius: 3px;
+    padding: 0.05em 0.35em;
+    overflow-wrap: anywhere;
+  }
+</style>

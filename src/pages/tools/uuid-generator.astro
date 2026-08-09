@@ -2,25 +2,161 @@
 import Page from "@/layouts/Page.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE } from "@/consts";
-import { breadcrumbList } from "@/lib/seo";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_NAME = "UUID Generator";
+const TOOL_PATH = "/tools/uuid-generator/";
+const TOOL_DESCRIPTION =
+  "Free UUID generator: create crypto-random v4 UUIDs in bulk, up to 500 at a time, and copy them with one click. Runs entirely in your browser, nothing uploaded.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
   { name: "Tools", url: "/tools/" },
-  { name: "UUID Generator", url: "/tools/uuid-generator/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
 ]);
+
+const versionColumns = [
+  { label: "v1", tone: "pink" as const },
+  { label: "v4", tone: "cyan" as const },
+  { label: "v7", tone: "green" as const },
+];
+
+const versionRows = [
+  {
+    icon: "lucide:package",
+    label: "What the 128 bits hold",
+    cells: [
+      "60-bit timestamp + 14-bit clock sequence + 48-bit node ID",
+      "122 random bits",
+      "48-bit millisecond timestamp + up to 74 random bits",
+    ],
+  },
+  {
+    icon: "lucide:arrow-down-up",
+    label: "Sorts by creation time",
+    cells: [false, false, true],
+  },
+  {
+    icon: "lucide:eye",
+    label: "Leaks something",
+    cells: ["MAC address and creation time", false, "Creation time, by design"],
+  },
+  {
+    icon: "lucide:database",
+    label: "Good primary key at scale",
+    cells: [false, false, true],
+  },
+  {
+    icon: "lucide:file-text",
+    label: "Where it is specified",
+    cells: ["RFC 4122, kept in RFC 9562", "RFC 4122, kept in RFC 9562", "RFC 9562 (2024)"],
+  },
+];
+
+const faq = [
+  {
+    q: "Are UUIDs guaranteed to be unique?",
+    a: "Not guaranteed — just overwhelmingly unlikely to collide. A v4 UUID carries 122 random bits, and the birthday bound puts you at roughly a one-in-a-billion chance of a single duplicate after generating 103 trillion of them. The real risk is never the maths, it is the random source: values drawn from Math.random(), from a PRNG seeded identically across forked workers, or from a library that truncates the UUID to fit a column will collide long before probability says they should.",
+  },
+  {
+    q: "Are the UUIDs from this generator cryptographically random?",
+    a: "Yes. The page calls crypto.randomUUID(), which the Web Crypto spec requires to be backed by a cryptographically secure random source, and falls back to crypto.getRandomValues() with the version and variant bits set by hand where randomUUID() is not available. Both need a secure context, so HTTPS or localhost. Nothing is generated on a server and nothing is sent anywhere — load the page once and it keeps working offline.",
+  },
+  {
+    q: "Does this tool generate UUID v7?",
+    a: "No. This generates v4 only, and I would rather say that than pretend otherwise. v7 puts a 48-bit millisecond timestamp at the front so the values sort by creation time, which is exactly what you want for database primary keys — so generate it where the row is created, not by pasting from a web page. PostgreSQL 18 ships a uuidv7() function, and every major language has a library.",
+  },
+  {
+    q: "Should I use a UUID as a database primary key?",
+    a: "It depends on the version and the write volume. Random v4 keys scatter inserts across the whole B-tree instead of appending to the rightmost page, which causes page splits, index fragmentation, and a sharp drop in insert throughput once the index stops fitting in memory. It hurts most on MySQL with InnoDB, where the table itself is the primary-key B-tree and every secondary index stores a full copy of that key. If you want a UUID primary key, use a time-ordered one: v7 or ULID.",
+  },
+  {
+    q: "How should I store a UUID in MySQL or PostgreSQL?",
+    a: "As 16 bytes, never as a 36-character string. PostgreSQL has a native uuid type that stores the raw 128 bits; MySQL has no UUID type, so use binary(16) with UUID_TO_BIN() and BIN_TO_UUID() to convert at the edges. A char(36) column wastes 20 bytes on every row, and in InnoDB that waste is repeated inside every secondary index, on top of slower string comparison under a collation.",
+  },
+  {
+    q: "Can I use a UUID as an API key or a password reset token?",
+    a: "A v4 UUID from a proper CSPRNG has 122 bits of entropy, so guessing one is not the problem. The format is. UUIDs get logged, pasted into URLs, and leaked through Referer headers, and nothing about the shape of a UUID tells the next developer that this particular one is a secret. Generate a purpose-made random token instead, keep it out of URLs, and store only its hash.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: TOOL_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const related = [
+  {
+    href: "/tools/secret-generator/",
+    kind: "Tool",
+    title: "Secret Generator",
+    blurb:
+      "A UUID is an identifier, not a secret. When you need a token, pick the entropy and the alphabet on purpose.",
+    tone: "purple" as const,
+  },
+  {
+    href: "/tools/hash-generator/",
+    kind: "Tool",
+    title: "SHA Hash Generator",
+    blurb:
+      "The other half of ID hygiene: hash a token before you store it, and fingerprint content for cache keys.",
+    tone: "yellow" as const,
+  },
+  {
+    href: "/blog/stateless-vs-stateful-apps/",
+    kind: "Article",
+    title: "Stateless vs stateful apps",
+    blurb:
+      "Client-generated IDs are what let a stateless service take the same retry twice and write the row once.",
+    tone: "cyan" as const,
+  },
+  {
+    href: "/blog/monolith-vs-microservices/",
+    kind: "Article",
+    title: "Monolith vs microservices",
+    blurb:
+      "The moment IDs have to be unique across services that do not share a database, a sequence stops being an option.",
+    tone: "green" as const,
+  },
+];
 ---
 
 <Page
-  title="UUID Generator"
-  description="Free v4 UUID generator. Generate crypto-random UUIDs in bulk and copy them with one click — instant, offline, nothing leaves your browser."
+  title={TOOL_NAME}
+  description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="UUID Generator."
-  intro="Crypto-random v4 UUIDs, generated in your browser. Set how many, generate, copy."
-  structuredData={breadcrumbLd}
+  intro="Crypto-random v4 UUIDs, generated by your browser's own CSPRNG. Set how many, generate, copy — nothing is sent anywhere."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
 >
+  <section class="mx-auto max-w-3xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ This makes v4, not v7
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Great for test data, seeds, correlation IDs and idempotency keys. If
+        these are going to be primary keys in a large table, generate v7 or ULID
+        at the source instead — the reason is below.
+      </p>
+    </StickyNote>
+  </section>
+
   <section class="mx-auto max-w-3xl px-5 pb-16" id="uuid-root">
     <NeoCard tone="paper" shadow="md" class="space-y-5">
       <div class="flex flex-wrap items-end gap-4">
@@ -60,6 +196,169 @@ const breadcrumbLd = breadcrumbList([
         class="w-full border-[3px] border-ink rounded-[4px] bg-bg-alt p-3 font-mono text-sm shadow-neo-sm focus:outline-none resize-y"
       ></textarea>
     </NeoCard>
+  </section>
+
+  <!-- EXPLAINER -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-4 text-2xl uppercase">What a v4 UUID actually is</h2>
+    <p class="text-base leading-relaxed">
+      A UUID is 128 bits, printed as 32 hex digits in an 8-4-4-4-12 grouping. In
+      version 4, six of those bits are not yours: four say "this is version 4"
+      and two mark the variant. The other 122 come straight out of a random
+      source. You can read both fields off the string without a parser: the
+      third group starts with the version digit, always
+      <code class="mono font-bold">4</code> here, and the fourth group starts with
+      the variant digit, always <code class="mono font-bold">8</code>,
+      <code class="mono font-bold">9</code>, <code class="mono font-bold">a</code
+      >, or <code class="mono font-bold">b</code>.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      This page calls <code class="mono font-bold">crypto.randomUUID()</code> and
+      falls back to <code class="mono font-bold">crypto.getRandomValues()</code>
+      with those six bits set by hand. No <code class="mono font-bold"
+        >Math.random()</code
+      > anywhere, which turns out to be the whole ballgame.
+    </p>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      The collision maths, in plain terms
+    </h2>
+    <p class="text-base leading-relaxed">
+      122 random bits is about 5.3 × 10³⁶ values, but the number that matters is
+      the birthday bound, which sits near the square root of that. Concretely:
+      generate 103 trillion v4 UUIDs and your odds of a single duplicate
+      anywhere in the pile are roughly one in a billion. You are not going to
+      collide.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      What you can break is the assumption underneath the maths: a real CSPRNG.
+      Duplicates in the wild come from
+      <code class="mono font-bold">Math.random()</code>, from a PRNG in a process
+      that forked after seeding, from images that boot with an identical entropy
+      pool, and from code that truncates a UUID to fit a legacy column. Keep the
+      unique constraint anyway — not as a retry mechanism, but as documentation
+      of intent.
+    </p>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      The version decides your write pattern
+    </h2>
+    <p class="mb-6 text-base leading-relaxed">
+      The versions are not quality tiers, they are different trade-offs. v1
+      embeds a timestamp and a node ID that is traditionally the machine's MAC
+      address — it leaks both, and because the timestamp fields sit out of
+      order, it does not even sort by time. v4 is pure randomness. v7,
+      standardised in RFC 9562 in 2024, leads with 48 bits of Unix milliseconds,
+      big-endian, then randomness.
+    </p>
+    <ComparisonTable columns={versionColumns} rows={versionRows} />
+    <p class="mt-6 text-base leading-relaxed">
+      That ordering is not cosmetic — it is an index problem, and it is the
+      production failure people actually hit. A primary key is a B-tree key.
+      Time-ordered values append to the rightmost leaf page, which stays hot in
+      the buffer pool. Random v4 values target a random page every time: the
+      working set becomes the entire
+      index, pages split down the middle instead of filling up, and the moment
+      the index outgrows RAM your insert throughput falls off a cliff. MySQL
+      with InnoDB suffers worst, because the table <em>is</em> the primary-key
+      B-tree and every secondary index carries a full copy of that key.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      This tool generates v4. For keys in a table that will get large, reach for
+      v7 or ULID where the row is created —
+      <code class="mono font-bold">uuidv7()</code> is built into PostgreSQL 18 and
+      there is a library for every language. ULID is the same idea (48 bits of milliseconds
+      plus 80 random) in a 26-character base32 encoding that sorts as text; v7 wins
+      on being a real UUID that drops into a <code class="mono font-bold">uuid</code
+      > column.
+    </p>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      Store 16 bytes, not 36 characters
+    </h2>
+    <p class="text-base leading-relaxed">
+      A UUID is 128 bits. The canonical text form is 36 characters, so
+      <code class="mono font-bold">char(36)</code> spends 36 bytes to hold 16 bytes
+      of information. PostgreSQL has a native <code class="mono font-bold"
+        >uuid</code
+      > type; MySQL does not, so use <code class="mono font-bold">binary(16)</code
+      > with <code class="mono font-bold">UUID_TO_BIN()</code> and <code
+        class="mono font-bold">BIN_TO_UUID()</code
+      > at the edges; SQL Server has <code class="mono font-bold"
+        >uniqueidentifier</code
+      >.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      The 20 wasted bytes sound trivial until you remember that InnoDB copies
+      the full primary key into every secondary index — five indexes, five more
+      copies of the waste, in RAM as well as on disk.
+    </p>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      When an auto-increment integer still wins
+    </h2>
+    <p class="text-base leading-relaxed">
+      A <code class="mono font-bold">bigint</code> is 8 bytes, strictly monotonic,
+      readable in a log, and half the width of a UUID in every index and foreign
+      key. One database, one writer, IDs that never appear in a URL — that is the
+      correct choice, and a UUID there is pure tax.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      UUIDs earn their place when you need the ID before the insert
+      (client-side creation, offline-first sync, idempotency keys), when you
+      merge rows from several sources, when you shard, or when the ID is
+      public — <code class="mono font-bold">/orders/1024</code> tells a
+      competitor your order count and invites a stranger to try 1025. Most teams
+      land on both: a <code class="mono font-bold">bigint</code> primary key for joins,
+      plus an indexed UUID column for the outside world.
+    </p>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered.</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- RELATED -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Keep going</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {
+        related.map((r) => (
+          <NeoCard href={r.href} tone={r.tone} shadow="sm" hover>
+            <p class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70">
+              {r.kind}
+            </p>
+            <p class="heading mb-2 flex items-center gap-2 text-lg uppercase">
+              {r.title}
+              <Icon
+                name="lucide:arrow-right"
+                class="h-4 w-4"
+                aria-hidden="true"
+              />
+            </p>
+            <p class="text-sm leading-snug">{r.blurb}</p>
+          </NeoCard>
+        ))
+      }
+    </div>
   </section>
 </Page>
 

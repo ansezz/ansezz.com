@@ -2,23 +2,145 @@
 import Page from "@/layouts/Page.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
 import { SITE } from "@/consts";
-import { breadcrumbList } from "@/lib/seo";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_NAME = "JWT Decoder";
+const TOOL_PATH = "/tools/jwt-decoder/";
+const TOOL_DESCRIPTION =
+  "JWT decoder: paste a JSON Web Token to read its header, payload, claims, and expiry. Free, decode-only, and it runs in your browser — nothing is uploaded.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
   { name: "Tools", url: "/tools/" },
-  { name: "JWT Decoder", url: "/tools/jwt-decoder/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
 ]);
+
+const claims = [
+  {
+    name: "iss",
+    label: "Issuer",
+    text: "Who minted it. Pin it, or another tenant's tokens pass.",
+  },
+  {
+    name: "sub",
+    label: "Subject",
+    text: "A stable, opaque user id; never a changeable email.",
+  },
+  {
+    name: "aud",
+    label: "Audience",
+    text: "Unchecked, a marketing-site token works on your billing API.",
+  },
+  {
+    name: "exp",
+    label: "Expiry",
+    text: "Seconds since the Unix epoch, not milliseconds.",
+  },
+  {
+    name: "nbf",
+    label: "Not before",
+    text: "Valid only from this time on.",
+  },
+  {
+    name: "iat",
+    label: "Issued at",
+    text: "Reject tokens minted before the last password change.",
+  },
+  {
+    name: "jti",
+    label: "JWT ID",
+    text: "What a denylist or a replay check keys on.",
+  },
+];
+
+const faq = [
+  {
+    q: "Is a JWT encrypted?",
+    a: "No — a standard JWT is signed, not encrypted. The header and payload are base64url, an encoding with no key, so anyone holding the token can read every claim in it, including this page. The signature only proves the token was not altered after it was issued. If the contents genuinely have to stay private you need JWE, the encrypted variant, and almost nothing that calls itself a JWT is JWE.",
+  },
+  {
+    q: "Does this JWT decoder send my token anywhere?",
+    a: "No. Decoding runs in your tab with atob and TextDecoder, there is no fetch call and no analytics — load the page once, go offline, and it still works. Even so, treat a live token like a password: a bearer token is enough to impersonate its subject until it expires, so use an expired or test token here and in every other online decoder.",
+  },
+  {
+    q: "How do I verify a JWT signature?",
+    a: "On the server, with the key: the shared secret for HS256, or the issuer's public key for RS256 and ES256 — usually fetched from a JWKS endpoint and selected by the header's kid. Pin the algorithm you expect rather than reading it from the token, then check exp, nbf, iss, and aud. A browser page cannot do any of that honestly, which is why this tool decodes and stops.",
+  },
+  {
+    q: "What does exp mean, and why is my token expired?",
+    a: "exp is the expiry time as a NumericDate — seconds since the Unix epoch in UTC, not milliseconds. This page renders it as a UTC timestamp and flags it once it is in the past. Two things trip people up: writing the value in milliseconds, which pushes the date tens of thousands of years into the future, and clock skew between issuer and verifier, which is why most libraries allow a leeway of a minute or two.",
+  },
+  {
+    q: "Can a JWT be revoked?",
+    a: "Not on its own. A signed token stays valid until exp because there is no server-side record to delete — logging a user out, banning them, or downgrading their plan does nothing to a token already in their hands. The usual fix is a short-lived access token of five to fifteen minutes plus a refresh token that is stored server-side and can be deleted. If you need revocation to take effect on the very next request, you need a lookup on every request, which is a session.",
+  },
+  {
+    q: "Is HS256 or RS256 better for JWTs?",
+    a: "It depends on who verifies. HS256 is HMAC with a shared secret, so every verifier can also mint tokens — fine when one service signs and checks its own. RS256 and ES256 sign with a private key and verify with a public one, so you can hand the public key to any number of services without letting them issue anything. Whichever you pick, pin it in the verifier: the algorithm-confusion attack replays an RS256 token as HS256 using the public key as the HMAC secret, and a verifier that trusts the header's alg field accepts it.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: TOOL_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const related = [
+  {
+    href: "/tools/base64-encoder/",
+    kind: "Tool",
+    title: "Base64 Encoder",
+    blurb:
+      "Every JWT segment is base64url. Decode one by hand, or round-trip text and files without the UTF-8 bugs.",
+    tone: "yellow" as const,
+  },
+  {
+    href: "/tools/hash-generator/",
+    kind: "Tool",
+    title: "SHA Hash Generator",
+    blurb:
+      "HS256 is HMAC-SHA-256 — the same hash family that signs most tokens, with a key bolted on.",
+    tone: "cyan" as const,
+  },
+  {
+    href: "/blog/api-vs-mcp/",
+    kind: "Article",
+    title: "API vs MCP",
+    blurb:
+      "Where the bearer token ends up when an agent, not a browser, is the thing calling your API.",
+    tone: "purple" as const,
+  },
+  {
+    href: "/blog/rest-vs-grpc/",
+    kind: "Article",
+    title: "REST vs gRPC",
+    blurb:
+      "Same token, different envelope: an Authorization header over HTTP, metadata over gRPC.",
+    tone: "green" as const,
+  },
+];
 ---
 
 <Page
-  title="JWT Decoder"
-  description="Free JWT decoder. Paste a JSON Web Token to read its header, payload, claims, algorithm, and expiry — decoded in your browser, nothing sent anywhere."
+  title={TOOL_NAME}
+  description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="JWT Decoder."
   intro="Paste a JWT to read its header and payload. Decoding happens in your browser — the token never leaves the page."
-  structuredData={breadcrumbLd}
+  structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-4xl px-5 pb-6">
     <StickyNote tone="pink" tilt={-1.5} class="max-w-md">
@@ -26,8 +148,10 @@ const breadcrumbLd = breadcrumbList([
         ▸ Decode only
       </p>
       <p class="text-sm font-bold leading-snug">
-        This does not verify the signature — it only decodes. Never trust a JWT
-        you haven't verified server-side. Don't paste production secrets.
+        Decoding runs in this tab — nothing is sent anywhere. It does not verify
+        the signature, so a decoded token proves nothing; never trust a JWT you
+        haven't verified server-side. And never paste a production token into
+        this page or any other online decoder — a live token is a password.
       </p>
     </StickyNote>
   </section>
@@ -71,6 +195,196 @@ const breadcrumbLd = breadcrumbList([
       </p>
       <ul id="jwt-claims" class="space-y-1 text-sm"></ul>
     </NeoCard>
+  </section>
+
+  <!-- EXPLAINER -->
+  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Three segments, none of them secret
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        A JWT is three base64url strings joined by dots: <code
+          class="mono font-bold">header.payload.signature</code
+        >. The header names the signing algorithm and usually a key id (<code
+          class="mono font-bold">kid</code
+        >). The payload is a JSON object of claims. The signature covers the
+        first two segments — it proves nobody edited them, and nothing more.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        The part people get wrong: base64url is an <em>encoding</em>, not
+        encryption. There is no key. Anyone holding the token reads every claim
+        in it — including this page, which does it with <code
+          class="mono font-bold">atob</code
+        > and a <code class="mono font-bold">TextDecoder</code>. A JWT is a signed
+        postcard: a user id and a role are fine; a password or an API key are not.
+        If the contents must stay private you want JWE, the encrypted variant —
+        and almost nothing calling itself "a JWT" is JWE.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">The registered claims</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        RFC 7519 reserves seven claim names; everything else in the payload is
+        yours.
+      </p>
+      <ul class="space-y-2 text-base leading-relaxed opacity-90">
+        {
+          claims.map((c) => (
+            <li class="flex gap-3">
+              <span aria-hidden="true" class="font-bold">
+                ▸
+              </span>
+              <span>
+                <code class="mono font-bold">{c.name}</code> —{" "}
+                <strong>{c.label}.</strong> {c.text}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="text-base leading-relaxed opacity-90">
+        The panel above renders <code class="mono font-bold">exp</code>, <code
+          class="mono font-bold">iat</code
+        >, and <code class="mono font-bold">nbf</code> as UTC timestamps: NumericDate
+        integers, so a date tens of thousands of years out means milliseconds crept
+        in.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Why this decoder is decode-only
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Verifying a signature requires the key: the shared secret for HS256, the
+        issuer's public key for RS256 and ES256 — usually pulled from a JWKS
+        endpoint and selected by <code class="mono font-bold">kid</code>. A page
+        that asked for your signing secret would be a phishing form, so this
+        tool decodes and stops.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        That matters more than it sounds: <strong
+          >a decoded token proves nothing.</strong
+        > Anyone can hand-craft a payload that reads <code class="mono font-bold"
+          >{'{"role":"admin"}'}</code
+        >. Trust starts only after your server checks the signature with a key it
+        already trusted, then <code class="mono font-bold">exp</code>, <code
+          class="mono font-bold">iss</code
+        >, and <code class="mono font-bold">aud</code>.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Everything here runs locally: no <code class="mono font-bold">fetch</code
+        >, no analytics, no server to log it. Still: never paste a production
+        token into this decoder or any other. A live bearer token is a password
+        until <code class="mono font-bold">exp</code>, and you cannot audit what
+        someone else's page does with your keystrokes. Use an expired or
+        redacted one; if a real one has gone into a website, rotate the key.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        alg: none, and algorithm confusion
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Two classic breaks, both from trusting the header.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        <strong><code class="mono font-bold">"alg":"none"</code>.</strong> The JWS
+        spec defines an unsecured mode with an empty signature. A library that reads
+        the algorithm out of the token accepts a forged payload signed by nobody —
+        a bug most major libraries have shipped.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        <strong>Algorithm confusion.</strong> An attacker takes an RS256 token, rewrites
+        the header to <code class="mono font-bold">HS256</code>, and signs it with
+        your RSA <em>public</em> key as the HMAC secret — the public key is public.
+        A verifier that reads <code class="mono font-bold">alg</code> from the token
+        and hands it to a generic <code class="mono font-bold"
+          >verify(token, key)</code
+        > treats that public key as a symmetric secret, and the forgery passes.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        The fix for both: the algorithm is a property of the key you hold, not a
+        field in the token. Pin it.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        You cannot revoke a JWT — which is when sessions win
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Statelessness is the selling point and the bill. Once signed, a token is
+        valid until <code class="mono font-bold">exp</code>; there is no
+        server-side record to delete. Log a user out, ban them, strip an admin
+        role — the token in their hands keeps verifying.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Two tokens fix it: a short-lived access JWT, five to fifteen minutes,
+        plus a refresh token stored server-side that you can delete.
+        The hot path stays stateless; the refresh exchange is where you re-read
+        the user's real state. A 30-day access token plus "we'll add a denylist
+        later" does not work — that denylist is a database read on every
+        request, which is the session table you were avoiding.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        If one backend serves your frontend and owns the database, a session id
+        in a <code class="mono font-bold">Secure; HttpOnly; SameSite</code> cookie
+        wins where it counts: instant revocation, an opaque payload, one indexed
+        read you already pay for. JWTs earn their keep when the verifier
+        cannot reach that store — separate services, a third party, an edge worker.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase mb-6">Questions, answered.</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
+            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- RELATED -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase mb-6">Keep going</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {
+        related.map((r) => (
+          <NeoCard href={r.href} tone={r.tone} shadow="sm" hover>
+            <p class="mono mb-2 text-[10px] font-bold uppercase tracking-widest opacity-70">
+              {r.kind}
+            </p>
+            <p class="heading mb-2 flex items-center gap-2 text-lg uppercase">
+              {r.title}
+              <Icon
+                name="lucide:arrow-right"
+                class="h-4 w-4"
+                aria-hidden="true"
+              />
+            </p>
+            <p class="text-sm leading-snug">{r.blurb}</p>
+          </NeoCard>
+        ))
+      }
+    </div>
   </section>
 </Page>
 

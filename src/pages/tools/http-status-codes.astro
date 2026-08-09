@@ -1,0 +1,1825 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const PAGE_TITLE = "HTTP Status Codes Reference";
+const PAGE_DESCRIPTION =
+  "HTTP status codes reference: every 1xx–5xx code, what it means, and when to use it, including the non-standard ones. Free, filterable, runs in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: PAGE_TITLE, url: "/tools/http-status-codes/" },
+]);
+
+type Flag = "webdav" | "rare" | "deprecated" | "reserved" | "non-standard";
+
+interface StatusCode {
+  code: string;
+  name: string;
+  meaning: string;
+  /** Reads after the words "Use it when" — start lowercase. */
+  use: string;
+  flag?: Flag;
+  /** Extra search terms for the filter box; never rendered. */
+  keywords?: string;
+}
+
+const FLAG_LABEL: Record<Flag, string> = {
+  webdav: "WebDAV",
+  rare: "Rare",
+  deprecated: "Deprecated",
+  reserved: "Reserved",
+  "non-standard": "Non-standard",
+};
+
+const FLAG_CLASS: Record<Flag, string> = {
+  webdav: "bg-cyan",
+  rare: "bg-bg-alt",
+  deprecated: "bg-yellow",
+  reserved: "bg-bg-alt",
+  "non-standard": "bg-pink",
+};
+
+const ONE_XX: StatusCode[] = [
+  {
+    code: "100",
+    name: "Continue",
+    meaning:
+      "The server has read the request headers and is willing to take the body. A final status still follows on the same request.",
+    use: "you never write it by hand. It exists so a client that sent Expect: 100-continue can avoid uploading two gigabytes before learning the request would be rejected.",
+    keywords: "expect continue upload",
+  },
+  {
+    code: "101",
+    name: "Switching Protocols",
+    meaning:
+      "The connection is leaving HTTP for whatever the Upgrade header named — in practice, WebSocket.",
+    use: "a protocol handshake, and only from the server side. Over HTTP/2 and HTTP/3 WebSockets use extended CONNECT instead, so you will never see a 101 there.",
+    keywords: "websocket upgrade handshake",
+  },
+  {
+    code: "102",
+    name: "Processing",
+    meaning:
+      "The server is still working on a long WebDAV operation and wants the client to keep waiting.",
+    use: "essentially never. It only ever applied to WebDAV, and 103 covers the useful half of the idea.",
+    flag: "webdav",
+    keywords: "long running",
+  },
+  {
+    code: "103",
+    name: "Early Hints",
+    meaning:
+      "A preliminary response carrying Link headers so the browser can start fetching CSS, fonts, and scripts while the origin is still generating the real response.",
+    use: "your time-to-first-byte is dominated by slow server work and you know the critical assets up front. Cloudflare and Fastly can synthesise it for you; browsers only act on it for navigation requests.",
+    keywords: "preload preconnect performance ttfb link",
+  },
+];
+
+const TWO_XX: StatusCode[] = [
+  {
+    code: "200",
+    name: "OK",
+    meaning:
+      "The request succeeded and the body, if there is one, is the result.",
+    use: "the operation fully succeeded and you are handing back a representation. Not when it half-worked, and never with an error object inside.",
+    keywords: "success ok",
+  },
+  {
+    code: "201",
+    name: "Created",
+    meaning:
+      "A new resource now exists. The response should carry a Location header pointing at it, and usually the new representation as the body.",
+    use: "a POST or PUT created something addressable — POST /orders that returns order 1234. If nothing was created and you only queued work, that is a 202.",
+    keywords: "post create location new resource",
+  },
+  {
+    code: "202",
+    name: "Accepted",
+    meaning:
+      "The request was valid and has been queued. Nothing has actually happened yet, and it might still fail.",
+    use: "async work: you enqueued a job, sent it to a worker, or handed it to a batch pipeline. Always return somewhere to poll — a Location header or a status URL in the body. A bare 202 tells the client nothing it can act on.",
+    keywords: "async queue job background webhook polling",
+  },
+  {
+    code: "203",
+    name: "Non-Authoritative Information",
+    meaning:
+      "Success, but a transforming proxy in the middle modified the payload, so it is not exactly what the origin sent.",
+    use: "you are writing a proxy that rewrites responses. Applications do not emit this.",
+    flag: "rare",
+    keywords: "proxy transform",
+  },
+  {
+    code: "204",
+    name: "No Content",
+    meaning:
+      "Success, and there is deliberately nothing to send. A 204 must not carry a body at all.",
+    use: "DELETE succeeded, a PUT saved with nothing worth returning, a preference toggle. Two traps: a browser navigating to a 204 stays on the current page, and fetch's response.json() throws on it. If the caller needs data, return 200 with a body instead.",
+    keywords: "delete empty body no content put",
+  },
+  {
+    code: "205",
+    name: "Reset Content",
+    meaning:
+      "Success, and the client should reset the form or document view that sent the request. Also forbidden from carrying a body.",
+    use: "almost never outside legacy form workflows. Modern front ends reset their own state.",
+    flag: "rare",
+    keywords: "form reset",
+  },
+  {
+    code: "206",
+    name: "Partial Content",
+    meaning:
+      "Here is the byte range that was asked for. Requires a Content-Range header describing what was sent.",
+    use: "range requests — video seeking, resumable downloads, byte-serving PDFs. Your CDN and static file server do this; you rarely hand-write it.",
+    keywords: "range video streaming resume download",
+  },
+  {
+    code: "207",
+    name: "Multi-Status",
+    meaning:
+      "One response body carrying a separate status for each of several resources.",
+    use: "WebDAV. It is also the honest answer for a batch endpoint where individual operations can fail independently — but if you invent your own envelope, do not label it 207.",
+    flag: "webdav",
+    keywords: "batch bulk multiple",
+  },
+  {
+    code: "208",
+    name: "Already Reported",
+    meaning:
+      "Inside a 207 body: this resource was already enumerated earlier in the response, so it is not repeated.",
+    use: "WebDAV collections only.",
+    flag: "webdav",
+  },
+  {
+    code: "226",
+    name: "IM Used",
+    meaning:
+      "The response is a delta against a version the client already has, per the instance-manipulation extension in RFC 3229.",
+    use: "practically never — almost nothing implements delta encoding.",
+    flag: "rare",
+    keywords: "delta encoding",
+  },
+];
+
+const THREE_XX: StatusCode[] = [
+  {
+    code: "300",
+    name: "Multiple Choices",
+    meaning:
+      "Several representations exist and the client (or user) should pick one.",
+    use: "rarely worth the trouble. There is no standard machine-readable format for the choices, so agents cannot act on it.",
+    flag: "rare",
+    keywords: "content negotiation choices",
+  },
+  {
+    code: "301",
+    name: "Moved Permanently",
+    meaning:
+      "This URL is gone for good; use the new one and update your links. Browsers and caches hold on to it hard — often for the life of the profile.",
+    use: "a permanent move you are certain about. Clients are allowed to rewrite a POST into a GET on a 301, and they do. If the method matters, use 308.",
+    keywords: "seo permanent redirect canonical moved",
+  },
+  {
+    code: "302",
+    name: "Found",
+    meaning:
+      "A temporary redirect. The original URL still owns the resource and should keep being used.",
+    use: "a genuinely temporary move. Most frameworks still emit 302 from their redirect() helper — and it inherits the POST-becomes-GET rewrite from 301, so for a form post-back 303 is the code that actually says what you mean.",
+    keywords: "temporary redirect found",
+  },
+  {
+    code: "303",
+    name: "See Other",
+    meaning:
+      "Go and GET this other URL. Changing the method to GET is mandatory and intentional.",
+    use: "post/redirect/get — you processed a form and want a refresh not to resubmit it. Also correct for handing a client the result URL of a job it POSTed.",
+    keywords: "post redirect get form resubmit prg",
+  },
+  {
+    code: "304",
+    name: "Not Modified",
+    meaning:
+      "The cached copy the client already has is still fresh. No body is sent.",
+    use: "a conditional request with If-None-Match or If-Modified-Since matched. Send the validators and cache headers, not the payload — that is the whole point.",
+    keywords: "cache etag conditional if-none-match revalidate",
+  },
+  {
+    code: "305",
+    name: "Use Proxy",
+    meaning:
+      "The resource must be fetched through the proxy named in the response.",
+    use: "never. Deprecated for security reasons and ignored by every current client.",
+    flag: "deprecated",
+  },
+  {
+    code: "306",
+    name: "(Unused)",
+    meaning:
+      "Used in a draft, never standardised, and permanently reserved so nothing else can claim it.",
+    use: "never.",
+    flag: "reserved",
+  },
+  {
+    code: "307",
+    name: "Temporary Redirect",
+    meaning:
+      "A temporary redirect where the method and the body must be preserved exactly.",
+    use: "you need to bounce a POST, PUT, or PATCH somewhere else without losing the body. This is the 302 you actually wanted on an API.",
+    keywords: "temporary redirect method preserved post",
+  },
+  {
+    code: "308",
+    name: "Permanent Redirect",
+    meaning:
+      "A permanent redirect where the method and the body must be preserved exactly.",
+    use: "a permanent move on an API where POST has to stay POST. Also the safer choice for http-to-https canonicalisation on endpoints that accept writes.",
+    keywords: "permanent redirect method preserved https canonical",
+  },
+];
+
+const FOUR_XX: StatusCode[] = [
+  {
+    code: "400",
+    name: "Bad Request",
+    meaning:
+      "The server refuses to process the request because the request itself is wrong: unparseable JSON, a malformed query string, a missing required field.",
+    use: "the payload could not be understood or is structurally invalid. RFC 9110 widened 400 to cover any client error the server cannot classify better, so it is always defensible — but a more specific code is more useful to the caller.",
+    keywords: "malformed invalid json parse validation",
+  },
+  {
+    code: "401",
+    name: "Unauthorized",
+    meaning:
+      "Misnamed: it means unauthenticated. No credentials were supplied, or the ones supplied were not valid.",
+    use: "the client should authenticate and retry. It must carry a WWW-Authenticate header naming the scheme, and in practice that header is the single most commonly omitted requirement in the whole 4xx block.",
+    keywords:
+      "auth authentication login token expired jwt bearer unauthenticated",
+  },
+  {
+    code: "402",
+    name: "Payment Required",
+    meaning:
+      "Reserved since 1997 and quietly real now: Stripe returns it for declined cards, and metered APIs use it for an exhausted plan.",
+    use: "billing state blocks the call. There is no standard semantics behind it, so document exactly what you mean and what the client should do.",
+    flag: "rare",
+    keywords: "billing payment subscription quota stripe",
+  },
+  {
+    code: "403",
+    name: "Forbidden",
+    meaning:
+      "The server understood the request and is refusing to authorise it. Re-authenticating is not implied to help.",
+    use: "an authenticated caller lacks permission, or a WAF, IP allowlist, or policy engine blocked the request. If logging in would fix it, the correct code is 401.",
+    keywords: "permission denied forbidden authorization rbac waf blocked",
+  },
+  {
+    code: "404",
+    name: "Not Found",
+    meaning:
+      "There is no resource at that URL, and the server is not saying whether there ever was one.",
+    use: "a route does not exist, an ID does not resolve, or you are deliberately hiding the existence of something the caller has no right to know about. That last case is a legitimate and common substitute for 403.",
+    keywords: "missing not found route id",
+  },
+  {
+    code: "405",
+    name: "Method Not Allowed",
+    meaning: "The URL exists but that verb is not supported on it.",
+    use: "you route by method and this one is not wired up. The response must include an Allow header listing the methods that are — frameworks that skip it turn a five-second fix into a debugging session.",
+    keywords: "verb allow method post get put delete",
+  },
+  {
+    code: "406",
+    name: "Not Acceptable",
+    meaning:
+      "Nothing the server can produce matches the client's Accept header.",
+    use: "content negotiation genuinely fails and returning something anyway would be wrong. Most JSON APIs are better off ignoring a nonsense Accept header and serving JSON.",
+    keywords: "accept content negotiation media type",
+  },
+  {
+    code: "407",
+    name: "Proxy Authentication Required",
+    meaning:
+      "The 401 of the proxy world. The client must authenticate with the proxy, which sends Proxy-Authenticate.",
+    use: "you are a proxy. Seeing it as a client usually means a corporate egress proxy is in the path.",
+    keywords: "proxy auth corporate egress",
+  },
+  {
+    code: "408",
+    name: "Request Timeout",
+    meaning:
+      "The client was too slow sending the request and the server is closing an idle connection.",
+    use: "you are a server reaping connections. As a client, a 408 is often just keep-alive housekeeping rather than a real error — retry the request once.",
+    keywords: "timeout idle keepalive slow",
+  },
+  {
+    code: "409",
+    name: "Conflict",
+    meaning: "The request clashes with the current state of the resource.",
+    use: "a duplicate create hits a unique constraint, an edit lands on a stale version, or a delete is blocked by dependents. Say what conflicts in the body — a bare 409 is a support ticket waiting to happen.",
+    keywords: "duplicate unique constraint concurrency state clash",
+  },
+  {
+    code: "410",
+    name: "Gone",
+    meaning:
+      "It existed, it was deliberately removed, and it is not coming back.",
+    use: "you intentionally deleted something and want clients and crawlers to drop it. Search engines treat 410 as a slightly stronger removal signal than 404. Only reach for it when the removal really is permanent.",
+    keywords: "deleted removed permanently seo crawler",
+  },
+  {
+    code: "411",
+    name: "Length Required",
+    meaning: "The request needs a Content-Length header and did not have one.",
+    use: "you cannot accept a chunked or length-less body on this endpoint.",
+    flag: "rare",
+    keywords: "content-length chunked",
+  },
+  {
+    code: "412",
+    name: "Precondition Failed",
+    meaning:
+      "A condition the client attached to the request — If-Match, If-Unmodified-Since — did not hold.",
+    use: "optimistic concurrency: the caller sent an ETag and the resource changed underneath them. This is how you stop lost updates without taking a lock.",
+    keywords: "etag if-match optimistic locking concurrency lost update",
+  },
+  {
+    code: "413",
+    name: "Content Too Large",
+    meaning:
+      "The body exceeds what the server is willing to accept. Renamed from Payload Too Large in RFC 9110.",
+    use: "an upload is over the limit. Check the whole chain before blaming your code — nginx defaults client_max_body_size to 1 MB, and most managed gateways cap request bodies far below what your handler allows.",
+    keywords: "upload too large payload body size limit nginx",
+  },
+  {
+    code: "414",
+    name: "URI Too Long",
+    meaning: "The request target is longer than the server will parse.",
+    use: "someone put a filter payload in a query string. It is usually a signal that the operation should have been a POST.",
+    keywords: "url long query string",
+  },
+  {
+    code: "415",
+    name: "Unsupported Media Type",
+    meaning: "The Content-Type of the body is not one this endpoint accepts.",
+    use: "form-encoded data arrived at a JSON-only endpoint, or the Content-Type header is missing entirely. Most mysterious empty-body bugs deserve this instead of a vague 400.",
+    keywords: "content-type json form multipart media",
+  },
+  {
+    code: "416",
+    name: "Range Not Satisfiable",
+    meaning: "The requested byte range does not exist in the representation.",
+    use: "you serve range requests and the range is out of bounds. Reply with Content-Range: bytes star-slash-length so the client learns the real size.",
+    keywords: "range bytes out of bounds",
+  },
+  {
+    code: "417",
+    name: "Expectation Failed",
+    meaning:
+      "The server will not meet the expectation in the Expect header — in practice, Expect: 100-continue.",
+    use: "you are a server or proxy that refuses 100-continue.",
+    flag: "rare",
+    keywords: "expect continue",
+  },
+  {
+    code: "418",
+    name: "I'm a Teapot",
+    meaning:
+      "A 1998 April Fools joke from RFC 2324. IANA keeps it reserved specifically so nothing real can ever claim it.",
+    use: "never in production. It is funny right up until a CDN, an SDK's error mapper, or an on-call engineer has to deal with it.",
+    flag: "reserved",
+    keywords: "teapot joke coffee hyper text",
+  },
+  {
+    code: "421",
+    name: "Misdirected Request",
+    meaning:
+      "This connection cannot serve requests for that authority — HTTP/2 connection coalescing sent the request to the wrong origin.",
+    use: "you are terminating HTTP/2 for multiple hostnames on one certificate. The client is expected to retry on a fresh connection.",
+    keywords: "http2 coalescing sni tls origin",
+  },
+  {
+    code: "422",
+    name: "Unprocessable Content",
+    meaning:
+      "The syntax is fine and the body parsed, but the values are semantically unacceptable.",
+    use: "validation failed on a well-formed request — an end date before a start date, an email that is not an email. Return field-level errors in the body; RFC 9457 problem details is a ready-made shape for that.",
+    keywords: "validation errors semantic unprocessable entity laravel rails",
+  },
+  {
+    code: "423",
+    name: "Locked",
+    meaning: "The resource is locked by another party.",
+    use: "WebDAV locking, or a domain model with explicit checkouts.",
+    flag: "webdav",
+    keywords: "lock checkout",
+  },
+  {
+    code: "424",
+    name: "Failed Dependency",
+    meaning:
+      "This request was not attempted because a request it depended on failed.",
+    use: "WebDAV, and occasionally a batch pipeline where one step gates the next.",
+    flag: "webdav",
+    keywords: "dependency batch chain",
+  },
+  {
+    code: "425",
+    name: "Too Early",
+    meaning:
+      "The request arrived in TLS 1.3 early data (0-RTT) and the server will not risk processing a replayable request.",
+    use: "you terminate TLS with 0-RTT enabled and the request is not idempotent. The client retries once the handshake completes. If you have never enabled 0-RTT, you will never emit this.",
+    keywords: "tls 0-rtt early data replay handshake",
+  },
+  {
+    code: "426",
+    name: "Upgrade Required",
+    meaning: "The endpoint requires a different protocol.",
+    use: "you refuse plain HTTP/1.1 on an endpoint that needs TLS or a newer version. Must include an Upgrade header naming what you want.",
+    keywords: "upgrade protocol tls version",
+  },
+  {
+    code: "428",
+    name: "Precondition Required",
+    meaning:
+      "The server refuses an unconditional request and wants the client to send If-Match.",
+    use: "you want to force every writer to prove which version it is editing, so two concurrent updates cannot silently clobber each other. It is the polite half of the 412 story.",
+    keywords: "if-match conditional lost update concurrency",
+  },
+  {
+    code: "429",
+    name: "Too Many Requests",
+    meaning: "The client has exceeded a rate limit.",
+    use: "rate limiting or quota enforcement — and always with a Retry-After header, in seconds or as an HTTP date. Without it, well-behaved clients guess and badly-behaved ones hammer you. The RateLimit-* fields are still an IETF draft; Retry-After is the one everything already understands.",
+    keywords: "rate limit throttle quota backoff retry-after 429",
+  },
+  {
+    code: "431",
+    name: "Request Header Fields Too Large",
+    meaning:
+      "The headers, individually or in total, exceeded what the server will accept.",
+    use: "a cookie jar or a bloated JWT blew past the limit. Node defaults to 16 KB of headers; nginx to 8 KB buffers. Fix the token size, do not raise the ceiling.",
+    keywords: "header size cookie jwt too large",
+  },
+  {
+    code: "451",
+    name: "Unavailable For Legal Reasons",
+    meaning:
+      "Blocked because of a legal demand — a court order, a takedown, a sanctions regime — not a technical failure.",
+    use: "the law, not your policy, is the reason. Include a Link header with rel=blocked-by naming the entity making the demand. Generic geo-blocking with no legal basis is a 403.",
+    keywords: "legal censorship dmca gdpr geo block takedown",
+  },
+  {
+    code: "419",
+    name: "Page Expired (Laravel)",
+    meaning:
+      "Not in any RFC. Laravel returns it when the CSRF token is missing, stale, or the session expired.",
+    use: "you are debugging a Laravel form that suddenly stopped submitting. The fix is session lifetime or a refreshed token, not the status code.",
+    flag: "non-standard",
+    keywords: "laravel csrf token session expired vendor",
+  },
+  {
+    code: "420",
+    name: "Enhance Your Calm (legacy Twitter)",
+    meaning:
+      "Twitter's rate-limit code from before 429 existed. Retired, but still quoted in old client libraries.",
+    use: "never. Use 429.",
+    flag: "non-standard",
+    keywords: "twitter rate limit legacy vendor",
+  },
+  {
+    code: "430",
+    name: "Shopify Security Rejection",
+    meaning:
+      "Shopify's code for a request its edge security layer rejected before your app ever saw it.",
+    use: "you are reading Shopify app logs. It is not something you emit.",
+    flag: "non-standard",
+    keywords: "shopify security rejected vendor edge",
+  },
+  {
+    code: "440",
+    name: "Login Time-out (IIS)",
+    meaning:
+      "Microsoft IIS: the session expired and the client must authenticate again.",
+    use: "never by hand. Standard equivalent is 401.",
+    flag: "non-standard",
+    keywords: "iis microsoft session vendor",
+  },
+  {
+    code: "444",
+    name: "No Response (nginx)",
+    meaning:
+      "An nginx directive that closes the connection without sending anything at all. It appears in the access log and never on the wire.",
+    use: "you are dropping abusive traffic at the edge without spending bytes on a response.",
+    flag: "non-standard",
+    keywords: "nginx drop connection close abuse vendor log",
+  },
+  {
+    code: "449",
+    name: "Retry With (IIS)",
+    meaning:
+      "Microsoft IIS: retry the request after supplying more information.",
+    use: "never. It has no standard meaning.",
+    flag: "non-standard",
+    keywords: "iis microsoft vendor",
+  },
+  {
+    code: "460",
+    name: "Client Closed Connection (AWS ALB)",
+    meaning:
+      "The client disconnected before the AWS load balancer could send a response. Log-only, like nginx 499.",
+    use: "you are reading ALB access logs. It points at client timeouts or slow targets, not at the balancer.",
+    flag: "non-standard",
+    keywords: "aws alb elb load balancer client closed vendor log",
+  },
+  {
+    code: "463",
+    name: "Too Many X-Forwarded-For IPs (AWS ALB)",
+    meaning:
+      "The request arrived at an AWS load balancer with more than 30 addresses in X-Forwarded-For.",
+    use: "you are debugging a proxy chain that keeps appending. Fix the chain.",
+    flag: "non-standard",
+    keywords: "aws alb x-forwarded-for proxy chain vendor",
+  },
+  {
+    code: "494",
+    name: "Request Header Too Large (nginx)",
+    meaning:
+      "An nginx-internal code, logged when headers overflow the configured buffers.",
+    use: "never — nginx converts it to a 400 on the wire. Standard equivalent is 431.",
+    flag: "non-standard",
+    keywords: "nginx header buffer vendor log",
+  },
+  {
+    code: "495",
+    name: "SSL Certificate Error (nginx)",
+    meaning:
+      "nginx-internal: the client presented a certificate that failed verification.",
+    use: "never by hand. It shows up when you enable mutual TLS.",
+    flag: "non-standard",
+    keywords: "nginx mtls client certificate tls vendor log",
+  },
+  {
+    code: "496",
+    name: "SSL Certificate Required (nginx)",
+    meaning:
+      "nginx-internal: mutual TLS is on and the client sent no certificate.",
+    use: "never by hand. Same family as 495.",
+    flag: "non-standard",
+    keywords: "nginx mtls client certificate missing vendor log",
+  },
+  {
+    code: "497",
+    name: "HTTP Request Sent to HTTPS Port (nginx)",
+    meaning: "nginx-internal: a plaintext request arrived on a TLS listener.",
+    use: "never by hand. Usually a misconfigured health check or an http:// URL that should be https://.",
+    flag: "non-standard",
+    keywords: "nginx tls plaintext port vendor log",
+  },
+  {
+    code: "499",
+    name: "Client Closed Request (nginx)",
+    meaning:
+      "nginx writes this to its access log when the client hung up before a response was ready. It is never sent over the wire — nobody receives a 499.",
+    use: "you are reading nginx logs. A spike means callers are timing out first, so look at upstream latency and client timeouts, not at nginx. Esri's servers use 499 for a missing token, which is an unrelated collision.",
+    flag: "non-standard",
+    keywords: "nginx client closed cancelled timeout log vendor 499",
+  },
+];
+
+const FIVE_XX: StatusCode[] = [
+  {
+    code: "500",
+    name: "Internal Server Error",
+    meaning:
+      "Something in the server blew up and nothing more specific applies. It is a statement that the caller did nothing wrong.",
+    use: "an unhandled exception, a null dereference, a broken invariant. Every 500 should map to a log line with a stack trace. Never use it for validation — that is a 4xx, and mixing the two destroys your error budget.",
+    keywords: "exception crash bug unhandled error",
+  },
+  {
+    code: "501",
+    name: "Not Implemented",
+    meaning:
+      "The server does not support the method at all, anywhere — not merely on this URL.",
+    use: "a gateway meets a verb it has never heard of. If the method exists but not on this route, that is 405.",
+    keywords: "method unsupported gateway verb",
+  },
+  {
+    code: "502",
+    name: "Bad Gateway",
+    meaning:
+      "A proxy received an invalid, empty, or unparseable response from the server behind it.",
+    use: "you are the proxy. From outside, a 502 almost always means the app crashed, refused the connection, or wrote garbage — check the application logs, not the proxy's.",
+    keywords: "proxy upstream crash nginx gateway origin refused",
+  },
+  {
+    code: "503",
+    name: "Service Unavailable",
+    meaning:
+      "The service is temporarily unable to handle the request: overloaded, draining, starting up, or deliberately in maintenance.",
+    use: "the condition is temporary and you know roughly for how long — pair it with Retry-After. It is the only 5xx that clients, CDNs, and crawlers are meant to treat as transient, which is why a maintenance window should return 503 and never 500 or 404.",
+    keywords: "maintenance overload capacity retry-after draining shed",
+  },
+  {
+    code: "504",
+    name: "Gateway Timeout",
+    meaning: "A proxy gave up waiting for the server behind it to respond.",
+    use: "you are the proxy and upstream blew the timeout budget. A 504 landing at exactly 30 or 60 seconds is a configuration value, not a mystery — compare the gateway timeout with the application's own.",
+    keywords: "timeout upstream slow proxy gateway latency",
+  },
+  {
+    code: "505",
+    name: "HTTP Version Not Supported",
+    meaning: "The major HTTP version in the request is not supported.",
+    use: "practically never. Almost always a client speaking something that is not HTTP at all.",
+    flag: "rare",
+    keywords: "protocol version",
+  },
+  {
+    code: "506",
+    name: "Variant Also Negotiates",
+    meaning:
+      "A transparent content negotiation misconfiguration on the server side.",
+    use: "never, unless you are implementing RFC 2295.",
+    flag: "rare",
+    keywords: "negotiation variant",
+  },
+  {
+    code: "507",
+    name: "Insufficient Storage",
+    meaning:
+      "The server cannot store the representation needed to complete the request.",
+    use: "WebDAV, or an upload service that is genuinely out of disk. Mostly you want 503 with a Retry-After.",
+    flag: "webdav",
+    keywords: "disk full storage quota",
+  },
+  {
+    code: "508",
+    name: "Loop Detected",
+    meaning:
+      "The server aborted an operation because it found an infinite loop.",
+    use: "WebDAV bindings. Its useful cousin in application code is a request-depth or recursion guard.",
+    flag: "webdav",
+    keywords: "loop recursion infinite",
+  },
+  {
+    code: "510",
+    name: "Not Extended",
+    meaning:
+      "The request needs further extensions to be processed. The extension framework behind it was made historic.",
+    use: "never.",
+    flag: "deprecated",
+    keywords: "extension obsolete",
+  },
+  {
+    code: "511",
+    name: "Network Authentication Required",
+    meaning:
+      "You are behind a captive portal that wants you to log in to the network.",
+    use: "you are the intercepting proxy — an origin server must never generate it. The entire point is that a client can tell apart the network hijacking the request and the API saying no.",
+    keywords: "captive portal wifi hotspot network login intercept",
+  },
+  {
+    code: "509",
+    name: "Bandwidth Limit Exceeded",
+    meaning:
+      "An Apache and cPanel extension for an account over its transfer quota.",
+    use: "never in your own code. Use 429 or 503.",
+    flag: "non-standard",
+    keywords: "cpanel apache bandwidth quota hosting vendor",
+  },
+  {
+    code: "520",
+    name: "Unknown Error (Cloudflare)",
+    meaning:
+      "Cloudflare's catch-all: the origin returned something empty, malformed, or otherwise unintelligible.",
+    use: "you are debugging a Cloudflare-fronted site. It usually means the origin reset the connection or sent an invalid response — check the origin, not Cloudflare.",
+    flag: "non-standard",
+    keywords: "cloudflare cdn edge origin vendor",
+  },
+  {
+    code: "521",
+    name: "Web Server Is Down (Cloudflare)",
+    meaning: "The origin actively refused Cloudflare's connection.",
+    use: "you are reading a Cloudflare error page. The origin process is down or its firewall is dropping Cloudflare's IPs.",
+    flag: "non-standard",
+    keywords: "cloudflare origin down refused firewall vendor",
+  },
+  {
+    code: "522",
+    name: "Connection Timed Out (Cloudflare)",
+    meaning:
+      "The TCP handshake between Cloudflare and the origin never completed.",
+    use: "network-level diagnosis: routing, security groups, or an overloaded origin accept queue.",
+    flag: "non-standard",
+    keywords: "cloudflare tcp handshake timeout vendor",
+  },
+  {
+    code: "523",
+    name: "Origin Is Unreachable (Cloudflare)",
+    meaning:
+      "Cloudflare could not route to the origin at all — usually a bad DNS record or a dead IP.",
+    use: "check the DNS record behind the proxied hostname.",
+    flag: "non-standard",
+    keywords: "cloudflare dns unreachable routing vendor",
+  },
+  {
+    code: "524",
+    name: "A Timeout Occurred (Cloudflare)",
+    meaning:
+      "The origin accepted the connection but did not finish responding inside Cloudflare's window (100 seconds on the standard plans).",
+    use: "you have a long-running request behind Cloudflare. Move it to a job and return 202 rather than trying to raise the ceiling.",
+    flag: "non-standard",
+    keywords: "cloudflare 100 seconds long running timeout vendor",
+  },
+  {
+    code: "525",
+    name: "SSL Handshake Failed (Cloudflare)",
+    meaning: "The TLS handshake between Cloudflare and the origin failed.",
+    use: "you set Full or Strict SSL mode and the origin's TLS config does not agree — ciphers, versions, or SNI.",
+    flag: "non-standard",
+    keywords: "cloudflare ssl tls handshake full strict vendor",
+  },
+  {
+    code: "526",
+    name: "Invalid SSL Certificate (Cloudflare)",
+    meaning:
+      "The origin presented a certificate Cloudflare could not validate in Strict mode.",
+    use: "expired, self-signed, or wrong-hostname origin certificates. Install a real certificate or an origin certificate from Cloudflare.",
+    flag: "non-standard",
+    keywords: "cloudflare certificate expired self-signed strict vendor",
+  },
+  {
+    code: "527",
+    name: "Railgun Error (Cloudflare)",
+    meaning: "A failure in Cloudflare's retired Railgun transport.",
+    use: "never — the product is gone. Included because it still turns up in old runbooks.",
+    flag: "non-standard",
+    keywords: "cloudflare railgun retired vendor",
+  },
+  {
+    code: "530",
+    name: "Origin DNS Error (Cloudflare)",
+    meaning:
+      "Always shown alongside a Cloudflare 1xxx error code; the real cause is in that number, most often a Worker exception or an origin DNS failure.",
+    use: "you see a 530 — go read the 1xxx code on the error page, because the 530 itself tells you nothing.",
+    flag: "non-standard",
+    keywords: "cloudflare worker 1000 1101 dns vendor",
+  },
+  {
+    code: "599",
+    name: "Network Connect Timeout Error",
+    meaning:
+      "A convention some proxies and HTTP clients use for a connection timeout they invented themselves.",
+    use: "never in your own responses. It exists so client libraries have something to put in a log line.",
+    flag: "non-standard",
+    keywords: "proxy client timeout connect vendor",
+  },
+];
+
+const TOTAL =
+  ONE_XX.length +
+  TWO_XX.length +
+  THREE_XX.length +
+  FOUR_XX.length +
+  FIVE_XX.length;
+
+const JUMP = [
+  { href: "#class-1xx", label: "1xx informational" },
+  { href: "#class-2xx", label: "2xx success" },
+  { href: "#class-3xx", label: "3xx redirection" },
+  { href: "#class-4xx", label: "4xx client error" },
+  { href: "#class-5xx", label: "5xx server error" },
+];
+
+const faq = [
+  {
+    q: "What is the difference between HTTP 401 and 403?",
+    a: "401 means the server does not know who you are: no credentials, an expired token, a bad signature. It must include a WWW-Authenticate header, and the client is expected to authenticate and retry. 403 means the server knows who you are and is refusing anyway, so retrying with the same credentials will not help. If logging in could fix it, it is a 401.",
+  },
+  {
+    q: "Should I use a 301 or a 302 redirect?",
+    a: "Use 301 when the URL has moved for good and you want browsers, caches, and search engines to update. Use 302 when the move is temporary and the original URL still owns the content. Both allow clients to rewrite a POST into a GET, so when the method has to survive the redirect use 308 for permanent moves and 307 for temporary ones.",
+  },
+  {
+    q: "Should validation errors return 400 or 422?",
+    a: "Return 400 when the request could not be parsed or is structurally wrong: broken JSON, a missing required field, an unusable query string. Return 422 when the body parsed cleanly but the values are unacceptable, such as an end date before a start date. Both are defensible under RFC 9110, so what actually matters is picking one rule, applying it on every endpoint, and putting field-level errors in the body.",
+  },
+  {
+    q: "Is it OK to return HTTP 200 with an error in the body?",
+    a: "No. The status line is the only part of a response that proxies, CDNs, retry policies, SDKs, and dashboards understand without parsing your payload. Returning 200 with an error object means caches store failures, client libraries report success, and your error-rate graph stays flat during an outage. Put the human-readable detail in the body and the machine-readable verdict in the status code.",
+  },
+  {
+    q: "What does HTTP status 499 mean?",
+    a: "499 is an nginx-only code that never travels over the wire: nginx writes it to its access log when the client closed the connection before a response was ready. It means the caller timed out or navigated away, so investigate upstream latency and client timeouts rather than nginx itself. Esri's servers use 499 for a missing token, which is an unrelated collision.",
+  },
+  {
+    q: "What status code should a successful POST return?",
+    a: "201 if it created a resource, with a Location header pointing at the new URL. 202 if it only queued work, with somewhere to poll for the result. 200 if it ran a command and has something to return, and 204 if it ran and there is genuinely nothing to send back. A blanket 200 on every POST throws away information the client could have acted on.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: PAGE_TITLE,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/http-status-codes/", SITE.URL).href,
+  description: PAGE_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const related = [
+  {
+    href: "/blog/rest-vs-grpc/",
+    label: "REST vs gRPC",
+    note: "gRPC throws the status line away and maps everything onto its own codes. Here is what that costs you.",
+  },
+  {
+    href: "/blog/load-balancer-vs-api-gateway/",
+    label: "Load balancer vs API gateway",
+    note: "Which box in front of your app is generating that 502, 503, or 504 — and why it matters.",
+  },
+  {
+    href: "/blog/rate-limiting-vs-throttling/",
+    label: "Rate limiting vs throttling",
+    note: "The design behind a 429: buckets, windows, and what Retry-After should actually say.",
+  },
+  {
+    href: "/tools/http-headers/",
+    label: "HTTP Headers Reference",
+    note: "The other half of the response: the headers these status codes require you to send.",
+  },
+];
+---
+
+<Page
+  title={PAGE_TITLE}
+  description={PAGE_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="HTTP Status Codes."
+  intro="Every status code, what it actually means, and when to reach for it — including the vendor codes that only exist in your logs. Type in the box to filter the whole reference."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Static page
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        The whole reference is server-rendered HTML. The only script on this
+        page is the filter box, and it never sends anything anywhere.
+      </p>
+    </StickyNote>
+  </section>
+
+  <div id="http-status-root">
+    <section class="mx-auto max-w-5xl px-5 pb-10">
+      <div id="http-status-controls" hidden>
+        <NeoCard tone="paper" shadow="md" class="space-y-4">
+          <div>
+            <label
+              for="http-status-input"
+              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
+            >
+              Filter the reference
+            </label>
+            <div class="flex flex-wrap items-center gap-2">
+              <input
+                id="http-status-input"
+                type="search"
+                placeholder="404, redirect, retry-after, nginx…"
+                spellcheck="false"
+                autocomplete="off"
+                class="border-ink bg-paper shadow-neo-sm min-w-0 flex-1 rounded-[4px] border-[3px] px-4 py-3 font-mono text-base font-bold focus:outline-none"
+              />
+              <button
+                type="button"
+                id="http-status-clear"
+                hidden
+                class="border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-2 rounded-[4px] border-[2.5px] px-3 py-2.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+              >
+                <Icon name="lucide:x" class="h-3.5 w-3.5" aria-hidden="true" />
+                Clear
+              </button>
+            </div>
+            <p
+              id="http-status-count"
+              aria-live="polite"
+              class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-70"
+            >
+              Showing all {TOTAL} status codes.
+            </p>
+          </div>
+
+          <div class="border-ink border-t-[2.5px] pt-4">
+            <p
+              class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70"
+            >
+              Jump to
+            </p>
+            <div class="flex flex-wrap gap-2">
+              {
+                JUMP.map((j) => (
+                  <a
+                    href={j.href}
+                    class="border-ink bg-bg-alt mono shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+                  >
+                    {j.label}
+                  </a>
+                ))
+              }
+            </div>
+          </div>
+
+          <div class="border-ink border-t-[2.5px] pt-4">
+            <p
+              class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70"
+            >
+              Badges
+            </p>
+            <ul class="flex flex-wrap items-center gap-2">
+              {
+                (
+                  [
+                    "non-standard",
+                    "deprecated",
+                    "reserved",
+                    "webdav",
+                    "rare",
+                  ] as const
+                ).map((flag) => (
+                  <li
+                    class:list={[
+                      "mono border-ink border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                      FLAG_CLASS[flag],
+                    ]}
+                  >
+                    {FLAG_LABEL[flag]}
+                  </li>
+                ))
+              }
+            </ul>
+            <p class="mt-2 text-[12px] leading-snug opacity-70">
+              Non-standard means a vendor invented it: nginx, Cloudflare, AWS,
+              IIS, Laravel, Shopify. Read them in logs; never emit them
+              yourself.
+            </p>
+          </div>
+        </NeoCard>
+      </div>
+
+      <div id="http-status-empty" class="mt-6" hidden>
+        <NeoCard tone="yellow" shadow="md">
+          <p class="heading text-xl uppercase">
+            Nothing matches “<span id="http-status-term"></span>”
+          </p>
+          <p class="mt-2 text-sm leading-relaxed">
+            The filter matches on the code, the name, the description, and a few
+            synonyms. Try a bare number (<span class="mono">409</span>), a word
+            (<span class="mono">redirect</span>, <span class="mono">cache</span
+            >), or a vendor (<span class="mono">cloudflare</span>, <span
+              class="mono">nginx</span
+            >).
+          </p>
+        </NeoCard>
+      </div>
+    </section>
+
+    <!-- 1xx -->
+    <section
+      id="class-1xx"
+      data-status-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">1xx — informational</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          A 1xx is a preliminary response. The client keeps waiting and a final
+          status still arrives on the same request, which is why almost nothing
+          in application code emits one — your server, your proxy, or your HTTP
+          library handles all of it.
+        </p>
+        <p>
+          The one worth knowing about is <strong>103 Early Hints</strong>. It
+          lets you ship the browser a list of assets to start fetching while the
+          origin is still assembling the real response, which buys back real
+          latency on any page with a slow first byte and predictable critical
+          assets. Everything else in this class is either automatic or
+          historical.
+        </p>
+      </div>
+      <div
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[44rem] border-collapse text-left">
+          <caption class="sr-only">1xx informational status codes</caption>
+          <thead>
+            <tr class="bg-cyan">
+              <th
+                scope="col"
+                class="mono border-ink w-[7rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Code</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[11rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Name</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it means</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              ONE_XX.map((s) => (
+                <tr
+                  data-status-row
+                  data-status-keywords={s.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="display text-xl leading-none">{s.code}</span>
+                    {s.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[s.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[s.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
+                    {s.name}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{s.meaning}</p>
+                    <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                      <span class="mono text-[10px] font-bold tracking-widest uppercase">
+                        Use it when
+                      </span>{" "}
+                      {s.use}
+                    </p>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2xx -->
+    <section
+      id="class-2xx"
+      data-status-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">2xx — success</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          200 is the default, and defaults are where bugs hide. There are four
+          different things "it worked" can mean, and the code you pick is the
+          only cheap way to tell them apart. If a request created something, say
+          <strong>201</strong> and send a <span class="mono">Location</span> header
+          pointing at it. If it only queued something, say <strong>202</strong> and
+          send somewhere to poll — a 202 with no follow-up URL is a shrug. If there
+          is genuinely nothing to return, say <strong>204</strong>.
+        </p>
+        <p>
+          204 has two sharp edges worth memorising. A browser navigating to a
+          204 stays exactly where it is, which is either a neat trick or a
+          baffling bug depending on whether you meant it. And <span class="mono"
+            >response.json()</span
+          > throws on a 204 because there is no body to parse, so any client that
+          blindly parses every response needs a guard. If your caller needs data back,
+          200 with a body is the honest answer.
+        </p>
+      </div>
+
+      <div
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[44rem] border-collapse text-left">
+          <caption class="sr-only">2xx success status codes</caption>
+          <thead>
+            <tr class="bg-green">
+              <th
+                scope="col"
+                class="mono border-ink w-[7rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Code</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[11rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Name</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it means</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              TWO_XX.map((s) => (
+                <tr
+                  data-status-row
+                  data-status-keywords={s.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="display text-xl leading-none">{s.code}</span>
+                    {s.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[s.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[s.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
+                    {s.name}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{s.meaning}</p>
+                    <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                      <span class="mono text-[10px] font-bold tracking-widest uppercase">
+                        Use it when
+                      </span>{" "}
+                      {s.use}
+                    </p>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <NeoCard tone="red" shadow="lg" class="mt-8">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Classic mistake #1
+        </p>
+        <h3 class="heading mt-2 text-xl uppercase">
+          200 OK with an error in the body
+        </h3>
+        <p class="mt-3 text-sm leading-relaxed">
+          This is the most expensive habit in API design, and it always starts
+          reasonably: the front end wants a consistent envelope, so every
+          response becomes 200 with a <span class="mono">success: false</span> field
+          somewhere inside. What you have actually done is hide the outcome from every
+          piece of infrastructure between you and the caller.
+        </p>
+        <ul class="mt-3 space-y-1.5 text-sm leading-relaxed">
+          <li>
+            <strong>Caches store the failure.</strong> A 200 is cacheable by default;
+            a 500 is not. Your CDN will happily serve that error to the next thousand
+            users.
+          </li>
+          <li>
+            <strong>Retry policies never fire.</strong> Every HTTP client, service
+            mesh, and job runner decides whether to retry from the status code. A
+            200 means "done, move on".
+          </li>
+          <li>
+            <strong>Your dashboards lie.</strong> Error-rate panels, SLOs, and alerting
+            rules are built on status-code ratios. A 100% success rate during an outage
+            is worse than no monitoring.
+          </li>
+          <li>
+            <strong>SDKs report success.</strong> Generated clients raise on non-2xx.
+            Yours will hand the caller a malformed object instead.
+          </li>
+        </ul>
+        <p class="mt-3 text-sm leading-relaxed">
+          Keep the envelope if you like it. Put the machine-readable verdict in
+          the status line and the human-readable detail in the body.
+        </p>
+      </NeoCard>
+    </section>
+
+    <!-- 3xx -->
+    <section
+      id="class-3xx"
+      data-status-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">3xx — redirection</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          Every redirect question reduces to two axes: is this permanent, and
+          does the request method survive? 301 and 302 were specified before
+          anyone cared about the second axis, browsers settled on rewriting POST
+          into GET, and the spec eventually gave up and documented the
+          behaviour. 307 and 308 exist purely to give you the same two choices
+          with the method guaranteed intact.
+        </p>
+      </div>
+
+      <ComparisonTable
+        class="mt-6"
+        columns={[
+          { label: "301", tone: "yellow" },
+          { label: "302", tone: "pink" },
+          { label: "307", tone: "cyan" },
+          { label: "308", tone: "green" },
+        ]}
+        rows={[
+          {
+            icon: "lucide:infinity",
+            label: "Permanent",
+            cells: ["Yes", "No", "No", "Yes"],
+          },
+          {
+            icon: "lucide:git-branch",
+            label: "Method kept",
+            cells: [
+              "No — POST becomes GET",
+              "No — POST becomes GET",
+              "Yes, required",
+              "Yes, required",
+            ],
+          },
+          {
+            icon: "lucide:database",
+            label: "Cached by default",
+            cells: ["Yes, aggressively", "No", "No", "Yes"],
+          },
+          {
+            icon: "lucide:target",
+            label: "Reach for it",
+            cells: [
+              "Page moved, SEO matters",
+              "Short-lived detour on a GET",
+              "Temporary move on a write",
+              "Permanent move on an API",
+            ],
+          },
+        ]}
+      />
+
+      <div class="mt-6 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          Two more you should know cold. <strong>303 See Other</strong> is the only
+          redirect where switching to GET is the deliberate point: it is the post/redirect/get
+          pattern that stops a browser refresh from resubmitting a form, and it is
+          also the right way to hand a client the result URL of a job it POSTed. <strong
+            >304 Not Modified</strong
+          > is not really a redirect at all — it is the successful outcome of a conditional
+          request, and it carries validators instead of a body.
+        </p>
+        <p>
+          One warning about 301: browsers cache it more aggressively than almost
+          anything else, frequently for the life of the profile, and there is no
+          way to reach into a user's browser and undo it. Ship a 302 while you
+          are still unsure, then promote it to 301 once the move is final.
+        </p>
+      </div>
+
+      <div
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[44rem] border-collapse text-left">
+          <caption class="sr-only">3xx redirection status codes</caption>
+          <thead>
+            <tr class="bg-yellow">
+              <th
+                scope="col"
+                class="mono border-ink w-[7rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Code</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[11rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Name</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it means</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              THREE_XX.map((s) => (
+                <tr
+                  data-status-row
+                  data-status-keywords={s.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="display text-xl leading-none">{s.code}</span>
+                    {s.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[s.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[s.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
+                    {s.name}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{s.meaning}</p>
+                    <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                      <span class="mono text-[10px] font-bold tracking-widest uppercase">
+                        Use it when
+                      </span>{" "}
+                      {s.use}
+                    </p>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <NeoCard tone="red" shadow="lg" class="mt-8">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Classic mistake #2
+        </p>
+        <h3 class="heading mt-2 text-xl uppercase">Redirect chains</h3>
+        <p class="mt-3 text-sm leading-relaxed">
+          Nobody designs a redirect chain. They accumulate. The TLS rule
+          redirects <span class="mono">http://example.com/page</span> to https, the
+          canonical-host rule redirects that to <span class="mono">www</span>,
+          the trailing-slash rule redirects that again, and the old-path map
+          adds a fourth hop. Every hop is a full round trip — DNS may already be
+          warm, but the TCP and TLS handshakes are not free on a phone on a
+          train.
+        </p>
+        <ul class="mt-3 space-y-1.5 text-sm leading-relaxed">
+          <li>
+            <strong>Collapse to one hop.</strong> Compute the final URL in a single
+            rule instead of chaining independent ones. Scheme, host, and path can
+            all be fixed at once.
+          </li>
+          <li>
+            <strong>Crawlers give up.</strong> Search engines follow a limited number
+            of hops and dilute the signal at each one. Browsers stop at roughly twenty
+            and show an error.
+          </li>
+          <li>
+            <strong>Writes get worse.</strong> Chain a POST through a 301 or 302 and
+            the body is gone by hop two. If a write can hit the chain, every hop has
+            to be 307 or 308.
+          </li>
+          <li>
+            <strong>Test it.</strong>
+            <span class="mono">curl -sIL</span> prints every hop. If the list is longer
+            than two lines, you have work to do.
+          </li>
+        </ul>
+      </NeoCard>
+    </section>
+
+    <!-- 4xx -->
+    <section
+      id="class-4xx"
+      data-status-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">4xx — client error</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          This is where API design actually happens. The useful question is not
+          "what went wrong" but <em>"what should the caller do next?"</em> — and there
+          are only four answers. Retry unchanged and later (429, 425, sometimes 408
+          and 409). Retry with different credentials (401). Fix the request and retry
+          (400, 405, 413, 415, 422). Or stop entirely, because nothing the client
+          does will change the outcome (403, 404, 410, 451).
+        </p>
+        <p>
+          Pick the code that answers that question and half of your error
+          handling documentation writes itself. Pick 400 for everything and you
+          have taught every client that the only safe strategy is to give up.
+        </p>
+      </div>
+
+      <ComparisonTable
+        class="mt-6"
+        columns={[
+          { label: "401", tone: "cyan" },
+          { label: "403", tone: "pink" },
+          { label: "404", tone: "yellow" },
+        ]}
+        rows={[
+          {
+            icon: "lucide:help-circle",
+            label: "It says",
+            cells: [
+              "I do not know who you are",
+              "I know, and no",
+              "There is nothing here",
+            ],
+          },
+          {
+            icon: "lucide:file-key",
+            label: "Required header",
+            cells: ["WWW-Authenticate", "None", "None"],
+          },
+          {
+            icon: "lucide:rotate-ccw",
+            label: "Retry with new credentials?",
+            cells: ["Yes, that is the point", "No", "No"],
+          },
+          {
+            icon: "lucide:bug",
+            label: "Typical trigger",
+            cells: [
+              "Missing or expired token",
+              "Role, scope, or WAF rule",
+              "Bad ID, or hiding a 403",
+            ],
+          },
+        ]}
+      />
+
+      <div class="mt-6 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          Two more distinctions that cost people days. <strong
+            >404 vs 410</strong
+          >: 404 means "nothing here, no comment on history"; 410 means "it was
+          here, I removed it, stop asking". If you have deliberately deleted
+          content and want crawlers to drop it, 410 is the stronger signal — but
+          only use it when the removal is genuinely permanent, because there is
+          no polite way to take it back. <strong>409 vs 412</strong>: 409 is a
+          conflict with the current state that the server detected on its own,
+          412 is a precondition the <em>client</em> attached failing. If your callers
+          send <span class="mono">If-Match</span> with an ETag, 412 is the correct
+          answer and 428 is how you force them to send it in the first place.
+        </p>
+        <p>
+          And on <strong>429</strong>: the code is the easy part. What makes a
+          rate limit usable is <span class="mono">Retry-After</span>, in seconds
+          or as an HTTP date, on every single 429 you emit. Without it, a
+          well-written client has to guess and a badly-written one retries
+          immediately, which is exactly the traffic you were trying to shed. The <span
+            class="mono">RateLimit-*</span
+          > header family is still an IETF draft; ship it if you like, but ship
+          <span class="mono">Retry-After</span> first because everything already understands
+          it.
+        </p>
+      </div>
+
+      <div
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[44rem] border-collapse text-left">
+          <caption class="sr-only">4xx client error status codes</caption>
+          <thead>
+            <tr class="bg-pink">
+              <th
+                scope="col"
+                class="mono border-ink w-[7rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Code</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[11rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Name</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it means</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              FOUR_XX.map((s) => (
+                <tr
+                  data-status-row
+                  data-status-keywords={s.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="display text-xl leading-none">{s.code}</span>
+                    {s.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[s.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[s.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
+                    {s.name}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{s.meaning}</p>
+                    <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                      <span class="mono text-[10px] font-bold tracking-widest uppercase">
+                        Use it when
+                      </span>{" "}
+                      {s.use}
+                    </p>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <NeoCard tone="red" shadow="lg" class="mt-8">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Classic mistake #3
+        </p>
+        <h3 class="heading mt-2 text-xl uppercase">
+          Returning 403 when you meant 401
+        </h3>
+        <p class="mt-3 text-sm leading-relaxed">
+          The names are the problem: 401 is called "Unauthorized" and 403 is
+          called "Forbidden", when the accurate labels would be
+          "Unauthenticated" and "Unauthorized". So middleware that finds no
+          token returns 403, and the client sits there with no idea that
+          refreshing its token would fix everything.
+        </p>
+        <p class="mt-3 text-sm leading-relaxed">
+          The test is one question: <strong
+            >would valid credentials change the answer?</strong
+          > If yes, it is 401 — and it must carry a <span class="mono"
+            >WWW-Authenticate</span
+          > header naming the scheme, which is the requirement almost every API skips.
+          That header is what tells a client library to run its refresh flow instead
+          of surfacing a dead end to the user. If no credentials would ever help,
+          it is 403.
+        </p>
+        <p class="mt-3 text-sm leading-relaxed">
+          The one legitimate reason to blur this: returning 404 instead of 403
+          when even confirming that a resource exists leaks something. That is a
+          deliberate trade, and worth a comment in the code so the next person
+          does not "fix" it.
+        </p>
+      </NeoCard>
+    </section>
+
+    <!-- 5xx -->
+    <section
+      id="class-5xx"
+      data-status-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">5xx — server error</h2>
+      <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          A 5xx is a promise that the caller did nothing wrong. That is the
+          whole contract, and it is why the 4xx/5xx boundary is the single most
+          load-bearing line in your monitoring: 4xx is traffic, 5xx is an
+          incident. Blur it and your alerting is worthless in both directions.
+        </p>
+        <p>
+          In production the useful split inside 5xx is <em>who generated it</em
+          >. A <strong>500</strong> came from your application — something threw.
+          A
+          <strong>502</strong> means the proxy in front of it got a response it could
+          not parse, which usually means your process crashed, refused the connection,
+          or died mid-response. A <strong>504</strong> means the proxy waited and
+          gave up, so the process is alive and too slow; the number of seconds it
+          waited is a config value somewhere, not a mystery. And <strong
+            >503</strong
+          > is the only one you should ever emit deliberately: overloaded, draining,
+          or in maintenance, always with <span class="mono">Retry-After</span>,
+          because it is the one 5xx that clients and crawlers are meant to treat
+          as temporary.
+        </p>
+      </div>
+
+      <div
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[44rem] border-collapse text-left">
+          <caption class="sr-only">5xx server error status codes</caption>
+          <thead>
+            <tr class="bg-red">
+              <th
+                scope="col"
+                class="mono border-ink w-[7rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Code</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[11rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Name</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it means</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              FIVE_XX.map((s) => (
+                <tr
+                  data-status-row
+                  data-status-keywords={s.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="display text-xl leading-none">{s.code}</span>
+                    {s.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[s.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[s.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="mono border-ink border-r-[3px] border-b-[2px] p-3 text-sm font-bold">
+                    {s.name}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{s.meaning}</p>
+                    <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                      <span class="mono text-[10px] font-bold tracking-widest uppercase">
+                        Use it when
+                      </span>{" "}
+                      {s.use}
+                    </p>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <NeoCard tone="red" shadow="lg" class="mt-8">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Classic mistake #4
+        </p>
+        <h3 class="heading mt-2 text-xl uppercase">
+          500 for validation failures
+        </h3>
+        <p class="mt-3 text-sm leading-relaxed">
+          Usually not a decision — a consequence. Validation throws, a global
+          exception handler catches everything it does not recognise, and every
+          bad email address on your signup form becomes a server error. Then the
+          on-call rotation learns to ignore the 500 alert, and the one real
+          outage goes unnoticed for forty minutes.
+        </p>
+        <ul class="mt-3 space-y-1.5 text-sm leading-relaxed">
+          <li>
+            <strong>Map your exception types.</strong> Validation errors to 422 (or
+            400), authorisation to 401 or 403, missing records to 404, conflicts to
+            409. Only the unmapped remainder becomes a 500.
+          </li>
+          <li>
+            <strong>Alert on 5xx, never on 4xx.</strong> A 4xx rate is a product signal
+            — it tells you a client is broken or your docs are wrong. A 5xx rate is
+            a pager.
+          </li>
+          <li>
+            <strong>Every 500 gets a stack trace.</strong> If it does not, it was
+            never a 500; it was a 4xx you failed to classify.
+          </li>
+          <li>
+            <strong>Do not leak.</strong> The response body for a 500 gets a correlation
+            ID and nothing else. The stack trace goes in the log.
+          </li>
+        </ul>
+      </NeoCard>
+    </section>
+  </div>
+
+  <!-- Decision shortcut -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase">Picking a code in thirty seconds</h2>
+    <NeoCard tone="cyan" shadow="lg" class="mt-5">
+      <ol class="space-y-3 text-sm leading-relaxed">
+        <li>
+          <strong>Did the server fail?</strong> If your code threw or your dependency
+          is down, it is a 5xx. 500 if it is you, 503 if it is temporary and you can
+          say when, 502 or 504 if you are the proxy reporting on something behind
+          you.
+        </li>
+        <li>
+          <strong>Could the caller fix it?</strong> Then it is a 4xx. Missing credentials
+          is 401, insufficient permission is 403, wrong URL is 404, wrong body is
+          400 or 422, wrong media type is 415, wrong verb is 405, too much of it is
+          413 or 429.
+        </li>
+        <li>
+          <strong>Did it succeed and create something?</strong> 201 with a Location
+          header.
+        </li>
+        <li>
+          <strong>Did it succeed and queue something?</strong> 202 with somewhere
+          to poll.
+        </li>
+        <li>
+          <strong>Did it succeed with nothing to say?</strong> 204, and no body at
+          all.
+        </li>
+        <li>
+          <strong>Anything else that succeeded?</strong> 200 with the representation.
+          And if you catch yourself writing an error field into a 200, go back to
+          step one.
+        </li>
+      </ol>
+    </NeoCard>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-5 text-2xl uppercase">Questions people ask</h2>
+    <div class="space-y-3">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-5 text-2xl uppercase">Related</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      {
+        related.map((r) => (
+          <li>
+            <NeoCard
+              href={r.href}
+              tone="paper"
+              shadow="sm"
+              hover
+              class="h-full space-y-1.5"
+            >
+              <p class="heading text-lg uppercase">{r.label}</p>
+              <p class="text-sm leading-snug opacity-80">{r.note}</p>
+            </NeoCard>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/http-status-codes";
+</script>

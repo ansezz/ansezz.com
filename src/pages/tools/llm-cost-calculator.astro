@@ -3,13 +3,20 @@ import Page from "@/layouts/Page.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
 import { SITE } from "@/consts";
-import { breadcrumbList } from "@/lib/seo";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_NAME = "LLM Cost Calculator";
+const TOOL_PATH = "/tools/llm-cost-calculator/";
+const TOOL_DESCRIPTION =
+  "LLM cost calculator: estimate API spend per request, day, and month for Claude, GPT, and Gemini. Free, prompt-cache aware, and it runs in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
   { name: "Tools", url: "/tools/" },
-  { name: "LLM Cost Calculator", url: "/tools/llm-cost-calculator/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
 ]);
 
 // Prices in USD per 1M tokens. List prices verified June 2026 against each
@@ -30,15 +37,90 @@ const MODELS = [
   { id: "custom", label: "Custom (enter prices)", in: 0, out: 0 },
 ];
 const modelsJson = JSON.stringify(MODELS);
+
+const batchColumns = [
+  { label: "Realtime call", tone: "cyan" as const },
+  { label: "Batch / async call", tone: "green" as const },
+];
+
+const batchRows = [
+  {
+    icon: "lucide:tag",
+    label: "Price vs list",
+    cells: ["1×", "~0.5× on input and output"],
+  },
+  {
+    icon: "lucide:timer",
+    label: "Turnaround",
+    cells: ["Milliseconds to seconds", "Minutes, up to 24 hours"],
+  },
+  { icon: "lucide:radio", label: "Streaming", cells: [true, false] },
+  {
+    icon: "lucide:gauge",
+    label: "Rate-limit pool",
+    cells: ["Your standard quota", "Separate, far larger queue"],
+  },
+  {
+    icon: "lucide:target",
+    label: "Fits",
+    cells: [
+      "Chat, agents, anything a user waits on",
+      "Backfills, evals, embeddings, nightly enrichment",
+    ],
+  },
+];
+
+const faq = [
+  {
+    q: "How do I calculate the cost of an LLM API call?",
+    a: "Multiply input tokens by the input price per million, multiply output tokens by the output price per million, and add the two. Both meters are billed separately and at different rates, so you cannot use a single blended number. This calculator does that arithmetic per request, then scales it by requests per day and a 30-day month.",
+  },
+  {
+    q: "Why are output tokens more expensive than input tokens?",
+    a: "Because they are produced differently. Your whole prompt is processed in one parallel prefill pass, while output is generated one token at a time, each token needing a full forward pass through the model — that decode loop is memory-bandwidth bound and cannot be parallelised within a request. In the model list above, output runs 5× input on the Claude tiers, 6× on GPT-5.4 and GPT-5.5, and 8× on Gemini 2.5 Pro.",
+  },
+  {
+    q: "How much does prompt caching actually save?",
+    a: "A cache read typically costs about 10% of the base input rate, and on Anthropic a cache write costs 1.25× base input for the 5-minute TTL or 2× for the 1-hour option. The write premium is 0.25× and every hit saves 0.9×, so a single reuse inside the TTL already pays for it. The caveat is that caching matches on an exact prefix — one timestamp or shuffled retrieval block near the top invalidates everything after it.",
+  },
+  {
+    q: "Are the LLM prices in this calculator up to date?",
+    a: "They are list rates checked against each provider's public pricing page and they will drift — providers change prices, add tiers, and charge extra for long-context requests above a threshold. Treat the dropdown as a fast starting point, then pick Custom and paste today's real numbers before you commit a budget. Nothing here knows about your enterprise discount, committed-use pricing, or batch rates.",
+  },
+  {
+    q: "Why is my AI agent so expensive compared to a single chat call?",
+    a: "Because every turn re-sends the entire conversation, including the system prompt and all tool definitions, so input cost grows quadratically with turn count rather than linearly. A 20-turn run with a 3,000-token header and 1,200 tokens added per turn burns about 288,000 input tokens, not 60,000. Feed the average input across turns into the box above, not the opening prompt, and multiply requests per day by turns per task.",
+  },
+  {
+    q: "Does this LLM cost calculator send my data anywhere?",
+    a: "No. The whole thing is a few lines of arithmetic running in your browser — no request is made, no numbers are stored, and there is no signup. Open the network tab and watch it stay empty, or load the page once and then go offline.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: TOOL_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
 ---
 
 <Page
-  title="LLM Cost Calculator"
-  description="Free, no-signup calculator for LLM API spend. Estimate monthly cost across Claude, GPT, Gemini, and custom models from tokens, requests, and price per million tokens."
+  title={TOOL_NAME}
+  description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="LLM Cost Calculator."
   intro="Plug in tokens, requests, and a model. See the daily and monthly API bill before you ship it to production."
-  structuredData={breadcrumbLd}
+  structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
@@ -203,6 +285,262 @@ const modelsJson = JSON.stringify(MODELS);
         </NeoButton>
       </NeoCard>
     </form>
+  </section>
+
+  <!-- EXPLAINER -->
+  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">Input and output are two prices</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Every provider bills two meters, not one. Tokens you send are input;
+        tokens the model generates are output, and output is always the
+        expensive side. In the dropdown above, output runs 5× input on every
+        Claude tier, 6× on GPT-5.4 and GPT-5.5, and 8× on Gemini 2.5 Pro.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        That gap is hardware, not margin games. Your prompt is processed in one
+        parallel prefill pass, while output emerges one token at a time, each
+        needing a full forward pass — a sequential, memory-bandwidth-bound loop.
+        So classification, extraction and routing are cheap per request, while
+        drafting and code generation are not. At a 5× ratio, 200 extra output
+        tokens cost exactly what 1,000 extra input tokens cost.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">Prompt caching redraws the maths</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Caching is the biggest lever on this page, and the checkbox above only
+        gestures at it. The shape is the same everywhere: pay a premium once to
+        write a prompt prefix into the cache, then pay a steep discount whenever
+        a later request reuses that exact prefix. Anthropic makes it explicit —
+        mark a breakpoint with <code class="mono font-bold">cache_control</code
+        >, writes cost 1.25× base input on the 5-minute TTL (2× for an hour),
+        reads roughly 0.1×. OpenAI and Google discount repeated prefixes
+        automatically rather than charging for the write.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        The break-even is trivial: the write premium is 0.25× and every hit saves
+        0.9×, so one reuse inside the TTL pays for it. It fails two ways.
+        Matching is on an exact prefix, so a timestamp or re-ordered retrieval
+        block near the top invalidates everything after it — keep volatile parts
+        last. And the TTL is short, so a low-traffic endpoint pays the premium
+        more often than it collects the discount. The checkbox here
+        assumes half your input hits cache at 0.1×, or 0.55× on input overall,
+        and charges nothing for writes.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">Your token counts are estimates</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        This calculator does not tokenize anything — it multiplies the numbers
+        you hand it. If those came from the <a
+          href="/tools/token-counter/"
+          class="font-bold underline decoration-2 underline-offset-2"
+          >token counter</a
+        > here, or any characters ÷ 4 rule of thumb, expect 10–15% error on
+        English prose and worse elsewhere:
+      </p>
+      <ul class="space-y-2 text-base leading-relaxed opacity-90">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Code.</strong> Indentation, braces, punctuation and
+            camelCase splits push you nearer 2.5–3 characters per token, so a
+            prose-tuned estimate undercounts a diff.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Non-English text.</strong> Tokenizer vocabularies are
+            English-dominated, so Cyrillic, Devanagari, Arabic and CJK routinely
+            cost two to four times as many tokens.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>High-entropy strings.</strong> UUIDs, hashes, base64 and
+            minified JSON have no learned merges and fragment almost character
+            by character.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Reasoning tokens.</strong> Billed as output whether or not
+            the API hands the text back to you — the line item that surprises
+            people on thinking models.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Images and audio.</strong> Converted to tokens by a
+            per-tile or per-second formula, billed at the input rate.</span
+          >
+        </li>
+      </ul>
+      <p class="text-base leading-relaxed opacity-90">
+        Providers also use different tokenizers, so the same string counts
+        differently on Claude, GPT, and Gemini. When it matters, count with the
+        provider's own.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Batch mode is 50% off, mostly unclaimed
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Anthropic, OpenAI, and Google all sell the same deal: submit work
+        asynchronously and pay roughly half list on both meters, in exchange for
+        a turnaround measured in minutes to 24 hours. Same models, half the
+        invoice.
+      </p>
+      <ComparisonTable columns={batchColumns} rows={batchRows} />
+      <p class="text-base leading-relaxed opacity-90">
+        Anything a human is not waiting on belongs in the right-hand column:
+        embedding backfills, evals, nightly enrichment, bulk classification. To
+        model it, pick <strong>Custom</strong> and halve both prices.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        The agent loop is where bills explode
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        The single biggest surprise on a real invoice: an agent does not make N
+        cheap calls — it re-sends the entire conversation every turn. Each tool
+        result is appended, and the whole transcript, system prompt and tool
+        definitions included, goes back over the wire next turn. Input cost grows
+        quadratically with turn count.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Concretely: a 3,000-token system-and-tools header, 1,200 tokens added per
+        turn, 20 turns. Turn one sends 3,000 input tokens; turn twenty sends
+        25,800; the run totals 288,000 for an average of 14,400 per call.
+        Estimating it as "20 calls at the opening prompt size" understates the
+        bill by nearly 5×.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        So the <strong>input tokens / request</strong> field above wants the
+        average across turns, and requests per day means tasks per day times
+        turns per task. Caching also stops being optional here: an agent
+        conversation grows purely by appending, the ideal cache shape. And it is
+        why capping an agent by request count, not tokens, protects nothing.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase mb-6">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
+            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- RELATED -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="heading text-xl uppercase mb-5">Keep reading</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      <li>
+        <NeoCard tone="cyan" shadow="sm" hover href="/tools/token-counter/">
+          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+            ▸ Tool
+          </p>
+          <p class="heading text-lg uppercase leading-tight">Token Counter</p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            Get the token numbers you type in here, and see how badly code and
+            non-English text break the estimate.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="purple"
+          shadow="sm"
+          hover
+          href="/tools/context-window-checker/"
+        >
+          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+            ▸ Tool
+          </p>
+          <p class="heading text-lg uppercase leading-tight">
+            Context Window Checker
+          </p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            Before you cost a prompt, check it still fits — and what the
+            long-context tier does to the price.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard tone="yellow" shadow="sm" hover href="/blog/llm-vs-ai-agent/">
+          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+            ▸ Post
+          </p>
+          <p class="heading text-lg uppercase leading-tight">
+            LLM vs AI agent
+          </p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            Why one call and one agent run are different products, and why only
+            one of them has a quadratic bill.
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="pink"
+          shadow="sm"
+          hover
+          href="/blog/rate-limiting-ai-wallet/"
+        >
+          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+            ▸ Post
+          </p>
+          <p class="heading text-lg uppercase leading-tight">
+            Rate limiting your AI wallet
+          </p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            The estimate above is the happy path. This is how you cap spend by
+            tokens when traffic is not.
+          </p>
+        </NeoCard>
+      </li>
+      <li class="sm:col-span-2">
+        <NeoCard tone="green" shadow="sm" hover href="/blog/rag-vs-fine-tuning/">
+          <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1.5">
+            ▸ Post
+          </p>
+          <p class="heading text-lg uppercase leading-tight">
+            RAG vs fine-tuning
+          </p>
+          <p class="mt-2 text-sm leading-snug opacity-90">
+            The architectural decision behind the numbers: retrieval inflates
+            input tokens on every call, fine-tuning moves the cost up front.
+          </p>
+        </NeoCard>
+      </li>
+    </ul>
   </section>
 </Page>
 

@@ -1,0 +1,825 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: "Server Capacity Calculator", url: "/tools/capacity-calculator/" },
+]);
+
+const DESCRIPTION =
+  "Free server capacity calculator. Little's Law sizing: turn requests/sec, latency, and concurrency into the worker count you actually need — in your browser.";
+
+// Concurrency numbers are what each runtime does by default, not what it can be
+// tuned to. Latencies are placeholders so the preset produces a whole scenario.
+const PRESETS = [
+  {
+    label: "Laravel Octane worker",
+    note: "Swoole / FrankenPHP, one request per worker process",
+    concurrency: "1",
+    latency: "40",
+  },
+  {
+    label: "Node single process",
+    note: "Event loop, I/O-bound handlers, nothing CPU-heavy",
+    concurrency: "40",
+    latency: "120",
+  },
+  {
+    label: "Python sync WSGI worker",
+    note: "Gunicorn sync worker — blocks for the whole request",
+    concurrency: "1",
+    latency: "80",
+  },
+  {
+    label: "Go goroutine service",
+    note: "One goroutine per request, bounded by CPU and pool limits",
+    concurrency: "200",
+    latency: "25",
+  },
+];
+
+// Fixed utilization steps for the queueing table. Fill tones are literal strings
+// so Tailwind keeps them; nothing here is built from a dynamic class name.
+const QUEUE_ROWS = [
+  { pct: 50, fill: "bg-green" },
+  { pct: 70, fill: "bg-green" },
+  { pct: 80, fill: "bg-yellow" },
+  { pct: 90, fill: "bg-yellow" },
+  { pct: 95, fill: "bg-pink" },
+  { pct: 99, fill: "bg-red" },
+];
+
+const faq = [
+  {
+    q: "How many servers do I need for X requests per second?",
+    a: "Multiply your target requests per second by the average time one request occupies a worker, in seconds. That product is the number of requests in flight at any instant — Little's Law. Divide it by how many requests a single worker handles concurrently, then divide again by your target utilization. At 300 req/s, 120 ms of service time, 40 concurrent slots per worker and a 70% target, that is 300 × 0.12 = 36 in flight, 36 ÷ 40 ÷ 0.7 = 1.3, so 2 workers.",
+  },
+  {
+    q: "What is Little's Law in simple terms?",
+    a: "L = λ × W. The average number of items inside a system equals how fast they arrive multiplied by how long each one stays. It holds for any stable system regardless of arrival pattern, service time distribution, or queueing discipline — it is arithmetic, not a model. The catch is that it describes long-run averages, so it tells you the floor on capacity and nothing at all about your worst minute.",
+  },
+  {
+    q: "What utilization should I target for a web service?",
+    a: "60-75% for anything user-facing. Queueing delay is proportional to 1/(1-ρ), so the cost of the last few percent is brutal: going from 70% to 90% roughly triples queue wait on a single-slot worker, and 90% to 95% doubles it again. Batch workers and queue consumers can run at 85-90% because nobody is watching a spinner. Anything above 90% on a synchronous path means your p99 is set by queueing, not by your code.",
+  },
+  {
+    q: "Should I size workers with average latency or p99?",
+    a: "Size the steady state with average latency, then sanity-check the fleet with p99. Little's Law uses the mean by definition, so the average is the mathematically correct input for the long-run number. But traffic arrives in bursts, and during a burst it is the slow requests that pin workers down — if your average is 80 ms and your p99 is 900 ms, a burst of slow requests occupies eleven times more slots than the average predicts. Run the calculator twice and treat the p99 answer as your burst budget.",
+  },
+  {
+    q: "How many Gunicorn or Octane workers do I need?",
+    a: "Both default to one request per worker process, so concurrency per worker is 1 and the answer is simply in-flight requests divided by your target utilization, rounded up. At 50 req/s with 80 ms handlers that is 4 in flight, or 6 workers at 70%. Then cap it by memory and CPU: a process that needs 250 MB resident cannot be scaled to 40 copies on a 4 GB box no matter what the arithmetic says.",
+  },
+  {
+    q: "Does this capacity calculator send my numbers anywhere?",
+    a: "No. There is no backend, no analytics call on the inputs, and no network request of any kind after the page loads. Every number — Little's Law, the worker counts, and the Erlang C queueing table — is computed in JavaScript inside your tab. Switch the network off and it keeps working.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Server Capacity Calculator",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/capacity-calculator/", SITE.URL).href,
+  description: DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const inputClass =
+  "border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none";
+const selectClass =
+  "border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-bold shadow-neo-sm focus:outline-none";
+const labelClass =
+  "mono text-[11px] font-bold uppercase tracking-widest block mb-2";
+const hintClass = "mono text-[10px] uppercase tracking-widest opacity-70 mt-2";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1";
+const thClass =
+  "border-b-[3px] border-r-[3px] border-ink p-3 mono text-[10px] font-bold uppercase tracking-widest";
+const tdClass = "border-b-[2px] border-r-[3px] border-ink p-3 text-sm";
+const dtClass = "text-xs font-bold uppercase";
+const ddClass = "text-right font-mono text-sm font-bold";
+---
+
+<Page
+  title="Server Capacity Calculator"
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Server Capacity Calculator."
+  intro="How many workers do you actually need? Enter throughput, latency, and concurrency per worker — Little's Law sizes the fleet, and the queueing table shows what the last 20% of utilization costs you."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ The law is exact, your inputs aren't
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        L = λ × W holds for any stable system. Everything downstream of it is
+        only as honest as the latency and concurrency you feed in.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id="capacity-calculator-root">
+    <div class="grid items-start gap-6 md:grid-cols-[1fr_360px]">
+      <!-- Inputs -->
+      <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-5">
+        <div>
+          <p class={labelClass}>Solve for</p>
+          <div
+            role="group"
+            aria-label="Choose which direction to solve"
+            class="border-ink shadow-neo-xs inline-flex overflow-hidden rounded-[4px] border-[3px]"
+          >
+            <button
+              type="button"
+              data-capacity-mode="fleet"
+              aria-pressed="true"
+              class="mono border-ink bg-yellow border-r-[3px] px-3.5 py-2 text-[10px] font-bold tracking-widest uppercase transition-colors"
+            >
+              Workers needed
+            </button>
+            <button
+              type="button"
+              data-capacity-mode="load"
+              aria-pressed="false"
+              class="mono bg-paper px-3.5 py-2 text-[10px] font-bold tracking-widest uppercase transition-colors"
+            >
+              Max throughput
+            </button>
+          </div>
+          <p class={hintClass}>
+            ▸ Same law, both directions. Pick the one you don't know yet.
+          </p>
+        </div>
+
+        <div id="capacity-calculator-rate-field">
+          <label for="capacity-calculator-rate" class={labelClass}>
+            Target throughput
+          </label>
+          <div class="flex gap-3">
+            <input
+              id="capacity-calculator-rate"
+              type="number"
+              min="0"
+              step="any"
+              inputmode="decimal"
+              value="120"
+              autocomplete="off"
+              class={`${inputClass} min-w-0 flex-1`}
+            />
+            <select
+              id="capacity-calculator-rate-unit"
+              aria-label="Throughput unit"
+              class={`${selectClass} w-28 shrink-0 sm:w-36`}
+            >
+              <option value="sec" selected>req / sec</option>
+              <option value="min">req / min</option>
+            </select>
+          </div>
+          <p class={hintClass}>
+            ▸ Peak, not daily average. Divide the busiest hour by 3,600.
+          </p>
+        </div>
+
+        <div id="capacity-calculator-workers-field" hidden>
+          <label for="capacity-calculator-workers" class={labelClass}>
+            Workers / pods you have
+          </label>
+          <input
+            id="capacity-calculator-workers"
+            type="number"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            value="6"
+            autocomplete="off"
+            class={`${inputClass} w-full`}
+          />
+          <p class={hintClass}>
+            ▸ Processes, pods, containers — whatever your concurrency figure is
+            per.
+          </p>
+        </div>
+
+        <div>
+          <label for="capacity-calculator-latency" class={labelClass}>
+            Average latency (ms)
+          </label>
+          <input
+            id="capacity-calculator-latency"
+            type="number"
+            min="0"
+            step="any"
+            inputmode="decimal"
+            value="200"
+            autocomplete="off"
+            class={`${inputClass} w-full`}
+          />
+          <p class={hintClass}>
+            ▸ Server-side handler time, measured at low load. Not the number
+            your users see during a spike.
+          </p>
+        </div>
+
+        <div>
+          <label for="capacity-calculator-concurrency" class={labelClass}>
+            Concurrency per worker
+          </label>
+          <input
+            id="capacity-calculator-concurrency"
+            type="number"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            value="6"
+            autocomplete="off"
+            class={`${inputClass} w-full`}
+          />
+          <p class={hintClass}>
+            ▸ How many requests one worker holds at once. Sync PHP/Python
+            workers: 1.
+          </p>
+        </div>
+
+        <div>
+          <label for="capacity-calculator-utilization" class={labelClass}>
+            Target utilization (%)
+          </label>
+          <input
+            id="capacity-calculator-utilization"
+            type="number"
+            min="1"
+            max="99"
+            step="1"
+            inputmode="numeric"
+            value="70"
+            autocomplete="off"
+            class={`${inputClass} w-full`}
+          />
+          <p class={hintClass}>
+            ▸ 60-75% for user-facing traffic. 85-90% only for queue consumers.
+          </p>
+        </div>
+      </NeoCard>
+
+      <!-- Output -->
+      <NeoCard
+        tone="cyan"
+        shadow="lg"
+        class="min-w-0 space-y-4 md:sticky md:top-24"
+      >
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ <span id="capacity-calculator-headline-label">Workers needed</span>
+        </p>
+
+        <div
+          id="capacity-calculator-results"
+          aria-live="polite"
+          class="space-y-4"
+        >
+          <div>
+            <p
+              id="capacity-calculator-headline"
+              class="display text-pink-deep text-5xl leading-none"
+            >
+              —
+            </p>
+            <p
+              id="capacity-calculator-headline-sub"
+              class="mono mt-2 text-[11px] tracking-widest uppercase opacity-80"
+            >
+              —
+            </p>
+          </div>
+
+          <dl class="border-ink space-y-2.5 border-t-[2.5px] pt-3">
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class={dtClass}>In flight (L = λ × W)</dt>
+              <dd id="capacity-calculator-inflight" class={ddClass}>—</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class={dtClass}>Slots in the pool</dt>
+              <dd id="capacity-calculator-slots" class={ddClass}>—</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class={dtClass} id="capacity-calculator-alt-label">
+                Workers at 100%
+              </dt>
+              <dd id="capacity-calculator-alt" class={ddClass}>—</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class={dtClass}>Real utilization</dt>
+              <dd id="capacity-calculator-actual-util" class={ddClass}>—</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class={dtClass}>Headroom before saturation</dt>
+              <dd id="capacity-calculator-headroom" class={ddClass}>—</dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class={dtClass}>Throughput per worker</dt>
+              <dd id="capacity-calculator-per-worker" class={ddClass}>—</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div
+          id="capacity-calculator-error"
+          role="status"
+          hidden
+          class="border-ink bg-red rounded-[4px] border-[3px] px-3 py-2.5"
+        >
+          <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+            ▸ Check the inputs
+          </p>
+          <p
+            id="capacity-calculator-error-text"
+            class="text-sm leading-snug font-bold"
+          >
+          </p>
+        </div>
+
+        <button
+          type="button"
+          id="capacity-calculator-copy"
+          class="border-ink bg-paper shadow-neo-sm hover:bg-yellow hover:shadow-neo-md inline-flex w-full items-center justify-center gap-2 rounded-[6px] border-[3px] px-4 py-2.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 disabled:opacity-50"
+        >
+          <Icon name="lucide:copy" class="h-4 w-4" aria-hidden="true" />
+          <span id="capacity-calculator-copy-label">Copy sizing</span>
+        </button>
+
+        <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+          Runs in your browser · nothing uploaded
+        </p>
+      </NeoCard>
+    </div>
+
+    <!-- Presets -->
+    <h2 class="heading mt-10 mb-3 text-xl uppercase">
+      Runtime starting points.
+    </h2>
+    <div
+      class="border-ink bg-paper shadow-neo-md overflow-x-auto rounded-[4px] border-[3px]"
+    >
+      <table class="w-full border-collapse text-left">
+        <caption class="sr-only">
+          Default concurrency and a plausible latency for four common runtimes
+        </caption>
+        <thead>
+          <tr class="bg-yellow">
+            <th scope="col" class={thClass}>Runtime</th>
+            <th scope="col" class={thClass}>Concurrency</th>
+            <th scope="col" class={thClass}>Latency</th>
+            <th
+              scope="col"
+              class="border-ink mono border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+            >
+              Apply
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            PRESETS.map((p, i) => (
+              <tr class={i % 2 ? "bg-bg-alt" : "bg-paper"}>
+                <th
+                  scope="row"
+                  class="border-ink border-r-[3px] border-b-[2px] p-3 text-left align-top font-bold"
+                >
+                  {p.label}
+                  <span class="mono mt-1 block text-[10px] font-normal tracking-widest uppercase opacity-70">
+                    {p.note}
+                  </span>
+                </th>
+                <td class={`${tdClass} font-mono font-bold whitespace-nowrap`}>
+                  {p.concurrency} / worker
+                </td>
+                <td class={`${tdClass} font-mono font-bold whitespace-nowrap`}>
+                  {p.latency} ms
+                </td>
+                <td class="border-ink border-b-[2px] p-3">
+                  <button
+                    type="button"
+                    data-preset-concurrency={p.concurrency}
+                    data-preset-latency={p.latency}
+                    class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+                  >
+                    Use
+                  </button>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class={hintClass}>
+      ▸ Starting points, not truths. Every one of these moves with your
+      middleware, your database, and your GC settings — measure yours.
+    </p>
+
+    <!-- Queueing -->
+    <h2 class="heading mt-10 mb-3 text-xl uppercase">
+      What the last 20% costs.
+    </h2>
+    <div
+      class="border-ink bg-paper shadow-neo-md overflow-x-auto rounded-[4px] border-[3px]"
+    >
+      <table class="w-full border-collapse text-left">
+        <caption class="sr-only">
+          Expected queue wait and total response time at rising utilization
+        </caption>
+        <thead>
+          <tr class="bg-cyan">
+            <th scope="col" class={thClass}>Utilization</th>
+            <th scope="col" class={thClass}>Queue wait</th>
+            <th scope="col" class={thClass}>Total response</th>
+            <th
+              scope="col"
+              class="border-ink mono border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+            >
+              Wait ÷ service time
+            </th>
+          </tr>
+        </thead>
+        <tbody id="capacity-calculator-queue-body" aria-live="polite">
+          {
+            QUEUE_ROWS.map((row, i) => (
+              <tr class={i % 2 ? "bg-bg-alt" : "bg-paper"}>
+                <th
+                  scope="row"
+                  class="border-ink mono border-r-[3px] border-b-[2px] p-3 text-left font-bold whitespace-nowrap"
+                >
+                  {row.pct}%
+                </th>
+                <td
+                  id={`capacity-calculator-q-${row.pct}-wait`}
+                  class={`${tdClass} font-mono font-bold whitespace-nowrap`}
+                >
+                  —
+                </td>
+                <td
+                  id={`capacity-calculator-q-${row.pct}-total`}
+                  class={`${tdClass} font-mono font-bold whitespace-nowrap`}
+                >
+                  —
+                </td>
+                <td class="border-ink min-w-[180px] border-b-[2px] p-3">
+                  <span
+                    id={`capacity-calculator-q-${row.pct}-mult`}
+                    class="mono mb-1.5 block text-[11px] font-bold"
+                  >
+                    —
+                  </span>
+                  <span class="border-ink bg-paper block h-2.5 overflow-hidden rounded-[2px] border-[2px]">
+                    <span
+                      id={`capacity-calculator-q-${row.pct}-bar`}
+                      class:list={["block h-full w-0", row.fill]}
+                    />
+                  </span>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p id="capacity-calculator-queue-caption" class={hintClass}>—</p>
+    <p class="text-ink/80 mt-3 max-w-3xl text-sm leading-relaxed">
+      <strong>How this is computed.</strong> Exact Erlang C for the M/M/c model:
+      <code class={codeClass}>Wq / S = C(c, a) ÷ (c × (1 − ρ))</code>, where
+      <code class={codeClass}>a = ρ × c</code> is offered load in erlangs and
+      <code class={codeClass}>C</code> comes from the standard Erlang B recursion
+      <code class={codeClass}>B(n) = a·B(n−1) ÷ (n + a·B(n−1))</code>. The
+      arithmetic is exact. <em>The model is not your traffic.</em> M/M/c assumes Poisson
+      arrivals, exponentially distributed service times, one shared queue, infinitely
+      patient clients, and zero retries. It also treats every concurrency slot as
+      an independent server, which flatters an I/O-bound runtime whose forty slots
+      share one CPU. Real bursts are worse than Poisson, real latency has a fatter
+      tail, and a retry storm breaks the model outright — so read these numbers as
+      the optimistic floor on queueing pain, not a forecast. What they are good for
+      is the <em>shape</em>: the ratio between the 70% row and the 95% row is
+      the point.
+    </p>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">Little's Law, stated plainly</h2>
+      <p>
+        <strong>L = λ × W.</strong> The average number of requests inside your service
+        equals the rate they arrive at, multiplied by how long each one stays. Nothing
+        else. If 120 requests per second arrive and each takes 200 ms, then on average
+        24 requests are inside your service at any instant — 120 × 0.2. Those 24 have
+        to live somewhere: in a worker slot, in a goroutine, on an event loop, or
+        in a queue in front of all of them. That is the whole sizing problem, and
+        it is the number the tool prints as <code class={codeClass}>L</code>.
+      </p>
+      <p>
+        The remarkable thing about this law is that it assumes nothing. No
+        distribution of arrivals, no distribution of service times, no queueing
+        discipline, no independence. Any stable system, over a long enough
+        window, obeys it. That makes it the one piece of capacity maths you can
+        trust completely — and also the reason it can never tell you about your
+        worst minute, because averages have no tails.
+      </p>
+      <p>
+        The tool applies it in both directions.
+        <strong>Workers needed</strong> computes L from your throughput and latency,
+        divides by concurrency per worker, then divides again by target utilization
+        and rounds up. <strong>Max throughput</strong> runs it backwards: your worker
+        count times concurrency gives total slots, slots times target utilization
+        gives busy slots, and busy slots divided by latency gives the arrival rate
+        that keeps you there. Same equation, rearranged.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Why 100% utilization is a trap
+      </h2>
+      <p>
+        The naive answer to "how many workers" is L divided by concurrency. That
+        number is correct and useless, because it sizes for a world where
+        requests arrive on a metronome. They don't. Arrivals cluster, and when
+        two requests want the last free slot at the same time, one of them
+        waits.
+      </p>
+      <p>
+        Queueing delay scales with <code class={codeClass}>1 / (1 − ρ)</code>.
+        At 50% utilization the term is 2. At 90% it is 10. At 99% it is 100.
+        That is why the table above bends the way it does: the first 70% of
+        capacity is nearly free, and the last 5% costs more than everything
+        before it combined. Utilization is not an efficiency score. Past about
+        80% it is a latency dial you are turning the wrong way.
+      </p>
+      <p>
+        There is one genuine mitigation, and the table shows it: pool size. A
+        single worker with one slot at 90% utilization queues for nine service
+        times. Forty slots behind one queue at the same 90% barely queue at all,
+        because a free slot is almost always available somewhere. This is the
+        entire argument for a shared queue in front of a worker pool instead of
+        per-worker queues, and it is why a load balancer doing
+        least-outstanding-requests beats round-robin under load.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        p99, not average, decides the fleet
+      </h2>
+      <p>
+        Little's Law wants the mean, so the mean is the right input for the
+        steady-state number. It is the wrong input for surviving a burst. A
+        service with 80 ms average latency and 900 ms p99 does not occupy
+        workers for 80 ms — it occupies them for 80 ms most of the time and 900
+        ms exactly when everyone shows up at once. During those seconds the
+        effective W is an order of magnitude larger, L jumps with it, and a
+        fleet sized on the average has no slots left.
+      </p>
+      <p>
+        Practical approach: run the calculator once with your average to get the
+        baseline, once with your p99 to get the burst budget, and put the fleet
+        somewhere between them depending on how expensive a queued request is.
+        If a slow request holds a database connection or a file handle, size
+        closer to p99 — the resource, not the CPU, is what runs out. And if you
+        do not know your p99, that is the first thing to fix; a mean latency
+        with no percentile behind it is a number you cannot plan on.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Concurrency is not parallelism
+      </h2>
+      <p>
+        The "concurrency per worker" field is the one people get wrong, because
+        it means different things depending on what your requests spend their
+        time doing.
+      </p>
+    </div>
+
+    <ComparisonTable
+      class="mt-6"
+      columns={[
+        { label: "I/O-bound", tone: "cyan" },
+        { label: "CPU-bound", tone: "pink" },
+      ]}
+      rows={[
+        {
+          label: "Where time goes",
+          cells: [
+            "Waiting on DB, HTTP, disk, an LLM",
+            "Hashing, parsing, rendering, inference",
+          ],
+        },
+        {
+          label: "Concurrency per worker",
+          cells: [
+            "High — dozens to hundreds of waiting requests",
+            "≈ cores available to that worker, and no more",
+          ],
+        },
+        {
+          label: "What adding slots does",
+          cells: [
+            "Absorbs more waiting, latency barely moves",
+            "Nothing but queue inside the process",
+          ],
+        },
+        {
+          label: "Scale by",
+          cells: [
+            "Raising concurrency, then adding workers",
+            "Adding workers or cores — full stop",
+          ],
+        },
+        {
+          label: "Failure signature",
+          cells: [
+            "Connection pool exhausted downstream",
+            "Run queue climbs, every response slows at once",
+          ],
+        },
+      ]}
+    />
+
+    <div class="text-ink/90 mt-6 space-y-4 text-base leading-relaxed">
+      <p>
+        Concurrency is how many requests are in progress; parallelism is how
+        many are actually executing on a core right now. A Node process can hold
+        four hundred concurrent requests and still be running exactly one line
+        of your code at a time. That is fine while they are all waiting on
+        Postgres, and catastrophic the moment one of them starts parsing a 10 MB
+        JSON payload — the event loop stalls and all four hundred stall with it.
+        Set concurrency to what the runtime can hold, then check whether your
+        handlers actually spend their time waiting. If they don't, the honest
+        number is the core count.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Autoscaling doesn't remove the headroom
+      </h2>
+      <p>
+        The most common reason a correctly-sized service falls over is that the
+        replacement capacity arrives late. Metrics scrape on an interval, the
+        autoscaler evaluates on an interval, a new pod schedules, an image
+        pulls, the runtime boots, the JIT warms, connection pools fill, and the
+        load balancer's health check has to pass twice. Thirty seconds is a good
+        day on Kubernetes with a warm image cache; two to four minutes is normal
+        on a cold VM.
+      </p>
+      <p>
+        For that entire window your existing workers absorb the whole surge —
+        which is precisely what the target utilization field is buying you.
+        Rough rule: your headroom should cover the traffic growth you can see
+        during one full scale-out cycle. A service that doubles in 60 seconds
+        and takes 90 seconds to add a pod needs to be sitting near 50%, not 70%,
+        or it needs a pre-warmed floor of replicas. Scaling on CPU makes this
+        worse for I/O-bound services, since CPU stays flat while the request
+        queue grows — scale on in-flight requests or queue depth instead, which
+        is the L this tool just computed for you.
+      </p>
+      <p>
+        And do not size for the peak you have today. Size for the peak plus one
+        failure domain: if a third of your pods live in an availability zone
+        that can disappear, the remaining two thirds have to run the whole load
+        at an acceptable utilization. That is a multiplier on the number above,
+        not a rounding error.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <h2 class="display mb-5 text-2xl uppercase">Questions people ask.</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="heading mb-4 text-xl uppercase">Keep reading.</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/horizontal-vs-vertical-scaling/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Horizontal vs vertical scaling: more workers or bigger ones
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/smart-auto-scaling-ai/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Smart auto-scaling: scaling on the signal that actually leads
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/laravel-octane-high-traffic/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Laravel Octane under high traffic: where the worker count bites
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/load-balancer-vs-reverse-proxy/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Load balancer vs reverse proxy: who owns the shared queue
+          </p>
+        </NeoCard>
+      </li>
+      <li class="sm:col-span-2">
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/tools/percentile-calculator/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Tool
+          </p>
+          <p class="leading-snug font-bold">
+            Percentile Calculator — get the p99 you should be sizing against
+          </p>
+        </NeoCard>
+      </li>
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/capacity-calculator";
+</script>

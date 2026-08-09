@@ -2,13 +2,20 @@
 import Page from "@/layouts/Page.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
 import { SITE } from "@/consts";
-import { breadcrumbList } from "@/lib/seo";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_NAME = "Cron Explainer";
+const TOOL_PATH = "/tools/cron-explainer/";
+const TOOL_DESCRIPTION =
+  "Free cron expression explainer: paste a 5-field schedule and read exactly when it fires, field by field, in plain English. Runs entirely in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
   { name: "Tools", url: "/tools/" },
-  { name: "Cron Explainer", url: "/tools/cron-explainer/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
 ]);
 
 const presets = [
@@ -19,15 +26,128 @@ const presets = [
   { label: "1st of month", expr: "0 0 1 * *" },
   { label: "Weekdays noon", expr: "0 12 * * 1-5" },
 ];
+
+const dialectColumns = [
+  { label: "Vixie / cronie (Linux)", tone: "cyan" as const },
+  { label: "Quartz (Java, Spring)", tone: "yellow" as const },
+];
+
+const dialectRows = [
+  {
+    icon: "lucide:layers",
+    label: "Fields",
+    cells: ["5 — minute to day-of-week", "6 or 7 — seconds first, optional year"],
+  },
+  { icon: "lucide:timer", label: "Seconds field", cells: [false, true] },
+  {
+    icon: "lucide:calendar",
+    label: "Day-of-week numbers",
+    cells: ["0–7, both 0 and 7 are Sunday", "1–7, 1 is Sunday"],
+  },
+  {
+    icon: "lucide:help-circle",
+    label: "? (no specific value)",
+    cells: [false, true],
+  },
+  { icon: "lucide:hash", label: "L, W and # tokens", cells: [false, true] },
+  {
+    icon: "lucide:zap",
+    label: "@daily, @reboot shortcuts",
+    cells: [true, false],
+  },
+  {
+    icon: "lucide:check-check",
+    label: "Parsed by this page",
+    cells: [true, false],
+  },
+];
+
+const faq = [
+  {
+    q: "What does 0 2 * * * mean in cron?",
+    a: "It runs once a day at 02:00 — minute 0, hour 2, every day-of-month, every month, every day-of-week. That is the expression loaded in the box above. It is also the worst hour to pick on a server that observes daylight saving, because 02:00 local is exactly the time that gets skipped or repeated twice a year.",
+  },
+  {
+    q: "Why did my cron job run on the wrong day?",
+    a: "Almost always the day-of-month versus day-of-week trap. When both of those fields are restricted, cron runs the job if either one matches, not both — so 0 0 13 * 5 fires on the 13th of every month and on every Friday, roughly sixty times a year, instead of on Friday the 13th. Leave one of the two fields as * and the usual AND behaviour comes back.",
+  },
+  {
+    q: "Does */7 * * * * run every 7 minutes?",
+    a: "No. A step expands to a set within the field, so */7 means minutes 0, 7, 14, 21, 28, 35, 42, 49 and 56, and then the hour rolls over and the count restarts at zero. The last gap is four minutes, not seven. Steps only give an even interval when they divide the field evenly — for minutes that means 2, 3, 4, 5, 6, 10, 12, 15, 20 or 30.",
+  },
+  {
+    q: "What timezone do cron jobs run in?",
+    a: "Whatever timezone the scheduler itself is in, which is usually the system timezone rather than UTC. cronie and Debian's cron let you put a CRON_TZ=Europe/Paris line at the top of a crontab, Kubernetes CronJob takes spec.timeZone, and most application schedulers simply inherit the process timezone. Running schedulers in UTC and converting only for display removes a whole class of daylight-saving bugs.",
+  },
+  {
+    q: "Why does my cron job work in the terminal but not in cron?",
+    a: "Environment. Cron hands a job a nearly empty environment with a minimal PATH — often just /usr/bin:/bin — no shell profile, and none of the variables your interactive login sets, so a command that resolves fine for you comes back 'not found'. Use absolute paths for every binary, and remember that % is special inside a crontab command: it is turned into a newline unless you escape it as \\%, which is why date +%Y silently breaks.",
+  },
+  {
+    q: "Does this cron explainer support @daily, seconds, or Quartz syntax?",
+    a: "No — it parses the standard five-field crontab format only: *, single values, ranges, comma lists and steps. Shortcuts like @daily and @reboot, six-field seconds-first expressions, and Quartz tokens such as ? L W and # are rejected with an 'expected 5 fields' message rather than guessed at. Everything is parsed in your browser as you type; the expression is never sent anywhere.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: TOOL_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const related = [
+  {
+    href: "/tools/epoch-converter/",
+    kind: "Tool",
+    title: "Epoch Converter",
+    blurb:
+      "Cron thinks in local time and your logs think in Unix timestamps. Convert between them while you work out why a job fired an hour early.",
+    tone: "cyan" as const,
+  },
+  {
+    href: "/tools/chmod-calculator/",
+    kind: "Tool",
+    title: "Chmod Calculator",
+    blurb:
+      "The other reason a perfectly good crontab line does nothing: the cron user cannot execute the script.",
+    tone: "yellow" as const,
+  },
+  {
+    href: "/blog/message-queues-document-processing/",
+    kind: "Article",
+    title: "Message queues for document processing",
+    blurb:
+      "What to build once a job stops fitting inside its interval and polling on a timer starts causing damage.",
+    tone: "green" as const,
+  },
+  {
+    href: "/blog/scaling-with-rabbitmq/",
+    kind: "Article",
+    title: "Scaling with RabbitMQ",
+    blurb:
+      "Retries, fan-out and back pressure — the things a crontab cannot give you when scheduled work outgrows one box.",
+    tone: "pink" as const,
+  },
+];
 ---
 
 <Page
-  title="Cron Explainer"
-  description="Free cron expression explainer. Paste a 5-field cron schedule and read what it does in plain English, field by field. Runs entirely in your browser."
+  title={TOOL_NAME}
+  description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="Cron Explainer."
   intro="Paste a 5-field cron expression — get a plain-English description of exactly when it fires. Built it for my own schedulers."
-  structuredData={breadcrumbLd}
+  structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-3xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
@@ -82,6 +202,203 @@ const presets = [
       </p>
       <ul id="cron-fields" class="space-y-1.5 border-t-[2.5px] border-ink pt-3 text-sm"></ul>
     </NeoCard>
+  </section>
+
+  <!-- EXPLAINER -->
+  <section class="mx-auto max-w-3xl px-5 pb-16 space-y-10">
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">The five fields, left to right</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Minute (0–59), hour (0–23), day-of-month (1–31), month (1–12),
+        day-of-week (0–7). Sunday is both <code class="mono font-bold">0</code> and
+        <code class="mono font-bold">7</code> — a Vixie-era compromise that still
+        catches anyone assuming <code class="mono font-bold">7</code> means
+        Saturday. Each field takes a star, a value, a range
+        <code class="mono font-bold">a-b</code>, a list
+        <code class="mono font-bold">a,b,c</code>, or a step
+        <code class="mono font-bold">*/n</code>. Steps are a Vixie extension, not
+        POSIX.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Three-letter names like <code class="mono font-bold">JAN</code> and
+        <code class="mono font-bold">MON</code> work for month and day-of-week, but
+        classic <code class="mono font-bold">crontab(5)</code> forbids ranges and
+        lists of names — <code class="mono font-bold">MON-FRI</code> is a
+        portability gamble. Use numbers. The readout above walks the expression
+        left to right, token by token.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Day-of-month and day-of-week are OR, not AND
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        This is the bug that ships. Minute, hour and month are ANDed together the
+        way you expect. The two day fields are not: when <em>both</em> are
+        restricted, cron fires if <em>either</em> one matches.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        So <code class="mono font-bold">0 0 13 * 5</code> is not "midnight on
+        Friday the 13th". It is midnight on the 13th of every month
+        <em>plus</em> midnight every Friday — roughly sixty runs a year, not one or
+        two. Leave one of the two day fields as
+        <code class="mono font-bold">*</code> and normal AND behaviour returns.
+        Vixie-derived crons test "restricted" by looking for a literal leading
+        asterisk, so <code class="mono font-bold">0 0 */2 * 5</code> still gets AND
+        semantics. Quartz sidesteps the argument by requiring
+        <code class="mono font-bold">?</code> in exactly one of the two fields.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        */7 is not "every 7 minutes"
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        A step is a set, not an interval. <code class="mono font-bold">*/7</code> in
+        the minute field expands to 0, 7, 14, 21, 28, 35, 42, 49, 56 — then the hour
+        rolls over and the count restarts, so the gap between :56 and the next :00
+        is four minutes.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Day-of-month is worse: the field length changes underneath you.
+        <code class="mono font-bold">*/2</code> means 1, 3, 5 … 31 and restarts at
+        1 every month, so a 31-day month hands you runs on two consecutive days.
+        Only steps that divide their field evenly give a true interval — for
+        minutes, 2, 3, 4, 5, 6, 10, 12, 15, 20 and 30. If you need a real
+        interval, use a scheduler that has one — systemd's
+        <code class="mono font-bold">OnUnitActiveSec=</code>, or
+        <code class="mono font-bold">@every 1h30m</code> in Go's robfig/cron.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Timezones, and the two broken nights a year
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Cron schedules in the daemon's local timezone, not UTC. cronie and
+        Debian's cron read a <code class="mono font-bold">CRON_TZ=</code> line at
+        the top of a crontab, and Kubernetes CronJob takes
+        <code class="mono font-bold">spec.timeZone</code>. Get it wrong and
+        everything is an hour off for half the year, which reads as flakiness
+        rather than as a bug.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        DST is the sharp edge: on spring-forward 02:30 local does not exist; on
+        fall-back it happens twice. Vixie and cronie special-case shifts under
+        three hours for fixed-time jobs: skipped runs fire once right after the
+        jump, nothing repeats. Jobs running more often than hourly get no such
+        help — <code class="mono font-bold">*/5</code> follows the wall clock, so
+        you collect a bonus hour of runs every autumn. Run schedulers in UTC,
+        convert at the edges with an <a
+          href="/tools/epoch-converter/"
+          class="font-bold underline decoration-2 underline-offset-2"
+          >epoch converter</a
+        >, and make jobs idempotent so a double fire is boring.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        Cron will happily stack overlapping runs
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Cron has no idea whether the previous invocation finished. Schedule
+        something every five minutes, let it take seven under load, and by
+        lunchtime you have concurrent processes fighting over the same rows.
+        That is how a slow report job takes out a database.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Cron gives you nothing here, so wrap it:
+        <code class="mono font-bold">flock -n /var/lock/job.lock ./job.sh</code> from
+        util-linux, <code class="mono font-bold">withoutOverlapping()</code> in
+        Laravel's scheduler,
+        <code class="mono font-bold">concurrencyPolicy: Forbid</code> on a
+        Kubernetes CronJob, or a systemd service unit, which cannot run two
+        instances at once. Once a job is routinely long enough to overlap, put the
+        work behind a queue instead — the argument in <a
+          href="/blog/message-queues-document-processing/"
+          class="font-bold underline decoration-2 underline-offset-2"
+          >message queues for document processing</a
+        >.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="display text-2xl uppercase">
+        @reboot, seconds, and the dialect problem
+      </h2>
+      <p class="text-base leading-relaxed opacity-90">
+        Everything past the five fields is an extension, and the extensions
+        disagree. <code class="mono font-bold">@daily</code>,
+        <code class="mono font-bold">@hourly</code>,
+        <code class="mono font-bold">@weekly</code> and
+        <code class="mono font-bold">@reboot</code> are Vixie's.
+        <code class="mono font-bold">@reboot</code> is the misleading one: it fires
+        when the cron daemon starts, not when the machine boots and not when your
+        dependencies are ready. Restart cron on a running box and every
+        <code class="mono font-bold">@reboot</code> line runs again.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Seconds are where copy-paste dies. Quartz, Spring's
+        <code class="mono font-bold">@Scheduled</code>, node-cron and Go's
+        robfig/cron with <code class="mono font-bold">WithSeconds()</code> put a
+        seconds field first, so a six-field expression pasted into a Linux crontab
+        shifts every field one place and gets rejected — and a five-field
+        expression pasted into Quartz quietly becomes a seconds schedule.
+        Kubernetes CronJob stays five-field; one minute is its floor.
+      </p>
+      <ComparisonTable columns={dialectColumns} rows={dialectRows} />
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase mb-6">Questions, answered.</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
+            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- RELATED -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="heading text-xl uppercase mb-5">Keep going</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {
+        related.map((r) => (
+          <NeoCard href={r.href} tone={r.tone} shadow="sm" hover>
+            <p class="mono text-[10px] font-bold uppercase tracking-widest mb-2 opacity-70">
+              {r.kind}
+            </p>
+            <p class="heading text-lg uppercase leading-tight mb-2 flex items-center gap-2">
+              {r.title}
+              <Icon
+                name="lucide:arrow-right"
+                class="h-4 w-4 shrink-0"
+                aria-hidden="true"
+              />
+            </p>
+            <p class="text-sm leading-snug">{r.blurb}</p>
+          </NeoCard>
+        ))
+      }
+    </div>
   </section>
 </Page>
 

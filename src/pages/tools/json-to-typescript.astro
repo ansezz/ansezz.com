@@ -1,0 +1,739 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const PAGE_DESCRIPTION =
+  "Free JSON to TypeScript converter. Paste a JSON sample and generate typed interfaces plus a Zod v4 schema, with unions and optionals inferred, in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: "JSON to TypeScript & Zod", url: "/tools/json-to-typescript/" },
+]);
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "JSON to TypeScript & Zod",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/json-to-typescript/", SITE.URL).href,
+  description: PAGE_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faq = [
+  {
+    q: "Does this JSON to TypeScript converter upload my data?",
+    a: "No. Parsing, inference and code generation all run in your browser — there is no request, no logging and nothing stored. That matters here more than for most tools, because the JSON people paste into a type generator is usually a real API response with real customer records in it.",
+  },
+  {
+    q: "Why are some fields marked optional in the generated interface?",
+    a: "A key is optional when it appeared in some merged object samples but not all of them. That only happens when you paste an array of objects, or when the same nested shape shows up more than once with different keys. Paste one object and nothing can be optional — the tool has no evidence either way, so every key comes out required.",
+  },
+  {
+    q: "How do I generate a Zod schema from JSON?",
+    a: "Paste the JSON, then switch the output to the Zod tab. You get one z.object() per inferred type, ordered so every schema is declared before it is referenced, plus an exported z.infer type so the TypeScript side stays derived from the schema instead of duplicated by hand.",
+  },
+  {
+    q: "Is the output Zod v4 or Zod v3 syntax?",
+    a: "Zod v4. String formats are the top-level functions — z.email(), z.url(), z.uuid(), z.iso.datetime() — integers are z.int(), and records are z.record(z.string(), z.unknown()) with both a key and a value schema. The v3 method chains like z.string().url() still run in v4 but are deprecated, and z.record() with one argument is a v4 type error.",
+  },
+  {
+    q: "Should I use generated types in production?",
+    a: "Use them as a first draft, not a contract. A generator sees one payload, so it cannot know that status is an enum of four values, that a field is optional, or that an id you got as a number is an int64 that will lose precision. Read every line, tighten the loose ones, and keep the schema in version control from then on.",
+  },
+  {
+    q: "How does the tool handle null values in JSON?",
+    a: "When a field was sometimes null and sometimes a value, null becomes a modifier rather than a union member: string | null in TypeScript, .nullable() in Zod. When a field was null in every sample, you get the literal null type and z.null(), and the stats line flags it as always null. That is the honest answer — the sample proves nothing else about that key — and the compile error the first time you assign to it is the point.",
+  },
+];
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const SAMPLES: { label: string; value: unknown }[] = [
+  {
+    label: "Users (array)",
+    value: [
+      {
+        id: "0d5d6f2a-8f9c-4a1e-9d2b-7c3f5b1a9e40",
+        email: "ada@example.com",
+        name: "Ada Lovelace",
+        createdAt: "2026-01-14T09:12:03Z",
+        loginCount: 42,
+        verified: true,
+      },
+      {
+        id: "3b8e1c47-2a55-4d0f-b6c1-9e2a4f7d1c08",
+        email: "grace@example.com",
+        name: "Grace Hopper",
+        createdAt: "2026-02-02T17:45:00Z",
+        loginCount: 7,
+        verified: false,
+        avatarUrl: "https://cdn.example.com/avatars/grace.png",
+      },
+      {
+        id: "c1f0a92d-6b4e-4f83-a0d7-5e8b2c6a3f11",
+        email: "alan@example.com",
+        name: null,
+        createdAt: "2026-03-19T08:00:11Z",
+        loginCount: 0,
+        verified: true,
+      },
+    ],
+  },
+  {
+    label: "Order (nested)",
+    value: {
+      id: 4821,
+      reference: "ORD-4821",
+      placedAt: "2026-04-02T11:20:45+02:00",
+      total: 149.9,
+      currency: "EUR",
+      customer: { id: 12, email: "sam@example.com", phone: null },
+      shippingAddress: {
+        line1: "12 Rue Centrale",
+        line2: null,
+        city: "Casablanca",
+        postcode: "20000",
+        country: "MA",
+      },
+      lineItems: [
+        { sku: "TS-001", title: "Heavy tee", quantity: 2, unitPrice: 29.95 },
+        {
+          sku: "MG-014",
+          title: "Enamel mug",
+          quantity: 1,
+          unitPrice: 12,
+          giftNote: "happy birthday",
+        },
+      ],
+      tags: ["priority", "eu"],
+      metadata: {},
+    },
+  },
+  {
+    label: "Mixed union",
+    value: {
+      results: [
+        { kind: "text", value: "hello" },
+        { kind: "number", value: 42 },
+        { kind: "flag", value: true },
+      ],
+      cursor: null,
+      page: 1,
+      nextUrl: "https://api.example.com/v1/results?page=2",
+      warnings: [],
+    },
+  },
+  {
+    label: "Config",
+    value: {
+      version: "2.1.0",
+      releasedOn: "2026-05-30",
+      maintainer: { name: "Anass", email: "hi@example.com" },
+      features: { rag: true, billing: false },
+      retryAfterSeconds: 30,
+      sampleRate: 0.25,
+      endpoints: ["https://eu.example.com", "https://us.example.com"],
+    },
+  },
+];
+
+const DEFAULT_JSON = JSON.stringify(SAMPLES[0].value, null, 2);
+
+const MISSING_STYLES = [
+  { value: "optional", label: "key?: T — optional" },
+  { value: "nullable", label: "key: T | null — nullable" },
+  { value: "both", label: "key?: T | null — both" },
+];
+
+const zodColumns = [
+  { label: "Zod 3", tone: "pink" as const },
+  { label: "Zod 4", tone: "green" as const },
+];
+
+const zodRows = [
+  { label: "Email", cells: ["z.string().email()", "z.email()"] },
+  { label: "URL", cells: ["z.string().url()", "z.url()"] },
+  { label: "UUID", cells: ["z.string().uuid()", "z.uuid()"] },
+  {
+    label: "ISO datetime",
+    cells: ["z.string().datetime()", "z.iso.datetime()"],
+  },
+  { label: "Integer", cells: ["z.number().int()", "z.int()"] },
+  {
+    label: "Record",
+    cells: ["z.record(z.unknown())", "z.record(z.string(), z.unknown())"],
+  },
+  {
+    label: "Unknown keys",
+    cells: ["z.object({ … }).passthrough()", "z.looseObject({ … })"],
+  },
+];
+
+const RELATED = [
+  {
+    href: "/tools/json-formatter/",
+    kind: "Tool",
+    title: "JSON Formatter",
+    blurb:
+      "Pretty-print, minify and sanity-check the payload before you turn it into a type.",
+    tone: "cyan" as const,
+  },
+  {
+    href: "/blog/api-vs-mcp/",
+    kind: "Blog",
+    title: "API vs MCP",
+    blurb:
+      "Tool schemas are the same problem in a different costume: a contract a model has to satisfy at runtime.",
+    tone: "yellow" as const,
+  },
+  {
+    href: "/blog/rest-vs-grpc/",
+    kind: "Blog",
+    title: "REST vs gRPC",
+    blurb:
+      "What you get when the schema comes first and the wire format is generated from it, instead of the other way round.",
+    tone: "purple" as const,
+  },
+];
+---
+
+<Page
+  title="JSON to TypeScript & Zod"
+  description={PAGE_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="JSON to TypeScript & Zod."
+  intro="Paste a JSON sample, get a TypeScript interface tree and a matching Zod v4 schema. It merges array elements into unions, marks the keys that went missing, and detects the string formats worth validating."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ One sample is a guess
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        A single payload cannot show you which keys are optional or which fields
+        vary. Paste an <strong>array of real responses</strong> — the tool merges
+        them and marks every key that went missing. Nothing is uploaded.
+      </p>
+    </StickyNote>
+  </section>
+
+  <!-- TOOL -->
+  <section class="mx-auto max-w-5xl space-y-5 px-5 pb-16" id="jts-root">
+    <!-- Input -->
+    <NeoCard tone="paper" shadow="md" class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <label
+          for="jts-input"
+          class="mono block text-[11px] font-bold tracking-widest uppercase"
+        >
+          JSON sample
+        </label>
+        <button
+          type="button"
+          id="jts-clear"
+          class="mono border-ink bg-paper shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-2 rounded-[4px] border-[2.5px] px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+        >
+          <Icon name="lucide:eraser" class="h-3.5 w-3.5" aria-hidden="true" />
+          Clear
+        </button>
+      </div>
+      <textarea
+        id="jts-input"
+        rows="14"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder="Paste a JSON object, or an array of responses for better optionality detection…"
+        class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm focus:outline-none"
+        >{DEFAULT_JSON}</textarea
+      >
+      <div class="flex flex-wrap items-center gap-2">
+        <span
+          class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
+        >
+          Try
+        </span>
+        {
+          SAMPLES.map((s) => (
+            <button
+              type="button"
+              data-jts-sample={JSON.stringify(s.value)}
+              class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            >
+              {s.label}
+            </button>
+          ))
+        }
+      </div>
+      <p
+        id="jts-error"
+        class="text-pink-deep text-sm font-bold"
+        role="status"
+        hidden
+      >
+      </p>
+    </NeoCard>
+
+    <!-- Options -->
+    <NeoCard tone="paper" shadow="md" class="space-y-4">
+      <p class="mono text-[11px] font-bold tracking-widest uppercase">
+        ▸ Options
+      </p>
+
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div>
+          <label
+            for="jts-root-name"
+            class="mono mb-1.5 block text-[10px] font-bold tracking-widest uppercase"
+          >
+            Root type name
+          </label>
+          <input
+            id="jts-root-name"
+            type="text"
+            value="Root"
+            spellcheck="false"
+            autocomplete="off"
+            class="border-ink bg-paper shadow-neo-xs w-full rounded-[3px] border-[2.5px] px-2.5 py-2 font-mono text-sm focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <span
+            class="mono mb-1.5 block text-[10px] font-bold tracking-widest uppercase"
+          >
+            Declaration
+          </span>
+          <div
+            role="group"
+            aria-label="Declaration style"
+            class="border-ink shadow-neo-xs inline-flex overflow-hidden rounded-[3px] border-[2.5px]"
+          >
+            <button
+              type="button"
+              data-jts-decl="interface"
+              aria-pressed="true"
+              class="mono border-ink bg-yellow border-r-[2.5px] px-3.5 py-2 text-[10px] font-bold tracking-widest uppercase transition-colors"
+            >
+              interface
+            </button>
+            <button
+              type="button"
+              data-jts-decl="type"
+              aria-pressed="false"
+              class="mono bg-paper px-3.5 py-2 text-[10px] font-bold tracking-widest uppercase transition-colors"
+            >
+              type
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label
+            for="jts-missing"
+            class="mono mb-1.5 block text-[10px] font-bold tracking-widest uppercase"
+          >
+            Keys missing from some samples
+          </label>
+          <select
+            id="jts-missing"
+            class="border-ink bg-paper shadow-neo-xs w-full rounded-[3px] border-[2.5px] px-2.5 py-2 font-mono text-sm focus:outline-none"
+          >
+            {
+              MISSING_STYLES.map((s) => (
+                <option value={s.value}>{s.label}</option>
+              ))
+            }
+          </select>
+        </div>
+      </div>
+
+      <ul class="border-ink grid gap-2.5 border-t-[2.5px] pt-4 sm:grid-cols-2">
+        <li>
+          <label
+            class="flex cursor-pointer items-start gap-2.5 text-sm font-bold"
+          >
+            <input
+              id="jts-nested"
+              type="checkbox"
+              checked
+              class="border-ink accent-pink mt-0.5 h-5 w-5 shrink-0 border-[2.5px]"
+            />
+            <span>
+              Named nested types
+              <span class="block text-xs font-medium opacity-70">
+                Off = nested objects are inlined as literals.
+              </span>
+            </span>
+          </label>
+        </li>
+        <li>
+          <label
+            class="flex cursor-pointer items-start gap-2.5 text-sm font-bold"
+          >
+            <input
+              id="jts-formats"
+              type="checkbox"
+              checked
+              class="border-ink accent-pink mt-0.5 h-5 w-5 shrink-0 border-[2.5px]"
+            />
+            <span>
+              Detect string formats
+              <span class="block text-xs font-medium opacity-70">
+                uuid, email, url, ISO date and datetime.
+              </span>
+            </span>
+          </label>
+        </li>
+        <li>
+          <label
+            class="flex cursor-pointer items-start gap-2.5 text-sm font-bold"
+          >
+            <input
+              id="jts-readonly"
+              type="checkbox"
+              class="border-ink accent-pink mt-0.5 h-5 w-5 shrink-0 border-[2.5px]"
+            />
+            <span>
+              readonly modifier
+              <span class="block text-xs font-medium opacity-70">
+                Readonly props and arrays, <code>.readonly()</code> in Zod.
+              </span>
+            </span>
+          </label>
+        </li>
+        <li>
+          <label
+            class="flex cursor-pointer items-start gap-2.5 text-sm font-bold"
+          >
+            <input
+              id="jts-dates"
+              type="checkbox"
+              class="border-ink accent-pink mt-0.5 h-5 w-5 shrink-0 border-[2.5px]"
+            />
+            <span>
+              ISO dates become <code>Date</code>
+              <span class="block text-xs font-medium opacity-70">
+                Types describe the parsed value, so Zod adds a transform.
+              </span>
+            </span>
+          </label>
+        </li>
+      </ul>
+    </NeoCard>
+
+    <!-- Output -->
+    <NeoCard tone="cyan" shadow="lg" class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div
+          role="tablist"
+          aria-label="Output format"
+          class="border-ink shadow-neo-xs inline-flex overflow-hidden rounded-[3px] border-[3px]"
+        >
+          <button
+            type="button"
+            role="tab"
+            id="jts-tab-ts"
+            data-jts-tab="ts"
+            aria-selected="true"
+            aria-controls="jts-panel-ts"
+            class="mono border-ink bg-yellow border-r-[3px] px-4 py-2 text-[11px] font-bold tracking-widest uppercase transition-colors"
+          >
+            TypeScript
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="jts-tab-zod"
+            data-jts-tab="zod"
+            aria-selected="false"
+            aria-controls="jts-panel-zod"
+            tabindex="-1"
+            class="mono bg-paper px-4 py-2 text-[11px] font-bold tracking-widest uppercase transition-colors"
+          >
+            Zod v4
+          </button>
+        </div>
+        <button
+          type="button"
+          id="jts-copy"
+          class="border-ink bg-paper shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-2 rounded-[3px] border-[2.5px] px-3 py-1.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+        >
+          <Icon name="lucide:copy" class="h-3.5 w-3.5" aria-hidden="true" />
+          <span id="jts-copy-label">Copy</span>
+        </button>
+      </div>
+
+      <ul
+        id="jts-stats"
+        class="flex flex-wrap gap-1.5"
+        aria-live="polite"
+        hidden
+      >
+      </ul>
+
+      <div
+        id="jts-panel-ts"
+        role="tabpanel"
+        aria-labelledby="jts-tab-ts"
+        tabindex="0"
+        class="border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px] focus:outline-none"
+      >
+        <pre
+          id="jts-out-ts"
+          aria-live="polite"
+          class="mono overflow-x-auto p-3 text-[13px] leading-relaxed">// Paste a JSON sample above.</pre>
+      </div>
+
+      <div
+        id="jts-panel-zod"
+        role="tabpanel"
+        aria-labelledby="jts-tab-zod"
+        tabindex="0"
+        hidden
+        class="border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px] focus:outline-none"
+      >
+        <pre
+          id="jts-out-zod"
+          aria-live="polite"
+          class="mono overflow-x-auto p-3 text-[13px] leading-relaxed">// Paste a JSON sample above.</pre>
+      </div>
+    </NeoCard>
+  </section>
+
+  <!-- EXPLAINER -->
+  <section class="explainer mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase">What the generator infers</h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Every value in the sample collapses into one node that records which
+      shapes were seen at that position, and then the nodes get merged. Array
+      elements merge into a single element type, so
+      <code>[1, "a", true]</code> becomes <code>number | string | boolean</code>
+      rather than a tuple. When every element is an object, the keys are unioned and
+      each one is counted: a key that appeared in two of three elements is marked
+      optional. <code>null</code> is tracked as a modifier instead of a member, so
+      a field that was sometimes a string and sometimes null comes out as <code
+        >string | null</code
+      > and <code>.nullable()</code>, not as a union containing <code>null</code
+      >.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Strings are then probed for shapes worth validating — UUID, email, http(s)
+      URL, <code>YYYY-MM-DD</code>, and ISO-8601 datetimes. Timezone handling is
+      deliberately literal: a trailing <code>Z</code> emits
+      <code>z.iso.datetime()</code>, a numeric offset emits
+      <code>z.iso.datetime(&#123; offset: true &#125;)</code>, and no timezone
+      at all emits <code>z.iso.datetime(&#123; local: true &#125;)</code>,
+      because the default form rejects the other two. If one field mixes
+      formats, the detector gives up and emits a plain <code>z.string()</code> — dropping
+      to a looser type is never wrong, and a field with three date formats in it is
+      a data problem you want to see, not paper over. Numbers get
+      <code>z.int()</code> only when every sample was a whole number.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">
+      One sample under-specifies a schema
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      This is the thing every JSON-to-TypeScript tool quietly gets wrong, mine
+      included, and there is no fixing it from the input side. A single response
+      is one point on a distribution. It cannot tell you that
+      <code>coupon</code> is absent for 98% of orders, that
+      <code>status</code> is really one of four strings, that
+      <code>items</code> is occasionally empty, or that
+      <code>discount: null</code> is a number the rest of the time. Optionality and
+      unions are properties of the <em>set</em> of possible payloads, and you handed
+      the generator exactly one.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      So change the input. Grab twenty real responses from your logs, wrap them
+      in an array, and paste that. The merge does the work: keys that vary get
+      the <code>?</code>, fields that vary get a union, and you find out in ten
+      seconds that a field you thought was <code>string</code> is
+      <code>string | number</code> in production. Same trick for a paginated endpoint
+      — paste the page of results, not one item.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">Parse, don't validate</h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      A TypeScript interface is a claim, not a check. <code>JSON.parse</code>
+      returns <code>any</code>, and
+      <code>const user = await res.json() as User</code> is a lie the compiler believes:
+      it deletes the type error without deleting the bug. Everything downstream is
+      now typed against a shape nobody verified, and the
+      <code>undefined is not an object</code> lands four call frames away from the
+      response that caused it.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Parse, don't validate means turning unknown input into a value whose type
+      proves the checks already ran. That is what the Zod tab is for.
+      <code>const user = UserSchema.parse(await res.json())</code> either throws at
+      the boundary with a path telling you which field was wrong, or hands back a
+      value the type system and the runtime agree on. The
+      <code>z.infer</code> line at the bottom of the output exists so the type is
+      derived from the schema — write both by hand and they drift within a sprint.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">
+      Validate at boundaries, trust types inside
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Runtime validation costs something, so spend it where data enters the
+      system and nowhere else: HTTP responses from services you don't own,
+      webhook bodies, queue messages, config files, environment variables, and
+      the JSON an LLM produces for a tool call. Those are the places where the
+      shape can be wrong at 3am. Inside your own module, between two functions
+      you wrote, the compile-time type is enough — re-validating there is
+      ceremony that buys nothing.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      One Zod v4 detail worth knowing before you deploy the output:
+      <code>z.object()</code> strips keys it doesn't know about. If you validate a
+      webhook and then forward the parsed value onward, the fields you didn't model
+      are gone. Use <code>z.looseObject()</code> when you re-serialize, and <code
+        >z.strictObject()</code
+      > when an unexpected key should be a loud failure.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">Zod v4 syntax, not v3</h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Most generators on the web still emit Zod 3. The v3 method chains mostly
+      keep working in v4, but they are deprecated, they are not tree-shakable,
+      and one of them is now an outright type error —
+      <code>z.record()</code> requires a key schema as well as a value schema. Here
+      is the mapping this tool emits:
+    </p>
+    <ComparisonTable columns={zodColumns} rows={zodRows} class="mt-5 text-sm" />
+    <p class="mt-4 text-base leading-relaxed opacity-90">
+      The <code>Date</code> option is the one place the two tabs deliberately disagree
+      with the wire format. JSON has no date type, so the honest TypeScript type for
+      a timestamp is <code>string</code>. Tick the box and you're saying the
+      type describes the value <em>after</em> validation: the TypeScript side becomes
+      <code>Date</code>, and the Zod side validates the ISO string first and
+      then transforms it, which is stricter than coercing whatever the <code
+        >Date</code
+      > constructor happens to accept.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">
+      Where not to trust the output
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Read the generated code as a draft written by something that saw one
+      example. In particular:
+    </p>
+    <ul class="mt-3 space-y-2.5 text-base leading-relaxed opacity-90">
+      <li>
+        <strong>Enums are invisible.</strong>
+        <code>"status": "paid"</code> gives you <code>string</code>. If it is
+        really
+        <code>"paid" | "pending" | "refunded"</code>, only you know that.
+      </li>
+      <li>
+        <strong>Big integers.</strong> JSON numbers are IEEE-754 doubles. A 64-bit
+        id past 2^53 has already lost precision by the time
+        <code>JSON.parse</code> returns, and <code>z.int()</code> only asserts the
+        safe-integer range — it cannot recover what the parse threw away. Ask the
+        API for a string.
+      </li>
+      <li>
+        <strong>Optional and nullable are different bugs.</strong> A missing key and
+        a <code>null</code> key fail in different places. The selector above exists
+        because plenty of APIs do both, inconsistently, on the same field.
+      </li>
+      <li>
+        <strong>Semantics never survive.</strong>
+        <code>z.email()</code> checks a shape, not a mailbox. A number field that
+        must be positive, a string with a max length, two fields that have to agree
+        — all of that is
+        <code>.min()</code>, <code>.max()</code> and <code>.refine()</code> you add
+        by hand.
+      </li>
+      <li>
+        <strong>Empty containers say nothing.</strong>
+        <code>[]</code> becomes
+        <code>unknown[]</code> and <code>&#123;&#125;</code> becomes
+        <code>Record&lt;string, unknown&gt;</code>, because that is genuinely
+        all the sample proves. Same for a key that was <code>null</code> every time:
+        you get the <code>null</code> type and a chip in the stats line saying so.
+        Go find a payload where they aren't empty.
+      </li>
+    </ul>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <h3 class="heading text-base leading-snug uppercase">{f.q}</h3>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- RELATED -->
+  <section class="mx-auto max-w-4xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Related</h2>
+    <ul class="grid gap-5 sm:grid-cols-2">
+      {
+        RELATED.map((r) => (
+          <li>
+            <NeoCard
+              href={r.href}
+              tone={r.tone}
+              shadow="sm"
+              hover
+              class="flex h-full flex-col gap-2"
+            >
+              <span class="mono text-[10px] font-bold tracking-widest uppercase opacity-70">
+                {r.kind}
+              </span>
+              <span class="heading text-lg leading-tight uppercase">
+                {r.title}
+              </span>
+              <span class="text-sm leading-snug opacity-90">{r.blurb}</span>
+            </NeoCard>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/json-to-typescript";
+</script>
+
+<style>
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--color-bg-alt);
+    border: 2px solid var(--color-ink);
+    border-radius: 3px;
+    padding: 0.05em 0.3em;
+  }
+</style>

@@ -1,0 +1,2632 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const PAGE_TITLE = "HTTP Headers Cheat Sheet";
+const PAGE_DESCRIPTION =
+  "HTTP headers cheat sheet: every request and response header that matters in production, with real example values. Free, filterable, runs in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: PAGE_TITLE, url: "/tools/http-headers/" },
+]);
+
+/** Which side of the exchange the field appears on. */
+type Dir = "req" | "res" | "both";
+
+/**
+ * legacy   — still works, something better replaced it
+ * de-facto — in no RFC, but everyone implements it
+ * draft    — standards-track, not finished
+ * dead     — do not ship this
+ */
+type Flag = "legacy" | "de-facto" | "draft" | "dead";
+
+interface HeaderRow {
+  name: string;
+  dir: Dir;
+  /** One line: what the field is for. */
+  purpose: string;
+  /** A value you would actually see on the wire. */
+  example: string;
+  /** Optional second line: the trap, the caveat, the reason it bites. */
+  note?: string;
+  flag?: Flag;
+  /** Extra search terms for the filter box; never rendered. */
+  keywords?: string;
+}
+
+const DIR_LABEL: Record<Dir, string> = {
+  req: "Request",
+  res: "Response",
+  both: "Request + response",
+};
+
+const DIR_CLASS: Record<Dir, string> = {
+  req: "bg-cyan",
+  res: "bg-green",
+  both: "bg-yellow",
+};
+
+const FLAG_LABEL: Record<Flag, string> = {
+  legacy: "Legacy",
+  "de-facto": "De facto",
+  draft: "Draft",
+  dead: "Dead",
+};
+
+const FLAG_CLASS: Record<Flag, string> = {
+  legacy: "bg-yellow",
+  "de-facto": "bg-pink",
+  draft: "bg-cyan",
+  dead: "bg-bg-alt",
+};
+
+const CACHING: HeaderRow[] = [
+  {
+    name: "Cache-Control",
+    dir: "both",
+    purpose:
+      "The entire caching policy in one field: how long a response stays fresh, who is allowed to store it, and what has to happen once it goes stale.",
+    example: "Cache-Control: public, max-age=60, s-maxage=86400",
+    note: "The same word means different things on a request and on a response. Every directive is spelled out in the next table.",
+    keywords: "caching ttl freshness cdn",
+  },
+  {
+    name: "Age",
+    dir: "res",
+    purpose:
+      "Seconds this response has already spent sitting in caches. Shared caches add it; clients subtract it from max-age to get the remaining freshness.",
+    example: "Age: 118",
+    note: "An Age that climbs past your max-age without a revalidation is a misconfigured CDN, not a fast one.",
+    keywords: "cdn cache hit staleness",
+  },
+  {
+    name: "Expires",
+    dir: "res",
+    purpose:
+      "An absolute date after which the response is stale. The HTTP/1.0 way of saying max-age.",
+    example: "Expires: Wed, 12 Aug 2026 09:14:00 GMT",
+    note: "Ignored whenever Cache-Control max-age or s-maxage is present. Expires: 0 is the widespread non-conforming way to say 'already stale' — use no-cache instead.",
+    flag: "legacy",
+  },
+  {
+    name: "ETag",
+    dir: "res",
+    purpose:
+      "An opaque version tag for this exact representation. The client hands it back to ask whether it is still current.",
+    example: 'ETag: "3f8a1c-1a4"',
+    note: "A W/ prefix marks it weak: fine for cache revalidation, useless for If-Match concurrency. Gzip and identity variants must not share a strong ETag.",
+    keywords: "validator revalidation 304 etags",
+  },
+  {
+    name: "Last-Modified",
+    dir: "res",
+    purpose:
+      "When the representation last changed. The weaker validator, for when you have no ETag.",
+    example: "Last-Modified: Tue, 11 Aug 2026 22:03:11 GMT",
+    note: "One-second resolution, so two edits inside the same second are invisible. Also what caches use for heuristic freshness when you send no explicit lifetime.",
+    keywords: "validator heuristic freshness",
+  },
+  {
+    name: "If-None-Match",
+    dir: "req",
+    purpose:
+      "Revalidation: send the body only if the ETag is none of these. A match gets a 304 with no body.",
+    example: 'If-None-Match: "3f8a1c-1a4"',
+    note: "Wins over If-Modified-Since when both are sent. Uses weak comparison, so W/ tags do match.",
+    keywords: "304 not modified conditional get",
+  },
+  {
+    name: "If-Modified-Since",
+    dir: "req",
+    purpose:
+      "Date-based revalidation: send the body only if it changed after this timestamp.",
+    example: "If-Modified-Since: Tue, 11 Aug 2026 22:03:11 GMT",
+    note: "Only meaningful on GET and HEAD, and ignored entirely when If-None-Match is present.",
+    keywords: "304 not modified conditional get",
+  },
+  {
+    name: "Vary",
+    dir: "res",
+    purpose:
+      "Names the request headers that were used to select this representation. In other words: the rest of the cache key.",
+    example: "Vary: Accept-Encoding, Origin",
+    note: "Omit one and a shared cache will happily hand a Brotli body to a client that cannot decode it, or one tenant's CORS headers to another. Vary: * means never reusable.",
+    keywords: "cache key content negotiation poisoning",
+  },
+  {
+    name: "CDN-Cache-Control",
+    dir: "res",
+    purpose:
+      "Caching policy aimed at CDNs only. They obey it in place of Cache-Control; browsers ignore it completely.",
+    example: "CDN-Cache-Control: max-age=31536000",
+    note: "RFC 9213 targeted cache control. The clean way to cache hard at the edge and barely at all in the browser, without the usual s-maxage contortions.",
+    keywords: "fastly cloudflare akamai targeted edge",
+  },
+  {
+    name: "Surrogate-Control",
+    dir: "res",
+    purpose:
+      "The pre-RFC vendor spelling of the same idea, still honoured by Varnish, Fastly and friends.",
+    example: "Surrogate-Control: max-age=86400",
+    flag: "de-facto",
+    keywords: "varnish fastly edge",
+  },
+  {
+    name: "Cache-Status",
+    dir: "res",
+    purpose:
+      "How each cache in the path handled the request: hit or miss, remaining TTL, which node answered.",
+    example: 'Cache-Status: "cdn"; hit; ttl=284',
+    note: "RFC 9211. Standardises the pile of X-Cache headers every CDN invented separately.",
+    keywords: "x-cache hit miss debug",
+  },
+  {
+    name: "Pragma",
+    dir: "req",
+    purpose: "The HTTP/1.0 ancestor of Cache-Control, with one useful value.",
+    example: "Pragma: no-cache",
+    note: "Only ever defined for requests. Sending it on a response does nothing except make your headers longer.",
+    flag: "legacy",
+  },
+  {
+    name: "Warning",
+    dir: "both",
+    purpose: "Free-text notes about staleness and transformations.",
+    example: 'Warning: 110 - "Response is Stale"',
+    note: "Obsoleted by RFC 9111. Nothing generates it and nothing reads it.",
+    flag: "dead",
+  },
+];
+
+const DIRECTIVES: HeaderRow[] = [
+  {
+    name: "max-age=N",
+    dir: "both",
+    purpose:
+      "On a response: fresh for N seconds, counted from when the origin generated it — not from when you received it. On a request: I will not accept anything older than N seconds.",
+    example: "Cache-Control: max-age=600",
+    note: "Age is what makes the origin-relative part work. A response that spent 500s in a CDN has 100s of freshness left, not 600.",
+    keywords: "ttl freshness",
+  },
+  {
+    name: "s-maxage=N",
+    dir: "res",
+    purpose:
+      "Freshness for shared caches only — CDN, reverse proxy. Overrides both max-age and Expires for them, and leaves the browser on max-age.",
+    example: "Cache-Control: max-age=60, s-maxage=86400",
+    note: "Also implies proxy-revalidate, so a shared cache may not serve it stale once it expires.",
+    keywords: "cdn shared cache proxy",
+  },
+  {
+    name: "no-cache",
+    dir: "both",
+    purpose:
+      "Store it, but never reuse it without asking the origin first. This is a revalidation rule, not a ban on caching.",
+    example: "Cache-Control: no-cache",
+    note: "A 304 costs one small round-trip and no body. This is usually the right answer for HTML.",
+    keywords: "revalidate misunderstood",
+  },
+  {
+    name: "no-store",
+    dir: "both",
+    purpose:
+      "Do not write this to any storage, anywhere, in any form. The only directive that actually means do not cache.",
+    example: "Cache-Control: no-store",
+    note: "Correct for responses carrying credentials or personal data. Add private and no-cache too if you need to defeat ancient, buggy intermediaries.",
+    keywords: "private data credentials security",
+  },
+  {
+    name: "private",
+    dir: "res",
+    purpose:
+      "Only a single-user cache — the browser — may store this. Shared caches must not.",
+    example: "Cache-Control: private, no-store",
+    note: "Not a security control. It is a request to well-behaved caches, and the body still passes in cleartext through anything terminating your TLS.",
+    keywords: "shared cache browser",
+  },
+  {
+    name: "public",
+    dir: "res",
+    purpose:
+      "Storable even in the cases where it normally would not be — most usefully, when the request carried an Authorization header.",
+    example: "Cache-Control: public, max-age=3600",
+    note: "Redundant on an ordinary unauthenticated GET; that is already cacheable. Adding it out of habit to authenticated responses is how private data lands in a CDN.",
+    keywords: "authorization shared cache",
+  },
+  {
+    name: "must-revalidate",
+    dir: "res",
+    purpose:
+      "Once stale, it must not be served again until the origin confirms it.",
+    example: "Cache-Control: max-age=60, must-revalidate",
+    note: "If the origin is unreachable the cache must return a 504 rather than a stale body. That is a correctness choice, and it costs you availability.",
+    keywords: "stale 504 correctness",
+  },
+  {
+    name: "proxy-revalidate",
+    dir: "res",
+    purpose: "must-revalidate, but binding only on shared caches.",
+    example: "Cache-Control: max-age=600, proxy-revalidate",
+    keywords: "cdn shared cache",
+  },
+  {
+    name: "immutable",
+    dir: "res",
+    purpose:
+      "The body at this URL will never change, so do not revalidate it even when the user hits reload.",
+    example: "Cache-Control: max-age=31536000, immutable",
+    note: "Only safe on content-hashed URLs like app.7f3c1d.js. Put it on /app.js and you will serve last week's bundle to people who have no way to fix it.",
+    keywords: "assets fingerprint reload rfc 8246",
+  },
+  {
+    name: "stale-while-revalidate=N",
+    dir: "res",
+    purpose:
+      "For N seconds past expiry, serve the stale copy immediately and refresh it in the background.",
+    example: "Cache-Control: max-age=60, stale-while-revalidate=600",
+    note: "The largest latency win available in this whole field, for one line of config. The cost is that some users see a response up to N seconds out of date.",
+    keywords: "swr latency rfc 5861 background refresh",
+  },
+  {
+    name: "stale-if-error=N",
+    dir: "res",
+    purpose:
+      "If the origin errors or times out, keep serving the stale copy for up to N seconds instead of passing the failure through.",
+    example: "Cache-Control: max-age=60, stale-if-error=86400",
+    note: "Free availability during an incident, and nothing to build. Note that must-revalidate cancels it.",
+    keywords: "outage resilience rfc 5861",
+  },
+  {
+    name: "no-transform",
+    dir: "res",
+    purpose:
+      "Intermediaries must not recompress images, minify, or otherwise rewrite the payload.",
+    example: "Cache-Control: no-transform",
+    note: "Worth setting on anything signed, checksummed, or byte-exact — and on images where a carrier proxy would otherwise degrade them.",
+    keywords: "proxy compression rewrite",
+  },
+  {
+    name: "must-understand",
+    dir: "res",
+    purpose:
+      "Store this only if the cache understands the caching rules for its status code.",
+    example: "Cache-Control: must-understand, no-store",
+    note: "Newer caches honour must-understand and may store; older ones see the no-store beside it and skip. A forward-compatibility trick, not an everyday directive.",
+    keywords: "rfc 9111 status code",
+  },
+  {
+    name: "only-if-cached",
+    dir: "req",
+    purpose: "Return the cached copy or a 504. Do not touch the network.",
+    example: "Cache-Control: only-if-cached",
+    note: "How offline modes and some service workers ask for a strictly local answer.",
+    keywords: "offline service worker",
+  },
+  {
+    name: "max-stale=N",
+    dir: "req",
+    purpose:
+      "I will accept a response that has been stale for up to N seconds.",
+    example: "Cache-Control: max-stale=300",
+    keywords: "client staleness tolerance",
+  },
+  {
+    name: "min-fresh=N",
+    dir: "req",
+    purpose:
+      "I want a response that will still be fresh for at least another N seconds.",
+    example: "Cache-Control: min-fresh=60",
+    keywords: "client freshness",
+  },
+];
+
+const CONDITIONAL: HeaderRow[] = [
+  {
+    name: "If-Match",
+    dir: "req",
+    purpose:
+      "Only perform this write if the resource still carries one of these ETags. HTTP's compare-and-swap.",
+    example: 'If-Match: "3f8a1c-1a4"',
+    note: "A mismatch returns 412 Precondition Failed. Strong comparison, so a W/ tag never matches. This is how you stop two tabs silently overwriting each other.",
+    keywords: "412 optimistic concurrency lost update put patch",
+  },
+  {
+    name: "If-Unmodified-Since",
+    dir: "req",
+    purpose:
+      "The dated version: only write if nothing has changed since this timestamp.",
+    example: "If-Unmodified-Since: Tue, 11 Aug 2026 22:03:11 GMT",
+    note: "Weaker than If-Match because of the one-second clock. Prefer ETags whenever you can generate them.",
+    keywords: "412 concurrency",
+  },
+  {
+    name: "Range",
+    dir: "req",
+    purpose: "Ask for specific byte ranges instead of the whole body.",
+    example: "Range: bytes=0-1048575",
+    note: "Answered with 206 and a Content-Range, or 416 if the range makes no sense. Multi-range requests are legal and mostly a denial-of-service vector — cap them.",
+    keywords: "206 video seek resume partial download streaming",
+  },
+  {
+    name: "Accept-Ranges",
+    dir: "res",
+    purpose:
+      "Advertises that range requests work here. Two values in practice: bytes, or none.",
+    example: "Accept-Ranges: bytes",
+    note: "Without it, well-behaved download managers will not attempt a resume.",
+    keywords: "resume download",
+  },
+  {
+    name: "Content-Range",
+    dir: "res",
+    purpose:
+      "On a 206: which bytes these are, and how large the whole thing is.",
+    example: "Content-Range: bytes 0-1048575/7340032",
+    note: "An unsatisfiable range gets a 416 plus Content-Range: bytes */7340032 so the client learns the real size.",
+    keywords: "206 416 partial content",
+  },
+  {
+    name: "If-Range",
+    dir: "req",
+    purpose:
+      "Send the range only if the resource has not changed; otherwise send the whole thing.",
+    example: 'If-Range: "3f8a1c-1a4"',
+    note: "Saves a round-trip on a resumed download: you get a 206 if the file is untouched, a plain 200 if it is not, and never a corrupted splice.",
+    keywords: "resume download 206",
+  },
+];
+
+const CONTENT: HeaderRow[] = [
+  {
+    name: "Accept",
+    dir: "req",
+    purpose:
+      "Media types the client can handle, with q-weights expressing preference.",
+    example: "Accept: application/json;q=1.0, text/plain;q=0.5, */*;q=0.1",
+    note: "If nothing matches, the honest answer is 406. Most APIs ignore this and always return JSON, which is fine — just do not also advertise negotiation you do not do.",
+    keywords: "content negotiation 406 media type",
+  },
+  {
+    name: "Accept-Encoding",
+    dir: "req",
+    purpose: "Compression formats the client understands.",
+    example: "Accept-Encoding: gzip, br, zstd",
+    note: "The reason Vary: Accept-Encoding is mandatory on anything you compress at the origin.",
+    keywords: "gzip brotli zstd compression",
+  },
+  {
+    name: "Accept-Language",
+    dir: "req",
+    purpose: "Preferred human languages, weighted.",
+    example: "Accept-Language: en-GB, en;q=0.9, fr;q=0.7",
+    note: "Serving different copy per language without Vary: Accept-Language is the classic way to show a French page to an English visitor straight out of the cache.",
+    keywords: "i18n localisation content negotiation",
+  },
+  {
+    name: "Accept-Charset",
+    dir: "req",
+    purpose: "Character encodings the client accepts.",
+    example: "Accept-Charset: utf-8",
+    note: "Deprecated in RFC 9110. Browsers stopped sending it years ago, and everything is UTF-8.",
+    flag: "dead",
+    keywords: "encoding utf-8",
+  },
+  {
+    name: "Content-Type",
+    dir: "both",
+    purpose:
+      "The media type of the body, plus parameters such as charset and multipart boundary.",
+    example: "Content-Type: application/json; charset=utf-8",
+    note: "Always send charset on text types. A JSON body sent with no Content-Type is the single most common cause of a mysterious 415.",
+    keywords: "mime media type 415 charset",
+  },
+  {
+    name: "Content-Encoding",
+    dir: "res",
+    purpose:
+      "How the body was compressed. End-to-end: it stays compressed until the client decodes it.",
+    example: "Content-Encoding: br",
+    note: "Not the same thing as Transfer-Encoding, which is per-hop and can be undone by any proxy on the path.",
+    keywords: "gzip brotli compression",
+  },
+  {
+    name: "Content-Language",
+    dir: "res",
+    purpose:
+      "Which language the body is in — the answer to Accept-Language, and one of the seven headers CORS exposes by default.",
+    example: "Content-Language: en-GB",
+    keywords: "i18n",
+  },
+  {
+    name: "Content-Length",
+    dir: "both",
+    purpose: "Body size in bytes.",
+    example: "Content-Length: 34871",
+    note: "Sending Content-Length and Transfer-Encoding: chunked on the same HTTP/1.1 message is the foundation of request smuggling. A front end should reject that message, not pick a winner.",
+    keywords: "smuggling chunked framing",
+  },
+  {
+    name: "Content-Disposition",
+    dir: "res",
+    purpose: "Render inline or download, and what to call the file.",
+    example: 'Content-Disposition: attachment; filename="q3-report.csv"',
+    note: "For non-ASCII names use the filename* form with UTF-8 percent-encoding. Sanitise it either way — an unescaped filename is a header-injection hole.",
+    keywords: "download attachment inline filename",
+  },
+  {
+    name: "Content-Location",
+    dir: "res",
+    purpose:
+      "The direct URL of the representation you just received, when it differs from the URL you asked for.",
+    example: "Content-Location: /reports/q3.json",
+    note: "Not Location, and it redirects nothing. Mixing the two up produces bugs that survive code review because the names look alike.",
+    keywords: "representation url",
+  },
+  {
+    name: "Content-Digest",
+    dir: "both",
+    purpose: "A checksum of the body, carried as a structured field.",
+    example:
+      "Content-Digest: sha-256=:X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=:",
+    note: "RFC 9530, replacing the old Digest header. Useful on webhooks and uploads; compare in constant time when it feeds a signature check.",
+    keywords: "integrity checksum webhook rfc 9530",
+  },
+  {
+    name: "Transfer-Encoding",
+    dir: "both",
+    purpose:
+      "How the message body was framed on this hop — in practice, chunked.",
+    example: "Transfer-Encoding: chunked",
+    note: "HTTP/1.1 only. Forbidden in HTTP/2 and HTTP/3, which do their own framing.",
+    keywords: "chunked framing smuggling",
+  },
+  {
+    name: "TE",
+    dir: "req",
+    purpose:
+      "Transfer codings the client accepts on this hop, including trailer fields.",
+    example: "TE: trailers",
+    note: "Hop-by-hop, and one of the fields a smuggling-aware proxy should normalise rather than forward blindly.",
+    keywords: "trailers hop-by-hop",
+  },
+  {
+    name: "Allow",
+    dir: "res",
+    purpose: "The methods this resource supports. Required on a 405.",
+    example: "Allow: GET, HEAD, PUT, OPTIONS",
+    note: "A 405 without Allow leaves the caller guessing, which defeats the entire point of the status code.",
+    keywords: "405 method not allowed options",
+  },
+  {
+    name: "Location",
+    dir: "res",
+    purpose:
+      "Where to go next: the redirect target on a 3xx, or the URL of the thing you just created on a 201.",
+    example: "Location: /orders/1f9c2b",
+    note: "A 201 without a Location is a half-finished API. So is a 202 that gives you nowhere to poll.",
+    keywords: "redirect 301 302 201 created",
+  },
+  {
+    name: "Link",
+    dir: "res",
+    purpose:
+      "Typed relations to other URLs: pagination, preload, canonical, API discovery.",
+    example:
+      'Link: </orders?page=3>; rel="next", </app.css>; rel=preload; as=style',
+    note: "Paired with a 103 Early Hints response, rel=preload buys you asset fetches while the origin is still assembling the real answer.",
+    keywords: "pagination preload canonical early hints 103",
+  },
+];
+
+const CORS: HeaderRow[] = [
+  {
+    name: "Origin",
+    dir: "req",
+    purpose:
+      "Which origin the request came from. The browser sets it and page JavaScript cannot change it.",
+    example: "Origin: https://app.example.com",
+    note: "Sent on every cross-origin request and on same-origin POST too. It can legitimately be the literal string null — sandboxed iframes, some redirects — so never let null pass an allowlist check.",
+    keywords: "cors preflight csrf",
+  },
+  {
+    name: "Access-Control-Request-Method",
+    dir: "req",
+    purpose: "On a preflight: the method the real request is about to use.",
+    example: "Access-Control-Request-Method: PATCH",
+    note: "Only ever appears on the OPTIONS preflight, never on the request that follows it.",
+    keywords: "cors preflight options",
+  },
+  {
+    name: "Access-Control-Request-Headers",
+    dir: "req",
+    purpose:
+      "On a preflight: the non-safelisted headers the real request wants to send.",
+    example: "Access-Control-Request-Headers: authorization, content-type",
+    note: "This is why adding one custom header to a fetch call suddenly doubles your request count.",
+    keywords: "cors preflight options safelist",
+  },
+  {
+    name: "Access-Control-Allow-Origin",
+    dir: "res",
+    purpose:
+      "The single origin allowed to read this response — or the wildcard.",
+    example: "Access-Control-Allow-Origin: https://app.example.com",
+    note: "You may send one origin, never a list. Check the request Origin against your allowlist, echo it back, and add Vary: Origin the moment you do.",
+    keywords: "cors acao wildcard allowlist",
+  },
+  {
+    name: "Access-Control-Allow-Methods",
+    dir: "res",
+    purpose: "Preflight answer: which methods are permitted.",
+    example: "Access-Control-Allow-Methods: GET, POST, PATCH, DELETE",
+    note: "Only read on the preflight response. Sending it on real responses is harmless noise.",
+    keywords: "cors preflight",
+  },
+  {
+    name: "Access-Control-Allow-Headers",
+    dir: "res",
+    purpose: "Preflight answer: which request headers are permitted.",
+    example:
+      "Access-Control-Allow-Headers: Authorization, Content-Type, X-Request-Id",
+    note: "The wildcard does not cover Authorization. If your clients send a bearer token, you have to name that header explicitly or the preflight fails.",
+    keywords: "cors preflight authorization wildcard",
+  },
+  {
+    name: "Access-Control-Allow-Credentials",
+    dir: "res",
+    purpose:
+      "Lets the browser attach cookies and expose the response when the request used credentials: include.",
+    example: "Access-Control-Allow-Credentials: true",
+    note: "Illegal alongside a wildcard origin. Turn credentials on and every wildcard in the CORS set stops behaving as a wildcard.",
+    keywords: "cors cookies credentials include",
+  },
+  {
+    name: "Access-Control-Expose-Headers",
+    dir: "res",
+    purpose: "Which response headers JavaScript is allowed to read.",
+    example:
+      "Access-Control-Expose-Headers: RateLimit, X-Request-Id, Content-Digest",
+    note: "Without it, fetch sees only seven safelisted headers: Cache-Control, Content-Language, Content-Length, Content-Type, Expires, Last-Modified, Pragma. Your custom header is visible in DevTools and absent in code.",
+    keywords: "cors read headers fetch safelist",
+  },
+  {
+    name: "Access-Control-Max-Age",
+    dir: "res",
+    purpose:
+      "How long the browser may cache this preflight result, in seconds.",
+    example: "Access-Control-Max-Age: 600",
+    note: "The default is 5 seconds and browsers clamp the maximum — Chromium at 7200, Firefox at 86400. Anything larger is silently reduced, not honoured.",
+    keywords: "cors preflight cache latency",
+  },
+  {
+    name: "Timing-Allow-Origin",
+    dir: "res",
+    purpose:
+      "Lets a cross-origin page read detailed timings and Server-Timing for this resource.",
+    example: "Timing-Allow-Origin: https://app.example.com",
+    note: "Nothing to do with access control; it only unlocks measurement. Without it, cross-origin Resource Timing entries are mostly zeroes.",
+    keywords: "resource timing server-timing rum performance",
+  },
+];
+
+const SECURITY: HeaderRow[] = [
+  {
+    name: "Strict-Transport-Security",
+    dir: "res",
+    purpose:
+      "Forces HTTPS for this host for max-age seconds, with no click-through past certificate errors.",
+    example:
+      "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload",
+    note: "Ignored over plain HTTP by design. includeSubDomains covers hosts you forgot about; preload bakes you into browser binaries and is genuinely hard to undo. Ship a short max-age first.",
+    keywords: "hsts https tls downgrade preload",
+  },
+  {
+    name: "Content-Security-Policy",
+    dir: "res",
+    purpose:
+      "An allowlist of where scripts, styles, images, frames and connections are allowed to come from.",
+    example:
+      "Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-r4nd0m'; frame-ancestors 'none'; base-uri 'none'",
+    note: "The nonce or hash on script-src is the part that actually stops XSS. Leave 'unsafe-inline' in and the policy is decoration. Add base-uri or an injected base tag reroutes every relative script URL.",
+    keywords: "csp xss nonce frame-ancestors clickjacking",
+  },
+  {
+    name: "Content-Security-Policy-Report-Only",
+    dir: "res",
+    purpose: "The same policy, enforced nowhere, violations reported.",
+    example:
+      "Content-Security-Policy-Report-Only: default-src 'self'; report-to csp",
+    note: "Always run a new policy here first. Real traffic breaks a CSP in ways staging never will — analytics snippets, injected extensions, a marketing tag someone added last quarter.",
+    keywords: "csp report violations rollout",
+  },
+  {
+    name: "X-Content-Type-Options",
+    dir: "res",
+    purpose:
+      "Stops the browser guessing a media type that disagrees with your Content-Type.",
+    example: "X-Content-Type-Options: nosniff",
+    note: "One value, no downside, kills a whole class of upload-to-XSS. It also makes browsers refuse scripts and stylesheets served with the wrong type, which is how you find your broken MIME config.",
+    keywords: "nosniff mime sniffing upload xss",
+  },
+  {
+    name: "Referrer-Policy",
+    dir: "res",
+    purpose: "How much of the current URL is attached to outgoing requests.",
+    example: "Referrer-Policy: strict-origin-when-cross-origin",
+    note: "That value is already the browser default. Set it anyway, and use no-referrer on any page whose URL contains a token, an invite code, or a customer id.",
+    keywords: "referer privacy leak",
+  },
+  {
+    name: "Permissions-Policy",
+    dir: "res",
+    purpose: "Which browser capabilities this page and its frames may use.",
+    example: "Permissions-Policy: geolocation=(), camera=(), microphone=()",
+    note: "An empty allowlist disables the feature outright. Replaces Feature-Policy, which used different syntax and no longer ships.",
+    keywords: "feature policy camera microphone geolocation",
+  },
+  {
+    name: "X-Frame-Options",
+    dir: "res",
+    purpose:
+      "Blocks framing of this page. Two usable values: DENY, SAMEORIGIN.",
+    example: "X-Frame-Options: DENY",
+    note: "Superseded by CSP frame-ancestors, which takes an origin list and wins when both are present in a modern browser. ALLOW-FROM was never implemented widely and is gone.",
+    flag: "legacy",
+    keywords: "clickjacking iframe frame-ancestors",
+  },
+  {
+    name: "Cross-Origin-Opener-Policy",
+    dir: "res",
+    purpose:
+      "Severs the window.opener link between your document and cross-origin ones.",
+    example: "Cross-Origin-Opener-Policy: same-origin",
+    note: "Half of the cross-origin isolation pair, and worth setting on its own — it closes a family of tab-napping and cross-window probing attacks.",
+    keywords: "coop isolation opener tabnabbing",
+  },
+  {
+    name: "Cross-Origin-Embedder-Policy",
+    dir: "res",
+    purpose: "Requires every subresource to opt in to being embedded here.",
+    example: "Cross-Origin-Embedder-Policy: require-corp",
+    note: "The other half. COOP plus COEP gives you crossOriginIsolated, which SharedArrayBuffer and high-resolution timers require. It will also break every third-party embed that does not send CORP.",
+    keywords: "coep isolation sharedarraybuffer",
+  },
+  {
+    name: "Cross-Origin-Resource-Policy",
+    dir: "res",
+    purpose: "Declares who is allowed to embed this resource at all.",
+    example: "Cross-Origin-Resource-Policy: same-site",
+    note: "Set cross-origin on public CDN assets or you break every isolated site embedding them. Set same-origin on anything private and you get a cheap defence against speculative-execution style leaks.",
+    keywords: "corp embed cdn",
+  },
+  {
+    name: "Reporting-Endpoints",
+    dir: "res",
+    purpose:
+      "Names the URLs that CSP, COOP, deprecation and crash reports get posted to.",
+    example: 'Reporting-Endpoints: csp="https://example.com/reports/csp"',
+    note: "The structured-field replacement for Report-To. Referenced by name from the report-to directive inside a CSP.",
+    keywords: "reporting api csp report-to",
+  },
+  {
+    name: "Clear-Site-Data",
+    dir: "res",
+    purpose:
+      "Tells the browser to wipe cookies, storage or cache for this origin.",
+    example: 'Clear-Site-Data: "cookies", "storage"',
+    note: "The values are quoted strings — unquoted is a silent no-op. Send it on logout. HTTPS only, and cache clearing support varies.",
+    keywords: "logout session cookies storage wipe",
+  },
+  {
+    name: "X-XSS-Protection",
+    dir: "res",
+    purpose: "Toggled a legacy browser XSS auditor.",
+    example: "X-XSS-Protection: 0",
+    note: "The auditors were removed years ago and were themselves exploitable. If a compliance scanner insists, send 0. Otherwise delete it and write a real CSP.",
+    flag: "dead",
+    keywords: "xss auditor legacy scanner",
+  },
+  {
+    name: "Sec-Fetch-Site",
+    dir: "req",
+    purpose:
+      "Relationship between the requesting page and the target: same-origin, same-site, cross-site or none.",
+    example: "Sec-Fetch-Site: same-origin",
+    note: "Browser-set and unforgeable from JavaScript, which makes the Sec-Fetch family a cheap, cookie-free CSRF check that costs one string comparison.",
+    keywords: "fetch metadata csrf",
+  },
+  {
+    name: "Sec-Fetch-Mode",
+    dir: "req",
+    purpose:
+      "How the request was made: navigate, cors, no-cors, same-origin or websocket.",
+    example: "Sec-Fetch-Mode: cors",
+    note: "A state-changing POST arriving with mode navigate and site cross-site is a form submission from somebody else's page.",
+    keywords: "fetch metadata csrf",
+  },
+  {
+    name: "Sec-Fetch-Dest",
+    dir: "req",
+    purpose:
+      "What the response will be used for: document, script, image, style, empty, and so on.",
+    example: "Sec-Fetch-Dest: empty",
+    note: "Reject a request whose Dest is script but whose URL is your JSON API and you have closed a whole category of cross-site data leak.",
+    keywords: "fetch metadata leak",
+  },
+  {
+    name: "Sec-Fetch-User",
+    dir: "req",
+    purpose: "Present only when a navigation came from a real user gesture.",
+    example: "Sec-Fetch-User: ?1",
+    note: "Only sent on navigations, and only ever with that one value.",
+    keywords: "fetch metadata activation",
+  },
+];
+
+const AUTH: HeaderRow[] = [
+  {
+    name: "Authorization",
+    dir: "req",
+    purpose: "Credentials for the target resource.",
+    example: "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…",
+    note: "Its presence makes the response uncacheable by shared caches unless you explicitly say public or s-maxage. It is also the header the CORS wildcard refuses to cover.",
+    keywords: "bearer basic jwt token 401 api key",
+  },
+  {
+    name: "WWW-Authenticate",
+    dir: "res",
+    purpose:
+      "The challenge that must accompany a 401: which scheme, which realm, and usually why the last attempt failed.",
+    example:
+      'WWW-Authenticate: Bearer realm="api", error="invalid_token", error_description="expired"',
+    note: "A 401 without this header is malformed. It is also the difference between a client that knows to refresh its token and one that retries the same dead credential forever.",
+    keywords: "401 challenge bearer basic realm",
+  },
+  {
+    name: "Proxy-Authorization",
+    dir: "req",
+    purpose: "Credentials for the proxy in front of you, not for the origin.",
+    example: "Proxy-Authorization: Basic dXNlcjpwYXNz",
+    note: "Hop-by-hop: the proxy consumes it and must not forward it upstream.",
+    keywords: "407 proxy auth",
+  },
+  {
+    name: "Proxy-Authenticate",
+    dir: "res",
+    purpose: "The 407 equivalent of WWW-Authenticate.",
+    example: 'Proxy-Authenticate: Basic realm="corp-proxy"',
+    keywords: "407 proxy challenge",
+  },
+  {
+    name: "Authentication-Info",
+    dir: "res",
+    purpose:
+      "Extra data at the end of a successful authenticated exchange — a next nonce, mutual-auth proof.",
+    example: 'Authentication-Info: nextnonce="a1b2c3d4"',
+    note: "Digest and mutual schemes only. You will never write it by hand for a bearer-token API.",
+    keywords: "digest mutual nonce",
+  },
+  {
+    name: "Cookie",
+    dir: "req",
+    purpose:
+      "Every cookie whose domain, path and flags match, concatenated, with no indication of who set which.",
+    example: "Cookie: sid=8f3c1d…; theme=dark",
+    note: "Cookies ignore ports and largely ignore scheme, so localhost:3000 and localhost:8080 share one jar. That is a debugging trap, not a feature.",
+    keywords: "session jar samesite",
+  },
+  {
+    name: "Set-Cookie",
+    dir: "res",
+    purpose: "Sets one cookie, with its lifetime and its security flags.",
+    example:
+      "Set-Cookie: sid=8f3c1d…; Max-Age=3600; Path=/; Secure; HttpOnly; SameSite=Lax",
+    note: "The one header that legitimately repeats — never join them with commas. SameSite=Lax by default; SameSite=None is only valid with Secure. The __Host- prefix forces Secure, Path=/ and no Domain, and is the strongest cookie you can ship.",
+    keywords: "session httponly secure samesite __host prefix",
+  },
+];
+
+const RATE_LIMIT: HeaderRow[] = [
+  {
+    name: "RateLimit",
+    dir: "res",
+    purpose:
+      "Current quota state as a structured field: which policy, how many requests remain, seconds until reset.",
+    example: 'RateLimit: "default";r=42;t=28',
+    note: "From the IETF ratelimit-headers work. The field shape changed between drafts, so check the revision your library implements before you promise anything to clients.",
+    flag: "draft",
+    keywords: "429 quota throttling backoff",
+  },
+  {
+    name: "RateLimit-Policy",
+    dir: "res",
+    purpose:
+      "The policy itself — quota and window length — so a client can pace itself instead of probing for the wall.",
+    example: 'RateLimit-Policy: "default";q=100;w=60',
+    note: "Send this alongside RateLimit and a well-written client never needs to hit a 429 at all.",
+    flag: "draft",
+    keywords: "429 quota window",
+  },
+  {
+    name: "RateLimit-Limit",
+    dir: "res",
+    purpose: "Earlier-draft field: the quota for the current window.",
+    example: "RateLimit-Limit: 100",
+    note: "Superseded by RateLimit-Policy, but this triplet is still what most shipping implementations emit.",
+    flag: "draft",
+    keywords: "429 quota",
+  },
+  {
+    name: "RateLimit-Remaining",
+    dir: "res",
+    purpose: "Earlier-draft field: requests left in the current window.",
+    example: "RateLimit-Remaining: 42",
+    flag: "draft",
+    keywords: "429 quota",
+  },
+  {
+    name: "RateLimit-Reset",
+    dir: "res",
+    purpose: "Earlier-draft field: seconds until the window resets.",
+    example: "RateLimit-Reset: 28",
+    note: "Delta-seconds here — unlike the X- version, which is where most of the confusion comes from.",
+    flag: "draft",
+    keywords: "429 window reset",
+  },
+  {
+    name: "X-RateLimit-Limit",
+    dir: "res",
+    purpose: "The de-facto original. Quota for the window.",
+    example: "X-RateLimit-Limit: 5000",
+    flag: "de-facto",
+    keywords: "429 github quota",
+  },
+  {
+    name: "X-RateLimit-Remaining",
+    dir: "res",
+    purpose: "Requests left in the window.",
+    example: "X-RateLimit-Remaining: 4987",
+    note: "Expose it through CORS or your browser clients cannot read it and will keep guessing.",
+    flag: "de-facto",
+    keywords: "429 github quota",
+  },
+  {
+    name: "X-RateLimit-Reset",
+    dir: "res",
+    purpose: "When the window resets — and nobody agrees on the unit.",
+    example: "X-RateLimit-Reset: 1786527600",
+    note: "GitHub sends a Unix timestamp in seconds. Plenty of others send seconds remaining. A client that guesses wrong either hammers you immediately or sleeps for fifty-six years.",
+    flag: "de-facto",
+    keywords: "429 epoch seconds unit ambiguity",
+  },
+  {
+    name: "Retry-After",
+    dir: "res",
+    purpose:
+      "How long to wait before trying again — delta-seconds or an HTTP-date.",
+    example: "Retry-After: 30",
+    note: "Valid on 429, on 503, and on a 3xx. Sending it on a 503 during a bad deploy turns a retry storm into an orderly queue, which is the cheapest availability win in this table.",
+    keywords: "429 503 backoff retry storm",
+  },
+];
+
+const PROXY: HeaderRow[] = [
+  {
+    name: "X-Forwarded-For",
+    dir: "req",
+    purpose:
+      "The chain of client IPs, appended to by each proxy: original client first, nearest proxy last.",
+    example: "X-Forwarded-For: 203.0.113.7, 198.51.100.17, 10.0.0.4",
+    note: "Anyone can send this header. Count in from the right through exactly as many hops as you actually operate, and never read element zero blindly.",
+    flag: "de-facto",
+    keywords: "xff client ip real ip spoofing trusted proxy",
+  },
+  {
+    name: "X-Forwarded-Proto",
+    dir: "req",
+    purpose:
+      "The scheme the client originally used, before your load balancer terminated TLS.",
+    example: "X-Forwarded-Proto: https",
+    note: "Without it your app believes every request is plain HTTP and starts emitting http:// redirects that loop forever behind the balancer.",
+    flag: "de-facto",
+    keywords: "tls termination redirect loop https",
+  },
+  {
+    name: "X-Forwarded-Host",
+    dir: "req",
+    purpose: "The Host the client originally asked for.",
+    example: "X-Forwarded-Host: api.example.com",
+    note: "Build absolute URLs from this without an allowlist and you have host-header injection — including password-reset links that point at somebody else's domain.",
+    flag: "de-facto",
+    keywords: "host header injection absolute url",
+  },
+  {
+    name: "X-Forwarded-Port",
+    dir: "req",
+    purpose: "The port on the original client connection.",
+    example: "X-Forwarded-Port: 443",
+    flag: "de-facto",
+    keywords: "load balancer port",
+  },
+  {
+    name: "Forwarded",
+    dir: "req",
+    purpose: "The standardised version of all of the above, in one field.",
+    example:
+      'Forwarded: for="[2001:db8::7]:9382";proto=https;host=api.example.com;by=203.0.113.43',
+    note: "RFC 7239. Handles IPv6 and obfuscated identifiers properly, which X-Forwarded-For never did. Support is patchy, so most stacks emit both and trust neither by default.",
+    keywords: "rfc 7239 client ip proxy",
+  },
+  {
+    name: "X-Real-IP",
+    dir: "req",
+    purpose: "A single client IP. Nginx's convention.",
+    example: "X-Real-IP: 203.0.113.7",
+    note: "Whatever the closest proxy decided the client was. Exactly as forgeable as X-Forwarded-For if that proxy does not overwrite it on every request.",
+    flag: "de-facto",
+    keywords: "nginx client ip spoofing",
+  },
+  {
+    name: "Via",
+    dir: "both",
+    purpose: "Each proxy and cache that handled the message.",
+    example: "Via: 1.1 varnish, 1.1 vegur",
+    note: "The standard hop record, and a good way to discover an intermediary nobody told you about.",
+    keywords: "proxy hop cache trace",
+  },
+  {
+    name: "Host",
+    dir: "req",
+    purpose:
+      "Which virtual host on this connection the request is for. Mandatory in HTTP/1.1.",
+    example: "Host: api.example.com",
+    note: "HTTP/2 and HTTP/3 use the :authority pseudo-header instead. Either way it is caller-controlled input — validate it against known hosts before it reaches routing or URL generation.",
+    keywords: "virtual host authority injection routing",
+  },
+  {
+    name: "Connection",
+    dir: "both",
+    purpose:
+      "Per-hop connection control, plus the list of other fields that are hop-by-hop.",
+    example: "Connection: keep-alive",
+    note: "Forbidden in HTTP/2 and HTTP/3, where a connection-specific field is a protocol error rather than a nuisance.",
+    keywords: "keep-alive close hop-by-hop",
+  },
+  {
+    name: "Keep-Alive",
+    dir: "both",
+    purpose:
+      "Idle timeout and request cap for a persistent HTTP/1.1 connection.",
+    example: "Keep-Alive: timeout=5, max=1000",
+    note: "Set your client idle timeout below the server's or you will race it and see phantom connection resets under load.",
+    keywords: "persistent connection timeout reset",
+  },
+  {
+    name: "Upgrade",
+    dir: "both",
+    purpose:
+      "Ask to switch protocols on this connection — in practice, WebSocket.",
+    example: "Upgrade: websocket",
+    note: "Needs Connection: Upgrade beside it. Over HTTP/2 the mechanism is extended CONNECT instead, so a 101 never appears there.",
+    keywords: "websocket 101 switching protocols",
+  },
+  {
+    name: "Expect",
+    dir: "req",
+    purpose:
+      "One defined value: ask the server to approve the headers before you send a large body.",
+    example: "Expect: 100-continue",
+    note: "Saves uploading a gigabyte that a 413 was always going to reject. Some proxies mishandle it, which is why curl gives you an option to switch it off.",
+    keywords: "100 continue upload 413",
+  },
+  {
+    name: "Early-Data",
+    dir: "req",
+    purpose:
+      "Marks a request that arrived in TLS 1.3 0-RTT data and is therefore replayable.",
+    example: "Early-Data: 1",
+    note: "If the request is not idempotent, answer 425 Too Early and let the client resend on a fully established connection.",
+    keywords: "0-rtt tls 425 replay",
+  },
+  {
+    name: "Alt-Svc",
+    dir: "res",
+    purpose:
+      "Advertises the same service on another protocol or endpoint — how browsers discover HTTP/3.",
+    example: 'Alt-Svc: h3=":443"; ma=86400',
+    note: "Cached for ma seconds. It is the reason your first page load was HTTP/2 and the second was QUIC.",
+    keywords: "http3 quic alternative service",
+  },
+];
+
+const OBSERVABILITY: HeaderRow[] = [
+  {
+    name: "Date",
+    dir: "res",
+    purpose:
+      "When the response was generated at the origin. Caches do all their freshness arithmetic against it.",
+    example: "Date: Tue, 11 Aug 2026 22:03:11 GMT",
+    note: "A server with a badly skewed clock breaks Age and Expires maths in every cache along the path, and the symptom looks nothing like a clock problem.",
+    keywords: "clock skew cache freshness",
+  },
+  {
+    name: "Server",
+    dir: "res",
+    purpose: "The origin software.",
+    example: "Server: nginx",
+    note: "Free reconnaissance for anyone scanning you. Strip the version number at minimum — no client has ever needed it.",
+    keywords: "fingerprint version disclosure",
+  },
+  {
+    name: "User-Agent",
+    dir: "req",
+    purpose:
+      "Client software string, historically a stack of compatibility lies.",
+    example:
+      "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    note: "Frozen and reduced in Chromium. Do not branch behaviour on it — use feature detection, or client hints if you genuinely need the device.",
+    keywords: "browser detection client hints sniffing",
+  },
+  {
+    name: "Referer",
+    dir: "req",
+    purpose:
+      "The page that linked here. The spelling is a 1996 typo baked permanently into the standard.",
+    example: "Referer: https://example.com/blog/cdn-vs-cache/",
+    note: "Trimmed to the origin cross-site by default. Never use it for authorisation, and never put secrets in URLs that other sites can link to.",
+    keywords: "referrer policy analytics leak",
+  },
+  {
+    name: "Server-Timing",
+    dir: "res",
+    purpose:
+      "Server-side timings surfaced to the browser and to the Resource Timing API.",
+    example: 'Server-Timing: db;dur=53.2, cache;desc="hit";dur=0.4',
+    note: "Cross-origin it is invisible unless you also send Timing-Allow-Origin. Real backend telemetry inside the browser's own waterfall, for the cost of one header.",
+    keywords: "performance rum telemetry waterfall",
+  },
+  {
+    name: "traceparent",
+    dir: "req",
+    purpose:
+      "W3C Trace Context: trace id, parent span id and sampling flag for distributed tracing.",
+    example:
+      "traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+    note: "Propagate it verbatim through every hop, including queue messages. Dropping it in one service is how a single trace ends up as two unrelated ones.",
+    keywords: "opentelemetry distributed tracing span",
+  },
+  {
+    name: "tracestate",
+    dir: "req",
+    purpose: "Vendor-specific tracing state travelling beside traceparent.",
+    example: "tracestate: rojo=00f067aa0ba902b7,congo=t61rcWkgMzE",
+    keywords: "opentelemetry vendor tracing",
+  },
+  {
+    name: "X-Request-ID",
+    dir: "both",
+    purpose:
+      "A correlation id you can grep for across every service and every log line.",
+    example: "X-Request-ID: 01JCX9F0Z6QG3Y6M5R8P2N4TVA",
+    note: "Generate it at the edge when the client did not send one, echo it on the response, and put it in every error body. Not standard, universally understood.",
+    flag: "de-facto",
+    keywords: "correlation id logging support debugging",
+  },
+  {
+    name: "X-Robots-Tag",
+    dir: "res",
+    purpose:
+      "Indexing rules for crawlers, for responses that cannot carry a meta tag.",
+    example: "X-Robots-Tag: noindex, nofollow",
+    note: "The only way to keep a PDF, a JSON endpoint, or an entire staging environment out of an index.",
+    flag: "de-facto",
+    keywords: "seo noindex crawler staging",
+  },
+  {
+    name: "Priority",
+    dir: "both",
+    purpose:
+      "Request urgency, and whether the response should be delivered incrementally.",
+    example: "Priority: u=1, i",
+    note: "RFC 9218. Urgency runs 0 to 7, defaults to 3, and lower is more urgent. Servers may honour it or ignore it entirely.",
+    keywords: "http2 http3 prioritisation",
+  },
+];
+
+const TOTAL =
+  CACHING.length +
+  DIRECTIVES.length +
+  CONDITIONAL.length +
+  CONTENT.length +
+  CORS.length +
+  SECURITY.length +
+  AUTH.length +
+  RATE_LIMIT.length +
+  PROXY.length +
+  OBSERVABILITY.length;
+
+const JUMP = [
+  { href: "#caching", label: "Caching" },
+  { href: "#conditional", label: "Conditional + range" },
+  { href: "#content", label: "Content" },
+  { href: "#cors", label: "CORS" },
+  { href: "#security", label: "Security" },
+  { href: "#auth", label: "Auth + cookies" },
+  { href: "#rate-limiting", label: "Rate limiting" },
+  { href: "#proxy", label: "Proxy + connection" },
+  { href: "#observability", label: "Observability" },
+];
+
+const faq = [
+  {
+    q: "What is the difference between Cache-Control no-cache and no-store?",
+    a: "no-cache lets caches store the response but forbids reusing it without revalidating with the origin first, so you normally get a cheap 304 with no body. no-store forbids writing it to storage at all and is the only directive that really means do not cache. Use no-cache on HTML you want fresh but cheap, and no-store on responses carrying credentials or personal data.",
+  },
+  {
+    q: "What does the Vary header do?",
+    a: "Vary lists the request headers a cache must include in its cache key because they changed which representation you returned. If you compress based on Accept-Encoding, translate based on Accept-Language, or echo an Origin into Access-Control-Allow-Origin, those headers belong in Vary. Leave one out and a shared cache will serve the wrong variant to the next visitor, which looks exactly like a random bug and is really a missing header.",
+  },
+  {
+    q: "Which headers are needed for a CORS preflight request?",
+    a: "The browser sends OPTIONS with Origin and Access-Control-Request-Method, plus Access-Control-Request-Headers when the real request carries non-safelisted headers. Your server answers with Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headers, and optionally Access-Control-Max-Age and Access-Control-Allow-Credentials. Two traps: the wildcard in Allow-Headers does not cover Authorization, and a wildcard origin is illegal once credentials are allowed.",
+  },
+  {
+    q: "Is X-Frame-Options still needed if I have CSP frame-ancestors?",
+    a: "Not for any browser released in the last decade. frame-ancestors supersedes X-Frame-Options, accepts a list of origins rather than one keyword, and wins when both headers are present. Keeping X-Frame-Options costs you nothing and covers very old clients, but if the two ever disagree, the CSP is the one that takes effect.",
+  },
+  {
+    q: "How do I get the real client IP behind a load balancer?",
+    a: "Read X-Forwarded-For or the RFC 7239 Forwarded header, but only after you decide which hops you trust. The header is a list that anyone can pre-seed, so parse it from the rightmost entry inward, skipping exactly as many addresses as you operate proxies, and take the first address beyond them. Frameworks call this the trusted proxy list, and configuring it is what turns a spoofable header into a usable one.",
+  },
+  {
+    q: "What is the difference between the RateLimit and X-RateLimit headers?",
+    a: "X-RateLimit-Limit, -Remaining and -Reset are the de-facto convention popularised by GitHub and copied everywhere, with no specification and no agreement on whether Reset is a Unix timestamp or seconds remaining. RateLimit and RateLimit-Policy come from the IETF ratelimit-headers work and use structured fields with explicit remaining, reset and quota parameters. Emit both if you have public clients, and always document the unit of your reset value.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: PAGE_TITLE,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/http-headers/", SITE.URL).href,
+  description: PAGE_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const related = [
+  {
+    href: "/blog/cdn-vs-cache/",
+    label: "CDN vs cache",
+    note: "Where Cache-Control, s-maxage and Vary actually land once there is an edge between you and the browser.",
+  },
+  {
+    href: "/blog/forward-proxy-vs-reverse-proxy/",
+    label: "Forward proxy vs reverse proxy",
+    note: "Which box is adding X-Forwarded-For, and why the direction decides whether you can trust it.",
+  },
+  {
+    href: "/blog/load-balancer-vs-reverse-proxy/",
+    label: "Load balancer vs reverse proxy",
+    note: "The hop that terminates TLS is the one that has to set X-Forwarded-Proto. Here is what sits where.",
+  },
+  {
+    href: "/blog/rate-limiting-vs-throttling/",
+    label: "Rate limiting vs throttling",
+    note: "The design behind RateLimit and Retry-After: buckets, windows, and what a 429 should actually say.",
+  },
+  {
+    href: "/tools/http-status-codes/",
+    label: "HTTP Status Codes",
+    note: "The other half of the response. Every 1xx to 5xx code and the headers each one obliges you to send.",
+  },
+  {
+    href: "/tools/jwt-decoder/",
+    label: "JWT Decoder",
+    note: "Paste the token out of an Authorization header and read its claims, algorithm and expiry.",
+  },
+];
+---
+
+<Page
+  title={PAGE_TITLE}
+  description={PAGE_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="HTTP Headers."
+  intro="Every request and response header that earns its place in production — what it does, a value you would really see on the wire, and the trap that comes with it. Type in the box to filter the whole reference."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Static page
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        The whole reference is server-rendered HTML. The only script here is the
+        filter box, and it never sends anything anywhere.
+      </p>
+    </StickyNote>
+  </section>
+
+  <div id="http-headers-root">
+    <section class="mx-auto max-w-5xl px-5 pb-10">
+      <div id="http-headers-controls" hidden>
+        <NeoCard tone="paper" shadow="md" class="space-y-4">
+          <div>
+            <label
+              for="http-headers-input"
+              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
+            >
+              Filter headers and directives
+            </label>
+            <div class="flex flex-wrap items-center gap-2">
+              <input
+                id="http-headers-input"
+                type="search"
+                placeholder="cors, cache-control, hsts, client ip…"
+                spellcheck="false"
+                autocomplete="off"
+                class="border-ink bg-paper shadow-neo-sm min-w-0 flex-1 rounded-[4px] border-[3px] px-4 py-3 font-mono text-base font-bold focus:outline-none"
+              />
+              <button
+                type="button"
+                id="http-headers-clear"
+                hidden
+                class="border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-2 rounded-[4px] border-[2.5px] px-3 py-2.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+              >
+                <Icon name="lucide:x" class="h-3.5 w-3.5" aria-hidden="true" />
+                Clear
+              </button>
+            </div>
+            <p
+              id="http-headers-count"
+              aria-live="polite"
+              class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-70"
+            >
+              Showing all {TOTAL} entries.
+            </p>
+          </div>
+
+          <div class="border-ink border-t-[2.5px] pt-4">
+            <p
+              class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70"
+            >
+              Jump to
+            </p>
+            <div class="flex flex-wrap gap-2">
+              {
+                JUMP.map((j) => (
+                  <a
+                    href={j.href}
+                    class="border-ink bg-bg-alt mono shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+                  >
+                    {j.label}
+                  </a>
+                ))
+              }
+            </div>
+          </div>
+
+          <div class="border-ink border-t-[2.5px] pt-4">
+            <p
+              class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70"
+            >
+              Badges
+            </p>
+            <ul class="flex flex-wrap items-center gap-2">
+              {
+                (["req", "res", "both"] as const).map((d) => (
+                  <li
+                    class:list={[
+                      "mono border-ink border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                      DIR_CLASS[d],
+                    ]}
+                  >
+                    {DIR_LABEL[d]}
+                  </li>
+                ))
+              }
+              {
+                (["legacy", "de-facto", "draft", "dead"] as const).map(
+                  (flag) => (
+                    <li
+                      class:list={[
+                        "mono border-ink border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        FLAG_CLASS[flag],
+                      ]}
+                    >
+                      {FLAG_LABEL[flag]}
+                    </li>
+                  ),
+                )
+              }
+              <li class="text-[12px] leading-snug opacity-70">
+                De facto means no RFC defines it and everyone ships it anyway.
+                Dead means delete it.
+              </li>
+            </ul>
+          </div>
+        </NeoCard>
+      </div>
+
+      <div id="http-headers-empty" class="mt-6" hidden>
+        <NeoCard tone="yellow" shadow="md">
+          <p class="heading text-xl uppercase">
+            Nothing matches “<span id="http-headers-term"></span>”
+          </p>
+          <p class="mt-2 text-sm leading-relaxed">
+            The filter matches the header name, the description, the example
+            value and a few synonyms. Try a field name (<span class="mono"
+              >etag</span
+            >), a concept (<span class="mono">preflight</span>, <span
+              class="mono">client ip</span
+            >), or a status code (<span class="mono">429</span>).
+          </p>
+        </NeoCard>
+      </div>
+    </section>
+
+    <!-- Caching -->
+    <section
+      id="caching"
+      data-header-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">Caching and revalidation</h2>
+      <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          Caching headers are the highest-leverage lines of config you will
+          write all quarter. A correct <span class="mono">Cache-Control</span> on
+          a hot endpoint removes more load than a week of query tuning, and a wrong
+          one serves the wrong body to the wrong person from a machine you do not
+          operate.
+        </p>
+        <p>
+          Two mental models make the rest of this section obvious. First,
+          freshness is measured at the origin, not at you: a response with
+          <span class="mono">max-age=600</span> that has been sitting in a CDN for
+          nine minutes has sixty seconds left, and <span class="mono">Age</span> is
+          how you find that out. Second, every response is stored under a key, and
+          that key is the URL <em>plus</em> whatever <span class="mono"
+            >Vary</span
+          > says. Everything that goes wrong with caches is one of those two facts
+          being ignored.
+        </p>
+      </div>
+
+      <div
+        data-header-table
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <caption class="sr-only">Caching and revalidation headers</caption>
+          <thead>
+            <tr class="bg-cyan">
+              <th
+                scope="col"
+                class="mono border-ink w-[14rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Header</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it does</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[18rem] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Example</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              CACHING.map((h) => (
+                <tr
+                  data-header-row
+                  data-header-keywords={h.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="mono block text-[13px] leading-tight font-bold break-words">
+                      {h.name}
+                    </span>
+                    <span
+                      class:list={[
+                        "mono border-ink mt-2 inline-block border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        DIR_CLASS[h.dir],
+                      ]}
+                    >
+                      {DIR_LABEL[h.dir]}
+                    </span>
+                    {h.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-1.5 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[h.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[h.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{h.purpose}</p>
+                    {h.note && (
+                      <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                        {h.note}
+                      </p>
+                    )}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3">
+                    <code class="mono block text-[12px] leading-snug break-words">
+                      {h.example}
+                    </code>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div data-header-prose class="mt-10 max-w-3xl space-y-3 leading-relaxed">
+        <h3 class="heading text-xl uppercase">
+          Cache-Control, directive by directive
+        </h3>
+        <p>
+          Almost every caching argument I have sat through was really an
+          argument about one of these words. They combine, they contradict each
+          other, and several of them mean different things depending on which
+          side of the exchange they appear on.
+        </p>
+      </div>
+
+      <div
+        data-header-table
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <caption class="sr-only">Cache-Control directives</caption>
+          <thead>
+            <tr class="bg-yellow">
+              <th
+                scope="col"
+                class="mono border-ink w-[14rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Directive</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it does</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[18rem] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Example</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              DIRECTIVES.map((h) => (
+                <tr
+                  data-header-row
+                  data-header-keywords={h.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="mono block text-[13px] leading-tight font-bold break-words">
+                      {h.name}
+                    </span>
+                    <span
+                      class:list={[
+                        "mono border-ink mt-2 inline-block border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        DIR_CLASS[h.dir],
+                      ]}
+                    >
+                      {DIR_LABEL[h.dir]}
+                    </span>
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{h.purpose}</p>
+                    {h.note && (
+                      <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                        {h.note}
+                      </p>
+                    )}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3">
+                    <code class="mono block text-[12px] leading-snug break-words">
+                      {h.example}
+                    </code>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div data-header-prose class="mt-8 grid gap-6 md:grid-cols-2">
+        <NeoCard tone="red" shadow="lg">
+          <p class="mono text-[11px] font-bold tracking-widest uppercase">
+            ▸ Classic mistake #1
+          </p>
+          <h3 class="heading mt-2 text-xl uppercase">
+            no-cache does not mean do not cache
+          </h3>
+          <p class="mt-3 text-sm leading-relaxed">
+            <span class="mono">no-cache</span> means store it and revalidate before
+            every reuse. The cache keeps a copy, sends a conditional request with
+            the ETag, and usually gets back a 304 with no body at all. That is a fast,
+            cheap, correct outcome and it is exactly what you want on HTML.
+          </p>
+          <p class="mt-3 text-sm leading-relaxed">
+            The directive that means what people think <span class="mono"
+              >no-cache</span
+            > means is <span class="mono">no-store</span>. If a response
+            contains a session token, an invoice, or someone's address, that is
+            the one you need — and it should be paired with <span class="mono"
+              >private</span
+            >
+            so an old intermediary that misreads one of them still gets the message.
+          </p>
+        </NeoCard>
+
+        <NeoCard tone="red" shadow="lg">
+          <p class="mono text-[11px] font-bold tracking-widest uppercase">
+            ▸ Classic mistake #2
+          </p>
+          <h3 class="heading mt-2 text-xl uppercase">
+            A missing Vary poisons the edge
+          </h3>
+          <p class="mt-3 text-sm leading-relaxed">
+            You gzip based on <span class="mono">Accept-Encoding</span>. You
+            pick a language from <span class="mono">Accept-Language</span>. You
+            echo the caller's <span class="mono">Origin</span> into <span
+              class="mono">Access-Control-Allow-Origin</span
+            >. Each of those makes the response depend on a request header — and
+            if that header is not in <span class="mono">Vary</span>, the cache
+            stores one variant under a key that does not mention it.
+          </p>
+          <p class="mt-3 text-sm leading-relaxed">
+            Then a different client asks, gets a hit, and receives a Brotli body
+            it cannot decode, a French page it cannot read, or another tenant's
+            CORS grant. It looks random, it is not reproducible locally, and it
+            is one header. Audit this whenever a response body depends on
+            anything except the URL.
+          </p>
+        </NeoCard>
+      </div>
+    </section>
+
+    <!-- Conditional requests and ranges -->
+    <section
+      id="conditional"
+      data-header-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">
+        Conditional requests and ranges
+      </h2>
+      <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          The validators in the previous section save bandwidth. The ones here
+          save correctness. <span class="mono">If-Match</span> on a PUT or PATCH turns
+          a blind overwrite into a compare-and-swap: the server accepts the write
+          only while the ETag you read still matches, and returns 412 otherwise. That
+          is the difference between two tabs merging and two tabs silently destroying
+          each other's edits.
+        </p>
+        <p>
+          Ranges are the other half. <span class="mono">Range</span> plus
+          <span class="mono">If-Range</span> is how video seeking and resumable downloads
+          work: ask for the bytes you are missing, and let the server hand back the
+          whole file instead if it changed underneath you. Your static file server
+          and CDN already implement all of this; the reason to know it is so you can
+          tell whether a 206 in your logs is a feature or an attack.
+        </p>
+      </div>
+
+      <div
+        data-header-table
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <caption class="sr-only">
+            Conditional request and range headers
+          </caption>
+          <thead>
+            <tr class="bg-green">
+              <th
+                scope="col"
+                class="mono border-ink w-[14rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Header</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it does</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[18rem] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Example</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              CONDITIONAL.map((h) => (
+                <tr
+                  data-header-row
+                  data-header-keywords={h.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="mono block text-[13px] leading-tight font-bold break-words">
+                      {h.name}
+                    </span>
+                    <span
+                      class:list={[
+                        "mono border-ink mt-2 inline-block border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        DIR_CLASS[h.dir],
+                      ]}
+                    >
+                      {DIR_LABEL[h.dir]}
+                    </span>
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{h.purpose}</p>
+                    {h.note && (
+                      <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                        {h.note}
+                      </p>
+                    )}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3">
+                    <code class="mono block text-[12px] leading-snug break-words">
+                      {h.example}
+                    </code>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Content -->
+    <section
+      id="content"
+      data-header-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">
+        Content negotiation and payload
+      </h2>
+      <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          This group describes the body: what format it is in, how it was
+          compressed, how long it is, and what the client would have preferred.
+          Most APIs use about a third of it and ignore the rest, which is a
+          defensible choice — the trouble starts when you half-implement
+          negotiation and forget the <span class="mono">Vary</span> that makes it
+          safe behind a cache.
+        </p>
+        <p>
+          Two distinctions are worth burning in.
+          <span class="mono">Content-Encoding</span> is end-to-end compression that
+          the client decodes; <span class="mono">Transfer-Encoding</span> is per-hop
+          framing that any proxy may undo. And <span class="mono"
+            >Content-Location</span
+          > is not <span class="mono">Location</span>: one tells you where the
+          representation you just got actually lives, the other tells the client
+          to go somewhere else.
+        </p>
+      </div>
+
+      <div
+        data-header-table
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <caption class="sr-only">
+            Content negotiation and payload headers
+          </caption>
+          <thead>
+            <tr class="bg-cyan">
+              <th
+                scope="col"
+                class="mono border-ink w-[14rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Header</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it does</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[18rem] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Example</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              CONTENT.map((h) => (
+                <tr
+                  data-header-row
+                  data-header-keywords={h.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="mono block text-[13px] leading-tight font-bold break-words">
+                      {h.name}
+                    </span>
+                    <span
+                      class:list={[
+                        "mono border-ink mt-2 inline-block border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        DIR_CLASS[h.dir],
+                      ]}
+                    >
+                      {DIR_LABEL[h.dir]}
+                    </span>
+                    {h.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-1.5 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[h.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[h.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{h.purpose}</p>
+                    {h.note && (
+                      <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                        {h.note}
+                      </p>
+                    )}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3">
+                    <code class="mono block text-[12px] leading-snug break-words">
+                      {h.example}
+                    </code>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CORS -->
+    <section id="cors" data-header-group class="mx-auto max-w-5xl px-5 pb-14">
+      <h2 class="display text-2xl uppercase">CORS and the preflight</h2>
+      <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          CORS is a browser mechanism for relaxing the same-origin policy, and
+          nearly all of the confusion around it comes from reading it backwards.
+          The default is that a page may <em>send</em> a cross-origin request but
+          may not <em>read</em> the response. CORS headers are the origin server saying
+          "this particular caller is allowed to read me". They do not gate the request;
+          they gate the reply.
+        </p>
+        <p>
+          Anything beyond a simple GET or form-shaped POST triggers a preflight:
+          a separate <span class="mono">OPTIONS</span> request carrying
+          <span class="mono">Origin</span> and
+          <span class="mono">Access-Control-Request-Method</span>, plus
+          <span class="mono">Access-Control-Request-Headers</span> if you set anything
+          non-safelisted. The browser will not send the real request until that comes
+          back approved, which is why one extra custom header can double your request
+          count and add a round-trip to every call. Raise
+          <span class="mono">Access-Control-Max-Age</span> and most of that cost goes
+          away.
+        </p>
+      </div>
+
+      <div
+        data-header-table
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <caption class="sr-only">CORS request and response headers</caption>
+          <thead>
+            <tr class="bg-pink">
+              <th
+                scope="col"
+                class="mono border-ink w-[14rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Header</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it does</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[18rem] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Example</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              CORS.map((h) => (
+                <tr
+                  data-header-row
+                  data-header-keywords={h.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="mono block text-[13px] leading-tight font-bold break-words">
+                      {h.name}
+                    </span>
+                    <span
+                      class:list={[
+                        "mono border-ink mt-2 inline-block border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        DIR_CLASS[h.dir],
+                      ]}
+                    >
+                      {DIR_LABEL[h.dir]}
+                    </span>
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{h.purpose}</p>
+                    {h.note && (
+                      <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                        {h.note}
+                      </p>
+                    )}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3">
+                    <code class="mono block text-[12px] leading-snug break-words">
+                      {h.example}
+                    </code>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div data-header-prose class="mt-8">
+        <NeoCard tone="red" shadow="lg">
+          <p class="mono text-[11px] font-bold tracking-widest uppercase">
+            ▸ Classic mistake #3
+          </p>
+          <h3 class="heading mt-2 text-xl uppercase">
+            CORS is not a security boundary
+          </h3>
+          <p class="mt-3 text-sm leading-relaxed">
+            A permissive <span class="mono">Access-Control-Allow-Origin</span> does
+            not open your API to attackers, and a strict one does not protect it.
+            Every request a browser blocks on CORS grounds still reaches your server
+            and still runs; the browser only refuses to hand the response back to
+            the script. And curl, a proxy, a mobile app and every server-side HTTP
+            client ignore the whole mechanism, because CORS is enforced by browsers,
+            not by servers.
+          </p>
+          <p class="mt-3 text-sm leading-relaxed">
+            So: authorise every request on its own merits, and treat CORS as
+            what it is — a rule about which web origins may read your responses.
+            Two things there do carry real weight. Reflecting any
+            <span class="mono">Origin</span> you are handed while also sending
+            <span class="mono">Access-Control-Allow-Credentials: true</span> hands
+            every site on the internet a session-authenticated read of your API. And
+            an allowlist that matches on
+            <span class="mono">endsWith</span> lets
+            <span class="mono">evil-example.com</span> through when you meant
+            <span class="mono">example.com</span>. Compare full origins,
+            exactly.
+          </p>
+        </NeoCard>
+      </div>
+    </section>
+
+    <!-- Security -->
+    <section
+      id="security"
+      data-header-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">Security headers</h2>
+      <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          There are four of these you should ship on every HTML response before
+          you argue about anything else:
+          <span class="mono">Strict-Transport-Security</span>,
+          <span class="mono">X-Content-Type-Options: nosniff</span>,
+          <span class="mono">Referrer-Policy</span>, and a
+          <span class="mono">Content-Security-Policy</span> with
+          <span class="mono">frame-ancestors</span>. That set costs nothing,
+          breaks nothing, and removes protocol downgrades, MIME-sniffing XSS,
+          URL leakage through the referrer, and clickjacking.
+        </p>
+        <p>
+          The CSP is the one that takes real work, and the only part that
+          actually stops cross-site scripting is a nonce or hash on
+          <span class="mono">script-src</span>. A policy containing
+          <span class="mono">'unsafe-inline'</span> is a compliance artifact, not
+          a defence. Roll a new one out through
+          <span class="mono">Content-Security-Policy-Report-Only</span> first, watch
+          the reports for a week of real traffic, then enforce. On the request side,
+          the <span class="mono">Sec-Fetch-</span> family is the sleeper: browsers
+          set it, pages cannot forge it, and comparing three strings gives you CSRF
+          protection that needs no token and no session state.
+        </p>
+      </div>
+
+      <div
+        data-header-table
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <caption class="sr-only">Security headers</caption>
+          <thead>
+            <tr class="bg-yellow">
+              <th
+                scope="col"
+                class="mono border-ink w-[14rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Header</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it does</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[18rem] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Example</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              SECURITY.map((h) => (
+                <tr
+                  data-header-row
+                  data-header-keywords={h.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="mono block text-[13px] leading-tight font-bold break-words">
+                      {h.name}
+                    </span>
+                    <span
+                      class:list={[
+                        "mono border-ink mt-2 inline-block border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        DIR_CLASS[h.dir],
+                      ]}
+                    >
+                      {DIR_LABEL[h.dir]}
+                    </span>
+                    {h.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-1.5 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[h.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[h.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{h.purpose}</p>
+                    {h.note && (
+                      <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                        {h.note}
+                      </p>
+                    )}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3">
+                    <code class="mono block text-[12px] leading-snug break-words">
+                      {h.example}
+                    </code>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Auth -->
+    <section id="auth" data-header-group class="mx-auto max-w-5xl px-5 pb-14">
+      <h2 class="display text-2xl uppercase">Auth, cookies and sessions</h2>
+      <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          Two things in this group catch people out. First,
+          <span class="mono">Authorization</span> changes how your response is cached:
+          a shared cache must not store it unless you explicitly opt in with
+          <span class="mono">public</span> or <span class="mono">s-maxage</span
+          >. That protection is real, and so is the footgun — adding
+          <span class="mono">public</span> out of habit to an authenticated endpoint
+          is how one customer's data ends up served to another from a CDN.
+        </p>
+        <p>
+          Second, <span class="mono">Set-Cookie</span> is the only header that legitimately
+          appears many times in one response, and it must never be folded into a comma-separated
+          list. Plenty of HTTP client libraries have shipped that bug. If you are
+          writing one, keep the raw multi-value list; if you are using one, check
+          before you trust
+          <span class="mono">headers.get</span>.
+        </p>
+      </div>
+
+      <div
+        data-header-table
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <caption class="sr-only">
+            Authentication, cookie and session headers
+          </caption>
+          <thead>
+            <tr class="bg-green">
+              <th
+                scope="col"
+                class="mono border-ink w-[14rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Header</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it does</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[18rem] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Example</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              AUTH.map((h) => (
+                <tr
+                  data-header-row
+                  data-header-keywords={h.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="mono block text-[13px] leading-tight font-bold break-words">
+                      {h.name}
+                    </span>
+                    <span
+                      class:list={[
+                        "mono border-ink mt-2 inline-block border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        DIR_CLASS[h.dir],
+                      ]}
+                    >
+                      {DIR_LABEL[h.dir]}
+                    </span>
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{h.purpose}</p>
+                    {h.note && (
+                      <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                        {h.note}
+                      </p>
+                    )}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3">
+                    <code class="mono block text-[12px] leading-snug break-words">
+                      {h.example}
+                    </code>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Rate limiting -->
+    <section
+      id="rate-limiting"
+      data-header-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">Rate limiting and retries</h2>
+      <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          A 429 with no headers is a wall in the dark. The client learns it was
+          refused and nothing about when to come back, so it retries
+          immediately, gets refused again, and turns your rate limiter into a
+          load generator. One <span class="mono">Retry-After</span> fixes that, and
+          it is the single highest-value header in this section.
+        </p>
+        <p>
+          Beyond that there are two competing conventions. The
+          <span class="mono">X-RateLimit-</span> triplet is the de-facto original,
+          specified nowhere, with no agreement on whether the reset value is a Unix
+          timestamp or a countdown. The IETF work — <span class="mono"
+            >RateLimit</span
+          > and <span class="mono">RateLimit-Policy</span> — fixes that with structured
+          fields and explicit parameters, but it is still a draft and the shape has
+          changed between revisions. If you run a public API, emit both, document
+          the unit in plain words, and remember to list them in
+          <span class="mono">Access-Control-Expose-Headers</span> or your browser
+          clients will never see them.
+        </p>
+      </div>
+
+      <div
+        data-header-table
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <caption class="sr-only">Rate limiting and retry headers</caption>
+          <thead>
+            <tr class="bg-pink">
+              <th
+                scope="col"
+                class="mono border-ink w-[14rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Header</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it does</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[18rem] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Example</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              RATE_LIMIT.map((h) => (
+                <tr
+                  data-header-row
+                  data-header-keywords={h.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="mono block text-[13px] leading-tight font-bold break-words">
+                      {h.name}
+                    </span>
+                    <span
+                      class:list={[
+                        "mono border-ink mt-2 inline-block border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        DIR_CLASS[h.dir],
+                      ]}
+                    >
+                      {DIR_LABEL[h.dir]}
+                    </span>
+                    {h.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-1.5 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[h.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[h.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{h.purpose}</p>
+                    {h.note && (
+                      <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                        {h.note}
+                      </p>
+                    )}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3">
+                    <code class="mono block text-[12px] leading-snug break-words">
+                      {h.example}
+                    </code>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Proxy -->
+    <section id="proxy" data-header-group class="mx-auto max-w-5xl px-5 pb-14">
+      <h2 class="display text-2xl uppercase">
+        Proxies, forwarding, connection
+      </h2>
+      <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          The moment anything sits in front of your application — a load
+          balancer, a CDN, an ingress controller — the connection your code sees
+          is not the connection the user made. The client IP belongs to the
+          proxy, the scheme is plain HTTP because TLS was terminated a hop ago,
+          and the Host may have been rewritten. The
+          <span class="mono">X-Forwarded-</span> family exists to carry the original
+          facts across that gap, and <span class="mono">Forwarded</span> is the standardised
+          version nobody quite finished adopting.
+        </p>
+        <p>
+          Every one of these is written by whoever is upstream, which includes
+          the caller. That is the whole problem, and it is covered below.
+        </p>
+      </div>
+
+      <div
+        data-header-table
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <caption class="sr-only">
+            Proxy, forwarding and connection headers
+          </caption>
+          <thead>
+            <tr class="bg-cyan">
+              <th
+                scope="col"
+                class="mono border-ink w-[14rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Header</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it does</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[18rem] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Example</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              PROXY.map((h) => (
+                <tr
+                  data-header-row
+                  data-header-keywords={h.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="mono block text-[13px] leading-tight font-bold break-words">
+                      {h.name}
+                    </span>
+                    <span
+                      class:list={[
+                        "mono border-ink mt-2 inline-block border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        DIR_CLASS[h.dir],
+                      ]}
+                    >
+                      {DIR_LABEL[h.dir]}
+                    </span>
+                    {h.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-1.5 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[h.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[h.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{h.purpose}</p>
+                    {h.note && (
+                      <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                        {h.note}
+                      </p>
+                    )}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3">
+                    <code class="mono block text-[12px] leading-snug break-words">
+                      {h.example}
+                    </code>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div data-header-prose class="mt-8">
+        <NeoCard tone="red" shadow="lg">
+          <p class="mono text-[11px] font-bold tracking-widest uppercase">
+            ▸ Classic mistake #4
+          </p>
+          <h3 class="heading mt-2 text-xl uppercase">
+            Trusting X-Forwarded-For without a trusted-proxy list
+          </h3>
+          <p class="mt-3 text-sm leading-relaxed">
+            <span class="mono">X-Forwarded-For</span> is a list that each proxy appends
+            to. Nothing stops a client from sending one that is already populated,
+            so what arrives at your app is the caller's fiction plus whatever your
+            own infrastructure added. Reading the leftmost entry — the advice in most
+            blog posts — means reading a value the attacker chose. That is how per-IP
+            rate limits get bypassed, how IP allowlists get defeated, and how audit
+            logs end up full of addresses that never existed.
+          </p>
+          <p class="mt-3 text-sm leading-relaxed">
+            The correct read is: start at the rightmost entry, which your
+            nearest proxy appended and the client could not influence, and walk
+            left past exactly as many addresses as you operate proxies. The
+            first address beyond your own hops is the real client. Every serious
+            framework has a setting for this — trusted proxies in Laravel and
+            Symfony,
+            <span class="mono">ProxyFix</span> in Werkzeug,
+            <span class="mono">trust proxy</span> in Express, real_ip in nginx — and
+            all of them need the hop count or CIDR list to be correct. Configure it
+            per environment, because the number of hops in staging is rarely the number
+            in production.
+          </p>
+          <p class="mt-3 text-sm leading-relaxed">
+            While you are there: have the edge overwrite
+            <span class="mono">X-Real-IP</span> rather than pass it through, and strip
+            any inbound <span class="mono">X-Forwarded-Host</span> unless you validate
+            it — a forged Host is how password-reset links end up pointing at somebody
+            else's domain.
+          </p>
+        </NeoCard>
+      </div>
+    </section>
+
+    <!-- Observability -->
+    <section
+      id="observability"
+      data-header-group
+      class="mx-auto max-w-5xl px-5 pb-14"
+    >
+      <h2 class="display text-2xl uppercase">
+        Observability and odds and ends
+      </h2>
+      <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
+        <p>
+          The last group is the one that pays for itself during an incident.
+          <span class="mono">X-Request-ID</span> generated at the edge, echoed on
+          the response and stamped into every log line turns "a customer says checkout
+          failed" into one grep. <span class="mono">traceparent</span> does the same
+          across service boundaries, provided every hop propagates it untouched —
+          and the hop that drops it is always the one nobody instrumented.
+        </p>
+        <p>
+          <span class="mono">Server-Timing</span> is the underused one: your backend
+          phases appear directly in the browser's performance panel and in Resource
+          Timing, which means real user monitoring without a vendor. It is invisible
+          cross-origin unless you also send <span class="mono"
+            >Timing-Allow-Origin</span
+          >, which is exactly the sort of detail that makes people conclude the
+          header does not work.
+        </p>
+      </div>
+
+      <div
+        data-header-table
+        class="border-ink bg-paper shadow-neo-md mt-6 overflow-x-auto rounded-[4px] border-[3px]"
+      >
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <caption class="sr-only">Observability and general headers</caption>
+          <thead>
+            <tr class="bg-green">
+              <th
+                scope="col"
+                class="mono border-ink w-[14rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Header</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >What it does</th
+              >
+              <th
+                scope="col"
+                class="mono border-ink w-[18rem] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+                >Example</th
+              >
+            </tr>
+          </thead>
+          <tbody>
+            {
+              OBSERVABILITY.map((h) => (
+                <tr
+                  data-header-row
+                  data-header-keywords={h.keywords}
+                  class="hover:bg-bg-alt align-top transition-colors"
+                >
+                  <th
+                    scope="row"
+                    class="border-ink border-r-[3px] border-b-[2px] p-3 text-left"
+                  >
+                    <span class="mono block text-[13px] leading-tight font-bold break-words">
+                      {h.name}
+                    </span>
+                    <span
+                      class:list={[
+                        "mono border-ink mt-2 inline-block border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                        DIR_CLASS[h.dir],
+                      ]}
+                    >
+                      {DIR_LABEL[h.dir]}
+                    </span>
+                    {h.flag && (
+                      <span
+                        class:list={[
+                          "mono border-ink mt-1.5 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          FLAG_CLASS[h.flag],
+                        ]}
+                      >
+                        {FLAG_LABEL[h.flag]}
+                      </span>
+                    )}
+                  </th>
+                  <td class="border-ink border-r-[3px] border-b-[2px] p-3 text-sm leading-relaxed">
+                    <p>{h.purpose}</p>
+                    {h.note && (
+                      <p class="mt-1.5 text-[13px] leading-snug opacity-80">
+                        {h.note}
+                      </p>
+                    )}
+                  </td>
+                  <td class="border-ink border-b-[2px] p-3">
+                    <code class="mono block text-[12px] leading-snug break-words">
+                      {h.example}
+                    </code>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Baseline -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase">The baseline I ship every time</h2>
+    <NeoCard tone="cyan" shadow="lg" class="mt-5">
+      <ol class="space-y-3 text-sm leading-relaxed">
+        <li>
+          <strong>On every HTML response:</strong>
+          <span class="mono">Strict-Transport-Security</span>,
+          <span class="mono">X-Content-Type-Options: nosniff</span>,
+          <span class="mono"
+            >Referrer-Policy: strict-origin-when-cross-origin</span
+          >, and a CSP with <span class="mono">frame-ancestors</span>. Four
+          lines, no behaviour change.
+        </li>
+        <li>
+          <strong>On every fingerprinted asset:</strong>
+          <span class="mono"
+            >Cache-Control: public, max-age=31536000, immutable</span
+          >. On the HTML that references them:
+          <span class="mono">no-cache</span>, so a deploy is visible
+          immediately.
+        </li>
+        <li>
+          <strong>On anything content-negotiated:</strong> a
+          <span class="mono">Vary</span> listing every request header the body depends
+          on. Compression, language, and any echoed Origin.
+        </li>
+        <li>
+          <strong>On every API response:</strong> an
+          <span class="mono">X-Request-ID</span> that also appears in your logs and
+          in error bodies, plus
+          <span class="mono">Access-Control-Expose-Headers</span> so browser clients
+          can actually read it.
+        </li>
+        <li>
+          <strong>On every 429 and 503:</strong> a
+          <span class="mono">Retry-After</span>. It is the difference between a
+          queue and a stampede.
+        </li>
+        <li>
+          <strong>Behind every proxy:</strong> a configured trusted-proxy list, and
+          <span class="mono">X-Forwarded-Proto</span> honoured so you stop generating
+          http:// redirects behind TLS termination.
+        </li>
+      </ol>
+    </NeoCard>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-5 text-2xl uppercase">Questions people ask</h2>
+    <div class="space-y-3">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-5 text-2xl uppercase">Related</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      {
+        related.map((r) => (
+          <li>
+            <NeoCard
+              href={r.href}
+              tone="paper"
+              shadow="sm"
+              hover
+              class="h-full space-y-1.5"
+            >
+              <p class="heading text-lg uppercase">{r.label}</p>
+              <p class="text-sm leading-snug opacity-80">{r.note}</p>
+            </NeoCard>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/http-headers";
+</script>

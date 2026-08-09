@@ -1,0 +1,845 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: "Context Window Checker", url: "/tools/context-window-checker/" },
+]);
+
+const DESCRIPTION =
+  "Free context window checker. Paste a prompt, see if it fits Claude, GPT, and Gemini windows — tokens used, headroom left, output reserve — in your browser.";
+
+// Windows are the advertised limits as of August 2026. They move; the page says
+// so out loud rather than pretending a hardcoded number is a contract.
+const MODELS = [
+  {
+    label: "Small local / legacy",
+    note: "Llama-2 class, small quantized builds",
+    window: 8192,
+  },
+  {
+    label: "32K self-hosted / legacy",
+    note: "Mistral, older GPT-4, plenty of OSS servers",
+    window: 32768,
+  },
+  {
+    label: "GPT-class standard",
+    note: "The 128K tier most GPT deployments run on",
+    window: 128000,
+  },
+  {
+    label: "Claude Opus / Sonnet",
+    note: "The default 200K window",
+    window: 200000,
+  },
+  {
+    label: "Claude Haiku",
+    note: "Same 200K window, cheaper tokens",
+    window: 200000,
+  },
+  {
+    label: "GPT-class extended",
+    note: "Long-context tier on newer GPT models",
+    window: 400000,
+  },
+  {
+    label: "Claude 1M context",
+    note: "Sonnet / Opus long-context variants, tier-gated",
+    window: 1000000,
+  },
+  {
+    label: "Gemini-class",
+    note: "1,048,576 tokens — 2^20, Pro and Flash",
+    window: 1048576,
+  },
+];
+
+// Four slices, because a prompt is never one blob in production.
+const PARTS = [
+  {
+    id: "system",
+    label: "System prompt",
+    note: "Instructions, tool schemas, persona. Resent every single turn.",
+    rows: 3,
+    swatch: "bg-purple",
+    placeholder: "You are a support agent for…",
+  },
+  {
+    id: "context",
+    label: "Retrieved context",
+    note: "RAG chunks, file dumps, tool results. Usually the biggest slice.",
+    rows: 6,
+    swatch: "bg-cyan",
+    placeholder: "Paste the chunks your retriever returned…",
+  },
+  {
+    id: "history",
+    label: "Chat history",
+    note: "Every prior turn you replay — user and assistant both.",
+    rows: 4,
+    swatch: "bg-yellow",
+    placeholder: "Paste the transcript you resend on each turn…",
+  },
+  {
+    id: "user",
+    label: "User turn",
+    note: "The actual question. Almost never the thing blowing the budget.",
+    rows: 3,
+    swatch: "bg-pink",
+    placeholder: "What the user just asked…",
+  },
+];
+
+const PRESETS = [
+  { label: "Short chat", tokens: "2000", scale: "2K" },
+  { label: "RAG, 8 chunks", tokens: "12000", scale: "12K" },
+  { label: "Long PDF", tokens: "60000", scale: "60K" },
+  { label: "Repo dump", tokens: "180000", scale: "180K" },
+  { label: "Full book", tokens: "600000", scale: "600K" },
+];
+
+const faq = [
+  {
+    q: "How accurate is this context window checker?",
+    a: "The token count is an estimate, not a tokenizer. It blends the ~4-characters-per-token rule with a word-based count, which lands within roughly 10-20% for English prose and drifts wider on code, JSON, and non-Latin scripts. The window sizes and the fit arithmetic are exact. Treat a result within 10% of a limit as a coin flip and verify with the provider's own token counting endpoint before you ship it.",
+  },
+  {
+    q: "Does the model's answer count against the context window?",
+    a: "Yes. Input tokens and output tokens come out of the same budget on almost every API, which is why this tool makes you reserve tokens for the reply. If your prompt uses 197,000 of a 200,000-token window, the model has 3,000 tokens left to answer with — and you will get a truncated response rather than an error. Some models also cap max output well below the window, so check both numbers.",
+  },
+  {
+    q: "What happens if I exceed the context window?",
+    a: "You get a hard 400-class error from the API, not a graceful degradation. Chat products paper over this by silently dropping the oldest turns or summarising them, which is why an assistant can forget something you said twenty messages ago. If you are building on the raw API, you have to do that trimming yourself, and doing it badly is how a system prompt gets evicted mid-conversation.",
+  },
+  {
+    q: "How many tokens should I reserve for output?",
+    a: "Start at 4,000 for a normal answer, 8,000-16,000 if the model writes code or long structured JSON, and 32,000 or more if you have extended thinking or reasoning tokens switched on — reasoning tokens are billed and budgeted as output. Reserve the p95 of what you actually see in logs, not the average. The default here is 4,000 because that covers a couple of pages of prose with room to spare.",
+  },
+  {
+    q: "Is a 1M token context window actually usable?",
+    a: "Usable, yes. Advisable, rarely. Retrieval accuracy sags for facts buried in the middle of a long context — the 'lost in the middle' effect — so a needle at 60% depth in a 900K-token prompt is meaningfully harder to find than the same needle in a 20K-token prompt. On top of that you pay for every token on every turn, time-to-first-token climbs with prefill, and KV cache memory grows linearly. Big windows are a safety net for the occasional oversized input, not a replacement for retrieval.",
+  },
+  {
+    q: "Is a context window the same as memory?",
+    a: "No. The context window is the working set for one request: everything you resend, every time, priced per call. Memory is state that survives between requests — a database row, a vector store, a summary file. A model with a 1M-token window still remembers nothing once the request returns. If your app needs to recall a preference from last Tuesday, that is a storage problem, and stuffing the transcript back into the window is the expensive way to fake it.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Context Window Checker",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/context-window-checker/", SITE.URL).href,
+  description: DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const labelClass = "mono text-[11px] font-bold uppercase tracking-widest block";
+const hintClass = "mono text-[10px] uppercase tracking-widest opacity-70";
+const areaClass =
+  "w-full border-[3px] border-ink rounded-[4px] bg-paper p-3 font-mono text-sm shadow-neo-sm focus:outline-none resize-y";
+const inputClass =
+  "border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none";
+const pillClass =
+  "mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1";
+const thClass =
+  "border-b-[3px] border-r-[3px] border-ink last:border-r-0 p-3 mono text-[10px] font-bold uppercase tracking-widest";
+const tdClass =
+  "border-b-[2px] border-r-[3px] border-ink last:border-r-0 p-3 text-sm";
+---
+
+<Page
+  title="Context Window Checker"
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Context Window Checker."
+  intro="Will this prompt fit — and what's left for the answer? Build it out of system prompt, retrieved context, history, and user turn, then see it graded against every window worth caring about."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Estimate, not a tokenizer
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Token counts use the ~4 chars/token heuristic — good to roughly ±15% on
+        prose, worse on code. Window sizes are the advertised limits and they
+        change. Never ship within 10% of a ceiling on these numbers alone.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section
+    class="mx-auto max-w-5xl px-5 pb-14"
+    id="context-window-checker-root"
+  >
+    <div class="grid items-start gap-6 md:grid-cols-[1fr_320px]">
+      <!-- Inputs -->
+      <div class="space-y-6">
+        <NeoCard tone="paper" shadow="md" class="space-y-5">
+          <div
+            class="border-ink flex flex-wrap items-center justify-between gap-3 border-b-[3px] pb-4"
+          >
+            <p class="mono text-[11px] font-bold tracking-widest uppercase">
+              ▸ What's going in
+            </p>
+            <div
+              class="flex gap-2"
+              role="group"
+              aria-label="Input mode"
+              id="context-window-checker-modes"
+            >
+              <button
+                type="button"
+                data-cw-mode="compose"
+                aria-pressed="true"
+                id="context-window-checker-mode-compose"
+                class={pillClass}
+              >
+                Build it up
+              </button>
+              <button
+                type="button"
+                data-cw-mode="count"
+                aria-pressed="false"
+                id="context-window-checker-mode-count"
+                class={pillClass}
+              >
+                I know the count
+              </button>
+            </div>
+          </div>
+
+          <!-- Compose mode: four parts -->
+          <div id="context-window-checker-compose" class="space-y-5">
+            {
+              PARTS.map((part) => (
+                <div>
+                  <div class="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                    <label
+                      for={`context-window-checker-part-${part.id}`}
+                      class={labelClass}
+                    >
+                      <span
+                        class:list={[
+                          "border-ink mr-2 inline-block h-2.5 w-2.5 border-[2px] align-middle",
+                          part.swatch,
+                        ]}
+                        aria-hidden="true"
+                      />
+                      {part.label}
+                    </label>
+                    <span
+                      id={`context-window-checker-count-${part.id}`}
+                      class="mono text-[11px] font-bold tracking-widest uppercase tabular-nums"
+                    >
+                      0 tok
+                    </span>
+                  </div>
+                  <textarea
+                    id={`context-window-checker-part-${part.id}`}
+                    rows={part.rows}
+                    placeholder={part.placeholder}
+                    spellcheck="false"
+                    class={areaClass}
+                  />
+                  <p class={`${hintClass} mt-2`}>▸ {part.note}</p>
+                </div>
+              ))
+            }
+
+            <div class="border-ink border-t-[3px] pt-4">
+              <p class={`${labelClass} mb-2`}>Where the budget goes</p>
+              <div
+                class="border-ink bg-bg-alt flex h-6 overflow-hidden rounded-[4px] border-[3px]"
+                role="img"
+                aria-labelledby="context-window-checker-split-legend"
+              >
+                {
+                  PARTS.map((part) => (
+                    <div
+                      data-cw-split={part.id}
+                      class:list={["h-full", part.swatch]}
+                      style="width:0%"
+                    />
+                  ))
+                }
+              </div>
+              <p
+                id="context-window-checker-split-legend"
+                class={`${hintClass} mt-2`}
+                aria-live="polite"
+              >
+                Nothing pasted yet.
+              </p>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                id="context-window-checker-clear"
+                class={pillClass}
+              >
+                Clear all four
+              </button>
+            </div>
+          </div>
+
+          <!-- Direct count mode -->
+          <div id="context-window-checker-count-pane" class="space-y-4" hidden>
+            <div>
+              <label for="context-window-checker-tokens" class={labelClass}>
+                Prompt tokens
+              </label>
+              <input
+                id="context-window-checker-tokens"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                value="12000"
+                autocomplete="off"
+                class={`${inputClass} mt-2 w-full`}
+              />
+              <p class={`${hintClass} mt-2`}>
+                ▸ Already have a real number from <code class={codeClass}
+                  >count_tokens</code
+                > or a usage log? Put it here and skip the estimate.
+              </p>
+            </div>
+            <div>
+              <p class={`${labelClass} mb-2`}>Or start from a typical shape</p>
+              <div class="flex flex-wrap gap-2">
+                {
+                  PRESETS.map((p) => (
+                    <button
+                      type="button"
+                      data-cw-preset={p.tokens}
+                      class={pillClass}
+                    >
+                      {p.label} · {p.scale}
+                    </button>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+        </NeoCard>
+
+        <NeoCard tone="paper" shadow="sm" class="space-y-2">
+          <label for="context-window-checker-reserve" class={labelClass}>
+            Reserve for output
+          </label>
+          <div class="flex flex-wrap items-center gap-3">
+            <input
+              id="context-window-checker-reserve"
+              type="number"
+              min="0"
+              step="100"
+              inputmode="numeric"
+              value="4000"
+              autocomplete="off"
+              class={`${inputClass} w-40`}
+            />
+            <span class={hintClass}>tokens held back for the reply</span>
+          </div>
+          <p class={hintClass}>
+            ▸ The answer comes out of the same window as the prompt. Reasoning
+            and thinking tokens count here too.
+          </p>
+        </NeoCard>
+      </div>
+
+      <!-- Summary -->
+      <NeoCard tone="cyan" shadow="lg" class="space-y-4 md:sticky md:top-24">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Budget
+        </p>
+
+        <div aria-live="polite" class="space-y-4">
+          <div>
+            <p
+              id="context-window-checker-total"
+              class="display text-pink-deep text-4xl leading-none tabular-nums"
+            >
+              0
+            </p>
+            <p
+              class="mono mt-2 text-[11px] tracking-widest uppercase opacity-80"
+            >
+              prompt tokens (est.)
+            </p>
+          </div>
+
+          <dl class="border-ink space-y-2.5 border-t-[2.5px] pt-3">
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Reserved for output</dt>
+              <dd
+                id="context-window-checker-reserved"
+                class="text-right font-mono text-sm font-bold tabular-nums"
+              >
+                4,000
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Window needed</dt>
+              <dd
+                id="context-window-checker-needed"
+                class="text-right font-mono text-sm font-bold tabular-nums"
+              >
+                4,000
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Characters in</dt>
+              <dd
+                id="context-window-checker-chars"
+                class="text-right font-mono text-sm font-bold tabular-nums"
+              >
+                0
+              </dd>
+            </div>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-xs font-bold uppercase">Windows that fit</dt>
+              <dd
+                id="context-window-checker-fitcount"
+                class="text-right font-mono text-sm font-bold tabular-nums"
+              >
+                —
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div
+          id="context-window-checker-error"
+          role="status"
+          hidden
+          class="border-ink bg-red rounded-[4px] border-[3px] px-3 py-2.5"
+        >
+          <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+            ▸ Check the inputs
+          </p>
+          <p
+            id="context-window-checker-error-text"
+            class="text-sm leading-snug font-bold"
+          >
+          </p>
+        </div>
+
+        <button
+          type="button"
+          id="context-window-checker-copy"
+          class="border-ink bg-paper shadow-neo-sm hover:bg-yellow hover:shadow-neo-md inline-flex w-full items-center justify-center gap-2 rounded-[6px] border-[3px] px-4 py-2.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 disabled:opacity-50"
+        >
+          <Icon name="lucide:copy" class="h-4 w-4" aria-hidden="true" />
+          <span id="context-window-checker-copy-label">Copy the breakdown</span>
+        </button>
+
+        <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+          Runs in your browser · nothing uploaded
+        </p>
+      </NeoCard>
+    </div>
+
+    <!-- Model table -->
+    <h2 class="heading mt-10 mb-3 text-xl uppercase">Does it fit?</h2>
+    <div
+      class="border-ink bg-paper shadow-neo-md overflow-x-auto rounded-[4px] border-[3px]"
+    >
+      <table class="w-full border-collapse text-left">
+        <caption class="sr-only">
+          Context window sizes with tokens used, percentage consumed, headroom
+          left after the output reserve, and a fit status for each model tier
+        </caption>
+        <thead>
+          <tr class="bg-yellow">
+            <th scope="col" class={thClass}>Model tier</th>
+            <th scope="col" class={thClass}>Window</th>
+            <th scope="col" class={thClass}>Used</th>
+            <th scope="col" class={thClass}>Consumed</th>
+            <th scope="col" class={thClass}>Left after reserve</th>
+            <th scope="col" class={thClass}>Status</th>
+          </tr>
+        </thead>
+        <tbody id="context-window-checker-rows" aria-live="polite">
+          {
+            MODELS.map((m, i) => (
+              <tr
+                data-cw-row
+                data-cw-window={String(m.window)}
+                data-cw-label={m.label}
+                class={i % 2 ? "bg-bg-alt" : "bg-paper"}
+              >
+                <th
+                  scope="row"
+                  class="border-ink border-r-[3px] border-b-[2px] p-3 text-left align-top font-bold"
+                >
+                  {m.label}
+                  <span class="mono mt-1 block text-[10px] font-normal tracking-widest uppercase opacity-70">
+                    {m.note}
+                  </span>
+                </th>
+                <td
+                  class={`${tdClass} font-mono font-bold whitespace-nowrap tabular-nums`}
+                >
+                  {m.window.toLocaleString("en-US")}
+                </td>
+                <td
+                  data-cw-used
+                  class={`${tdClass} font-mono whitespace-nowrap tabular-nums`}
+                >
+                  0
+                </td>
+                <td class={tdClass}>
+                  <span class="border-ink bg-paper flex h-4 w-28 overflow-hidden border-[2px]">
+                    <span
+                      data-cw-fill
+                      class="bg-pink h-full"
+                      style="width:0%"
+                    />
+                    <span
+                      data-cw-reserve-bar
+                      class="bg-yellow h-full"
+                      style="width:0%"
+                    />
+                  </span>
+                  <span
+                    data-cw-pct
+                    class="mono mt-1 block text-[10px] font-bold tracking-widest tabular-nums"
+                  >
+                    0%
+                  </span>
+                </td>
+                <td
+                  data-cw-left
+                  class={`${tdClass} font-mono font-bold whitespace-nowrap tabular-nums`}
+                >
+                  —
+                </td>
+                <td class={tdClass}>
+                  <span
+                    data-cw-status
+                    class="mono border-ink bg-green inline-block rounded-full border-[2px] px-2.5 py-1 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase"
+                  >
+                    Fits
+                  </span>
+                  <span
+                    data-cw-note
+                    class="mono mt-1 block text-[10px] tracking-widest uppercase opacity-70"
+                  />
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class={`${hintClass} mt-3`}>
+      ▸ Pink is the prompt, yellow is the reserved reply. <strong>Tight</strong> fires
+      at 75% of the window or when less than 10% is left over. Window sizes checked
+      August 2026 — confirm against the model card before you architect around one.
+    </p>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">A context window is not memory</h2>
+      <p>
+        This is the confusion that costs the most money. The context window is
+        the working set for <em>one</em> request: system prompt, tools, retrieved
+        chunks, the transcript you chose to replay, and the new question — all of
+        it uploaded and paid for again on every single call. The model holds none
+        of it afterwards. Return the response, and the state is gone.
+      </p>
+      <p>
+        Memory is the part that survives: a row in Postgres, a vector store, a
+        summary file, a user profile. When a chat product "remembers" your name
+        from last week, something outside the model wrote it down and something
+        outside the model decided to paste it back in. A million-token window
+        does not give you memory. It gives you a bigger sheet of paper to
+        re-copy your notes onto, every turn, at full price.
+      </p>
+    </div>
+
+    <ComparisonTable
+      class="mt-6"
+      columns={[
+        { label: "Context window", tone: "cyan" },
+        { label: "Memory", tone: "yellow" },
+      ]}
+      rows={[
+        {
+          label: "Lifetime",
+          cells: ["One request", "Until you delete it"],
+        },
+        {
+          label: "Lives in",
+          cells: ["The request body", "Your database or vector store"],
+        },
+        {
+          label: "Cost model",
+          cells: [
+            "Per token, per call, every call",
+            "Storage — effectively free",
+          ],
+        },
+        {
+          label: "Grows by",
+          cells: ["Pasting more in", "Writing something down"],
+        },
+        {
+          label: "Fails by",
+          cells: [
+            "Overflow error or silent truncation",
+            "Stale or missing records",
+          ],
+        },
+        {
+          label: "Fixed by",
+          cells: [
+            "Retrieval, summarisation, trimming",
+            "Schema and write logic",
+          ],
+        },
+      ]}
+    />
+
+    <div class="text-ink/90 mt-6 space-y-4 text-base leading-relaxed">
+      <h2 class="display pt-4 text-2xl uppercase">
+        Input and output share one budget
+      </h2>
+      <p>
+        The window is a total, not an inbox. If a model advertises 200,000
+        tokens and your prompt eats 197,000, the reply gets 3,000 — and you will
+        find out by reading a sentence that stops mid-word, not by catching an
+        exception. That is why this tool subtracts a reserve before it grades
+        anything. Four thousand covers a couple of pages of prose. Raise it hard
+        if the model writes code, emits long JSON, or has extended thinking
+        switched on, because reasoning tokens are output tokens: budgeted from
+        the same pool and billed at the output rate.
+      </p>
+      <p>
+        Two limits, not one. Most providers also cap <code class={codeClass}
+          >max_tokens</code
+        > well below the context window, so a 1M-token window with a 64K output ceiling
+        cannot write you a novel no matter how much headroom the bar shows. Check
+        both numbers on the model card.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Long context degrades in the middle
+      </h2>
+      <p>
+        Fitting is not the same as working. The <em>lost in the middle</em> effect
+        — measured by Liu et al. in 2023 and still visible in current models — is
+        that recall is strongest for material at the very start and the very end of
+        a long context, and weakest for material buried in the middle. Push a fact
+        to 50-60% depth in a 400K-token prompt and the odds of the model using it
+        correctly drop noticeably compared to the same fact in a 20K-token prompt.
+      </p>
+      <p>
+        Three things follow. Put the instruction that matters last, right before
+        the question, not at the top of a wall of retrieved text. Rank your
+        retrieved chunks and cut the tail instead of pasting all fifty "just in
+        case" — irrelevant chunks are not free, they actively dilute attention.
+        And when a long-context evaluation looks perfect, check whether it was a
+        needle-in-a-haystack test, which measures literal lookup, not multi-hop
+        reasoning across scattered facts. The second is what your app actually
+        does, and it degrades much earlier.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        What a full window costs you
+      </h2>
+      <p>Three separate bills arrive when you decide to stuff the window.</p>
+      <ul class="marker:text-pink list-disc space-y-3 pl-5">
+        <li>
+          <strong>Tokens, every turn.</strong> A 120K-token context replayed across
+          a 20-turn conversation is 2.4M input tokens for one session. Prompt caching
+          is the fix that actually works — a stable prefix (system prompt, tool schemas,
+          the document) reads back at a fraction of the input price. It only helps
+          if the prefix is byte-identical, so put anything volatile, like a timestamp
+          or a per-user greeting, <em>after</em> the cached block, never before it.
+        </li>
+        <li>
+          <strong>Latency, before the first token.</strong> Prefill attention scales
+          roughly with the square of sequence length, so time-to-first-token climbs
+          faster than the prompt does. Users notice the wait far more than they notice
+          a slightly worse answer.
+        </li>
+        <li>
+          <strong>KV cache memory, if you self-host.</strong> The cache grows linearly
+          with context length and it is not small. Llama-3-8B with grouped-query attention
+          is 32 layers × 8 KV heads × 128 dims × 2 (keys and values) × 2 bytes ≈ 128
+          KB per token. A single 128K-token request is about 16 GB of VRAM — roughly
+          what the fp16 weights themselves occupy, for one user. That is why your
+          throughput collapses when you raise the max context on a shared GPU.
+        </li>
+      </ul>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Retrieve instead of stuffing
+      </h2>
+      <p>
+        My rule of thumb: under about 30K tokens and static, paste it and cache
+        it — RAG is not worth the infrastructure. Above that, or if the corpus
+        changes, or if you have more source material than one window can hold,
+        retrieve. Retrieval is not only cheaper, it is usually <em>more</em> accurate,
+        because eight well-ranked chunks beat two hundred pages of noise at getting
+        the model to cite the right paragraph.
+      </p>
+      <p>
+        The one case that genuinely justifies a huge window is a single
+        indivisible artefact you must reason over end to end — a full contract,
+        a long transcript, a codebase you are refactoring across files. Chunking
+        those destroys the relationships that make the task work. Everything
+        else is usually a retrieval problem wearing a long-context costume, and
+        the tell is simple: if you cannot say which part of the pasted context
+        answered the question, you pasted too much.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <h2 class="display mb-5 text-2xl uppercase">Questions people ask.</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="heading mb-4 text-xl uppercase">Keep reading.</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/context-window-vs-memory/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Context window vs memory: why a bigger window doesn't remember
+            anything
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/prompt-engineering-vs-context-engineering/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Prompt engineering vs context engineering: budgeting the window
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/rag-vs-fine-tuning/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            RAG vs fine-tuning: when retrieval beats stuffing the prompt
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/tools/token-counter/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Tool
+          </p>
+          <p class="leading-snug font-bold">
+            Token Counter — count one blob against chars, words, and cost
+          </p>
+        </NeoCard>
+      </li>
+      <li class="sm:col-span-2">
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/tools/llm-cost-calculator/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Tool
+          </p>
+          <p class="leading-snug font-bold">
+            LLM Cost Calculator — price the window you just filled, per day and
+            per month
+          </p>
+        </NeoCard>
+      </li>
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/context-window-checker";
+</script>

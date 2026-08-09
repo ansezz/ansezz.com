@@ -1,0 +1,642 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_NAME = "Shopify Webhook HMAC Verifier";
+const TOOL_PATH = "/tools/shopify-hmac-verifier/";
+const TOOL_DESCRIPTION =
+  "Free Shopify webhook HMAC verifier. Paste the raw body, the X-Shopify-Hmac-Sha256 header, and your client secret — checked in your browser, never uploaded.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+// A self-consistent sample so the pass state is reachable without a real store.
+// The digest below is HMAC-SHA256 over DEMO_BODY keyed with DEMO_KEY — exactly
+// the operation this page performs in the browser. DEMO_KEY is a throwaway
+// string, not anybody's credential.
+const DEMO_KEY = "demo-secret-do-not-use-in-production";
+const DEMO_BODY = `{"id":820982911946154508,"admin_graphql_api_id":"gid://shopify/Order/820982911946154508","email":"jon@example.com","created_at":"2026-03-04T09:12:41-05:00","currency":"USD","total_price":"403.00","financial_status":"paid","test":true}`;
+const DEMO_HMAC = "e4oNH7EgBPzCIZ8lu6PxgOoDtAQOj8JpSb+r/u2BmMk=";
+// Same object, re-serialised with indentation — the single most common reason
+// a verification that "should work" doesn't.
+const DEMO_BODY_PRETTY = JSON.stringify(JSON.parse(DEMO_BODY), null, 2);
+
+const causes = [
+  {
+    icon: "lucide:file-json-2",
+    title: "The body was parsed and re-serialised",
+    body: "express.json(), await request.json(), json_encode($request->all()) — all of them hand you a new string. Key order, spacing, number formatting and unicode escaping can all shift. Hash the bytes you received, not a reconstruction of them.",
+  },
+  {
+    icon: "lucide:key-round",
+    title: "Wrong secret",
+    body: "Webhooks your app subscribes to are signed with the app's client secret (older dashboards call it the API secret key). Webhooks a merchant created by hand in Settings → Notifications are signed with that store's own webhook signing secret, printed on the same screen. They are different values.",
+  },
+  {
+    icon: "lucide:corner-down-left",
+    title: "A newline came along for the ride",
+    body: "Copying the payload out of a log viewer or a terminal often appends a line break, and plenty of editors add one on save. One extra byte changes every bit of the digest.",
+  },
+  {
+    icon: "lucide:file-code-2",
+    title: "Encoding drift",
+    body: "The body was decoded to a string and re-encoded in a different charset, or CRLF line endings collapsed to LF somewhere in transit. HMAC sees bytes, so both are fatal.",
+  },
+  {
+    icon: "lucide:store",
+    title: "Different app, different store",
+    body: "The delivery came from a webhook subscription owned by another app — staging versus production is the classic — so you are verifying a real signature against a secret that never produced it.",
+  },
+  {
+    icon: "lucide:link-2",
+    title: "Wrong signature scheme entirely",
+    body: "App proxy requests are not webhooks. They are signed with a hex digest over sorted query parameters and arrive in a signature query parameter, not in X-Shopify-Hmac-Sha256.",
+  },
+];
+
+const faq = [
+  {
+    q: "Why does my Shopify webhook HMAC verification always fail?",
+    a: "Nine times out of ten the body was parsed before you hashed it. A JSON parser plus a serialiser is not an identity function — key order, whitespace, number formatting and unicode escaping can all change — so the reconstructed string hashes to something else. Capture the raw bytes before any body parser runs and hash those. The remaining failures are usually the wrong secret or a stray trailing newline picked up while copying the payload.",
+  },
+  {
+    q: "Which secret does Shopify use to sign webhooks?",
+    a: "It depends on who created the subscription. Webhooks your app registers through the Admin API or its app config are signed with the app's client secret, which older Partner dashboards label the API secret key. Webhooks a merchant creates by hand in Settings → Notifications are signed with that store's own webhook signing secret, shown on the same admin screen. Using one where the other applies produces a perfectly valid digest that never matches.",
+  },
+  {
+    q: "Do I have to use the raw request body to verify a Shopify webhook?",
+    a: "Yes, and it is the hardest part in most frameworks. In Express, mount express.raw() on the webhook route above the global express.json() so the handler receives a Buffer. In Remix or React Router, call await request.text() and verify that string before parsing it, because the body stream can only be read once. In Laravel use $request->getContent(), never json_encode($request->all()), and exclude the route from CSRF verification.",
+  },
+  {
+    q: "Is it safe to paste my Shopify client secret into this tool?",
+    a: "The page never transmits it: the secret goes into a password field, is read straight into crypto.subtle.importKey, and is never stored, logged or sent anywhere — you can watch the network tab stay empty. That said, pasting a production secret into any web page is a judgement call, and browser extensions can read the DOM of pages you visit. Use a development app's secret where you can, and rotate anything you are unsure about.",
+  },
+  {
+    q: "How do I stop a Shopify webhook being processed twice?",
+    a: "Assume every webhook will arrive more than once. Shopify retries a failed or slow delivery repeatedly over roughly 48 hours, and at-least-once delivery means duplicates happen even when nothing is broken. Use the X-Shopify-Webhook-Id header as an idempotency key: store it with a unique index, and if the insert conflicts, acknowledge with 200 and do nothing else. Verifying the signature proves the message is authentic, not that it is new.",
+  },
+  {
+    q: "Does this tool work for Shopify app proxy signatures?",
+    a: "No — app proxy requests use a different scheme. Shopify sorts the query parameters, concatenates them, computes HMAC-SHA256 with the same client secret, and sends a lowercase hex digest in the signature query parameter rather than a base64 digest in a header. This page verifies webhook deliveries only. Mandatory compliance webhooks such as customers/data_request use the standard webhook scheme, so those do work here.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: TOOL_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const expressSnippet = `import express from "express";
+import crypto from "node:crypto";
+
+const app = express();
+
+// Raw parser FIRST, scoped to the webhook route. The express.json() below
+// never sees this request, so req.body stays a Buffer of the exact bytes.
+app.post(
+  "/webhooks/shopify",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    const sent = req.get("X-Shopify-Hmac-Sha256") ?? "";
+    const digest = crypto
+      .createHmac("sha256", process.env.SHOPIFY_API_SECRET)
+      .update(req.body)
+      .digest("base64");
+
+    const a = Buffer.from(digest, "utf8");
+    const b = Buffer.from(sent, "utf8");
+    // timingSafeEqual throws on a length mismatch, so check length first.
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      return res.sendStatus(401);
+    }
+
+    res.sendStatus(200); // Acknowledge inside 5s, then work off-request.
+    void enqueue(req.get("X-Shopify-Webhook-Id"), req.body);
+  },
+);
+
+app.use(express.json()); // Everything else, mounted after the webhook route.`;
+
+const laravelSnippet = `<?php
+// app/Http/Middleware/VerifyShopifyWebhook.php
+
+public function handle(Request $request, Closure $next): Response
+{
+    $sent = (string) $request->header('X-Shopify-Hmac-Sha256', '');
+
+    // getContent() is the untouched body.
+    // json_encode($request->all()) is a different string. Do not use it.
+    $digest = base64_encode(hash_hmac(
+        'sha256',
+        $request->getContent(),
+        config('services.shopify.secret'),
+        true,
+    ));
+
+    // hash_equals is the constant-time comparison. === is not.
+    abort_unless(hash_equals($digest, $sent), 401);
+
+    return $next($request);
+}`;
+
+const related = [
+  {
+    href: "/blog/agentic-commerce-shopify/",
+    kind: "Article",
+    title: "Agentic commerce on Shopify",
+    blurb:
+      "Where webhooks sit when an agent, not a human, is driving the checkout — and why authenticity checks stop being optional.",
+    tone: "yellow" as const,
+  },
+  {
+    href: "/blog/shopify-ucp-quick-start/",
+    kind: "Article",
+    title: "Shopify UCP quick start",
+    blurb:
+      "Getting a Shopify app talking to the commerce protocol, signed requests and all.",
+    tone: "purple" as const,
+  },
+  {
+    href: "/tools/hash-generator/",
+    kind: "Tool",
+    title: "SHA Hash Generator",
+    blurb:
+      "The unkeyed version of what happens here — SHA-1 through SHA-512 for text or a file, in hex or base64.",
+    tone: "green" as const,
+  },
+  {
+    href: "/tools/base64-encoder/",
+    kind: "Tool",
+    title: "Base64 Encoder / Decoder",
+    blurb:
+      "For when the digest is the easy part and the payload encoding is what's actually broken.",
+    tone: "cyan" as const,
+  },
+];
+---
+
+<Page
+  title={TOOL_NAME}
+  description={TOOL_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Shopify Webhook HMAC Verifier."
+  intro="Paste the raw webhook body, the X-Shopify-Hmac-Sha256 header and your client secret. The digest is computed with the Web Crypto API on this page — your secret never leaves the browser."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-4xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Raw bytes, or it won't match
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        HMAC signs the exact bytes Shopify sent. Pretty-printed, re-serialised
+        or newline-padded JSON is a different message and will always fail —
+        even when the data is identical.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-4xl px-5 pb-16" id="shmac-root">
+    <NeoCard tone="paper" shadow="md" class="space-y-5">
+      <div class="space-y-2">
+        <label
+          for="shmac-body"
+          class="mono block text-[11px] font-bold tracking-widest uppercase"
+        >
+          Raw request body
+        </label>
+        <textarea
+          id="shmac-body"
+          rows="7"
+          spellcheck="false"
+          placeholder="Paste the body exactly as it arrived — no reformatting, no trailing newline…"
+          class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm focus:outline-none"
+        ></textarea>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            data-shmac-body={DEMO_BODY}
+            data-shmac-header={DEMO_HMAC}
+            data-shmac-secret={DEMO_KEY}
+            class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-green hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+          >
+            Load a passing example
+          </button>
+          <button
+            type="button"
+            data-shmac-body={DEMO_BODY_PRETTY}
+            data-shmac-header={DEMO_HMAC}
+            data-shmac-secret={DEMO_KEY}
+            class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-red hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+          >
+            Same payload, pretty-printed
+          </button>
+          <button
+            type="button"
+            id="shmac-clear"
+            class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+          >
+            Clear everything
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label
+          for="shmac-header"
+          class="mono block text-[11px] font-bold tracking-widest uppercase"
+        >
+          X-Shopify-Hmac-Sha256 header
+        </label>
+        <input
+          id="shmac-header"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="base64 digest from the request header…"
+          class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono text-sm font-bold focus:outline-none"
+        />
+      </div>
+
+      <div class="space-y-2">
+        <label
+          for="shmac-secret"
+          class="mono block text-[11px] font-bold tracking-widest uppercase"
+        >
+          App client secret
+        </label>
+        <div class="flex flex-wrap items-stretch gap-2">
+          <input
+            id="shmac-secret"
+            type="password"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            placeholder="the signing secret for this webhook…"
+            class="border-ink bg-paper shadow-neo-sm min-w-0 flex-1 rounded-[4px] border-[3px] px-3 py-3 font-mono text-sm font-bold focus:outline-none"
+          />
+          <button
+            type="button"
+            id="shmac-secret-toggle"
+            aria-pressed="false"
+            class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-[4px] border-[2px] px-3 py-2 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+          >
+            <Icon name="lucide:eye" class="h-3.5 w-3.5" aria-hidden="true" />
+            <span id="shmac-secret-toggle-label">Show</span>
+          </button>
+        </div>
+        <p
+          class="border-ink bg-red rounded-[4px] border-[3px] p-3 text-[13px] leading-snug font-bold"
+        >
+          <Icon
+            name="lucide:shield-alert"
+            class="mr-1 inline h-4 w-4 align-[-3px]"
+            aria-hidden="true"
+          />
+          The secret stays in this tab. It is read into <code
+            class="mono font-bold">crypto.subtle.importKey</code
+          > and never stored, never logged, never sent. Even so — pasting a production
+          secret into any web page is a call you should make deliberately. Prefer
+          a development app's secret, and rotate anything you are unsure about.
+        </p>
+      </div>
+
+      <div
+        class="border-ink flex flex-wrap items-center justify-between gap-3 border-t-[2.5px] pt-4"
+      >
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          HMAC-SHA256 · base64 · recomputed as you type
+        </p>
+        <p
+          id="shmac-status"
+          aria-live="polite"
+          class="mono text-[11px] font-bold tracking-widest uppercase opacity-70"
+        >
+          Waiting for input
+        </p>
+      </div>
+
+      <p
+        id="shmac-error"
+        hidden
+        aria-live="polite"
+        class="border-ink bg-red rounded-[4px] border-[3px] p-3 text-sm leading-snug font-bold"
+      >
+      </p>
+    </NeoCard>
+
+    <NeoCard tone="paper" shadow="lg" class="mt-6 space-y-5">
+      <div
+        id="shmac-verdict"
+        class="border-ink bg-bg-alt rounded-[4px] border-[3px] p-5"
+        aria-live="polite"
+      >
+        <div class="flex items-start gap-3">
+          <span id="shmac-icon-idle" class="mt-1 shrink-0" aria-hidden="true">
+            <Icon name="lucide:circle-dashed" class="h-8 w-8" />
+          </span>
+          <span
+            id="shmac-icon-pass"
+            class="mt-1 hidden shrink-0"
+            aria-hidden="true"
+          >
+            <Icon name="lucide:shield-check" class="h-8 w-8" />
+          </span>
+          <span
+            id="shmac-icon-fail"
+            class="mt-1 hidden shrink-0"
+            aria-hidden="true"
+          >
+            <Icon name="lucide:shield-x" class="h-8 w-8" />
+          </span>
+          <div class="min-w-0">
+            <p
+              id="shmac-verdict-label"
+              class="display text-2xl leading-none uppercase sm:text-3xl"
+            >
+              Awaiting input
+            </p>
+            <p
+              id="shmac-verdict-note"
+              class="mt-2 text-sm leading-snug font-bold"
+            >
+              Fill in all three fields. Nothing is computed until there is a
+              secret to key the HMAC with.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="border-ink bg-bg-alt rounded-[4px] border-[2.5px] p-3">
+          <div class="mb-2 flex items-center justify-between gap-2">
+            <span class="mono text-[10px] font-bold tracking-widest uppercase">
+              Computed digest
+            </span>
+            <button
+              type="button"
+              id="shmac-copy"
+              class="mono border-ink bg-paper shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-full border-[2px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            >
+              <Icon name="lucide:copy" class="h-3 w-3" aria-hidden="true" />
+              <span id="shmac-copy-label">Copy</span>
+            </button>
+          </div>
+          <code
+            id="shmac-computed"
+            class="block font-mono text-[13px] leading-relaxed break-all"
+            >—</code
+          >
+        </div>
+        <div class="border-ink bg-bg-alt rounded-[4px] border-[2.5px] p-3">
+          <p class="mono mb-2 text-[10px] font-bold tracking-widest uppercase">
+            Supplied header
+          </p>
+          <code
+            id="shmac-supplied"
+            class="block font-mono text-[13px] leading-relaxed break-all"
+            >—</code
+          >
+        </div>
+      </div>
+
+      <ul
+        id="shmac-signals"
+        class="border-ink space-y-1.5 border-t-[2.5px] pt-4 text-[13px] leading-snug"
+      >
+      </ul>
+
+      <div id="shmac-causes" hidden class="border-ink border-t-[2.5px] pt-4">
+        <p class="mono mb-3 text-[11px] font-bold tracking-widest uppercase">
+          ▸ Work through these, in this order
+        </p>
+        <ol class="space-y-3">
+          {
+            causes.map((c, i) => (
+              <li class="flex items-start gap-3">
+                <span class="border-ink bg-yellow mono mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[2px] text-[11px] font-bold">
+                  {i + 1}
+                </span>
+                <span>
+                  <span class="heading inline-flex items-center gap-1.5 text-sm uppercase">
+                    <Icon name={c.icon} class="h-4 w-4" aria-hidden="true" />
+                    {c.title}
+                  </span>
+                  <span class="mt-0.5 block text-[13px] leading-snug opacity-90">
+                    {c.body}
+                  </span>
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </NeoCard>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-4 text-2xl uppercase">How Shopify signs a webhook</h2>
+    <p class="text-base leading-relaxed">
+      Every webhook Shopify delivers carries an
+      <code class="mono font-bold">X-Shopify-Hmac-Sha256</code> header. Shopify computes
+      HMAC-SHA256 over the exact bytes of the request body, keyed with your app's
+      client secret, and base64-encodes the 32-byte result. Because you hold the same
+      secret, you can recompute the digest and compare. A match proves two things
+      at once: the payload came from Shopify, and not one byte of it changed on the
+      way.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      That matters more than it sounds. A webhook endpoint is a public URL that
+      accepts POSTs from anyone. Without verification, "order paid" is a claim
+      any stranger with curl can make about any order — an unauthenticated write
+      API wearing a webhook costume, happy to fulfil orders, grant entitlements
+      and trigger refunds for whoever guessed the URL. Verify first, parse
+      second, act third, and answer a bad signature with
+      <code class="mono font-bold">401</code> so failures show up as failures in the
+      Partner dashboard instead of quietly succeeding.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      This page does the same computation the Web Crypto way: the body goes
+      through <code class="mono font-bold">TextEncoder</code> to UTF-8 bytes, the
+      secret is imported with <code class="mono font-bold"
+        >crypto.subtle.importKey</code
+      > as a non-extractable HMAC key, and <code class="mono font-bold"
+        >crypto.subtle.sign</code
+      > produces the digest. That is the browser's native crypto — the same code path
+      that validates TLS — not a JavaScript reimplementation of SHA-256.
+    </p>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      Raw body, or nothing works
+    </h2>
+    <p class="text-base leading-relaxed">
+      The failure that eats an afternoon is always the same: something parsed
+      the body before you hashed it. JSON round-tripping is not byte-preserving.
+      Key order can move, whitespace disappears, <code class="mono font-bold"
+        >"403.00"</code
+      > can come back as <code class="mono font-bold">403</code>, and non-ASCII
+      characters may or may not survive as escape sequences. The data is
+      identical, the bytes are not, and HMAC only cares about bytes.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      In Express the fix is ordering: mount <code class="mono font-bold"
+        >express.raw()</code
+      > on the webhook route above the global <code class="mono font-bold"
+        >express.json()</code
+      >, so the handler receives a Buffer instead of a parsed object.
+    </p>
+    <CodeBlock code={expressSnippet} lang="js" filename="webhook.js" />
+    <p class="mt-6 text-base leading-relaxed">
+      Remix and React Router have a subtler version of the same trap: a request
+      body is a stream you can read exactly once. Call <code
+        class="mono font-bold">await request.text()</code
+      >, verify that string, then parse it yourself — call <code
+        class="mono font-bold">request.json()</code
+      > first and there is nothing left to hash. Shopify's own Remix template hides
+      all of this behind <code class="mono font-bold"
+        >authenticate.webhook(request)</code
+      >, which is the right thing to use when you have it.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      Laravel is friendlier — <code class="mono font-bold"
+        >$request->getContent()</code
+      > returns the untouched body — but two things still bite. Reaching for <code
+        class="mono font-bold">json_encode($request->all())</code
+      > because it "looks the same" produces a different string, and forgetting to
+      exempt the route from CSRF verification gets you a 419 before your middleware
+      ever runs.
+    </p>
+    <CodeBlock
+      code={laravelSnippet}
+      lang="php"
+      filename="VerifyShopifyWebhook.php"
+    />
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      Why the comparison is a loop
+    </h2>
+    <p class="text-base leading-relaxed">
+      Comparing the two digests with <code class="mono font-bold">===</code> or <code
+        class="mono font-bold">strcmp</code
+      > is a real, if narrow, vulnerability. String equality bails out the moment
+      it finds a differing byte, so a guess that shares the first ten characters takes
+      measurably longer to reject than one that differs immediately. With enough requests
+      to average out network noise, that leak lets an attacker rebuild the correct
+      digest one character at a time — on the order of 44 × 64 attempts instead of
+      2^256.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      The fix is boring: walk the full length of both values, XOR each pair of
+      bytes, OR the result into an accumulator, and only look at that
+      accumulator at the very end. Fold the length difference into the
+      accumulator too, so a truncated value cannot exit early either. The
+      comparison then costs the same whether the first byte differs or none of
+      them do. That is what
+      <code class="mono font-bold">hash_equals()</code> does in PHP,
+      <code class="mono font-bold">crypto.timingSafeEqual()</code> in Node, and
+      <code class="mono font-bold">hmac.compare_digest()</code> in Python. This page
+      runs the same loop — and then, separately, tells you where the two digests first
+      diverge. That readout would be inexcusable on a live endpoint; here you are
+      the only person on both ends of the timer, and finding the difference is the
+      entire point.
+    </p>
+
+    <h2 class="display mt-12 mb-4 text-2xl uppercase">
+      A valid signature is not a safe request
+    </h2>
+    <p class="text-base leading-relaxed">
+      HMAC proves authenticity and integrity. It says nothing about freshness. A
+      valid webhook captured off the wire — or replayed out of your own logs —
+      verifies perfectly the second time, and the hundredth. Shopify delivers
+      at-least-once and retries failures over roughly 48 hours, so duplicates
+      are not a hypothetical attack scenario. They are Tuesday.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      Two habits close the gap. Treat
+      <code class="mono font-bold">X-Shopify-Webhook-Id</code> as an idempotency key:
+      store it behind a unique index, and if the insert conflicts, return 200 and
+      do nothing else — retries of the same delivery reuse that id. And reject stale
+      payloads by checking
+      <code class="mono font-bold">X-Shopify-Triggered-At</code> against a window
+      you pick, a few minutes wide, which caps how long a captured request stays useful
+      to anyone who copied it. Budget your response while you are there: Shopify wants
+      an acknowledgement within five seconds, so verify, enqueue, reply — never do
+      the work on the request thread.
+    </p>
+    <p class="mt-4 text-base leading-relaxed">
+      One scope note. This page verifies webhook deliveries. App proxy requests
+      are signed differently — sorted query parameters, a hex digest, a
+      <code class="mono font-bold">signature</code> query parameter instead of a header
+      — so a perfectly valid proxy request will never verify here, and that is correct
+      behaviour rather than a bug in either of us.
+    </p>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered.</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Keep going</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {
+        related.map((r) => (
+          <NeoCard href={r.href} tone={r.tone} shadow="sm" hover>
+            <p class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70">
+              {r.kind}
+            </p>
+            <p class="heading mb-2 flex items-center gap-2 text-lg uppercase">
+              {r.title}
+              <Icon
+                name="lucide:arrow-right"
+                class="h-4 w-4"
+                aria-hidden="true"
+              />
+            </p>
+            <p class="text-sm leading-snug">{r.blurb}</p>
+          </NeoCard>
+        ))
+      }
+    </div>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/shopify-hmac-verifier";
+</script>

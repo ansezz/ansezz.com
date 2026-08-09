@@ -1,0 +1,650 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const PAGE_DESCRIPTION =
+  "Free URL parser and encoder. Break any URL into protocol, host, path, query and hash, edit query params live, and encode or decode text in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: "URL Parser & Encoder", url: "/tools/url-parser/" },
+]);
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "URL Parser & Encoder",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/url-parser/", SITE.URL).href,
+  description: PAGE_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faq = [
+  {
+    q: "What is the difference between encodeURI and encodeURIComponent?",
+    a: "encodeURI escapes a whole URL and deliberately leaves the delimiters / ? & = # : intact so the result still parses as a URL. encodeURIComponent escapes those delimiters too, because it is meant for one piece that sits inside a URL — a path segment or a query value. Use encodeURIComponent on values, encodeURI on a complete URL, and ideally neither: build the URL with URL and URLSearchParams instead.",
+  },
+  {
+    q: "Why does my URL show a + instead of a space?",
+    a: "The + comes from application/x-www-form-urlencoded, the form serialization that applies to query strings. URLSearchParams uses it, so a value of “a b” is written as “a+b”. It only applies to the query — inside a path a + is a literal plus character, and decodeURIComponent will never turn a + back into a space.",
+  },
+  {
+    q: "Does this URL parser send my URL anywhere?",
+    a: "No. Parsing, query editing and encoding all run in your browser using the built-in URL, URLSearchParams and encodeURIComponent APIs. There is no network call, no logging of your input, and nothing is stored. Signed URLs and session tokens still deserve care everywhere — they belong out of logs and chat threads, not just out of online tools.",
+  },
+  {
+    q: "How do repeated query parameters like ?tag=a&tag=b work?",
+    a: "They are valid, and no standard defines what they mean. In JavaScript, URLSearchParams.get returns the first value and getAll returns every value. PHP keeps the last one, Go's Query().Get returns the first, and Express hands you an array — so the same URL can mean three different things depending on which backend receives it.",
+  },
+  {
+    q: "What is the maximum length of a URL?",
+    a: "HTTP itself defines no limit; the software along the path does. Apache's LimitRequestLine defaults to 8190 bytes, nginx answers 414 when the request line overflows one of its 8 KB header buffers, and Node caps total headers at 16 KB. The familiar 2,000-character rule comes from Internet Explorer's 2,083-character cap and is still a sane ceiling for links humans will share.",
+  },
+  {
+    q: "Why does the URL constructor say “Invalid URL”?",
+    a: "new URL() only accepts an absolute URL, so “example.com/path” and “/path?a=1” both throw unless you pass a base — add a scheme like https:// and they parse. The other common causes are a raw space or another forbidden character in the host, and an empty host after the //. This tool catches the error and names the case instead of throwing.",
+  },
+];
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const PRESETS = [
+  {
+    label: "Repeated keys",
+    url: "https://ansezz.com/blog/?tag=rag&tag=agents&utm_source=newsletter#faq",
+  },
+  {
+    label: "Auth + port",
+    url: "https://api-user:s3cr3t@api.example.com:8443/v1/orders/42?fields=id,total&q=a+b",
+  },
+  {
+    label: "Percent-encoded",
+    url: "https://example.com/search?q=caf%C3%A9%20%26%20bar&lang=fr",
+  },
+  { label: "IDN host", url: "https://bücher.de/über/uns?ort=köln" },
+  { label: "Normalization", url: "https://EXAMPLE.com:443/a/b/../c/./d?x=1" },
+  { label: "mailto:", url: "mailto:hey@ansezz.com?subject=Hello&cc=me@x.com" },
+];
+
+const PARTS: { key: string; label: string; note?: string }[] = [
+  { key: "href", label: "href", note: "normalized, what the browser sends" },
+  { key: "origin", label: "origin", note: "scheme + host + port — the CORS unit" },
+  { key: "protocol", label: "protocol", note: "includes the colon" },
+  { key: "username", label: "username", note: "userinfo — deprecated" },
+  { key: "password", label: "password", note: "userinfo — deprecated" },
+  { key: "host", label: "host", note: "hostname + port" },
+  { key: "hostname", label: "hostname", note: "no port, punycoded if IDN" },
+  { key: "port", label: "port", note: "empty when it is the scheme default" },
+  { key: "pathname", label: "pathname", note: "dot segments already resolved" },
+  { key: "search", label: "search", note: "includes the leading ?" },
+  { key: "hash", label: "hash", note: "never sent to the server" },
+];
+
+const CODEC_OPS = [
+  { op: "encodeURIComponent", label: "encodeURIComponent" },
+  { op: "decodeURIComponent", label: "decodeURIComponent" },
+  { op: "encodeURI", label: "encodeURI" },
+  { op: "decodeURI", label: "decodeURI" },
+];
+
+const encodeColumns = [
+  { label: "encodeURI", tone: "cyan" as const },
+  { label: "encodeURIComponent", tone: "yellow" as const },
+];
+
+const encodeRows = [
+  { label: "space", cells: ["%20", "%20"] },
+  { label: "/ slash", cells: ["/", "%2F"] },
+  { label: "? question", cells: ["?", "%3F"] },
+  { label: "& ampersand", cells: ["&", "%26"] },
+  { label: "= equals", cells: ["=", "%3D"] },
+  { label: "# hash", cells: ["#", "%23"] },
+  { label: "+ plus", cells: ["+", "%2B"] },
+  { label: ": colon", cells: [":", "%3A"] },
+  { label: "@ at", cells: ["@", "%40"] },
+  { label: "~ tilde", cells: ["~", "~"] },
+];
+
+const RELATED = [
+  {
+    href: "/blog/forward-proxy-vs-reverse-proxy/",
+    kind: "Blog",
+    title: "Forward proxy vs reverse proxy",
+    blurb:
+      "Who rewrites the Host header, and why the path your app sees is not always the path the client typed.",
+    tone: "cyan" as const,
+  },
+  {
+    href: "/blog/load-balancer-vs-api-gateway/",
+    kind: "Blog",
+    title: "Load balancer vs API gateway",
+    blurb:
+      "Path-based routing, query rewriting, and where URL handling actually lives at the edge.",
+    tone: "yellow" as const,
+  },
+  {
+    href: "/tools/jwt-decoder/",
+    kind: "Tool",
+    title: "JWT Decoder",
+    blurb:
+      "Base64url in, header and claims out. Same rule: decode-only, nothing leaves the page.",
+    tone: "purple" as const,
+  },
+  {
+    href: "/tools/uuid-generator/",
+    kind: "Tool",
+    title: "UUID Generator",
+    blurb: "Crypto-random v4 UUIDs in bulk, copied with one click.",
+    tone: "green" as const,
+  },
+];
+---
+
+<Page
+  title="URL Parser & Encoder"
+  description={PAGE_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="URL Parser & Encoder."
+  intro="Paste a URL and read every part of it. Edit query parameters and watch the URL rebuild itself. Encode or decode any value with the four functions people keep mixing up."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-4xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold uppercase tracking-widest">
+        ▸ It normalizes
+      </p>
+      <p class="text-sm font-bold leading-snug">
+        This uses the browser's own URL parser, so it lowercases the host,
+        punycodes IDNs, drops default ports and resolves <code>..</code> — the
+        parsed href can differ from what you pasted. That is the wire format,
+        not a bug. Nothing is uploaded.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-4xl space-y-5 px-5 pb-16" id="url-parser-root">
+    <!-- Input -->
+    <NeoCard tone="paper" shadow="md" class="space-y-3">
+      <label
+        for="url-parser-input"
+        class="mono block text-[11px] font-bold uppercase tracking-widest"
+      >
+        URL
+      </label>
+      <textarea
+        id="url-parser-input"
+        rows="2"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder="https://example.com/path?key=value#section"
+        class="w-full resize-y break-all rounded-[4px] border-[3px] border-ink bg-paper p-3 font-mono text-sm shadow-neo-sm focus:outline-none"
+        >https://ansezz.com/blog/?tag=rag&amp;tag=agents&amp;utm_source=newsletter#faq</textarea
+      >
+      <div class="flex flex-wrap gap-2">
+        {
+          PRESETS.map((p) => (
+            <button
+              type="button"
+              data-url-parser-preset={p.url}
+              class="mono rounded-full border-[2px] border-ink bg-bg-alt px-3 py-1 text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+            >
+              {p.label}
+            </button>
+          ))
+        }
+      </div>
+      <p
+        id="url-parser-error"
+        class="text-sm font-bold text-pink-deep"
+        role="status"
+        hidden
+      >
+      </p>
+    </NeoCard>
+
+    <!-- Parts -->
+    <NeoCard tone="cyan" shadow="lg" class="space-y-3">
+      <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        ▸ Parts
+      </p>
+      <dl id="url-parser-parts" aria-live="polite" class="space-y-0">
+        {
+          PARTS.map((p) => (
+            <div class="grid gap-0.5 border-b-[2px] border-ink/20 py-2 last:border-b-0 sm:grid-cols-[190px_1fr] sm:items-baseline sm:gap-3">
+              <dt class="mono text-[11px] font-bold uppercase tracking-widest">
+                {p.label}
+                {p.note && (
+                  <span class="mt-0.5 block text-[10px] font-normal normal-case tracking-normal opacity-60">
+                    {p.note}
+                  </span>
+                )}
+              </dt>
+              <dd
+                id={`url-parser-part-${p.key}`}
+                class="break-all font-mono text-sm"
+              >
+                —
+              </dd>
+            </div>
+          ))
+        }
+        <div
+          id="url-parser-decoded-row"
+          class="grid gap-0.5 border-t-[2px] border-ink/20 py-2 sm:grid-cols-[190px_1fr] sm:items-baseline sm:gap-3"
+          hidden
+        >
+          <dt class="mono text-[11px] font-bold uppercase tracking-widest">
+            pathname decoded
+            <span
+              class="mt-0.5 block text-[10px] font-normal normal-case tracking-normal opacity-60"
+            >
+              percent-escapes resolved
+            </span>
+          </dt>
+          <dd
+            id="url-parser-part-decoded"
+            class="break-all font-mono text-sm"
+          >
+            —
+          </dd>
+        </div>
+      </dl>
+    </NeoCard>
+
+    <!-- Query params -->
+    <NeoCard tone="paper" shadow="md" class="space-y-3">
+      <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        ▸ Query parameters
+      </p>
+      <p class="text-xs leading-snug opacity-70">
+        Edit a value or delete a row and the URL above rebuilds instantly.
+        Values are re-serialized with <code>URLSearchParams</code>, so spaces
+        become <code>+</code> and <code>&amp;</code> becomes <code>%26</code>.
+        Duplicate names are kept in order.
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-sm">
+          <thead>
+            <tr class="border-b-[2.5px] border-ink">
+              <th
+                scope="col"
+                class="mono w-[38%] pb-2 pr-2 text-left text-[10px] font-bold uppercase tracking-widest"
+              >
+                Name
+              </th>
+              <th
+                scope="col"
+                class="mono pb-2 pr-2 text-left text-[10px] font-bold uppercase tracking-widest"
+              >
+                Value
+              </th>
+              <th scope="col" class="w-11 pb-2">
+                <span class="sr-only">Remove</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="url-parser-params"></tbody>
+        </table>
+      </div>
+      <p
+        id="url-parser-params-msg"
+        class="text-sm font-bold opacity-70"
+        aria-live="polite"
+        hidden
+      >
+      </p>
+
+      <div
+        class="grid items-end gap-3 border-t-[2.5px] border-ink pt-4 sm:grid-cols-[1fr_1fr_auto]"
+      >
+        <div>
+          <label
+            for="url-parser-new-key"
+            class="mono mb-1.5 block text-[10px] font-bold uppercase tracking-widest"
+          >
+            Add name
+          </label>
+          <input
+            id="url-parser-new-key"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            class="w-full rounded-[3px] border-[2.5px] border-ink bg-paper px-2.5 py-2 font-mono text-sm shadow-neo-xs focus:outline-none"
+          />
+        </div>
+        <div>
+          <label
+            for="url-parser-new-value"
+            class="mono mb-1.5 block text-[10px] font-bold uppercase tracking-widest"
+          >
+            Add value
+          </label>
+          <input
+            id="url-parser-new-value"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+            class="w-full rounded-[3px] border-[2.5px] border-ink bg-paper px-2.5 py-2 font-mono text-sm shadow-neo-xs focus:outline-none"
+          />
+        </div>
+        <button
+          type="button"
+          id="url-parser-add"
+          class="inline-flex items-center justify-center gap-2 rounded-[3px] border-[3px] border-ink bg-paper px-4 py-2.5 text-sm font-bold uppercase tracking-wide shadow-neo-sm transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-md"
+        >
+          <Icon name="lucide:plus" class="h-4 w-4" aria-hidden="true" />
+          Add
+        </button>
+      </div>
+    </NeoCard>
+
+    <!-- Rebuilt URL -->
+    <NeoCard tone="green" shadow="lg" class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="mono text-[11px] font-bold uppercase tracking-widest">
+          ▸ Rebuilt URL
+        </p>
+        <button
+          type="button"
+          id="url-parser-copy"
+          class="inline-flex items-center gap-2 rounded-[3px] border-[2.5px] border-ink bg-paper px-3 py-1.5 text-xs font-bold uppercase tracking-wide shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+        >
+          <Icon name="lucide:copy" class="h-3.5 w-3.5" aria-hidden="true" />
+          <span id="url-parser-copy-label">Copy</span>
+        </button>
+      </div>
+      <label for="url-parser-output" class="sr-only">Rebuilt URL</label>
+      <textarea
+        id="url-parser-output"
+        rows="2"
+        readonly
+        aria-live="polite"
+        class="w-full resize-y break-all rounded-[4px] border-[3px] border-ink bg-paper p-3 font-mono text-sm shadow-neo-sm focus:outline-none"
+      ></textarea>
+    </NeoCard>
+
+    <!-- Encode / decode -->
+    <NeoCard tone="paper" shadow="md" class="space-y-3">
+      <p class="mono text-[11px] font-bold uppercase tracking-widest">
+        ▸ Encode / decode
+      </p>
+      <label
+        for="url-parser-codec-input"
+        class="mono block text-[11px] font-bold uppercase tracking-widest"
+      >
+        Input
+      </label>
+      <textarea
+        id="url-parser-codec-input"
+        rows="3"
+        spellcheck="false"
+        placeholder="café & bar / 100%"
+        class="w-full resize-y rounded-[4px] border-[3px] border-ink bg-paper p-3 font-mono text-sm shadow-neo-sm focus:outline-none"
+        >https://example.com/a b?q=café &amp; bar</textarea
+      >
+      <div class="flex flex-wrap gap-2">
+        {
+          CODEC_OPS.map((c) => (
+            <button
+              type="button"
+              data-url-parser-op={c.op}
+              class="mono rounded-full border-[2px] border-ink bg-bg-alt px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-cyan hover:shadow-neo-sm"
+            >
+              {c.label}
+            </button>
+          ))
+        }
+      </div>
+      <p
+        id="url-parser-codec-error"
+        class="text-sm font-bold text-pink-deep"
+        role="status"
+        hidden
+      >
+      </p>
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <label
+          for="url-parser-codec-output"
+          class="mono block text-[11px] font-bold uppercase tracking-widest"
+        >
+          Result
+        </label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            id="url-parser-codec-reuse"
+            class="mono rounded-[3px] border-[2.5px] border-ink bg-paper px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+          >
+            ↑ Use as input
+          </button>
+          <button
+            type="button"
+            id="url-parser-codec-copy"
+            class="mono inline-flex items-center gap-2 rounded-[3px] border-[2.5px] border-ink bg-paper px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+          >
+            <Icon name="lucide:copy" class="h-3.5 w-3.5" aria-hidden="true" />
+            <span id="url-parser-codec-copy-label">Copy</span>
+          </button>
+        </div>
+      </div>
+      <textarea
+        id="url-parser-codec-output"
+        rows="3"
+        readonly
+        aria-live="polite"
+        class="w-full resize-y break-all rounded-[4px] border-[3px] border-ink bg-bg-alt p-3 font-mono text-sm shadow-neo-sm focus:outline-none"
+      ></textarea>
+
+      <ul class="space-y-1.5 border-t-[2.5px] border-ink pt-3 text-xs leading-snug">
+        <li>
+          <code>encodeURIComponent</code> — one value going <em>into</em> a URL:
+          a query value, a path segment, a redirect target. Escapes
+          <code>/ ? &amp; = # : @ + $ , ;</code>.
+        </li>
+        <li>
+          <code>encodeURI</code> — a whole URL you assembled yourself. Leaves the
+          delimiters alone so it still parses.
+        </li>
+        <li>
+          <code>decodeURIComponent</code> — reading one value back out. Does
+          <strong>not</strong> turn <code>+</code> into a space.
+        </li>
+        <li>
+          <code>decodeURI</code> — reading a whole URL back. Leaves
+          <code>%2F</code>, <code>%26</code>, <code>%3F</code> encoded on
+          purpose, because decoding them would change the URL's structure.
+        </li>
+      </ul>
+    </NeoCard>
+  </section>
+
+  <!-- Explainer -->
+  <section class="explainer mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase">What the parser actually does</h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Everything above runs through the same WHATWG URL parser your address bar
+      uses — <code>new URL(input)</code> — so what you see is what a browser
+      will really send, not a regex approximation. That matters, because the
+      parser normalizes as it goes: the scheme and host get lowercased,
+      <code>bücher.de</code> becomes <code>xn--bcher-kva.de</code>,
+      <code>:443</code> disappears from an <code>https</code> URL because it is
+      the default port, <code>/a/b/../c</code> collapses to <code>/a/c</code>,
+      and tabs and newlines are stripped outright. If the parsed href does not
+      match the string you pasted, that is the gap between the text you have and
+      the request that goes on the wire.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Two things it does not do. It does not check that the host resolves or
+      that the path exists. And it is not a validator —
+      <code>javascript:alert(1)</code> and <code>data:text/html,…</code> parse
+      perfectly. Before you render a user-supplied URL into an
+      <code>href</code>, allowlist <code>url.protocol</code> against
+      <code>https:</code> and whatever else you actually intend to support.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">
+      encodeURI vs encodeURIComponent
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      <code>encodeURI</code> encodes a whole URL, so it deliberately leaves the
+      delimiters intact. <code>encodeURIComponent</code> encodes one piece that
+      sits inside a URL, so it escapes those same delimiters. Here is the entire
+      difference, character by character:
+    </p>
+    <ComparisonTable
+      columns={encodeColumns}
+      rows={encodeRows}
+      class="mt-5 text-sm"
+    />
+    <p class="mt-4 text-base leading-relaxed opacity-90">
+      The classic bug is reaching for <code>encodeURI</code> on a value.
+      <code>"/checkout?next=" + encodeURI("/a?b=1&amp;c=2")</code> produces
+      <code>/checkout?next=/a?b=1&amp;c=2</code>, so the server reads
+      <code>next=/a?b=1</code> and a bonus parameter <code>c=2</code>. A
+      <code>#</code> in the value is worse: the fragment is never sent, so
+      everything after it silently vanishes before the request leaves the
+      browser. Rule of thumb — value in, <code>encodeURIComponent</code>; whole
+      URL, <code>encodeURI</code>; and if you can, skip both and let
+      <code>URL</code> plus <code>URLSearchParams</code> do the escaping.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">
+      Why + is a space in a query but not in a path
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      <code>+</code> meaning space comes from
+      <code>application/x-www-form-urlencoded</code>, the HTML form
+      serialization, and it applies to the query string only. In a path a
+      <code>+</code> is a literal plus: <code>/a+b</code> is a file called
+      <code>a+b</code>, not <code>a b</code>. Same byte, two meanings, decided
+      by which side of the <code>?</code> it lands on.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      The trap is <code>decodeURIComponent</code>, which knows nothing about
+      form encoding: <code>decodeURIComponent("a+b")</code> returns
+      <code>"a+b"</code>. Hand-roll query parsing with <code>split("&amp;")</code>
+      and <code>decodeURIComponent</code> and every space arrives as a plus.
+      Use <code>URLSearchParams</code>, which applies form rules in both
+      directions. And a literal plus in a value has to travel as
+      <code>%2B</code> — which is exactly what the parameter table above emits.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">
+      Repeated keys are legal, and every stack disagrees
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      <code>?tag=rag&amp;tag=agents</code> is a perfectly valid URL, and no spec
+      says what it means. <code>URLSearchParams.get("tag")</code> returns the
+      first value; <code>getAll("tag")</code> returns both. PHP keeps the last
+      one, so <code>$_GET['tag']</code> is <code>agents</code> unless you write
+      <code>tag[]=</code>. Go's <code>r.URL.Query().Get("tag")</code> returns the
+      first. Express hands you an array. ASP.NET keeps both and joins them with
+      a comma if you stringify it.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      One URL, three different meanings, depending on who receives it. If
+      repeated keys are load-bearing in your API, document the semantics and
+      validate the count server-side. If they are not, put a delimiter inside a
+      single value and stop thinking about it.
+    </p>
+
+    <h2 class="display mt-10 text-2xl uppercase">
+      How long can a URL be, in practice
+    </h2>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      HTTP sets no limit. The limits live in the software along the path, and
+      they are lower than people expect. Apache's <code>LimitRequestLine</code>
+      defaults to 8190 bytes. nginx returns
+      <code>414 Request-URI Too Large</code> when the request line does not fit
+      one of its <code>large_client_header_buffers</code> (8 KB each by
+      default). Node caps total headers at 16 KB. The famous 2,000-character
+      rule is really Internet Explorer's old 2,083-character cap, and it
+      survives because that is roughly where links start breaking in chat
+      clients, email templates and CDN configs.
+    </p>
+    <p class="mt-3 text-base leading-relaxed opacity-90">
+      Practical version: stay under ~2,000 characters for anything a human will
+      share, under 8,000 for anything a server will parse, and move the payload
+      into a POST body past that. Remember too that every byte of a query string
+      lands in access logs, browser history and the <code>Referer</code> header
+      of outbound links — which is why session tokens and signed URLs do not
+      belong there.
+    </p>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group rounded-[4px] border-[3px] border-ink bg-paper shadow-neo-sm">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <h3 class="heading text-base uppercase leading-snug">{f.q}</h3>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-4xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Related</h2>
+    <ul class="grid gap-5 sm:grid-cols-2">
+      {
+        RELATED.map((r) => (
+          <li>
+            <NeoCard
+              href={r.href}
+              tone={r.tone}
+              shadow="sm"
+              hover
+              class="flex h-full flex-col gap-2"
+            >
+              <span class="mono text-[10px] font-bold uppercase tracking-widest opacity-70">
+                {r.kind}
+              </span>
+              <span class="heading text-lg uppercase leading-tight">
+                {r.title}
+              </span>
+              <span class="text-sm leading-snug opacity-90">{r.blurb}</span>
+            </NeoCard>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/url-parser";
+</script>
+
+<style>
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--color-bg-alt);
+    border: 2px solid var(--color-ink);
+    border-radius: 3px;
+    padding: 0.05em 0.3em;
+  }
+</style>

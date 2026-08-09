@@ -1,0 +1,615 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const PAGE_TITLE = "Chmod Permissions Calculator";
+const PAGE_DESCRIPTION =
+  "Free chmod permissions calculator. Convert octal like 755 to rwx and back, with setuid, setgid, and sticky bits plus a copy-ready command — in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: PAGE_TITLE, url: "/tools/chmod-calculator/" },
+]);
+
+const CLASSES = [
+  { key: "u", label: "Owner", hint: "u" },
+  { key: "g", label: "Group", hint: "g" },
+  { key: "o", label: "Others", hint: "o" },
+];
+
+const BITS = [
+  { key: "r", label: "Read", weight: 4 },
+  { key: "w", label: "Write", weight: 2 },
+  { key: "x", label: "Execute", weight: 1 },
+];
+
+const SPECIALS = [
+  {
+    id: "chmod-setuid",
+    label: "setuid",
+    weight: 4,
+    note: "binary runs as the file's owner",
+  },
+  {
+    id: "chmod-setgid",
+    label: "setgid",
+    weight: 2,
+    note: "runs as the file's group · new entries inherit a directory's group",
+  },
+  {
+    id: "chmod-sticky",
+    label: "sticky",
+    weight: 1,
+    note: "only an entry's owner can delete it",
+  },
+];
+
+const PRESETS = [
+  { mode: "644", label: "644 · files" },
+  { mode: "755", label: "755 · dirs + scripts" },
+  { mode: "600", label: "600 · private key" },
+  { mode: "700", label: "700 · private dir" },
+  { mode: "777", label: "777 · danger" },
+  { mode: "1777", label: "1777 · /tmp" },
+  { mode: "2775", label: "2775 · shared dir" },
+];
+
+const faq = [
+  {
+    q: "What does chmod 755 mean?",
+    a: "755 gives the owner read, write, and execute (7 = 4+2+1) and gives the group and everyone else read and execute (5 = 4+1). In symbolic form that is rwxr-xr-x. It is the normal mode for directories and for scripts other accounts need to run.",
+  },
+  {
+    q: "What is the difference between chmod 755 and 644?",
+    a: "The execute bit. 644 is rw-r--r--, for data files nobody needs to run. 755 is rwxr-xr-x, which adds execute. On a directory the execute bit means permission to enter it, so directories are usually 755 while the files inside them are 644.",
+  },
+  {
+    q: "Is chmod 777 ever safe?",
+    a: "Almost never on a server. 777 lets every local account and every process — including a compromised web server — read, modify, and execute the file. If something only works at 777, the real problem is ownership: fix the user or group with chown, then use 750 or 640.",
+  },
+  {
+    q: "What does the 4 in chmod 4755 do?",
+    a: "The fourth digit holds the special bits: 4 is setuid, 2 is setgid, 1 is sticky. 4755 sets setuid, so the program runs with the file owner's privileges instead of the caller's. Linux ignores setuid on shell scripts, and on a compiled binary it is a real privilege-escalation risk.",
+  },
+  {
+    q: "Why does my permission string show a capital S or T?",
+    a: "A capital letter means the special bit is set but the matching execute bit is not. rwSr--r-- is setuid with no owner execute; drwxrwxrwT is the sticky bit with no other execute. Lowercase s or t means both bits are on. A capital is usually a mistake — the bit is stored but nothing can use it.",
+  },
+  {
+    q: "How do I chmod a folder and everything inside it?",
+    a: "chmod -R 755 dir works but marks every data file executable too. Use two passes instead: find dir -type d -exec chmod 755 {} + then find dir -type f -exec chmod 644 {} +. Or use the capital X flag, as in chmod -R u=rwX,go=rX dir, which adds execute only to directories and to files that already had it.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: PAGE_TITLE,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/chmod-calculator/", SITE.URL).href,
+  description: PAGE_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const related = [
+  {
+    href: "/blog/container-vs-pod/",
+    label: "Container vs pod",
+    note: "Where these permissions land once your filesystem is a layered image.",
+  },
+  {
+    href: "/blog/docker-vs-kubernetes/",
+    label: "Docker vs Kubernetes",
+    note: "Runtime users, mounted volumes, and why root-in-container bites.",
+  },
+  {
+    href: "/tools/cron-explainer/",
+    label: "Cron Explainer",
+    note: "The other half of every deploy script: when it runs.",
+  },
+  {
+    href: "/tools/uuid-generator/",
+    label: "UUID Generator",
+    note: "Crypto-random v4 UUIDs, generated in the same browser tab.",
+  },
+];
+---
+
+<Page
+  title={PAGE_TITLE}
+  description={PAGE_DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Chmod Permissions Calculator."
+  intro="Tick the boxes or type the number — both directions stay in sync. Includes the setuid, setgid, and sticky bits, with the S/T rendering everyone else gets wrong."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-4xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono text-[10px] font-bold uppercase tracking-widest mb-1">
+        ▸ Runs offline
+      </p>
+      <p class="text-sm font-bold leading-snug">
+        Every digit is computed in this tab. No request, no upload, no logging —
+        paste a real path if you want to.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-4xl px-5 pb-16" id="chmod-root">
+    <!-- Inputs -->
+    <NeoCard tone="paper" shadow="md" class="space-y-5">
+      <div class="grid gap-4 sm:grid-cols-[9rem_1fr]">
+        <div>
+          <label
+            for="chmod-octal"
+            class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+          >
+            Octal mode
+          </label>
+          <input
+            id="chmod-octal"
+            type="text"
+            value="755"
+            inputmode="numeric"
+            spellcheck="false"
+            autocomplete="off"
+            class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-4 py-3 font-mono text-2xl font-bold shadow-neo-sm focus:outline-none"
+          />
+        </div>
+        <div>
+          <label
+            for="chmod-path"
+            class="mono text-[11px] font-bold uppercase tracking-widest block mb-2"
+          >
+            Path (for the command)
+          </label>
+          <input
+            id="chmod-path"
+            type="text"
+            value="path/to/file"
+            spellcheck="false"
+            autocomplete="off"
+            class="w-full border-[3px] border-ink rounded-[4px] bg-paper px-4 py-3 font-mono text-base font-bold shadow-neo-sm focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <p
+        id="chmod-error"
+        class="text-sm font-bold text-pink-deep"
+        role="status"
+        hidden
+      >
+      </p>
+
+      <div class="flex flex-wrap gap-2">
+        {
+          PRESETS.map((p) => (
+            <button
+              type="button"
+              data-chmod-preset={p.mode}
+              class="border-[2px] border-ink rounded-full bg-bg-alt px-3 py-1 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+            >
+              {p.label}
+            </button>
+          ))
+        }
+      </div>
+    </NeoCard>
+
+    <!-- Bit grid -->
+    <NeoCard tone="paper" shadow="md" class="mt-6 space-y-6">
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-center">
+          <caption class="sr-only">
+            Permission bits for owner, group, and others
+          </caption>
+          <thead>
+            <tr>
+              <th
+                scope="col"
+                class="mono text-[10px] font-bold uppercase tracking-widest border-b-[2.5px] border-ink p-2 text-left"
+              >
+                Class
+              </th>
+              {
+                BITS.map((bit) => (
+                  <th
+                    scope="col"
+                    class="mono text-[10px] font-bold uppercase tracking-widest border-b-[2.5px] border-ink p-2"
+                  >
+                    {bit.label}
+                    <span class="ml-1 opacity-60">{bit.weight}</span>
+                  </th>
+                ))
+              }
+              <th
+                scope="col"
+                class="mono text-[10px] font-bold uppercase tracking-widest border-b-[2.5px] border-ink p-2"
+              >
+                Digit
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              CLASSES.map((cls) => (
+                <tr>
+                  <th
+                    scope="row"
+                    class="border-b-[2px] border-ink p-2 text-left text-sm font-bold uppercase"
+                  >
+                    {cls.label}
+                    <span class="mono ml-1 text-[11px] opacity-60">
+                      {cls.hint}
+                    </span>
+                  </th>
+                  {BITS.map((bit) => (
+                    <td class="border-b-[2px] border-ink p-2">
+                      <label
+                        for={`chmod-${cls.key}-${bit.key}`}
+                        class="inline-flex cursor-pointer items-center gap-1.5"
+                      >
+                        <input
+                          id={`chmod-${cls.key}-${bit.key}`}
+                          type="checkbox"
+                          class="h-5 w-5 border-[2.5px] border-ink accent-pink"
+                        />
+                        <span aria-hidden="true" class="mono text-sm font-bold">
+                          {bit.key}
+                        </span>
+                        <span class="sr-only">
+                          {cls.label} {bit.label}
+                        </span>
+                      </label>
+                    </td>
+                  ))}
+                  <td class="border-b-[2px] border-ink p-2">
+                    <span
+                      id={`chmod-digit-${cls.key}`}
+                      class="display text-2xl leading-none"
+                    >
+                      0
+                    </span>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="border-t-[2.5px] border-ink pt-5">
+        <p class="mono text-[10px] font-bold uppercase tracking-widest mb-3">
+          ▸ Special bits (the optional 4th digit) — now <span
+            id="chmod-digit-special">0</span
+          >
+        </p>
+        <ul class="grid gap-3 sm:grid-cols-3">
+          {
+            SPECIALS.map((s) => (
+              <li>
+                <label
+                  for={s.id}
+                  class="flex h-full cursor-pointer items-start gap-2 border-[2.5px] border-ink rounded-[4px] bg-bg-alt p-3 shadow-neo-xs"
+                >
+                  <input
+                    id={s.id}
+                    type="checkbox"
+                    class="mt-0.5 h-5 w-5 shrink-0 border-[2.5px] border-ink accent-pink"
+                  />
+                  <span>
+                    <span class="mono block text-sm font-bold">
+                      {s.label}
+                      <span class="ml-1 opacity-60">{s.weight}</span>
+                    </span>
+                    <span class="block text-[12px] leading-snug opacity-80">
+                      {s.note}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </NeoCard>
+
+    <!-- Output -->
+    <NeoCard tone="cyan" shadow="lg" class="mt-6">
+      <div aria-live="polite" class="space-y-5">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="mono text-[11px] font-bold uppercase tracking-widest">
+              ▸ Mode
+            </p>
+            <p
+              id="chmod-out-octal"
+              class="display text-5xl md:text-6xl leading-none"
+            >
+              755
+            </p>
+            <p
+              class="mono text-[11px] uppercase tracking-widest opacity-70 mt-2"
+            >
+              4-digit: <span id="chmod-out-four">0755</span>
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="mono text-[11px] font-bold uppercase tracking-widest">
+              ▸ Symbolic
+            </p>
+            <p
+              id="chmod-out-symbolic"
+              class="mono text-2xl md:text-3xl font-bold leading-none"
+            >
+              rwxr-xr-x
+            </p>
+            <p
+              class="mono text-[11px] uppercase tracking-widest opacity-70 mt-2"
+            >
+              ls -l: <span id="chmod-out-ls-file">-rwxr-xr-x</span> ·
+              <span id="chmod-out-ls-dir">drwxr-xr-x</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t-[2.5px] border-ink pt-4">
+          <p class="mono text-[11px] font-bold uppercase tracking-widest mb-2">
+            ▸ In plain English
+          </p>
+          <p id="chmod-out-english" class="text-lg font-bold leading-snug">
+            Owner can read, write, and execute; group and others can read and
+            execute.
+          </p>
+          <ul id="chmod-out-notes" class="mt-3 space-y-1.5"></ul>
+        </div>
+
+        <div class="border-t-[2.5px] border-ink pt-4">
+          <div class="flex items-center justify-between gap-3">
+            <p class="mono text-[11px] font-bold uppercase tracking-widest">
+              ▸ Command
+            </p>
+            <button
+              type="button"
+              id="chmod-copy"
+              class="inline-flex items-center gap-2 border-[2.5px] border-ink rounded-[4px] bg-paper px-3 py-1.5 text-xs font-bold uppercase tracking-wide shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm"
+            >
+              <Icon name="lucide:copy" class="h-3.5 w-3.5" aria-hidden="true" />
+              <span id="chmod-copy-label">Copy command</span>
+            </button>
+          </div>
+          <pre
+            class="mt-2 overflow-x-auto border-[2.5px] border-ink rounded-[4px] bg-paper p-3 text-sm"><code id="chmod-out-command">chmod 755 path/to/file</code></pre>
+          <p class="mono text-[11px] uppercase tracking-widest opacity-70 mt-2">
+            Symbolic: <code id="chmod-out-symbolic-command"
+              >chmod u=rwx,g=rx,o=rx path/to/file</code
+            >
+          </p>
+        </div>
+      </div>
+    </NeoCard>
+
+    <div id="chmod-warnings-wrap" class="mt-6" hidden>
+      <NeoCard tone="yellow" shadow="md">
+        <p class="mono text-[11px] font-bold uppercase tracking-widest mb-3">
+          ▸ Sanity check
+        </p>
+        <ul id="chmod-out-warnings" class="space-y-3" aria-live="polite"></ul>
+      </NeoCard>
+    </div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <div class="space-y-10">
+      <div>
+        <h2 class="display text-2xl uppercase">How the octal actually works</h2>
+        <p class="mt-3 leading-relaxed">
+          Each digit is a three-bit field: read is 4, write is 2, execute is 1,
+          and you add them. So 7 is <code>rwx</code>, 6 is <code>rw-</code>, 5
+          is
+          <code>r-x</code>. The three digits are owner, group, others — in that
+          order, and the kernel checks them in that order and <em
+            >stops at the first class you match</em
+          >. That trips people up: if you own a file with mode 077, you get
+          nothing. Your group membership never gets consulted, because you
+          already matched as the owner.
+        </p>
+        <p class="mt-3 leading-relaxed">
+          A fourth digit sits in front for the special bits. This calculator
+          treats the checkboxes and the number as one value in two shapes:
+          ticking a box ORs a bit into the digit, typing a digit sets the boxes.
+          It also right-aligns short input the way <code>chmod</code> does —
+          <code>chmod 7 file</code> is <code>0007</code>, which grants
+          <code>rwx</code> to everyone <em>except</em> the owner and the group. Type
+          all three digits.
+        </p>
+      </div>
+
+      <div>
+        <h2 class="display text-2xl uppercase">
+          Execute on a directory does not mean "run"
+        </h2>
+        <p class="mt-3 leading-relaxed">
+          Same three bits, completely different meanings depending on what you
+          point them at. This is the single biggest source of "but I gave it
+          permission" bugs.
+        </p>
+        <ComparisonTable
+          class="mt-5"
+          columns={[
+            { label: "On a file", tone: "cyan" },
+            { label: "On a directory", tone: "yellow" },
+          ]}
+          rows={[
+            {
+              icon: "lucide:book-open",
+              label: "r (4)",
+              cells: [
+                "Read the contents.",
+                "List the names inside it (plain ls).",
+              ],
+            },
+            {
+              icon: "lucide:pencil",
+              label: "w (2)",
+              cells: [
+                "Change the contents.",
+                "Create, rename, and delete entries inside it.",
+              ],
+            },
+            {
+              icon: "lucide:corner-down-right",
+              label: "x (1)",
+              cells: [
+                "Run it as a program.",
+                "Traverse it — cd in, and reach anything below.",
+              ],
+            },
+          ]}
+        />
+        <p class="mt-5 leading-relaxed">
+          Two consequences worth internalising. Read without execute on a
+          directory lets you see the names but not stat them, so <code
+            >ls -l</code
+          > returns question marks. And write on a directory is delete permission
+          for everything inside it: you can remove a file you have no write access
+          to, as long as you can write its parent. That is exactly why <code
+            >/tmp</code
+          > needs the sticky bit.
+        </p>
+      </div>
+
+      <div>
+        <h2 class="display text-2xl uppercase">
+          Why 777 is almost always wrong
+        </h2>
+        <p class="mt-3 leading-relaxed">
+          777 is a symptom, not a fix. It says "I don't know which account needs
+          this, so I'll give it to all of them" — including the web server, the
+          queue worker, and whatever a future attacker lands as. World-writable
+          plus world-executable on a deployed application means one file-upload
+          bug is a shell, and the audit trail is worthless because every process
+          could have written the file.
+        </p>
+        <p class="mt-3 leading-relaxed">
+          The correct move is nearly always ownership. Work out which user the
+          process actually runs as, <code>chown</code> the tree to it, then use 750
+          for directories and 640 for files. If two services need the same tree, give
+          them a shared group and a setgid directory (2775) so new files inherit that
+          group automatically. Reserve world-write for scratch directories that carry
+          the sticky bit.
+        </p>
+      </div>
+
+      <div>
+        <h2 class="display text-2xl uppercase">umask: why new files are 644</h2>
+        <p class="mt-3 leading-relaxed">
+          You never actually create a file at 666. The kernel starts a new file
+          at 666 and a new directory at 777, then clears whatever bits the
+          process <code>umask</code> names. The common umask of 022 clears group and
+          other write, which is where 644 and 755 come from. Set it to 077 and you
+          get 600 and 700 — the right default for anything holding secrets.
+        </p>
+        <p class="mt-3 leading-relaxed">
+          umask only ever removes bits, never adds them, which is why a freshly
+          written script is never executable and always needs a <code
+            >chmod +x</code
+          >. It is also per-process and inherited by children, so setting it in
+          your shell profile does nothing for a systemd service — use <code
+            >UMask=</code
+          > in the unit file instead.
+        </p>
+      </div>
+
+      <div>
+        <h2 class="display text-2xl uppercase">
+          The special bits, and setuid risk
+        </h2>
+        <p class="mt-3 leading-relaxed">
+          Setuid (4000) makes a binary run as the file's owner instead of the
+          caller. Setgid (2000) does the same for the group, and on a directory
+          it makes new entries inherit that directory's group. The sticky bit
+          (1000) on a directory restricts renames and deletes to each entry's
+          owner — <code>/tmp</code> is 1777 for precisely that reason. When the matching
+          execute bit is missing the letter goes uppercase: <code>S</code>, <code
+            >S</code
+          >, <code>T</code>. That is not a special mode, it is a warning sign.
+        </p>
+        <p class="mt-3 leading-relaxed">
+          Linux ignores setuid and setgid on interpreted scripts entirely, so <code
+            >chmod 4755 deploy.sh</code
+          > buys you nothing except a finding in the next audit. On a compiled binary
+          the bit is real, and so is the blast radius: every bug in that program becomes
+          a bug that runs as its owner. Reach for a <code>sudo</code> rule or a file
+          capability such as <code>cap_net_bind_service</code> first. One last trap:
+          GNU <code>chmod</code> preserves a directory's setuid and setgid bits when
+          you pass three digits — pass four (<code>0755</code>) when you
+          actually want them cleared.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase mb-5">Questions people ask</h2>
+    <div class="space-y-3">
+      {
+        faq.map((f) => (
+          <details class="group border-[3px] border-ink rounded-[4px] bg-paper shadow-neo-sm">
+            <summary class="cursor-pointer list-none flex items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display text-2xl uppercase mb-5">Related</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      {
+        related.map((r) => (
+          <li>
+            <NeoCard
+              href={r.href}
+              tone="paper"
+              shadow="sm"
+              hover
+              class="h-full space-y-1.5"
+            >
+              <p class="heading text-lg uppercase">{r.label}</p>
+              <p class="text-sm leading-snug opacity-80">{r.note}</p>
+            </NeoCard>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/chmod-calculator";
+</script>

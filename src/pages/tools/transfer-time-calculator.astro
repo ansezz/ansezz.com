@@ -1,0 +1,679 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
+import { Icon } from "astro-icon/components";
+import { SITE } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  {
+    name: "Data Transfer Time Calculator",
+    url: "/tools/transfer-time-calculator/",
+  },
+]);
+
+const DESCRIPTION =
+  "Free data transfer time calculator: how long a file takes to move at a given bandwidth. Bits vs bytes, GB vs GiB, real throughput — all in your browser.";
+
+// Link rates people actually run into, with the efficiency I'd assume for each.
+const PRESETS = [
+  {
+    label: "Home broadband",
+    note: "Wired, single stream, ISP line rate",
+    rateLabel: "100 Mbps",
+    speed: "100",
+    unit: "Mbps",
+    eff: "85",
+  },
+  {
+    label: "Gigabit fibre",
+    note: "Wired LAN or same-region cloud",
+    rateLabel: "1 Gbps",
+    speed: "1",
+    unit: "Gbps",
+    eff: "90",
+  },
+  {
+    label: "Datacenter east-west",
+    note: "Jumbo frames, tuned windows, short RTT",
+    rateLabel: "10 Gbps",
+    speed: "10",
+    unit: "Gbps",
+    eff: "92",
+  },
+  {
+    label: "5G mobile",
+    note: "Wildly variable — assume the low end",
+    rateLabel: "200 Mbps",
+    speed: "200",
+    unit: "Mbps",
+    eff: "60",
+  },
+  {
+    label: "S3 multipart upload",
+    note: "8 parallel parts over a 1 Gbps uplink",
+    rateLabel: "1 Gbps",
+    speed: "1",
+    unit: "Gbps",
+    eff: "75",
+  },
+];
+
+const faq = [
+  {
+    q: "How long does it take to transfer 1 TB?",
+    a: "On a 1 Gbps link at 85% efficiency, 1 TB (decimal, 10^12 bytes) takes about 2 hours 37 minutes. On 100 Mbps that becomes roughly 1 day 2 hours. At 10 Gbps inside a datacenter it drops to about 16 minutes. The link rate is the headline, but the efficiency figure is what separates the estimate from the number you actually watch tick by.",
+  },
+  {
+    q: "Is 100 Mbps the same as 100 MB/s?",
+    a: "No — 100 Mbps is 12.5 MB/s. Mbps is megabits per second, MB/s is megabytes per second, and one byte is eight bits. Divide any bits-per-second figure by 8 to get bytes per second. This one conversion is behind most complaints that a connection runs eight times slower than advertised.",
+  },
+  {
+    q: "Why is my download slower than the speed I pay for?",
+    a: "Because the plan quotes line rate and you are measuring goodput. Protocol headers eat 5-6%, a single TCP connection is capped at receive window divided by round-trip time, congestion control spends the first seconds ramping up, and any hop on the path can be slower than your last mile. Getting 80-90% of the advertised rate on a wired link is a good day; Wi-Fi and mobile land closer to 60-70%.",
+  },
+  {
+    q: "Should I use 1000 or 1024 bytes per KB?",
+    a: "Use 1000 when the number came from a drive vendor, a cloud storage bill, or an object-store API. Use 1024 when it came from ls -lh, du, or Windows Explorer. The gap compounds with scale: 2.4% at the kilobyte, 9.95% at the terabyte. This calculator makes you pick a base instead of guessing, and prints the exact byte count next to the result so you can check the assumption.",
+  },
+  {
+    q: "What efficiency percentage should I use?",
+    a: "90-95% for a wired LAN or same-region cloud traffic, 85% for a healthy wired WAN, 60-70% for Wi-Fi or 5G, and 40-60% for a single TCP stream between continents. Parallel transfers — S3 multipart, rclone with several transfers, a few concurrent rsync jobs — push a long-haul link back toward 85-90%, because they route around the per-connection window ceiling.",
+  },
+  {
+    q: "Does this calculator upload my file or send my numbers anywhere?",
+    a: "No. There is no file picker and no network request. You type a size and a rate, and the arithmetic runs in JavaScript inside your tab. The page keeps working with the network switched off once it has loaded, and nothing is logged, stored, or transmitted.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Data Transfer Time Calculator",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL("/tools/transfer-time-calculator/", SITE.URL).href,
+  description: DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+// Width is applied per usage so Tailwind's w-* utilities never collide.
+const inputClass =
+  "border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-mono font-bold shadow-neo-sm focus:outline-none";
+const selectClass =
+  "border-[3px] border-ink rounded-[4px] bg-paper px-3 py-3 font-bold shadow-neo-sm focus:outline-none";
+const labelClass =
+  "mono text-[11px] font-bold uppercase tracking-widest block mb-2";
+const hintClass = "mono text-[10px] uppercase tracking-widest opacity-70 mt-2";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1";
+const thClass =
+  "border-b-[3px] border-r-[3px] border-ink p-3 mono text-[10px] font-bold uppercase tracking-widest";
+const tdClass = "border-b-[2px] border-r-[3px] border-ink p-3 text-sm";
+---
+
+<Page
+  title="Data Transfer Time Calculator"
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Data Transfer Time Calculator."
+  intro="How long does it take to move X at Y bandwidth? Enter a size and a link rate, pick a base, and get a real answer — with the overhead that line-rate maths always forgets."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Units matter
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Link speed is bits. File size is bytes. The factor of 8 between them is
+        where most transfer estimates go wrong — this tool keeps them apart.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section
+    class="mx-auto max-w-5xl px-5 pb-14"
+    id="transfer-time-calculator-root"
+  >
+    <div class="grid items-start gap-6 md:grid-cols-[1fr_340px]">
+      <!-- Inputs -->
+      <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-5">
+        <div>
+          <label for="transfer-time-calculator-size" class={labelClass}>
+            How much data
+          </label>
+          <div class="flex gap-3">
+            <input
+              id="transfer-time-calculator-size"
+              type="number"
+              min="0"
+              step="any"
+              inputmode="decimal"
+              value="500"
+              autocomplete="off"
+              class={`${inputClass} min-w-0 flex-1`}
+            />
+            <select
+              id="transfer-time-calculator-size-unit"
+              aria-label="Size unit"
+              class={`${selectClass} w-28 shrink-0 sm:w-32`}
+            >
+              <option value="KB" data-si="KB" data-iec="KiB">KB</option>
+              <option value="MB" data-si="MB" data-iec="MiB">MB</option>
+              <option value="GB" data-si="GB" data-iec="GiB" selected>GB</option
+              >
+              <option value="TB" data-si="TB" data-iec="TiB">TB</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="transfer-time-calculator-base" class={labelClass}>
+            Size base
+          </label>
+          <select
+            id="transfer-time-calculator-base"
+            class={`${selectClass} w-full min-w-0`}
+          >
+            <option value="decimal" selected>
+              Decimal (SI) — 1 kB = 1,000 bytes
+            </option>
+            <option value="binary"> Binary (IEC) — 1 KiB = 1,024 bytes </option>
+          </select>
+          <p class={hintClass}>
+            ▸ Cloud bills and drive labels are decimal. <code class={codeClass}
+              >ls -lh</code
+            > and Windows are binary.
+          </p>
+        </div>
+
+        <div>
+          <label for="transfer-time-calculator-speed" class={labelClass}>
+            Link speed
+          </label>
+          <div class="flex gap-3">
+            <input
+              id="transfer-time-calculator-speed"
+              type="number"
+              min="0"
+              step="any"
+              inputmode="decimal"
+              value="1"
+              autocomplete="off"
+              class={`${inputClass} min-w-0 flex-1`}
+            />
+            <select
+              id="transfer-time-calculator-speed-unit"
+              aria-label="Link speed unit"
+              class={`${selectClass} w-28 shrink-0 sm:w-32`}
+            >
+              <option value="Kbps">Kbps</option>
+              <option value="Mbps">Mbps</option>
+              <option value="Gbps" selected>Gbps</option>
+              <option value="MBps">MB/s</option>
+            </select>
+          </div>
+          <p class={hintClass}>
+            ▸ Link rates are always decimal. MB/s here means 10⁶ bytes/s.
+          </p>
+        </div>
+
+        <div>
+          <label for="transfer-time-calculator-efficiency" class={labelClass}>
+            Efficiency / overhead (%)
+          </label>
+          <input
+            id="transfer-time-calculator-efficiency"
+            type="number"
+            min="1"
+            max="100"
+            step="1"
+            inputmode="numeric"
+            value="85"
+            autocomplete="off"
+            class={`${inputClass} w-full`}
+          />
+          <p class={hintClass}>
+            ▸ Share of line rate you actually get. 85% is a sane wired default.
+          </p>
+        </div>
+      </NeoCard>
+
+      <!-- Output -->
+      <NeoCard
+        tone="cyan"
+        shadow="lg"
+        class="min-w-0 space-y-4 md:sticky md:top-24"
+      >
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Transfer time
+        </p>
+
+        <div
+          id="transfer-time-calculator-results"
+          aria-live="polite"
+          class="space-y-4"
+        >
+          <div>
+            <p
+              id="transfer-time-calculator-time"
+              class="display text-pink-deep text-4xl leading-none"
+            >
+              —
+            </p>
+            <p
+              id="transfer-time-calculator-scale"
+              class="mono mt-2 text-[11px] tracking-widest uppercase opacity-80"
+            >
+              —
+            </p>
+          </div>
+
+          <dl class="border-ink space-y-2.5 border-t-[2.5px] pt-3">
+            <div class="flex flex-wrap items-baseline gap-x-3">
+              <dt class="text-xs font-bold uppercase">At full line rate</dt>
+              <dd
+                id="transfer-time-calculator-line-time"
+                class="ml-auto font-mono text-sm font-bold whitespace-nowrap"
+              >
+                —
+              </dd>
+            </div>
+            <div class="flex flex-wrap items-baseline gap-x-3">
+              <dt class="text-xs font-bold uppercase">Effective throughput</dt>
+              <dd
+                id="transfer-time-calculator-throughput"
+                class="ml-auto font-mono text-sm font-bold whitespace-nowrap"
+              >
+                —
+              </dd>
+            </div>
+            <div class="flex flex-wrap items-baseline gap-x-3">
+              <dt class="text-xs font-bold uppercase">Payload</dt>
+              <dd
+                id="transfer-time-calculator-payload"
+                class="ml-auto font-mono text-sm font-bold whitespace-nowrap"
+              >
+                —
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div
+          id="transfer-time-calculator-error"
+          role="status"
+          hidden
+          class="border-ink bg-red rounded-[4px] border-[3px] px-3 py-2.5"
+        >
+          <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+            ▸ Check the inputs
+          </p>
+          <p
+            id="transfer-time-calculator-error-text"
+            class="text-sm leading-snug font-bold"
+          >
+          </p>
+        </div>
+
+        <button
+          type="button"
+          id="transfer-time-calculator-copy"
+          class="border-ink bg-paper shadow-neo-sm hover:bg-yellow hover:shadow-neo-md inline-flex w-full items-center justify-center gap-2 rounded-[6px] border-[3px] px-4 py-2.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 disabled:opacity-50"
+        >
+          <Icon name="lucide:copy" class="h-4 w-4" aria-hidden="true" />
+          <span id="transfer-time-calculator-copy-label">Copy result</span>
+        </button>
+
+        <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+          Runs in your browser · nothing uploaded
+        </p>
+      </NeoCard>
+    </div>
+
+    <!-- Presets -->
+    <h2 class="heading mt-10 mb-3 text-xl uppercase">Common links.</h2>
+    <div
+      class="border-ink bg-paper shadow-neo-md overflow-x-auto rounded-[4px] border-[3px]"
+    >
+      <table class="w-full min-w-[520px] border-collapse text-left">
+        <caption class="sr-only">
+          Common link speeds with a realistic efficiency assumption for each
+        </caption>
+        <thead>
+          <tr class="bg-yellow">
+            <th scope="col" class={thClass}>Scenario</th>
+            <th scope="col" class={thClass}>Link rate</th>
+            <th scope="col" class={thClass}>Efficiency</th>
+            <th
+              scope="col"
+              class="border-ink mono border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
+            >
+              Apply
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            PRESETS.map((p, i) => (
+              <tr class={i % 2 ? "bg-bg-alt" : "bg-paper"}>
+                <th
+                  scope="row"
+                  class="border-ink border-r-[3px] border-b-[2px] p-3 text-left align-top font-bold"
+                >
+                  {p.label}
+                  <span class="mono mt-1 block text-[10px] font-normal tracking-widest uppercase opacity-70">
+                    {p.note}
+                  </span>
+                </th>
+                <td class={`${tdClass} font-mono font-bold whitespace-nowrap`}>
+                  {p.rateLabel}
+                </td>
+                <td class={`${tdClass} font-mono font-bold`}>{p.eff}%</td>
+                <td class="border-ink border-b-[2px] p-3">
+                  <button
+                    type="button"
+                    data-preset-speed={p.speed}
+                    data-preset-unit={p.unit}
+                    data-preset-eff={p.eff}
+                    class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+                  >
+                    Use
+                  </button>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">
+        Bits, bytes, and the factor of 8
+      </h2>
+      <p>
+        Link speeds are sold in bits per second. Files are measured in bytes.
+        One byte is eight bits, so a 100 Mbps line moves at most 12.5 MB/s, and
+        a 1 GB file needs at least 80 seconds on it — not 10. Nearly every "why
+        is my transfer so slow" thread starts and ends right here.
+      </p>
+      <p>
+        The unit selector keeps the two apart on purpose. Pick Mbps or Gbps when
+        you are reading a spec sheet, an ISP plan, or a NIC. Pick MB/s when you
+        are reading a progress bar in Finder, <code class={codeClass}
+          >rsync</code
+        >, or the AWS CLI. One thing this calculator deliberately does not do:
+        it treats MB/s as 10⁶ bytes per second, because network rates are
+        decimal by convention even when the file size sitting next to them is
+        binary. If your transfer tool reports MiB/s, multiply by 1.048576 before
+        typing it in.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        1000 or 1024 — pick one and say which
+      </h2>
+      <p>
+        A "1 TB" drive holds 1,000,000,000,000 bytes. The same drive shows up as
+        931 GB in Windows, because Windows divides by 1024 four times and still
+        writes "GB". Those are two different numbers, 9.95% apart, and at
+        terabyte scale that gap alone is an extra half hour of copying.
+      </p>
+      <p>
+        The base selector switches between them. Decimal (KB/MB/GB/TB, powers of
+        1000) is what drive vendors, cloud object stores, and storage invoices
+        mean. Binary (KiB/MiB/GiB/TiB, powers of 1024) is what <code
+          class={codeClass}>ls -lh</code
+        >, <code class={codeClass}>du -h</code>, and Windows Explorer mean, even
+        when the label quietly drops the "i". Match whichever source you read
+        the size from — not the one that gives you the answer you were hoping
+        for. The exact byte count is printed with every result so you can sanity
+        check it.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Why you never hit line rate
+      </h2>
+      <p>
+        The headline number here is not size divided by link speed, because you
+        will never get the link speed. The efficiency field defaults to 85% for
+        four reasons:
+      </p>
+      <ul class="marker:text-pink list-disc space-y-3 pl-5">
+        <li>
+          <strong>Framing overhead.</strong> A standard 1500-byte Ethernet frame carries
+          1460 bytes of TCP payload — 20 bytes of IP header, 20 of TCP header, plus
+          38 bytes of Ethernet framing and inter-frame gap on the wire. That is roughly
+          5-6% gone before anything goes wrong, and TLS record overhead takes a little
+          more.
+        </li>
+        <li>
+          <strong>The bandwidth-delay product.</strong> A single TCP connection can
+          only have one receive window in flight at a time, so window divided by round-trip
+          time is a hard ceiling. A 64 KB window over a 100 ms path tops out at 5.2
+          Mbps no matter how fat the link is. To fill 1 Gbps at 100 ms RTT you need
+          12.5 MB in flight, which means window scaling and buffers large enough to
+          hold it. This is why a cross-region <code class={codeClass}>scp</code> crawls
+          while <code class={codeClass}>aws s3 cp</code> with multipart concurrency
+          saturates the same link.
+        </li>
+        <li>
+          <strong>Congestion control.</strong> CUBIC and BBR both spend the first
+          round trips ramping. Short transfers may never leave slow start; long ones
+          lose half the window to a single loss event and take many RTTs to climb
+          back.
+        </li>
+        <li>
+          <strong>The slowest hop wins.</strong> Your 10 Gbps NIC is irrelevant if
+          the path crosses a saturated uplink, a rate-limited API gateway, or a disk
+          that only reads at 90 MB/s.
+        </li>
+      </ul>
+      <p>
+        Rules of thumb I use: 90-95% for wired LAN and same-region cloud, 85%
+        for a healthy wired WAN, 60-70% for Wi-Fi and mobile, 40-60% for a
+        single TCP stream between continents — and back up toward 90% if you
+        parallelise the transfer.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        Bandwidth, throughput, latency
+      </h2>
+      <p>
+        Three numbers, constantly confused, fixed by three different things.
+      </p>
+    </div>
+
+    <ComparisonTable
+      class="mt-6"
+      columns={[
+        { label: "Bandwidth", tone: "yellow" },
+        { label: "Throughput", tone: "cyan" },
+        { label: "Latency", tone: "pink" },
+      ]}
+      rows={[
+        {
+          label: "What it is",
+          cells: [
+            "Max capacity of the link",
+            "Bytes actually delivered",
+            "Delay for one round trip",
+          ],
+        },
+        {
+          label: "Unit",
+          cells: [
+            "Mbps / Gbps (quoted)",
+            "Mbps or MB/s (measured)",
+            "Milliseconds",
+          ],
+        },
+        {
+          label: "Set by",
+          cells: [
+            "Your plan and the slowest hop",
+            "Overhead, loss, windows, congestion",
+            "Distance, hops, queueing",
+          ],
+        },
+        {
+          label: "Fixed by",
+          cells: [
+            "Buying a fatter link",
+            "Parallel streams, tuning, compression",
+            "Getting closer: CDN, edge, region",
+          ],
+        },
+        {
+          label: "In this tool",
+          cells: [
+            "The link speed field",
+            "Link speed × efficiency",
+            "Hidden inside the efficiency %",
+          ],
+        },
+      ]}
+    />
+
+    <div class="text-ink/90 mt-6 space-y-4 text-base leading-relaxed">
+      <p>
+        This calculator sizes the transfer. It cannot tell you whether the fix
+        is a fatter pipe, more parallel streams, or a shorter path — that
+        depends on which of the three is actually binding. Useful test: if
+        raising the efficiency percentage alone gets you to a duration you would
+        accept, your problem is protocol and tuning, not capacity, and buying
+        more bandwidth is money set on fire.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">When this estimate lies</h2>
+      <p>
+        Skip it when the payload compresses — a Postgres dump over <code
+          class={codeClass}>ssh -C</code
+        > moves several times faster than its on-disk size suggests. Skip it when
+        the job is millions of small files, because you are bound by per-file syscalls
+        and round trips rather than bytes. Skip it when the real bottleneck is the
+        disk at either end. And nothing here models a transfer that dies at 80% and
+        restarts, which in practice is the actual reason the six-hour copy took two
+        days.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <h2 class="display mb-5 text-2xl uppercase">Questions people ask.</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Related -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="heading mb-4 text-xl uppercase">Keep reading.</h2>
+    <ul class="grid gap-4 sm:grid-cols-2">
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/bandwidth-vs-throughput/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Bandwidth vs throughput: a wider pipe won't fix lag
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/cdn-vs-cache/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            CDN vs cache: shortening the path instead of widening it
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/blog/replication-vs-backup-laravel/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Blog
+          </p>
+          <p class="leading-snug font-bold">
+            Replication vs backup: sizing your restore window
+          </p>
+        </NeoCard>
+      </li>
+      <li>
+        <NeoCard
+          tone="paper"
+          shadow="sm"
+          hover
+          href="/tools/cron-explainer/"
+          class="h-full"
+        >
+          <p
+            class="mono text-pink-deep mb-1 text-[10px] font-bold tracking-widest uppercase"
+          >
+            ▸ Tool
+          </p>
+          <p class="leading-snug font-bold">
+            Cron Explainer — schedule the window you just sized
+          </p>
+        </NeoCard>
+      </li>
+    </ul>
+  </section>
+</Page>
+
+<script>
+  import "@/scripts/transfer-time-calculator";
+</script>
