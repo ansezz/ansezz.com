@@ -53,12 +53,14 @@ This is the part people underrate. The service catalog is not a gimmick — it's
 
 ![Bento grid of one-click services available in Coolify](/blog/coolify-2026-self-hosted-paas/one-click-services.webp)
 
-The catalog spans roughly:
+Worth splitting into two things that get conflated. **Databases are first-class resources**, not templates — eight of them: PostgreSQL, MySQL, MariaDB, MongoDB, Redis, DragonFly, KeyDB, and ClickHouse. They get their own backup scheduling, their own connection UI, their own lifecycle.
 
-- **Databases**: PostgreSQL, MySQL, MariaDB, MongoDB, Redis, ClickHouse, and vector stores like Qdrant.
+Everything else is a compose template, and that's where the breadth lives:
+
 - **Dev tools**: Gitea, Hoppscotch, n8n, Uptime Kuma.
 - **Analytics**: Plausible, Umami, PostHog.
-- **CMS and apps**: Ghost, Strapi, Directus, WordPress, Appwrite, Supabase.
+- **CMS and app platforms**: Ghost, Strapi, Directus, WordPress, Appwrite, Supabase.
+- **AI infrastructure**: Qdrant and other vector stores for RAG workloads.
 
 Each template ships with sane defaults, networking, volume mounts, and generated secrets. You get a running service and a URL.
 
@@ -75,17 +77,17 @@ The self-hosted PaaS space stopped being a one-horse race. Here's where the four
 | **Interface**       | Web dashboard                            | Web dashboard                                       | Web UI                          | CLI-first                         |
 | **Multi-server**    | Native + Swarm                           | Native + Swarm                                      | Docker Swarm                    | Via plugins                       |
 | **Service catalog** | 362 templates                            | 514 blueprints                                      | 354 one-click apps              | Plugin-based                      |
-| **Build sources**   | Dockerfile / Compose / Nixpacks / static | Dockerfile / Compose / Nixpacks / Heroku buildpacks | Dockerfile / captain-definition | Herokuish buildpacks / Dockerfile |
+| **Build sources**   | Dockerfile / Compose / Nixpacks / static | Dockerfile / Compose / Nixpacks / Railpack / Heroku + Paketo buildpacks | Dockerfile / captain-definition | Herokuish buildpacks / Dockerfile |
 | **Backups**         | S3-compatible, scheduled                 | S3-compatible                                       | Manual / scripted               | Plugin-based                      |
 | **GitHub stars**    | 60.3k                                    | 36.5k                                               | 15.1k                           | 32.1k                             |
 
 A few honest reads on that table.
 
-**Dokploy** is the real competitor now, not a footnote — 36k stars and climbing fast, with a template catalog that has quietly grown _larger_ than Coolify's. It's leaner and the UI is arguably cleaner. If you're starting fresh in 2026 it deserves a genuine evaluation rather than a dismissal. Coolify's remaining edge is time in production: more people have hit more edge cases, and those fixes are already merged.
+**Dokploy** is the real competitor now, not a footnote — 36k stars and climbing fast, with a template catalog that has quietly grown _larger_ than Coolify's and a wider set of build sources (Railpack and Paketo on top of the usual Nixpacks and Dockerfile). It's leaner and the UI is arguably cleaner. If you're starting fresh in 2026 it deserves a genuine evaluation rather than a dismissal. Coolify's remaining edge is time in production: more people have hit more edge cases, and those fixes are already merged.
 
 **Dokku** has the smallest resource footprint of the four and the most Unix-native design. If you're comfortable in a terminal and want something that will still work identically in five years, it's a defensible choice. The CLI-first model is a real barrier for teams where not everyone deploys.
 
-**CapRover** is stable and Swarm-native, but development has slowed relative to the others. Fine if you're already on it; I wouldn't start there.
+**CapRover** is the oldest of the four and still actively maintained — it committed as recently as this week. It's Swarm-native by design, which is a genuine advantage if clustering is your starting requirement rather than an afterthought. Its ceiling is the smaller community: fewer people hitting problems means fewer problems already solved for you.
 
 ## What multi-server actually means
 
@@ -103,10 +105,10 @@ This is where I'll break with the usual Coolify writeup, because there's a claim
 
 Here's what Coolify actually gives you:
 
-- **Automatic TLS.** Let's Encrypt issuance and renewal via the bundled proxy (Traefik by default, Caddy optional), including wildcard certificates with a DNS challenge.
-- **Encrypted secrets.** Environment variables are encrypted at rest, scoped per-resource, with shared variables at the project and team level.
-- **Team roles.** Owner, admin, and member roles per team, so a contractor doesn't get production database access.
-- **Scheduled S3 backups.** Database dumps to any S3-compatible bucket — Backblaze B2 and Cloudflare R2 both work and cost almost nothing.
+- **Automatic TLS.** Let's Encrypt issuance and renewal for custom domains, handled by the bundled proxy — Traefik by default, Caddy still marked experimental.
+- **Encrypted secrets.** Environment variable values are stored with Laravel's `encrypted` cast, so they're not sitting in the database as plaintext. Scopes go per-resource, with shared variables at the environment, project, and team level, and separate build-time and runtime visibility.
+- **Team roles.** `owner`, `admin`, and `member` per team, so a contractor doesn't get production database access.
+- **Scheduled backups.** Postgres gets first-class scheduled dumps (Coolify backs up its own database the same way); MySQL, MariaDB, and MongoDB are covered too. Destination is local disk or any S3-compatible bucket — Backblaze B2 and Cloudflare R2 both work and cost almost nothing.
 
 And here's the part nobody says out loud: **Docker publishes ports by writing NAT rules that bypass UFW.** If you `ufw deny 5432` and then map Postgres to the host, that port is open to the internet and `ufw status` will happily tell you it's blocked. This is Docker behavior, not a Coolify bug, but the consequence lands on you either way.
 
