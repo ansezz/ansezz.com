@@ -1,0 +1,157 @@
+---
+title: "Modular monoliths first: why microservices can wait"
+description: "Distributed systems are the priciest fix for a problem you don't have. How to build a modular monolith, own data per module, and know when to split."
+publishDate: 2026-06-24
+category: architecture
+tags: [architecture, modular-monolith, micro-services, laravel, scaling, devops]
+featured: false
+heroImage:
+  url: "/blog/modular-monolith-first/hero.webp"
+  alt: "Pop-art illustration of a SaaS architecture split into neat modules inside one deployable block"
+---
+
+Distributed systems are the most expensive way to solve a problem you do not have yet.
+
+Every year a new batch of SaaS founders jumps straight to microservices because they want to "build for scale." Six months later they are debugging network latency and distributed transactions instead of shipping features. The product has not moved. The infrastructure bill has.
+
+The modular monolith has quietly won this argument. It gives you the logical separation you actually need without the operational tax of a distributed environment. This post covers why you should start there, how to structure it so it stays modular, and the specific signals that tell you it is finally time to split.
+
+If you are still weighing the two patterns at a high level, read [monolith vs microservices](/blog/monolith-vs-microservices/) first. This post assumes you have picked the monolith and want to build one that does not rot.
+
+## The microservice tax is real
+
+Most startups choose microservices for the wrong reasons. They look at Netflix or Uber and assume the infrastructure is the blueprint for success. What they miss is that those companies adopted microservices to solve **organizational** problems — hundreds of engineers who could not coordinate a single deploy — not purely technical ones.
+
+Split prematurely and you pay a heavy tax:
+
+- **Operational overhead.** You now need service discovery, centralized logging, distributed tracing, and a CI/CD pipeline per repository. None of that ships a feature.
+- **Data consistency.** Distributed transactions are hard. You end up with eventual consistency problems that need sagas or an outbox pattern to fix — code that exists only because you split.
+- **Network latency.** Every cross-service call costs milliseconds and can fail. In a monolith these are function calls in memory that cannot time out.
+- **Developer friction.** Debugging a request that hops through five services is far worse than stepping through one process. Reproducing it locally is worse still.
+
+For a small team this overhead kills velocity. You spend 40% of your time on infrastructure and 60% on product. In a modular monolith that ratio flips back toward the thing customers pay for.
+
+![Comparison of monolith and microservice building blocks in pop-art style](/blog/modular-monolith-first/microservice-tax.webp)
+
+## What a modular monolith actually is
+
+A modular monolith is not a big ball of mud with nicer folder names. It is a **single deployable unit** where code is strictly organized into independent modules with well-defined interfaces between them.
+
+In a [Laravel](/blog/category/laravel/) codebase that means each domain gets its own namespace, its own service provider, its own routes, and its own migrations. A `Billing` module never reaches into the `Users` tables directly. It talks through a contract.
+
+```php
+// app/Modules/Billing/Contracts/CustomerDirectory.php
+namespace App\Modules\Billing\Contracts;
+
+interface CustomerDirectory
+{
+    public function find(int $customerId): ?CustomerSummary;
+}
+```
+
+```php
+// app/Modules/Users/Adapters/EloquentCustomerDirectory.php
+namespace App\Modules\Users\Adapters;
+
+use App\Modules\Billing\Contracts\CustomerDirectory;
+use App\Modules\Billing\Contracts\CustomerSummary;
+use App\Modules\Users\Models\User;
+
+final class EloquentCustomerDirectory implements CustomerDirectory
+{
+    public function find(int $customerId): ?CustomerSummary
+    {
+        $user = User::query()->find($customerId);
+
+        return $user
+            ? new CustomerSummary($user->id, $user->email, $user->billing_country)
+            : null;
+    }
+}
+```
+
+`Billing` depends on an interface it owns and a DTO it controls. `Users` supplies the implementation. Swap that adapter for an HTTP client tomorrow and `Billing` does not change a single line. That is the whole trick: the seam already exists, you just move what is behind it.
+
+The goal is **logical separation with physical unity**. You get a clean, decoupled [architecture](/blog/category/architecture/) without managing a fleet of containers on [Coolify](/blog/coolify-docker-saas-hosting/) or Kubernetes before you need to.
+
+## Bounded contexts keep the modules honest
+
+The concept doing the real work here is the **bounded context** — a term from Domain-Driven Design that marks the boundary where one model of a thing applies.
+
+A `Product` in the `Inventory` module is not the same object as a `Product` in the `Marketing` module. One cares about stock levels, SKUs, and warehouse locations. The other cares about SEO titles, hero images, and merchandising rules. Forcing them into one bloated `Product` model is how modular monoliths turn into mud.
+
+Three rules keep boundaries intact:
+
+1. **Enforce them mechanically.** Human discipline fails under deadline. Add an architecture test that fails the build when `Modules\Billing` imports `Modules\Inventory\Models`. In PHP, [Deptrac](https://github.com/qossmic/deptrac) or a Pest arch test does this in a few lines. Any language has an equivalent.
+2. **Keep the shared kernel tiny.** A little shared code is fine. A giant `Common` package that every module depends on is a monolith wearing a costume — you can never split anything out of it.
+3. **Prefer events over direct calls.** When `Orders` needs `Shipping` to react, emit a domain event instead of calling a method. Replacing an in-process listener with a message queue later becomes a config change, not a rewrite.
+
+That third rule is the highest-leverage one. Internal events are the cheapest dress rehearsal for [asynchronous communication](/blog/synchronous-vs-asynchronous-communication/) you will ever get, and they cost nothing while everything still runs in one process.
+
+## The data ownership trap
+
+The database is where most monolith-to-microservice migrations die.
+
+If your modules share tables or run JOINs across domains, you are coupled at the data layer — the hardest coupling to break. No amount of tidy namespaces saves you when `Reporting` joins six tables owned by four other modules.
+
+So aim for **schema per module**. Use one physical Postgres or MySQL instance for simplicity, but give each module its own tables and treat them as private. In practice:
+
+- No foreign keys crossing module boundaries. Store the ID and let the application layer resolve the relationship.
+- No cross-module JOINs. If `Billing` needs a customer email, it calls the contract, not the `users` table.
+- Read models over reach-ins. If `Reporting` needs a wide view, have modules publish into a reporting table they explicitly own.
+
+Here is the test: **if you cannot imagine running your `Orders` module against a separate database server tomorrow, your monolith is not modular yet.** It is a monolith with folders.
+
+![Dashboard visualization of module metrics and boundaries in pop-art style](/blog/modular-monolith-first/bounded-contexts.webp)
+
+## A decision framework for when to split
+
+You rarely outgrow a monolith because of traffic. A single well-tuned Laravel box with [Octane](/blog/laravel-octane-high-traffic/) and a queue handles more load than most SaaS companies ever see. You outgrow it because of **friction**. Three signals matter:
+
+### 1. Team autonomy
+
+Are developers constantly blocking each other? Twenty engineers merging into one codebase with a deployment queue is a real organizational bottleneck, and that alone can justify a split. Five engineers? A monolith is almost always faster. Conway's Law cuts both ways — do not buy a distributed architecture for a co-located team.
+
+### 2. Divergent scaling profiles
+
+Does one part of the app have radically different resource needs? An AI inference module that wants GPUs while your dashboard is plain CRUD is a genuine case for extraction. You stop paying for GPU-sized instances to serve settings pages, and your [DevOps](/blog/category/devops/) spend tracks actual demand.
+
+### 3. Fault isolation
+
+If a bug in non-critical reporting takes down checkout, you have a resilience problem. First try to solve it in-process — better error handling, background jobs, timeouts, a bulkhead around the risky call. If it keeps happening, a separate service acts as a circuit breaker around your core revenue path.
+
+| Metric               | Modular monolith        | Microservices             |
+| :------------------- | :---------------------- | :------------------------ |
+| **Deployment**       | Simple (one pipeline)   | Complex (many pipelines)  |
+| **Testing**          | Easy (in-process)       | Hard (end-to-end focused) |
+| **Data integrity**   | Strong (ACID)           | Eventual consistency      |
+| **Debugging**        | Stack trace             | Distributed trace         |
+| **Operational cost** | Low                     | High                      |
+| **Team scaling**     | Bottlenecks past ~15–20 | Scales with squads        |
+
+Notice what is missing: raw performance. It is almost never the deciding factor, and when it is, a bigger box or a read replica usually beats a rewrite.
+
+## Extract background workers before services
+
+When the split finally makes sense, your first move should not be a full service.
+
+Start with an **extracted background worker**. Move heavy, long-running tasks — PDF generation, CSV exports, video transcoding, embedding jobs — into their own process consuming from a queue. You get isolation, independent scaling, and blast-radius reduction without the pain of synchronous API contracts, retries, and versioning. [RabbitMQ](/blog/scaling-with-rabbitmq/) or a [Pub/Sub-style event backbone](/blog/event-driven-pubsub/) covers most of this, and the same pattern powers [queue-based document processing](/blog/message-queues-document-processing/).
+
+Only after that should you consider carving out a synchronous service. When you do, the [strangler fig migration](/blog/monolith-to-microservices/) is the safe path — route one endpoint at a time and keep the monolith as your fallback.
+
+One more constraint: **wait until your domain is stable**. Early-stage products change their data models weekly. Hard service boundaries during that discovery phase turn every small feature into a multi-service orchestration project. Boundaries are cheap to move inside a monolith and expensive to move across a network.
+
+![Diagram of a module being extracted from a monolith into its own service](/blog/modular-monolith-first/extraction-path.webp)
+
+## Takeaways
+
+- **Start modular.** Separate business domains with namespaces, modules, and contracts from day one — this costs nothing early and is nearly impossible to retrofit later.
+- **Enforce boundaries with tooling.** Architecture tests in CI, not code-review vigilance.
+- **Own your data per module.** No cross-module foreign keys, no cross-domain JOINs. Data coupling is the coupling that traps you.
+- **Emit events internally.** In-process listeners today become queue consumers tomorrow with a config change.
+- **Split on friction, not fashion.** Deployment bottlenecks, divergent scaling profiles, and repeat fault cascades are reasons. A conference talk is not.
+- **Extract workers first.** Async background processes give you most of the isolation benefits at a fraction of the operational cost.
+
+If your architecture lets you change your mind later without a rewrite, you have already won. That is the whole point of deferring the decision.
+
+How often are you actually checking for cross-module coupling in your codebase? If the answer is "never," that is the cheapest audit you can run this week — and [I am happy to look at it with you](/contact/).
