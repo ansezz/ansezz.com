@@ -93,7 +93,10 @@ Composites: `src/components/home/*`, `src/components/blog/*`, `src/components/wo
 - Zod v4 syntax in schemas (`z.url()`, `z.coerce.date()`).
 - Tailwind v4 — colors are CSS vars (`bg-yellow`, `text-ink`). Shadows are utilities (`shadow-neo-xs/sm/md/lg/xl`). No `tailwind.config.js`.
 - Use `NeoCard` instead of hand-rolling bordered cards. Use `Page` layout for routine pages.
+- The header's desktop nav needs ~932px, so it switches at `lg:`, not `md:`. `src/scripts/mobile-menu.ts` has a matching `matchMedia` query — change both together.
 - Dynamic Tailwind classes (e.g. `bg-${tone}`) do not work — use static lookup maps (`Record<Tone, string>`).
+- **Coloured surfaces need a pinned foreground.** `--color-ink`/`--color-paper`/`--color-bg` invert between themes, but the accents (`yellow`, `cyan`, `green`, `red`, `pink`, `purple`, `blue`) do not. So `bg-ink text-bg` is correct, while `bg-yellow text-ink` collapses to ~1.4:1 in dark mode. Pair bright accents with `text-on-accent` and deep ones (purple/blue) with `text-on-deep`; both are theme-invariant. A tone map that sets a background but no foreground is a bug.
+- Grid and flex items default to `min-width: auto`, so a `truncate`/`whitespace-nowrap` descendant forces the track to its full text width and the card overflows the viewport. Card-grid `<li>`s carry `min-w-0`.
 - External links go through `externalLinkAttrs()` from `@/lib/links`, not hand-written `target`/`rel`.
 - Never hardcode a number that `consts.ts` already derives (years of experience, post counts, tag counts) — they drift.
 - Don't render the same component twice with a fixed `id`; two `<ThemeToggle />` instances is why that hook is `[data-theme-toggle]`.

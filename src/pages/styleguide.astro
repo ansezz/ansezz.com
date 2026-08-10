@@ -87,9 +87,41 @@ const colors: ColorToken[] = [
   { name: "blue", value: "#2e6bb8", className: "bg-blue", text: "text-paper" },
   {
     name: "purple",
-    value: "#9b5de5",
+    value: "#7c3aed",
     className: "bg-purple",
-    text: "text-paper",
+    text: "text-on-deep",
+  },
+  // Foreground tokens. These deliberately do NOT invert with the theme —
+  // see the note in global.css.
+  {
+    name: "on-accent",
+    value: "#0a0a0a",
+    className: "bg-on-accent",
+    text: "text-on-deep",
+  },
+  {
+    name: "on-deep",
+    value: "#fafaf5",
+    className: "bg-on-deep",
+    text: "text-on-accent",
+  },
+  {
+    name: "accent-text",
+    value: "#c7005f",
+    className: "bg-accent-text",
+    text: "text-on-deep",
+  },
+  {
+    name: "ink-soft",
+    value: "#2a2a2a",
+    className: "bg-ink-soft",
+    text: "text-on-deep",
+  },
+  {
+    name: "muted",
+    value: "#4a4a4a",
+    className: "bg-muted",
+    text: "text-on-deep",
   },
 ];
 
@@ -164,7 +196,9 @@ const sections = [
                 <p class="mono text-[11px] font-bold tracking-widest uppercase">
                   {c.name}
                 </p>
-                <p class="mono text-[10px] opacity-60">{c.value}</p>
+                <p class="mono text-[10px] opacity-60" data-token={c.name}>
+                  {c.value}
+                </p>
               </div>
             </li>
           ))
@@ -516,4 +550,8 @@ const sections = [
       </div>
     </div>
   </section>
+
+  <script>
+    import "@/scripts/styleguide-tokens";
+  </script>
 </BaseLayout>

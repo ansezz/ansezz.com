@@ -95,7 +95,8 @@ Composites live in `src/components/home/`, `src/components/blog/`, `src/componen
 
 Tokens (in `src/styles/global.css` `@theme`):
 
-- **Colors** — `bg`, `bg-alt`, `paper`, `ink`, `ink-soft`, `yellow`, `pink`, `pink-deep`, `cyan`, `green`, `red`, `blue`, `purple`
+- **Colors** — `bg`, `bg-alt`, `paper`, `ink`, `ink-soft`, `muted`, `yellow`, `pink`, `pink-deep`, `cyan`, `green`, `red`, `blue`, `purple`
+- **Foregrounds** — `on-accent` (always dark) and `on-deep` (always light). These do **not** invert with the theme. `ink`/`paper`/`bg` invert together, so `bg-ink text-bg` is fine; but `bg-yellow` stays bright in dark mode, so it must pair with `text-on-accent` or the text drops to ~1.4:1. `accent-text` is the eyebrow colour and lightens on dark.
 - **Shadows** — `shadow-neo-xs` (2px) → `shadow-neo-xl` (12px), all hard offset
 - **Type** — clamp display scale, Archivo Black + Inter + JetBrains Mono
 
