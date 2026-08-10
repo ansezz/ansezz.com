@@ -396,6 +396,267 @@ export const CATEGORY_TONE: Record<
   career: "pink",
 };
 
+/**
+ * Closed tag vocabulary. Tags are the axis orthogonal to category: a category
+ * is one broad navigational bucket, a tag is a specific technology or concept
+ * that cuts across categories.
+ *
+ * This list is enforced by `src/content.config.ts` — a post carrying a tag
+ * that is not defined here fails the build. That is deliberate. An open
+ * vocabulary is how this site reached 188 tags, 150 of which had fewer than
+ * three posts and generated a thin, noindexed page each.
+ *
+ * Adding a tag means adding it here first, with a real description and three
+ * to five related tags. Every tag must carry at least three posts.
+ */
+export const BLOG_TAGS = {
+  laravel: {
+    label: "Laravel",
+    description:
+      "Laravel in production: Octane and Swoole under real traffic, queue design, multi-tenancy, and the parts of the framework that bite at scale.",
+    related: ["databases", "multi-tenancy", "messaging", "performance"],
+  },
+  devops: {
+    label: "DevOps",
+    description:
+      "The operational half of shipping software — CI/CD pipelines, infrastructure as code, and the boundary between building a system and running it.",
+    related: ["ci-cd", "infrastructure", "deployment", "observability"],
+  },
+  ai: {
+    label: "AI",
+    description:
+      "Applied AI engineering: shipping model-backed features that hold up in production, rather than demos that work once on a clean input.",
+    related: ["llm", "agentic-ai", "rag", "ai-engineering"],
+  },
+  infrastructure: {
+    label: "Infrastructure",
+    description:
+      "The layer under the app — compute, networking, storage sizing, and the cost and failure characteristics that arrive with each choice.",
+    related: ["cloud-platforms", "self-hosting", "scaling", "networking"],
+  },
+  architecture: {
+    label: "Architecture",
+    description:
+      "System design trade-offs written down honestly: what each option costs, where it breaks, and when the simpler answer is the right one.",
+    related: ["microservices", "api-design", "messaging", "scaling"],
+  },
+  shopify: {
+    label: "Shopify",
+    description:
+      "Shopify Plus development — apps, Liquid and headless storefronts, webhooks, and the platform limits you only discover under production load.",
+    related: ["hydrogen", "agentic-commerce", "api-design", "security"],
+  },
+  rag: {
+    label: "RAG",
+    description:
+      "Retrieval-augmented generation that survives production: chunking, hybrid search, reranking, and the failure modes that only appear at scale.",
+    related: ["pgvector", "vector-search", "llm", "ai-engineering"],
+  },
+  llm: {
+    label: "LLMs",
+    description:
+      "Working with large language models directly — context windows, prompt and context engineering, memory, and where the abstractions leak.",
+    related: ["llm-inference", "rag", "claude", "agentic-ai"],
+  },
+  "agentic-ai": {
+    label: "Agentic AI",
+    description:
+      "Agents that do real work: tool use, multi-step planning, the MCP/A2A/ACP protocol landscape, and keeping autonomy bounded enough to trust.",
+    related: ["mcp", "claude", "llm", "code-quality"],
+  },
+  mcp: {
+    label: "MCP",
+    description:
+      "Model Context Protocol in practice — building servers, wiring tools to Claude, and using MCP as the integration layer that agents plug into.",
+    related: ["agentic-ai", "claude", "api-design", "ai-engineering"],
+  },
+  scaling: {
+    label: "Scaling",
+    description:
+      "Making a system carry more load: horizontal versus vertical, autoscaling signals that track real demand, and the point where scaling stops helping.",
+    related: ["kubernetes", "performance", "infrastructure", "messaging"],
+  },
+  docker: {
+    label: "Docker",
+    description:
+      "Containers as a production tool — image design, Compose used in anger, and the actual difference between a container and a pod.",
+    related: ["kubernetes", "deployment", "self-hosting", "coolify"],
+  },
+  networking: {
+    label: "Networking",
+    description:
+      "How traffic actually reaches your app: DNS, service discovery, reverse proxies, load balancing, CDNs, and the latency each layer quietly adds.",
+    related: ["infrastructure", "performance", "api-design", "kubernetes"],
+  },
+  "api-design": {
+    label: "API design",
+    description:
+      "Designing APIs people can use — REST versus gRPC versus GraphQL, gateway responsibilities, rate limiting, and versioning without breaking clients.",
+    related: ["architecture", "security", "networking", "microservices"],
+  },
+  "vector-search": {
+    label: "Vector search",
+    description:
+      "Vector and hybrid retrieval — pgvector, Pinecone, Weaviate, Qdrant, graph search, and choosing one without regretting it six months later.",
+    related: ["rag", "pgvector", "databases", "llm"],
+  },
+  claude: {
+    label: "Claude",
+    description:
+      "Building on Anthropic's Claude: the API, MCP, agentic coding workflows, and what changes about a product when the model is the interface.",
+    related: ["mcp", "agentic-ai", "llm", "vibe-coding"],
+  },
+  "machine-learning": {
+    label: "Machine learning",
+    description:
+      "Classical ML next to generative AI — where each belongs, the MLOps around both, and the data engineering that decides whether either works.",
+    related: ["ai", "ai-engineering", "llm-inference", "databases"],
+  },
+  "ci-cd": {
+    label: "CI/CD",
+    description:
+      "Continuous integration and delivery that catches real problems: pipeline design, test gates, and shipping without a release ritual.",
+    related: ["devops", "deployment", "code-quality", "docker"],
+  },
+  kubernetes: {
+    label: "Kubernetes",
+    description:
+      "Kubernetes when it earns its complexity — pods and sidecars, KEDA-driven autoscaling, and the many cases where Docker Compose was already enough.",
+    related: ["docker", "scaling", "infrastructure", "networking"],
+  },
+  microservices: {
+    label: "Microservices",
+    description:
+      "Service boundaries and the cost of crossing them: modular monoliths, strangler-fig migrations, and when splitting the system is the wrong move.",
+    related: ["architecture", "messaging", "api-design", "scaling"],
+  },
+  pgvector: {
+    label: "pgvector",
+    description:
+      "Postgres as a vector database — pgvector indexing, recall tuning, and running retrieval next to your relational data instead of beside it.",
+    related: ["rag", "vector-search", "databases", "laravel"],
+  },
+  "vibe-coding": {
+    label: "Vibe coding",
+    description:
+      "AI-assisted development as a discipline: where model-driven coding earns real speed, where it quietly costs you, and how taste survives it.",
+    related: ["claude", "code-quality", "agentic-ai", "ai"],
+  },
+  "multi-tenancy": {
+    label: "Multi-tenancy",
+    description:
+      "Multi-tenant SaaS architecture — tenant isolation, per-tenant data boundaries, and the Laravel patterns that keep it maintainable past ten customers.",
+    related: ["laravel", "databases", "architecture", "security"],
+  },
+  messaging: {
+    label: "Messaging & queues",
+    description:
+      "Asynchronous work: queues and brokers, pub/sub, event-driven design, dead-letter handling, batching, and back-pressure that actually holds.",
+    related: ["architecture", "redis", "microservices", "scaling"],
+  },
+  performance: {
+    label: "Performance",
+    description:
+      "Making software faster where it counts — measuring first, telling bandwidth from throughput, and fixing the bottleneck that exists rather than the one you assumed.",
+    related: ["scaling", "networking", "redis", "observability"],
+  },
+  redis: {
+    label: "Redis",
+    description:
+      "Redis beyond a cache: semantic caching for LLM calls, rate-limit counters, queue backing, and recognising when the cache has become the bug.",
+    related: ["messaging", "performance", "databases", "rag"],
+  },
+  career: {
+    label: "Career",
+    description:
+      "Engineering roles compared honestly — what SREs, platform, cloud, data and forward-deployed engineers actually do, and how hiring reads each title.",
+    related: ["devops", "architecture", "ai-engineering", "code-quality"],
+  },
+  "ai-engineering": {
+    label: "AI engineering",
+    description:
+      "AI engineering as its own discipline: evaluation, retrieval, cost control, and the operational work separating a working demo from a product.",
+    related: ["ai", "rag", "llm-inference", "production"],
+  },
+  "agentic-commerce": {
+    label: "Agentic commerce",
+    description:
+      "Commerce that agents can transact against — UCP, checkout flows built for machine buyers, and making a storefront legible to a model.",
+    related: ["shopify", "hydrogen", "agentic-ai", "security"],
+  },
+  hydrogen: {
+    label: "Hydrogen",
+    description:
+      "Headless Shopify with Hydrogen and the Storefront API: when leaving Liquid pays for itself, and when it quietly does not.",
+    related: ["shopify", "agentic-commerce", "performance", "api-design"],
+  },
+  "code-quality": {
+    label: "Code quality",
+    description:
+      "Holding quality when a model writes the first draft — testing AI-generated code, reviewing at the right altitude, and what CI has to catch.",
+    related: ["ci-cd", "vibe-coding", "agentic-ai", "career"],
+  },
+  security: {
+    label: "Security",
+    description:
+      "Security for systems that talk to models and to money: authentication, webhook verification, and denial-of-wallet on metered AI endpoints.",
+    related: ["api-design", "shopify", "multi-tenancy", "infrastructure"],
+  },
+  coolify: {
+    label: "Coolify",
+    description:
+      "Coolify as a self-hosted PaaS — running production SaaS on hardware you own, and how it actually compares to Dokploy and the managed platforms.",
+    related: ["self-hosting", "docker", "deployment", "devops"],
+  },
+  "self-hosting": {
+    label: "Self-hosting",
+    description:
+      "Running your own infrastructure deliberately: VPS and ARM economics, what you gain in cost and control, and what you take on in exchange.",
+    related: ["coolify", "infrastructure", "docker", "deployment"],
+  },
+  production: {
+    label: "Production",
+    description:
+      "The gap between working and production-ready — the operational realities that only surface once real users and real load arrive.",
+    related: ["observability", "ai-engineering", "devops", "scaling"],
+  },
+  observability: {
+    label: "Observability",
+    description:
+      "Knowing what your system is doing: logging versus monitoring, circuit breakers, graceful fallbacks, and designing for the failure you will get.",
+    related: ["production", "devops", "performance", "infrastructure"],
+  },
+  "cloud-platforms": {
+    label: "Cloud platforms",
+    description:
+      "Working across GCP and AWS — the managed services worth paying for, the lock-in worth accepting, and the bill you should model before committing.",
+    related: ["infrastructure", "devops", "kubernetes", "self-hosting"],
+  },
+  deployment: {
+    label: "Deployment",
+    description:
+      "Getting code into production repeatably: deployment strategies, PaaS trade-offs, and a rollback path you could actually execute under pressure.",
+    related: ["ci-cd", "docker", "coolify", "devops"],
+  },
+  databases: {
+    label: "Databases",
+    description:
+      "Data that has to survive — Postgres in production, replication versus backup, high availability, and the recovery procedure nobody has tested.",
+    related: ["laravel", "pgvector", "multi-tenancy", "redis"],
+  },
+  "llm-inference": {
+    label: "LLM inference",
+    description:
+      "Serving models efficiently: prefill and decode, KV cache, GPU-aware load balancing, vLLM, and the latency budget behind time-to-first-token.",
+    related: ["llm", "scaling", "performance", "ai-engineering"],
+  },
+} as const;
+
+export type BlogTag = keyof typeof BLOG_TAGS;
+
+/** Tuple form required by `z.enum()` in src/content.config.ts. */
+export const TAG_KEYS = Object.keys(BLOG_TAGS) as [BlogTag, ...BlogTag[]];
+
 export const CARD_TONES = [
   "paper",
   "yellow",
