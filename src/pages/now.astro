@@ -1,5 +1,8 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks, {
+  type RelatedLink,
+} from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
@@ -17,6 +20,29 @@ const updated = new Date(NOW.UPDATED).toLocaleDateString("en-US", {
   month: "long",
   day: "numeric",
 });
+
+const relatedLinks: RelatedLink[] = [
+  {
+    href: "/blog/series/rag-in-production/",
+    kind: "Series",
+    note: "Everything that breaks when RAG meets real users, and how to fix it.",
+  },
+  {
+    href: "/blog/series/shopify-plus/",
+    kind: "Series",
+    note: "Agentic commerce, UCP, headless \u2014 the Shopify Plus work in depth.",
+  },
+  {
+    href: "/work/",
+    kind: "Page",
+    note: "What's already shipped, filterable by lane.",
+  },
+  {
+    href: "/services/",
+    kind: "Page",
+    note: "How an engagement runs if you want to work together on any of it.",
+  },
+];
 ---
 
 <Page
@@ -87,4 +113,6 @@ const updated = new Date(NOW.UPDATED).toLocaleDateString("en-US", {
       </div>
     </NeoCard>
   </section>
+
+  <RelatedLinks title="Dig into any of it" items={relatedLinks} />
 </Page>

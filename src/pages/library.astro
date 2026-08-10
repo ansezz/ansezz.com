@@ -1,5 +1,8 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks, {
+  type RelatedLink,
+} from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import { Icon } from "astro-icon/components";
 import { LIBRARY, LIBRARY_GROUPS, SITE } from "@/consts";
@@ -20,6 +23,29 @@ const iconBg: Record<string, string> = {
   purple: "bg-purple text-paper",
   blue: "bg-blue text-paper",
 };
+
+const relatedLinks: RelatedLink[] = [
+  {
+    href: "/uses/",
+    kind: "Page",
+    note: "The stack I actually ship on \u2014 what these recommendations turned into in practice.",
+  },
+  {
+    href: "/blog/series/rag-in-production/",
+    kind: "Series",
+    note: "The pgvector and RAG material above, applied end to end.",
+  },
+  {
+    href: "/tools/",
+    kind: "Page",
+    note: "23 free browser-only tools built while working through this stuff.",
+  },
+  {
+    href: "/blog/",
+    kind: "Page",
+    note: "71 posts on Laravel, AI engineering, Shopify Plus, DevOps and architecture.",
+  },
+];
 ---
 
 <Page
@@ -82,4 +108,6 @@ const iconBg: Record<string, string> = {
       ))
     }
   </section>
+
+  <RelatedLinks title="Related" items={relatedLinks} />
 </Page>

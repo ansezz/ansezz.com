@@ -1,5 +1,8 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks, {
+  type RelatedLink,
+} from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import TagPill from "@/components/neobrutalist/TagPill.astro";
 import TagPillRow from "@/components/neobrutalist/TagPillRow.astro";
@@ -309,6 +312,29 @@ const recentlyDropped = [
   "Algolia — Meilisearch caught up",
   "Vercel for Laravel apps — Coolify wins",
   "OpenAI as default model — Claude now is",
+];
+
+const relatedLinks: RelatedLink[] = [
+  {
+    href: "/blog/laravel-octane-high-traffic/",
+    kind: "Post",
+    note: "Octane and FrankenPHP in anger \u2014 worker tuning, memory bloat, and what actually got faster.",
+  },
+  {
+    href: "/blog/series/self-hosting-saas/",
+    kind: "Series",
+    note: "The Coolify half of this list, start to finish: ship and scale a SaaS on your own boxes.",
+  },
+  {
+    href: "/blog/claude-mcp-dev-tools/",
+    kind: "Post",
+    note: "The Claude + MCP setup I run daily, and which servers earned a permanent slot.",
+  },
+  {
+    href: "/library/",
+    kind: "Page",
+    note: "The books, docs and repos behind these choices \u2014 not just the tools themselves.",
+  },
 ];
 ---
 
@@ -646,4 +672,6 @@ const recentlyDropped = [
       </div>
     </div>
   </HalftoneSection>
+
+  <RelatedLinks title="Where this stack shows up" items={relatedLinks} />
 </Page>
