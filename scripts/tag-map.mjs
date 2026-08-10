@@ -8,7 +8,16 @@
 export const MAP = {
   ai: ["ai", "genai"],
   llm: ["llm", "context-window", "context", "memory"],
+  // "llm-inference", "databases", and "cloud-platforms" are new canonical
+  // names invented by this taxonomy — no corpus post ever carried a tag
+  // spelled exactly that way (the corpus had "database" singular and no
+  // "cloud-platforms"/"llm-inference" tag at all). Without a self-alias,
+  // re-running the migration against already-canonicalized frontmatter
+  // can't resolve these back to themselves and the script wrongly reports
+  // them as unmapped. Every other canonical below self-aliases naturally
+  // because it already existed as a corpus tag with that spelling.
   "llm-inference": [
+    "llm-inference",
     "inference",
     "training",
     "vllm",
@@ -67,6 +76,7 @@ export const MAP = {
     "backend",
   ],
   databases: [
+    "databases",
     "database",
     "postgres",
     "replication",
@@ -135,7 +145,7 @@ export const MAP = {
   ],
   performance: ["performance", "web-performance"],
   redis: ["redis", "caching", "semantic-cache", "redisvl"],
-  "cloud-platforms": ["gcp", "google-cloud", "aws"],
+  "cloud-platforms": ["cloud-platforms", "gcp", "google-cloud", "aws"],
   security: ["security", "denial-of-wallet"],
 
   architecture: [

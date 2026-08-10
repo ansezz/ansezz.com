@@ -60,7 +60,14 @@ applyCap(posts);
 let changed = 0;
 for (const p of posts) {
   const newLine = `tags: [${p.tags.join(", ")}]`;
-  if (newLine === p.oldLine.trim()) continue;
+  // Compare resolved VALUES, not serialized text. A post whose tags are
+  // already canonical but whose array Prettier wrapped across lines would
+  // otherwise register as changed forever: this script collapses it to one
+  // line, `pnpm format` re-wraps it past printWidth, and the two never
+  // converge. Only a genuine change in tag values should trigger a write.
+  const unchanged =
+    p.raw.length === p.tags.length && p.raw.every((t, i) => t === p.tags[i]);
+  if (unchanged) continue;
   changed++;
   console.log(
     `${p.id}\n  - ${p.raw.join(", ")}\n  + ${p.tags.join(", ")}${p.dropped.length ? `\n  ! capped, dropped: ${p.dropped.join(", ")}` : ""}`,
