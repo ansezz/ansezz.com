@@ -29,3 +29,19 @@ const ready =
 }
 
 {ready && <script>import "@/scripts/giscus";</script>}
+
+<style>
+  /* giscus's client.js injects <link href="https://giscus.app/default.css">,
+     which our CSP (style-src 'self' 'unsafe-inline') blocks — leaving the
+     iframe at its default 300px intrinsic width. Ship those rules ourselves
+     instead of widening the CSP. The loading fade is set inline by client.js. */
+  #giscus-mount :global(.giscus),
+  #giscus-mount :global(.giscus-frame) {
+    width: 100%;
+  }
+
+  #giscus-mount :global(.giscus-frame) {
+    border: none;
+    color-scheme: normal;
+  }
+</style>
