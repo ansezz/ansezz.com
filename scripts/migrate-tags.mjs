@@ -34,7 +34,16 @@ for (const file of readdirSync(dir).filter((f) => /\.mdx?$/.test(f))) {
     .filter(Boolean);
 
   const r = resolveTags(id, raw);
-  posts.push({ id, file, src, raw, oldLine: tagsLine[0], ...r });
+  posts.push({
+    id,
+    file,
+    src,
+    raw,
+    oldLine: tagsLine[0],
+    fmStart: fmMatch.index,
+    fmBlock: fmMatch[0],
+    ...r,
+  });
 }
 
 const unmapped = [...new Set(posts.flatMap((p) => p.unmapped))];
@@ -57,11 +66,12 @@ for (const p of posts) {
     `${p.id}\n  - ${p.raw.join(", ")}\n  + ${p.tags.join(", ")}${p.dropped.length ? `\n  ! capped, dropped: ${p.dropped.join(", ")}` : ""}`,
   );
   if (!DRY) {
-    writeFileSync(
-      `${dir}/${p.file}`,
-      p.src.replace(p.oldLine, newLine),
-      "utf8",
-    );
+    const newFmBlock = p.fmBlock.replace(p.oldLine, newLine);
+    const newSrc =
+      p.src.slice(0, p.fmStart) +
+      newFmBlock +
+      p.src.slice(p.fmStart + p.fmBlock.length);
+    writeFileSync(`${dir}/${p.file}`, newSrc, "utf8");
   }
 }
 
