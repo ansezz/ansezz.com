@@ -14,7 +14,7 @@ type Tone =
 type Shadow = "sm" | "md" | "lg" | "xl";
 type ElementTag = "div" | "article" | "section" | "a" | "li";
 
-export interface Props {
+interface KnownProps {
   tone?: Tone;
   shadow?: Shadow;
   hover?: boolean;
@@ -25,13 +25,24 @@ export interface Props {
   ariaLabel?: string;
 }
 
-const props = Astro.props;
-const tone: Tone = props.tone ?? "paper";
-const shadow: Shadow = props.shadow ?? "md";
-const hover = props.hover ?? false;
-const tilt = props.tilt ?? 0;
-const as: ElementTag = props.as ?? "div";
-const { href, class: className = "", ariaLabel } = props;
+/** Anything beyond KnownProps (id, data-*, aria-*) is forwarded to the root. */
+export interface Props extends KnownProps {
+  [key: string]: unknown;
+}
+
+// Cast through KnownProps — the index signature would otherwise widen every
+// destructured value to `unknown`.
+const {
+  tone = "paper",
+  shadow = "md",
+  hover = false,
+  tilt = 0,
+  as = "div",
+  href,
+  class: className = "",
+  ariaLabel,
+  ...rest
+} = Astro.props as KnownProps & Record<string, unknown>;
 const externalAttrs = href ? externalLinkAttrs(href) : {};
 
 const toneClass: Record<Tone, string> = {
@@ -62,6 +73,7 @@ const style = tilt ? `transform: rotate(${tilt}deg);` : undefined;
 ---
 
 <Tag
+  {...rest}
   href={href}
   {...externalAttrs}
   aria-label={ariaLabel}
