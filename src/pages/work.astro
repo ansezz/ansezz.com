@@ -14,6 +14,7 @@ import { Icon } from "astro-icon/components";
 import {
   WORK,
   SITE,
+  STATS,
   OTHER_SHOPIFY_STOREFRONTS,
   OTHER_SHOPIFY_APPS,
   OTHER_PLATFORMS,
@@ -217,6 +218,17 @@ const workBreadcrumbLd = breadcrumbList([
         ))
       }
     </ul>
+    <p
+      class="mono mt-4 text-[11px] font-bold tracking-widest uppercase opacity-60"
+    >
+      ▸ {allLinksTotal} listed on this page · {STATS[1].value}
+      {STATS[1].label.toLowerCase()} overall — the rest are under NDA and live in
+      the <a
+        href={SITE.RESUME_URL}
+        class="hover:bg-yellow underline decoration-2 underline-offset-2"
+        >resume</a
+      >.
+    </p>
   </section>
 
   <div class="mx-auto max-w-6xl space-y-14 px-5 pb-16" data-work-root>

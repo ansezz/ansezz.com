@@ -78,6 +78,18 @@ export const PAGE_OG: PageOg[] = [
     label: "Blog series",
     title: "Read it as a series.",
   },
+  {
+    slug: "feed",
+    path: "/feed/",
+    label: "Follow",
+    title: "Every way to follow along.",
+  },
+  {
+    slug: "privacy",
+    path: "/privacy/",
+    label: "Privacy",
+    title: "No analytics. No tracking. No cookies.",
+  },
 
   // ── Individual tool pages ──
   {

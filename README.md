@@ -142,6 +142,7 @@ pnpm dev                # localhost:4321  (search is inert — no Pagefind index
 pnpm build              # → dist/ then pagefind --site dist
 pnpm preview            # serve dist/
 pnpm check              # astro check + typescript
+pnpm lighthouse         # Lighthouse CI over dist/ (needs a build first)
 pnpm format             # prettier (astro + tailwind plugins via .prettierrc.json)
 pnpm optimize:images    # sharp pass over public/blog
 pnpm generate:icons     # PWA + apple-touch icons

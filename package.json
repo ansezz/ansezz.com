@@ -11,6 +11,7 @@
     "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "check": "astro check",
+    "lighthouse": "pnpm dlx @lhci/cli@0.15.x autorun",
     "format": "prettier --write .",
     "optimize:images": "node scripts/optimize-images.mjs",
     "generate:icons": "node scripts/generate-icons.mjs",

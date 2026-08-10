@@ -17,6 +17,7 @@ Deploy target: **Cloudflare Pages** (project `ansezz-com`, custom domain `ansezz
 | `pnpm build`           | Build to `./dist/`, then `pagefind --site dist`           |
 | `pnpm preview`         | Preview built site                                        |
 | `pnpm check`           | Type-check `.astro` + TS (run before declaring work done) |
+| `pnpm lighthouse`      | Lighthouse CI against `dist/` — run `pnpm build` first    |
 | `pnpm format`          | Prettier across repo                                      |
 | `pnpm optimize:images` | Sharp pass over images in `public/blog`                   |
 | `pnpm generate:icons`  | Regenerate PWA + apple-touch icons                        |
