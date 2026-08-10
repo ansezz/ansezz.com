@@ -5,6 +5,13 @@ import { readdirSync, readFileSync, existsSync } from "node:fs";
 const problems = [];
 const fail = (msg) => problems.push(msg);
 
+// Vocabulary floor: every tag in BLOG_TAGS must carry at least this many
+// posts. Deliberately NOT TAG_OG_MIN_POSTS from consts.ts — that is the
+// noindex/sitemap threshold. The two are equal today and mean different
+// things; coupling them would make raising the indexing threshold fail the
+// build across legitimate tags.
+const MIN_POSTS_PER_TAG = 3;
+
 // ── 1. Vocabulary shape ────────────────────────────────────────────────
 const constsSrc = readFileSync("src/consts.ts", "utf8");
 if (!constsSrc.includes("export const BLOG_TAGS")) {
@@ -81,7 +88,8 @@ if (!migrated) {
   );
 } else {
   for (const [tag, n] of Object.entries(counts)) {
-    if (n < 3) fail(`tag "${tag}" has ${n} post(s), floor is 3`);
+    if (n < MIN_POSTS_PER_TAG)
+      fail(`tag "${tag}" has ${n} post(s), floor is ${MIN_POSTS_PER_TAG}`);
   }
 }
 
