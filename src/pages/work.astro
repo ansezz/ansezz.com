@@ -92,13 +92,13 @@ const totalLinks =
 const allLinksTotal = totalCount + totalLinks;
 
 const toneBg: Record<string, string> = {
-  yellow: "bg-yellow text-ink",
-  pink: "bg-pink text-ink",
-  cyan: "bg-cyan text-ink",
-  green: "bg-green text-ink",
-  red: "bg-red text-ink",
-  blue: "bg-blue text-paper",
-  purple: "bg-purple text-paper",
+  yellow: "bg-yellow text-on-accent",
+  pink: "bg-pink text-on-accent",
+  cyan: "bg-cyan text-on-accent",
+  green: "bg-green text-on-accent",
+  red: "bg-red text-on-accent",
+  blue: "bg-blue text-on-deep",
+  purple: "bg-purple text-on-deep",
   ink: "bg-ink text-bg",
 };
 
@@ -196,7 +196,7 @@ const workBreadcrumbLd = breadcrumbList([
     <ul class="grid grid-cols-2 gap-4 md:grid-cols-4">
       {
         stats.map((s, i) => (
-          <li>
+          <li class="min-w-0">
             <NeoCard
               tone={s.tone}
               shadow="sm"
@@ -210,7 +210,7 @@ const workBreadcrumbLd = breadcrumbList([
                 <Icon name={s.icon} class="h-5 w-5" />
               </span>
               <p class="display text-4xl leading-none md:text-5xl">{s.v}</p>
-              <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-80">
+              <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-90">
                 {s.l}
               </p>
             </NeoCard>
@@ -247,7 +247,7 @@ const workBreadcrumbLd = breadcrumbList([
         </div>
       </div>
       <TagPillRow scrollOnMobile>
-        <li>
+        <li class="min-w-0">
           <button
             type="button"
             data-work-filter="all"
@@ -261,7 +261,7 @@ const workBreadcrumbLd = breadcrumbList([
           Object.values(groups).map(
             (g) =>
               g.items.length > 0 && (
-                <li>
+                <li class="min-w-0">
                   <button
                     type="button"
                     data-work-filter={g.slug}
@@ -295,7 +295,7 @@ const workBreadcrumbLd = breadcrumbList([
           </div>
           <ul class="grid gap-6 md:grid-cols-2">
             {featuredEntries.map((entry, i) => (
-              <li>
+              <li class="min-w-0">
                 <ProjectCard
                   entry={entry}
                   tone={cardTones[i % cardTones.length]}
@@ -347,7 +347,7 @@ const workBreadcrumbLd = breadcrumbList([
               </div>
               <ul class="grid gap-6 md:grid-cols-2">
                 {group.items.map((entry, i) => (
-                  <li>
+                  <li class="min-w-0">
                     <ProjectCard
                       entry={entry}
                       tone={cardTones[(gi * 2 + i) % cardTones.length]}
@@ -391,7 +391,7 @@ const workBreadcrumbLd = breadcrumbList([
         <div>
           <h3 class="heading mb-4 flex items-center gap-3 text-xl uppercase">
             <span
-              class="border-ink bg-green text-ink shadow-neo-xs inline-flex h-9 w-9 items-center justify-center rounded-full border-[2.5px]"
+              class="border-ink bg-green text-on-accent shadow-neo-xs inline-flex h-9 w-9 items-center justify-center rounded-full border-[2.5px]"
               aria-hidden="true"
             >
               <Icon name="lucide:shopping-bag" class="h-4 w-4" />
@@ -406,7 +406,7 @@ const workBreadcrumbLd = breadcrumbList([
           <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {
               OTHER_SHOPIFY_STOREFRONTS.map((p) => (
-                <li>
+                <li class="min-w-0">
                   <a
                     href={p.url}
                     {...externalLinkAttrs(p.url)}
@@ -441,7 +441,7 @@ const workBreadcrumbLd = breadcrumbList([
         <div>
           <h3 class="heading mb-4 flex items-center gap-3 text-xl uppercase">
             <span
-              class="border-ink bg-red text-ink shadow-neo-xs inline-flex h-9 w-9 items-center justify-center rounded-full border-[2.5px]"
+              class="border-ink bg-red text-on-accent shadow-neo-xs inline-flex h-9 w-9 items-center justify-center rounded-full border-[2.5px]"
               aria-hidden="true"
             >
               <Icon name="lucide:puzzle" class="h-4 w-4" />
@@ -451,7 +451,7 @@ const workBreadcrumbLd = breadcrumbList([
           <ul class="grid gap-3 sm:grid-cols-2">
             {
               OTHER_SHOPIFY_APPS.map((p) => (
-                <li>
+                <li class="min-w-0">
                   <a
                     href={p.url}
                     {...externalLinkAttrs(p.url)}
@@ -486,7 +486,7 @@ const workBreadcrumbLd = breadcrumbList([
         <div>
           <h3 class="heading mb-4 flex items-center gap-3 text-xl uppercase">
             <span
-              class="border-ink bg-blue text-paper shadow-neo-xs inline-flex h-9 w-9 items-center justify-center rounded-full border-[2.5px]"
+              class="border-ink bg-blue text-on-deep shadow-neo-xs inline-flex h-9 w-9 items-center justify-center rounded-full border-[2.5px]"
               aria-hidden="true"
             >
               <Icon name="lucide:globe" class="h-4 w-4" />
@@ -501,7 +501,7 @@ const workBreadcrumbLd = breadcrumbList([
           <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {
               OTHER_PLATFORMS.map((p) => (
-                <li>
+                <li class="min-w-0">
                   <a
                     href={p.url}
                     {...externalLinkAttrs(p.url)}
@@ -537,7 +537,7 @@ const workBreadcrumbLd = breadcrumbList([
 
     <NeoCard tone="paper" class="space-y-4 text-center">
       <p
-        class="mono text-pink-deep text-xs font-bold tracking-widest uppercase"
+        class="mono text-accent-text text-xs font-bold tracking-widest uppercase"
       >
         ▸ Need the boring version?
       </p>
@@ -571,7 +571,7 @@ const workBreadcrumbLd = breadcrumbList([
         <p class="display text-3xl leading-tight md:text-4xl">
           Got a project that needs a senior engineer who actually ships?
         </p>
-        <p class="text-paper/80 mt-3 text-base">
+        <p class="text-on-deep/90 mt-3 text-base">
           Discovery call is free. I'll tell you honestly if it's a fit.
         </p>
       </div>

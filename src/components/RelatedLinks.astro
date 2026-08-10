@@ -38,7 +38,7 @@ const resolved = items.map((item, i) => ({
       <h2 class="heading mb-5 text-xl uppercase">{title}</h2>
       <ul class="grid gap-4 sm:grid-cols-2">
         {resolved.map((item) => (
-          <li>
+          <li class="min-w-0">
             <NeoCard tone={item.tone} shadow="sm" hover href={item.href}>
               <p class="mono mb-1.5 text-[10px] font-bold tracking-widest uppercase">
                 ▸ {item.kind}

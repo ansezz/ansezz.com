@@ -21,12 +21,12 @@ interface Props {
 const { columns, rows, class: className = "" } = Astro.props;
 
 const toneClass: Record<string, string> = {
-  yellow: "bg-yellow",
-  pink: "bg-pink",
-  cyan: "bg-cyan",
-  green: "bg-green",
-  blue: "bg-blue text-paper",
-  red: "bg-red",
+  yellow: "bg-yellow text-on-accent",
+  pink: "bg-pink text-on-accent",
+  cyan: "bg-cyan text-on-accent",
+  green: "bg-green text-on-accent",
+  blue: "bg-blue text-on-deep",
+  red: "bg-red text-on-accent",
 };
 ---
 

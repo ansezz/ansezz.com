@@ -18,7 +18,7 @@ function init(): void {
     const setStatus = (msg: string, ok: boolean) => {
       if (status) {
         status.textContent = msg;
-        status.className = `text-sm font-bold ${ok ? "text-pink-deep" : "text-red"}`;
+        status.className = `text-sm font-bold ${ok ? "text-accent-text" : "text-red"}`;
       }
     };
 

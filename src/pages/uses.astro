@@ -389,7 +389,7 @@ const relatedLinks: RelatedLink[] = [
                 <Icon name={s.icon} class="h-5 w-5" />
               </span>
               <p class="display text-4xl leading-none md:text-5xl">{s.v}</p>
-              <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-80">
+              <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-90">
                 {s.l}
               </p>
             </NeoCard>
@@ -425,7 +425,7 @@ const relatedLinks: RelatedLink[] = [
               >
                 <Icon name={d.icon} class="h-5 w-5" />
               </span>
-              <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-80">
+              <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-90">
                 ▸ {d.tag}
               </p>
               <h3 class="heading text-xl leading-tight uppercase">{d.tool}</h3>
@@ -506,6 +506,7 @@ const relatedLinks: RelatedLink[] = [
                       {it.daily && (
                         <span
                           class="bg-yellow border-ink inline-flex h-4 w-4 items-center justify-center rounded-full border-[1.5px]"
+                          role="img"
                           title="Daily driver"
                           aria-label="Daily driver"
                         >

@@ -98,7 +98,7 @@ const breadcrumbLd = {
         <li><TagPill tone="ink" href="/blog/">All</TagPill></li>
         {
           BLOG_CATEGORIES.map((c) => (
-            <li>
+            <li class="min-w-0">
               <TagPill
                 tone={CATEGORY_TONE[c]}
                 href={`/blog/category/${c}/`}
@@ -116,7 +116,7 @@ const breadcrumbLd = {
       all.length > 0 ? (
         <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {all.map((post, i) => (
-            <li>
+            <li class="min-w-0">
               <PostCard
                 post={post}
                 eager={i < 3}

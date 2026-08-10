@@ -137,7 +137,7 @@ const blogBreadcrumbLd = breadcrumbList([
     startHere.length > 0 && (
       <section class="mx-auto max-w-6xl px-5 pb-8">
         <div class="mb-4 flex flex-wrap items-end justify-between gap-4">
-          <p class="mono text-pink-deep text-xs font-bold tracking-widest uppercase">
+          <p class="mono text-accent-text text-xs font-bold tracking-widest uppercase">
             ▸ New here? Start with these
           </p>
           <a
@@ -150,7 +150,7 @@ const blogBreadcrumbLd = breadcrumbList([
         </div>
         <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {startHere.map((post, i) => (
-            <li>
+            <li class="min-w-0">
               <a
                 href={`/blog/${post.id}/`}
                 data-neo-hover
@@ -178,12 +178,12 @@ const blogBreadcrumbLd = breadcrumbList([
   <HalftoneSection tone="bg" class="pb-2">
     <div class="mx-auto max-w-6xl px-5">
       <TagPillRow scrollOnMobile sticky class="!top-[60px] md:!top-[64px]">
-        <li>
+        <li class="min-w-0">
           <TagPill tone="ink" href="/blog/" active>All · {totalPosts}</TagPill>
         </li>
         {
           BLOG_CATEGORIES.map((c) => (
-            <li>
+            <li class="min-w-0">
               <TagPill tone={CATEGORY_TONE[c]} href={`/blog/category/${c}/`}>
                 {CATEGORY_LABEL[c]} · {categoryCounts[c]}
               </TagPill>
@@ -210,7 +210,7 @@ const blogBreadcrumbLd = breadcrumbList([
       <ul class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         {
           BLOG_CATEGORIES.map((c, i) => (
-            <li>
+            <li class="min-w-0">
               <NeoCard
                 href={`/blog/category/${c}/`}
                 tone={CATEGORY_TONE[c]}
@@ -229,7 +229,7 @@ const blogBreadcrumbLd = breadcrumbList([
                   />
                 </span>
                 <p class="heading text-sm uppercase">{CATEGORY_LABEL[c]}</p>
-                <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-80">
+                <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-90">
                   {categoryCounts[c]}{" "}
                   {categoryCounts[c] === 1 ? "post" : "posts"}
                 </p>
@@ -333,7 +333,7 @@ const blogBreadcrumbLd = breadcrumbList([
           </div>
           <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {visible.map((post, i) => (
-              <li>
+              <li class="min-w-0">
                 <PostCard post={post} eager={i < 6} />
               </li>
             ))}
@@ -367,7 +367,7 @@ const blogBreadcrumbLd = breadcrumbList([
                 "paper",
               ] as const;
               return (
-                <li>
+                <li class="min-w-0">
                   <TagPill
                     tone={tones[i % tones.length]}
                     size="sm"

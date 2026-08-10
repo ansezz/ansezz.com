@@ -16,12 +16,12 @@ const breadcrumbLd = breadcrumbList([
 
 // Static class maps — dynamic `bg-${tone}` is not picked up by Tailwind.
 const iconBg: Record<string, string> = {
-  yellow: "bg-yellow text-ink",
-  pink: "bg-pink text-ink",
-  cyan: "bg-cyan text-ink",
-  green: "bg-green text-ink",
-  purple: "bg-purple text-paper",
-  blue: "bg-blue text-paper",
+  yellow: "bg-yellow text-on-accent",
+  pink: "bg-pink text-on-accent",
+  cyan: "bg-cyan text-on-accent",
+  green: "bg-green text-on-accent",
+  purple: "bg-purple text-on-deep",
+  blue: "bg-blue text-on-deep",
 };
 
 const relatedLinks: RelatedLink[] = [
@@ -75,7 +75,7 @@ const relatedLinks: RelatedLink[] = [
             {group.items.map((item, i) => {
               const Tag = item.url ? "a" : "div";
               return (
-                <li>
+                <li class="min-w-0">
                   <Tag
                     href={item.url}
                     {...(item.url ? externalLinkAttrs(item.url) : {})}

@@ -82,7 +82,7 @@ function init(): void {
           v.textContent = txt;
           v.className =
             key === "exp" && payload[key] < now
-              ? "text-pink-deep font-bold"
+              ? "text-accent-text font-bold"
               : "";
           li.append(k, v);
           claimsEl.appendChild(li);

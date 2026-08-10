@@ -13,13 +13,13 @@ import { externalLinkAttrs } from "@/lib/links";
 // Real social proof from shipped, live projects — no fabricated quotes.
 // (If real testimonials are added to TESTIMONIALS later, they render above.)
 const toneBg: Record<string, string> = {
-  yellow: "bg-yellow text-ink",
-  pink: "bg-pink text-ink",
-  cyan: "bg-cyan text-ink",
-  green: "bg-green text-ink",
-  red: "bg-red text-ink",
-  blue: "bg-blue text-paper",
-  purple: "bg-purple text-paper",
+  yellow: "bg-yellow text-on-accent",
+  pink: "bg-pink text-on-accent",
+  cyan: "bg-cyan text-on-accent",
+  green: "bg-green text-on-accent",
+  red: "bg-red text-on-accent",
+  blue: "bg-blue text-on-deep",
+  purple: "bg-purple text-on-deep",
   ink: "bg-ink text-bg",
 };
 
@@ -48,7 +48,7 @@ const brands = [
     TESTIMONIALS.length > 0 && (
       <ul class="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {TESTIMONIALS.map((t, i) => (
-          <li>
+          <li class="min-w-0">
             <NeoCard
               tone={t.tone}
               shadow="md"
@@ -75,7 +75,7 @@ const brands = [
   <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
     {
       brands.map((b) => (
-        <li>
+        <li class="min-w-0">
           <a
             href={b.url}
             {...externalLinkAttrs(b.url)}

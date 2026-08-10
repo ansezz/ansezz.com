@@ -39,7 +39,7 @@ const FILL_OVER = "bg-red h-full";
 
 const MODE_BASE =
   "mono border-ink rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all";
-const MODE_ON = `${MODE_BASE} bg-ink text-paper shadow-neo-xs`;
+const MODE_ON = `${MODE_BASE} bg-ink text-bg shadow-neo-xs`;
 const MODE_OFF = `${MODE_BASE} bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm hover:-translate-x-0.5 hover:-translate-y-0.5`;
 
 const COPY_LABEL = "Copy the breakdown";

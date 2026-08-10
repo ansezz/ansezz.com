@@ -25,9 +25,9 @@ const UNIT_LABEL: Record<UnitKey, string> = {
 };
 
 const BADGE_CLASS: Record<Level, string> = {
-  ok: "bg-green text-ink",
-  noisy: "bg-yellow text-ink",
-  max: "bg-red text-ink",
+  ok: "bg-green text-on-accent",
+  noisy: "bg-yellow text-on-accent",
+  max: "bg-red text-on-accent",
 };
 
 const BADGE_TEXT: Record<Level, string> = {
@@ -43,9 +43,9 @@ const MARKER_LINE: Record<MarkerKey, string> = {
 };
 
 const MARKER_CHIP: Record<MarkerKey, string> = {
-  50: "bg-cyan text-ink",
-  95: "bg-pink text-ink",
-  99: "bg-purple text-paper",
+  50: "bg-cyan text-on-accent",
+  95: "bg-pink text-on-accent",
+  99: "bg-purple text-on-deep",
 };
 
 /* ── parsing ───────────────────────────────────────────────────────────── */
@@ -523,7 +523,7 @@ function init(): void {
       if (row.custom) {
         const tag = document.createElement("span");
         tag.className =
-          "mono ml-2 text-[9px] font-bold tracking-widest uppercase opacity-70";
+          "mono ml-2 text-[10px] font-bold tracking-widest uppercase opacity-70";
         tag.textContent = "custom";
         label.appendChild(tag);
       }
@@ -661,7 +661,7 @@ function init(): void {
       line.style.left = `${position.toFixed(2)}%`;
 
       const chip = document.createElement("div");
-      chip.className = `mono border-ink absolute rounded-[3px] border-[2px] px-1 text-[9px] font-bold tracking-widest whitespace-nowrap uppercase ${MARKER_CHIP[p]}`;
+      chip.className = `mono border-ink absolute rounded-[3px] border-[2px] px-1 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase ${MARKER_CHIP[p]}`;
       chip.style.left = `${position.toFixed(2)}%`;
       chip.style.top = `${4 + index * 20}px`;
       chip.style.transform =

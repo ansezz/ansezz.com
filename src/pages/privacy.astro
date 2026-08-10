@@ -103,7 +103,7 @@ const sections = [
         Updated {updatedLabel}
       </span>
       <span
-        class="border-ink bg-green shadow-neo-xs mono inline-flex items-center gap-2 rounded-full border-[2.5px] px-3 py-1 text-[11px] font-bold tracking-widest uppercase"
+        class="border-ink bg-green text-on-accent shadow-neo-xs mono inline-flex items-center gap-2 rounded-full border-[2.5px] px-3 py-1 text-[11px] font-bold tracking-widest uppercase"
       >
         <Icon name="lucide:lock" class="h-3.5 w-3.5" />
         GDPR-friendly
@@ -120,8 +120,8 @@ const sections = [
         {
           tldr.map((t) => (
             <li>
-              <TagPill tone={t.tone}>
-                <Icon name="lucide:check" class="h-3 w-3" />
+              <TagPill tone={t.tone} nowrap={false}>
+                <Icon name="lucide:check" class="h-3 w-3 shrink-0" />
                 {t.label}
               </TagPill>
             </li>

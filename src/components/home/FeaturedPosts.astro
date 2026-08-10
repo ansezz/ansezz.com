@@ -41,7 +41,7 @@ const tones = ["yellow", "cyan", "green"] as const;
     ) : (
       <ul class="grid gap-6 md:grid-cols-3">
         {featured.map((post, i) => (
-          <li>
+          <li class="min-w-0">
             <PostCard
               post={post}
               eager={i < 3}

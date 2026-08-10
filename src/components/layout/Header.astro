@@ -12,11 +12,11 @@ import { externalLinkAttrs } from "@/lib/links";
   >
     <a
       href="/"
-      class="display hover:bg-yellow -mx-1.5 px-1.5 text-2xl tracking-tight transition-colors"
+      class="display hover:bg-yellow -mx-1.5 px-1.5 py-1 text-2xl tracking-tight transition-colors"
     >
       {SITE.SHORT_TITLE}<span class="text-pink">.</span>
     </a>
-    <div class="hidden items-center gap-3 md:flex">
+    <div class="hidden items-center gap-3 lg:flex">
       <Nav />
       <button
         type="button"
@@ -31,7 +31,7 @@ import { externalLinkAttrs } from "@/lib/links";
       <ThemeToggle />
       <a
         href="/contact/"
-        class="border-ink bg-pink text-paper shadow-neo-xs hover:shadow-neo-sm inline-flex items-center gap-1.5 border-[2.5px] px-3.5 py-1.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+        class="border-ink bg-pink-deep text-on-deep shadow-neo-xs hover:shadow-neo-sm inline-flex items-center gap-1.5 border-[2.5px] px-3.5 py-1.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
         aria-label="Work with me — get in touch"
       >
         <Icon name="lucide:mail" class="h-3.5 w-3.5" />
@@ -39,7 +39,7 @@ import { externalLinkAttrs } from "@/lib/links";
       </a>
     </div>
 
-    <div class="flex items-center gap-2 md:hidden">
+    <div class="flex items-center gap-2 lg:hidden">
       <ThemeToggle />
       <button
         id="mobile-menu-toggle"
@@ -57,13 +57,13 @@ import { externalLinkAttrs } from "@/lib/links";
     <div
       id="mobile-menu"
       hidden
-      class="border-ink bg-bg border-t-[3px] md:hidden"
+      class="border-ink bg-bg border-t-[3px] lg:hidden"
     >
       <div class="mx-auto max-w-5xl space-y-3 px-5 py-4">
         <Nav vertical />
         <a
           href="/contact/"
-          class="border-ink bg-pink text-paper shadow-neo-sm hover:shadow-neo-md flex items-center justify-center gap-2 border-[3px] px-4 py-3 text-sm font-bold uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+          class="border-ink bg-pink-deep text-on-deep shadow-neo-sm hover:shadow-neo-md flex items-center justify-center gap-2 border-[3px] px-4 py-3 text-sm font-bold uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
           aria-label="Work with me — get in touch"
         >
           <Icon name="lucide:mail" class="h-4 w-4" />
@@ -87,12 +87,12 @@ import { externalLinkAttrs } from "@/lib/links";
           display: none !important;
         }
       </style>
-      <div class="border-ink bg-bg border-t-[3px] md:hidden">
+      <div class="border-ink bg-bg border-t-[3px] lg:hidden">
         <div class="mx-auto max-w-5xl space-y-3 px-5 py-4">
           <Nav vertical />
           <a
             href="/contact/"
-            class="border-ink bg-pink text-paper shadow-neo-sm flex items-center justify-center gap-2 border-[3px] px-4 py-3 text-sm font-bold uppercase"
+            class="border-ink bg-pink-deep text-on-deep shadow-neo-sm flex items-center justify-center gap-2 border-[3px] px-4 py-3 text-sm font-bold uppercase"
           >
             <Icon name="lucide:mail" class="h-4 w-4" />
             Let's work together

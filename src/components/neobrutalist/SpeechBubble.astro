@@ -12,10 +12,10 @@ const { tone = "paper", tail = "bl", class: className = "" } = Astro.props;
 
 const toneClass: Record<Tone, string> = {
   paper: "bg-paper",
-  yellow: "bg-yellow",
-  pink: "bg-pink",
-  cyan: "bg-cyan",
-  green: "bg-green",
+  yellow: "bg-yellow text-on-accent",
+  pink: "bg-pink text-on-accent",
+  cyan: "bg-cyan text-on-accent",
+  green: "bg-green text-on-accent",
 };
 
 const toneFill: Record<Tone, string> = {

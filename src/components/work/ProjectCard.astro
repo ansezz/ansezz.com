@@ -18,12 +18,12 @@ const caseStudyHref = entry.data.featured ? `/work/${entry.id}/` : undefined;
 
 const toneClass: Record<Tone, string> = {
   paper: "bg-paper text-ink",
-  yellow: "bg-yellow text-ink",
-  pink: "bg-pink text-ink",
-  cyan: "bg-cyan text-ink",
-  green: "bg-green text-ink",
-  red: "bg-red text-ink",
-  purple: "bg-purple text-paper",
+  yellow: "bg-yellow text-on-accent",
+  pink: "bg-pink text-on-accent",
+  cyan: "bg-cyan text-on-accent",
+  green: "bg-green text-on-accent",
+  red: "bg-red text-on-accent",
+  purple: "bg-purple text-on-deep",
 };
 
 const tagTone = tone === "paper" ? "yellow" : "paper";
@@ -61,7 +61,7 @@ const tagTone = tone === "paper" ? "yellow" : "paper";
     {
       entry.data.featured && (
         <span
-          class={`border-ink shadow-neo-xs inline-flex items-center gap-1 rounded-full border-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase ${tone === "yellow" ? "bg-pink text-ink" : "bg-yellow text-ink"}`}
+          class={`border-ink shadow-neo-xs inline-flex items-center gap-1 rounded-full border-[2px] px-2.5 py-0.5 text-[10px] font-bold uppercase ${tone === "yellow" ? "bg-pink text-on-accent" : "bg-yellow text-on-accent"}`}
         >
           ★ Featured
         </span>

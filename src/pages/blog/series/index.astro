@@ -44,10 +44,10 @@ const seriesListLd = {
     <ul class="grid gap-6 md:grid-cols-2">
       {
         BLOG_SERIES.map((s, i) => (
-          <li>
+          <li class="min-w-0">
             <a
               href={`/blog/series/${s.slug}/`}
-              class="block h-full"
+              class="block h-full min-w-0"
               data-neo-hover
             >
               <NeoCard
@@ -73,11 +73,13 @@ const seriesListLd = {
                 <p class="text-sm leading-snug opacity-90">{s.description}</p>
                 <ol class="mt-auto space-y-1 pt-2 text-sm font-medium">
                   {s.posts.slice(0, 3).map((id, n) => (
-                    <li class="flex gap-2">
-                      <span class="mono text-[11px] opacity-60">
+                    <li class="flex min-w-0 gap-2">
+                      <span class="mono shrink-0 text-[11px] opacity-60">
                         {String(n + 1).padStart(2, "0")}
                       </span>
-                      <span class="truncate">{titleOf.get(id) ?? id}</span>
+                      <span class="min-w-0 flex-1 truncate">
+                        {titleOf.get(id) ?? id}
+                      </span>
                     </li>
                   ))}
                   {s.posts.length > 3 && (

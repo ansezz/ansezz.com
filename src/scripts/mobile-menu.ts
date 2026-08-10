@@ -51,7 +51,8 @@ document.addEventListener("keydown", (event) => {
 });
 
 // Close on resize to desktop
-const mql = window.matchMedia("(min-width: 768px)");
+// Must match the header's lg: breakpoint, where the desktop nav takes over.
+const mql = window.matchMedia("(min-width: 1024px)");
 mql.addEventListener("change", (event) => {
   if (event.matches) setOpen(false);
 });

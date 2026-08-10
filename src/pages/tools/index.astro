@@ -69,7 +69,7 @@ const groups = TOOL_GROUPS.map((g) => ({
             const isLive = t.status === "live";
             const Wrapper = isLive ? "a" : "div";
             return (
-              <li>
+              <li class="min-w-0">
                 <Wrapper
                   href={isLive ? t.href : undefined}
                   data-neo-hover={isLive ? "" : undefined}

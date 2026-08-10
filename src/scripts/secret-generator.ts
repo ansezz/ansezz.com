@@ -184,7 +184,7 @@ interface Strength {
   cls: string;
 }
 
-const WEAK = "font-bold text-pink-deep";
+const WEAK = "font-bold text-accent-text";
 const OK = "font-bold";
 
 function strengthFor(bits: number): Strength {

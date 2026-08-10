@@ -10,10 +10,10 @@ interface Props {
 const { tone = "yellow", tilt = -2, class: className = "" } = Astro.props;
 
 const toneClass: Record<Tone, string> = {
-  yellow: "bg-yellow",
-  pink: "bg-pink",
-  cyan: "bg-cyan",
-  green: "bg-green",
+  yellow: "bg-yellow text-on-accent",
+  pink: "bg-pink text-on-accent",
+  cyan: "bg-cyan text-on-accent",
+  green: "bg-green text-on-accent",
 };
 
 const style = `transform: rotate(${tilt}deg);`;
@@ -21,7 +21,7 @@ const style = `transform: rotate(${tilt}deg);`;
 
 <div
   class:list={[
-    "border-ink shadow-neo-md inline-block max-w-xs border-[3px] p-4",
+    "border-ink shadow-neo-md inline-block w-full max-w-xs border-[3px] p-4",
     toneClass[tone],
     className,
   ]}

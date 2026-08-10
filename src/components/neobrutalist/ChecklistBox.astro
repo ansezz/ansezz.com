@@ -17,9 +17,9 @@ const { title, items, tone = "paper", class: className = "" } = Astro.props;
 
 const toneClass = {
   paper: "bg-paper",
-  yellow: "bg-yellow",
-  cyan: "bg-cyan",
-  green: "bg-green",
+  yellow: "bg-yellow text-on-accent",
+  cyan: "bg-cyan text-on-accent",
+  green: "bg-green text-on-accent",
 }[tone];
 
 const done = items.filter((i) => i.done).length;

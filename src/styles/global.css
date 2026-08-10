@@ -16,6 +16,15 @@
   --color-yellow: #ffd93d;
   --color-pink: #ff2d87;
   --color-pink-deep: #c7005f;
+
+  /* Foreground colours for coloured surfaces. These deliberately do NOT
+     invert with the theme: --color-ink flips to near-white in dark mode,
+     but bg-yellow / bg-cyan / bg-green stay bright, so text-ink on them
+     dropped to ~1.4:1. Pair bright accents with --color-on-accent and deep
+     accents (purple, blue, ink) with --color-on-deep in both themes. */
+  --color-accent-text: #c7005f;
+  --color-on-accent: #0a0a0a;
+  --color-on-deep: #fafaf5;
   --color-blue: #2e6bb8;
   --color-cyan: #3dd9c9;
   --color-green: #7ae582;
@@ -84,6 +93,9 @@ html[data-theme="dark"] {
   --color-yellow: #f2cf3c;
   --color-cyan: #34c4b6;
   --color-green: #6cce75;
+  /* pink-deep stays a dark surface in both themes (white text on it passes);
+     the eyebrow *text* colour needs to lighten instead — see --color-accent-text */
+  --color-accent-text: #ff7ab0;
 }
 
 @utility display-xl {
@@ -106,7 +118,8 @@ body {
   color: var(--color-ink);
   background-color: var(--color-bg);
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  /* clip, not hidden: no scroll container, so position:sticky keeps working */
+  overflow-x: clip;
 }
 
 ::selection {

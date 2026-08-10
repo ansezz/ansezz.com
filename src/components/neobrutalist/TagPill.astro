@@ -19,6 +19,8 @@ interface Props {
   href?: string;
   active?: boolean;
   class?: string;
+  /** Keep on one line. True for scrolling pill rows, false for wrapping lists. */
+  nowrap?: boolean;
 }
 
 const {
@@ -27,18 +29,19 @@ const {
   href,
   active = false,
   class: className = "",
+  nowrap = true,
 } = Astro.props;
 
 const toneClass: Record<Tone, string> = {
   paper: "bg-paper text-ink",
-  yellow: "bg-yellow text-ink",
-  pink: "bg-pink text-ink",
-  cyan: "bg-cyan text-ink",
-  green: "bg-green text-ink",
-  red: "bg-red text-ink",
-  blue: "bg-blue text-paper",
-  purple: "bg-purple text-paper",
-  ink: "bg-ink text-paper",
+  yellow: "bg-yellow text-on-accent",
+  pink: "bg-pink text-on-accent",
+  cyan: "bg-cyan text-on-accent",
+  green: "bg-green text-on-accent",
+  red: "bg-red text-on-accent",
+  blue: "bg-blue text-on-deep",
+  purple: "bg-purple text-on-deep",
+  ink: "bg-ink text-bg",
 };
 
 const sizeClass: Record<Size, string> = {
@@ -54,7 +57,8 @@ const externalAttrs = href ? externalLinkAttrs(href) : {};
   href={href}
   {...externalAttrs}
   class:list={[
-    "border-ink inline-flex items-center rounded-full border-[2px] font-bold tracking-wide whitespace-nowrap uppercase",
+    "border-ink inline-flex max-w-full items-center rounded-full border-[2px] font-bold tracking-wide uppercase",
+    nowrap ? "whitespace-nowrap" : "text-left",
     toneClass[tone],
     sizeClass[size],
     href

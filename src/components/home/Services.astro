@@ -31,7 +31,7 @@ import { SERVICES } from "@/consts";
   <ul class="grid gap-6 md:grid-cols-2">
     {
       SERVICES.map((s, i) => (
-        <li>
+        <li class="min-w-0">
           <NeoCard
             tone={s.tone}
             shadow="md"
@@ -42,7 +42,7 @@ import { SERVICES } from "@/consts";
               {s.title}
             </h3>
             <p class="text-sm leading-snug opacity-90 md:text-base">{s.body}</p>
-            <p class="mono mt-auto pt-2 text-[10px] font-bold tracking-widest uppercase opacity-70">
+            <p class="mono mt-auto pt-2 text-[10px] font-bold tracking-widest uppercase opacity-90">
               ▸ {s.bullets.length} deliverables · see the breakdown
             </p>
           </NeoCard>

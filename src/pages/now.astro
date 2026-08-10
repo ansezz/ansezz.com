@@ -68,7 +68,7 @@ const relatedLinks: RelatedLink[] = [
     <ul class="grid gap-6 md:grid-cols-2">
       {
         NOW.FOCUS.map((f, i) => (
-          <li>
+          <li class="min-w-0">
             <NeoCard
               tone={f.tone}
               shadow="md"
@@ -95,7 +95,7 @@ const relatedLinks: RelatedLink[] = [
   <section class="mx-auto max-w-5xl px-5 pb-16">
     <NeoCard tone="paper" class="space-y-4 text-center">
       <p
-        class="mono text-pink-deep text-xs font-bold tracking-widest uppercase"
+        class="mono text-accent-text text-xs font-bold tracking-widest uppercase"
       >
         ▸ Want the long version?
       </p>

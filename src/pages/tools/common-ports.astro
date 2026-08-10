@@ -1105,7 +1105,7 @@ const relatedLinks = [
                 (["never-public", "legacy", "local"] as const).map((flag) => (
                   <li
                     class:list={[
-                      "mono border-ink border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                      "mono border-ink border-[2px] px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase",
                       FLAG_CLASS[flag],
                     ]}
                   >
@@ -1168,7 +1168,7 @@ const relatedLinks = [
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">Web, proxy and HTTP ports</caption>
           <thead>
-            <tr class="bg-cyan">
+            <tr class="bg-cyan text-on-accent">
               <th
                 scope="col"
                 class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
@@ -1207,7 +1207,7 @@ const relatedLinks = [
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1260,7 +1260,7 @@ const relatedLinks = [
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">Database and search engine ports</caption>
           <thead>
-            <tr class="bg-yellow">
+            <tr class="bg-yellow text-on-accent">
               <th
                 scope="col"
                 class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
@@ -1299,7 +1299,7 @@ const relatedLinks = [
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1349,7 +1349,7 @@ const relatedLinks = [
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">Cache, queue and streaming ports</caption>
           <thead>
-            <tr class="bg-green">
+            <tr class="bg-green text-on-accent">
               <th
                 scope="col"
                 class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
@@ -1388,7 +1388,7 @@ const relatedLinks = [
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1441,7 +1441,7 @@ const relatedLinks = [
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only"> Container and orchestration ports </caption>
           <thead>
-            <tr class="bg-pink">
+            <tr class="bg-pink text-on-accent">
               <th
                 scope="col"
                 class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
@@ -1480,7 +1480,7 @@ const relatedLinks = [
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1536,7 +1536,7 @@ const relatedLinks = [
             Metrics, logging and tracing ports
           </caption>
           <thead>
-            <tr class="bg-purple text-paper">
+            <tr class="bg-purple text-on-deep">
               <th
                 scope="col"
                 class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
@@ -1575,7 +1575,7 @@ const relatedLinks = [
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1626,7 +1626,7 @@ const relatedLinks = [
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">Mail transport and retrieval ports</caption>
           <thead>
-            <tr class="bg-cyan">
+            <tr class="bg-cyan text-on-accent">
               <th
                 scope="col"
                 class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
@@ -1665,7 +1665,7 @@ const relatedLinks = [
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1717,7 +1717,7 @@ const relatedLinks = [
             Remote access and file transfer ports
           </caption>
           <thead>
-            <tr class="bg-yellow">
+            <tr class="bg-yellow text-on-accent">
               <th
                 scope="col"
                 class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
@@ -1756,7 +1756,7 @@ const relatedLinks = [
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1809,7 +1809,7 @@ const relatedLinks = [
             DNS, discovery and network service ports
           </caption>
           <thead>
-            <tr class="bg-green">
+            <tr class="bg-green text-on-accent">
               <th
                 scope="col"
                 class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
@@ -1848,7 +1848,7 @@ const relatedLinks = [
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >
@@ -1899,7 +1899,7 @@ const relatedLinks = [
         <table class="w-full min-w-[48rem] border-collapse text-left">
           <caption class="sr-only">Development server ports</caption>
           <thead>
-            <tr class="bg-pink">
+            <tr class="bg-pink text-on-accent">
               <th
                 scope="col"
                 class="mono border-ink w-[9rem] border-r-[3px] border-b-[3px] p-3 text-[10px] font-bold tracking-widest uppercase"
@@ -1938,7 +1938,7 @@ const relatedLinks = [
                     {p.flag && (
                       <span
                         class:list={[
-                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase",
+                          "mono border-ink mt-2 block w-fit border-[2px] px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase",
                           FLAG_CLASS[p.flag],
                         ]}
                       >

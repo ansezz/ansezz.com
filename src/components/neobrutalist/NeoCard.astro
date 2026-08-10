@@ -47,14 +47,14 @@ const externalAttrs = href ? externalLinkAttrs(href) : {};
 
 const toneClass: Record<Tone, string> = {
   paper: "bg-paper text-ink",
-  yellow: "bg-yellow text-ink",
-  pink: "bg-pink text-ink",
-  blue: "bg-blue text-paper",
-  cyan: "bg-cyan text-ink",
-  green: "bg-green text-ink",
-  red: "bg-red text-ink",
-  purple: "bg-purple text-paper",
-  ink: "bg-ink text-paper",
+  yellow: "bg-yellow text-on-accent",
+  pink: "bg-pink text-on-accent",
+  blue: "bg-blue text-on-deep",
+  cyan: "bg-cyan text-on-accent",
+  green: "bg-green text-on-accent",
+  red: "bg-red text-on-accent",
+  purple: "bg-purple text-on-deep",
+  ink: "bg-ink text-bg",
 };
 
 const shadowClass: Record<Shadow, string> = {

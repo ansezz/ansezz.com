@@ -233,7 +233,7 @@ const obsessions = [
         <ul class="grid grid-cols-2 gap-4 lg:grid-cols-3">
           {
             facts.map((f, i) => (
-              <li>
+              <li class="min-w-0">
                 <NeoCard
                   tone={f.tone}
                   shadow="sm"
@@ -247,7 +247,7 @@ const obsessions = [
                     <Icon name={f.icon} class="h-5 w-5" />
                   </span>
                   <p class="display text-4xl leading-none md:text-5xl">{f.v}</p>
-                  <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-80">
+                  <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-90">
                     {f.l}
                   </p>
                 </NeoCard>
@@ -269,7 +269,7 @@ const obsessions = [
         <ol class="grid gap-5 md:grid-cols-3">
           {
             process.map((p, i) => (
-              <li>
+              <li class="min-w-0">
                 <NeoCard
                   tone={p.tone}
                   shadow="md"
@@ -353,7 +353,7 @@ const obsessions = [
         <ul class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {
             principles.map((p, i) => (
-              <li>
+              <li class="min-w-0">
                 <NeoCard
                   tone={p.tone}
                   shadow="sm"
@@ -389,7 +389,7 @@ const obsessions = [
         <ul class="grid gap-5 md:grid-cols-2">
           {
             stackByLane.map((s, i) => (
-              <li>
+              <li class="min-w-0">
                 <NeoCard
                   tone={s.tone}
                   shadow="sm"
@@ -399,7 +399,7 @@ const obsessions = [
                   <h3 class="heading mb-3 text-lg uppercase">{s.title}</h3>
                   <ul class="flex flex-wrap gap-1.5">
                     {s.tags.map((t) => (
-                      <li>
+                      <li class="min-w-0">
                         <TagPill tone="paper" size="sm">
                           {t}
                         </TagPill>
@@ -423,7 +423,7 @@ const obsessions = [
           <ul class="flex flex-wrap gap-2">
             {
               LANGUAGES.map((l) => (
-                <li>
+                <li class="min-w-0">
                   <TagPill tone="paper" size="sm">
                     <span class="font-black">{l.label}</span>
                     <span class="mono ml-2 opacity-70">{l.level}</span>
@@ -459,7 +459,7 @@ const obsessions = [
       </div>
     </div>
 
-    <aside class="space-y-5 md:sticky md:top-24 md:self-start">
+    <aside class="min-w-0 space-y-5 md:sticky md:top-24 md:self-start">
       <ChecklistBox
         title="Currently obsessed with"
         items={obsessions}
@@ -467,7 +467,7 @@ const obsessions = [
       />
       <NeoCard tone="paper" class="space-y-4">
         <p
-          class="mono text-pink-deep text-xs font-bold tracking-widest uppercase"
+          class="mono text-accent-text text-xs font-bold tracking-widest uppercase"
         >
           ▸ For procurement / recruiters
         </p>

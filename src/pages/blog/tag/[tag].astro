@@ -67,7 +67,7 @@ const ogImage = isThin ? "/og/page/blog.png" : `/og/tag/${slug}.png`;
     <p>
       <a
         href="/blog/"
-        class="mono text-pink-deep hover:bg-yellow hover:text-ink -mx-1 px-1 text-xs font-bold tracking-widest uppercase"
+        class="mono text-accent-text hover:bg-yellow hover:text-ink -mx-1 px-1 text-xs font-bold tracking-widest uppercase"
       >
         ← Back to all posts
       </a>
@@ -77,7 +77,7 @@ const ogImage = isThin ? "/og/page/blog.png" : `/og/tag/${slug}.png`;
       all.length > 0 ? (
         <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {all.map((post, i) => (
-            <li>
+            <li class="min-w-0">
               <PostCard
                 post={post}
                 eager={i < 3}
