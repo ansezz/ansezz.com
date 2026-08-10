@@ -405,7 +405,6 @@ export const CARD_TONES = [
   "red",
   "purple",
 ] as const;
-export type CardTone = (typeof CARD_TONES)[number];
 
 export const WHAT_I_DO = [
   {

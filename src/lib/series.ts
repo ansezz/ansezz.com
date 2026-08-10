@@ -26,7 +26,3 @@ export function getSeriesForPost(postId: string): SeriesContext | null {
       index < series.posts.length - 1 ? series.posts[index + 1] : undefined,
   };
 }
-
-export function getSeries(slug: string): BlogSeries | undefined {
-  return BLOG_SERIES.find((s) => s.slug === slug);
-}
