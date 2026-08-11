@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -169,6 +170,22 @@ const related = [
     blurb:
       "Retries, fan-out and back pressure — the things a crontab cannot give you when scheduled work outgrows one box.",
     tone: "pink" as const,
+  },
+];
+
+const relatedLinks = [
+  {
+    href: "/tools/epoch-converter/",
+    note: "Turn the timestamps in your scheduler's logs into times you can reason about.",
+  },
+  {
+    href: "/tools/chmod-calculator/",
+    note: "A cron job that silently never runs is often a permissions problem, not a schedule problem.",
+  },
+  {
+    href: "/blog/message-queues-document-processing/",
+    note: "When recurring work outgrows cron and needs a queue instead.",
+    kind: "Post" as const,
   },
 ];
 ---
@@ -436,6 +453,8 @@ const related = [
       }
     </div>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

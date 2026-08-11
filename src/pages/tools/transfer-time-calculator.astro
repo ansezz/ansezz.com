@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -119,6 +120,27 @@ const codeClass =
 const thClass =
   "border-b-[3px] border-r-[3px] border-ink p-3 mono text-[10px] font-bold uppercase tracking-widest";
 const tdClass = "border-b-[2px] border-r-[3px] border-ink p-3 text-sm";
+
+const relatedLinks = [
+  {
+    href: "/tools/capacity-calculator/",
+    note: "Once you know the transfer cost, size the machines that absorb it.",
+  },
+  {
+    href: "/tools/percentile-calculator/",
+    note: "Transfer time lands in your tail latency — check where.",
+  },
+  {
+    href: "/blog/bandwidth-vs-throughput/",
+    note: "The two get used interchangeably and are not the same number.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/cdn-vs-cache/",
+    note: "Moving the bytes closer beats moving them faster.",
+    kind: "Post" as const,
+  },
+];
 ---
 
 <Page
@@ -672,6 +694,8 @@ const tdClass = "border-b-[2px] border-r-[3px] border-ink p-3 text-sm";
       </li>
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

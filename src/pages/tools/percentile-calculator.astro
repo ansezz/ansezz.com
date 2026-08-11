@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -90,6 +91,27 @@ const codeClass =
   "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1";
 const thClass =
   "border-b-[3px] border-r-[3px] border-ink p-3 mono text-[10px] font-bold uppercase tracking-widest text-left";
+
+const relatedLinks = [
+  {
+    href: "/tools/capacity-calculator/",
+    note: "Turn a tail-latency target into the capacity that meets it.",
+  },
+  {
+    href: "/tools/transfer-time-calculator/",
+    note: "Check how much of your p99 is just bytes moving.",
+  },
+  {
+    href: "/blog/logging-vs-monitoring/",
+    note: "Percentiles are a monitoring signal; logs tell you which request was the p99.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/gpu-aware-load-balancing/",
+    note: "Why naive round-robin wrecks tail latency on GPU-backed inference.",
+    kind: "Post" as const,
+  },
+];
 ---
 
 <Page
@@ -781,6 +803,8 @@ const thClass =
       </li>
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

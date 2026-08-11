@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -106,6 +107,27 @@ const codeClass =
   "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1";
 const pillClass =
   "mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5";
+
+const relatedLinks = [
+  {
+    href: "/tools/token-counter/",
+    note: "Check how many tokens each chunk actually costs before you commit to a size.",
+  },
+  {
+    href: "/tools/context-window-checker/",
+    note: "See how many chunks fit in a given model's context window.",
+  },
+  {
+    href: "/blog/why-your-rag-is-failing/",
+    note: "Chunking is one of the four things that break retrieval quality most often.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/picking-the-right-rag-stack/",
+    note: "Where chunk size fits against your vector store choice.",
+    kind: "Post" as const,
+  },
+];
 ---
 
 <Page
@@ -738,6 +760,8 @@ const pillClass =
       </li>
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

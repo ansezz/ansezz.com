@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
@@ -117,6 +118,27 @@ const appLd = {
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const relatedLinks = [
+  {
+    href: "/tools/token-counter/",
+    note: "The cost model is only as good as the token count you feed it.",
+  },
+  {
+    href: "/tools/context-window-checker/",
+    note: "Long context is the line item people forget to model.",
+  },
+  {
+    href: "/blog/rate-limiting-ai-wallet/",
+    note: "Denial-of-wallet: how a metered AI endpoint becomes an unbounded bill.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/training-vs-inference/",
+    note: "Where the money actually goes once you are serving rather than training.",
+    kind: "Post" as const,
+  },
+];
 ---
 
 <Page
@@ -570,6 +592,8 @@ const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
       </li>
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

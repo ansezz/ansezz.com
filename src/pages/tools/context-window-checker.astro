@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -162,6 +163,27 @@ const thClass =
   "border-b-[3px] border-r-[3px] border-ink last:border-r-0 p-3 mono text-[10px] font-bold uppercase tracking-widest";
 const tdClass =
   "border-b-[2px] border-r-[3px] border-ink last:border-r-0 p-3 text-sm";
+
+const relatedLinks = [
+  {
+    href: "/tools/token-counter/",
+    note: "Count the tokens before working out how many of them fit.",
+  },
+  {
+    href: "/tools/rag-chunk-splitter/",
+    note: "If the context will not fit, retrieval is the answer — start by sizing the chunks.",
+  },
+  {
+    href: "/blog/context-window-vs-memory/",
+    note: "A bigger window is not memory, and treating it as memory is a design error.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/prompt-engineering-vs-context-engineering/",
+    note: "Deciding what earns a place in the window at all.",
+    kind: "Post" as const,
+  },
+];
 ---
 
 <Page
@@ -838,6 +860,8 @@ const tdClass =
       </li>
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

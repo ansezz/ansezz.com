@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -129,6 +130,22 @@ const actionClass =
 const statLabelClass =
   "mono text-[10px] font-bold uppercase tracking-widest opacity-70";
 const statValueClass = "heading text-lg leading-none mt-1";
+
+const relatedLinks = [
+  {
+    href: "/tools/json-to-typescript/",
+    note: "Once the JSON is valid, turn it into a type or a Zod schema.",
+  },
+  {
+    href: "/tools/url-parser/",
+    note: "Pull apart a query string carrying JSON in a parameter.",
+  },
+  {
+    href: "/blog/rest-vs-grpc/",
+    note: "Where JSON stops being the right wire format.",
+    kind: "Post" as const,
+  },
+];
 ---
 
 <Page
@@ -607,6 +624,8 @@ const statValueClass = "heading text-lg leading-none mt-1";
       </li>
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

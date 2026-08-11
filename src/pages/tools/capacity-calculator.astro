@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -113,6 +114,27 @@ const thClass =
 const tdClass = "border-b-[2px] border-r-[3px] border-ink p-3 text-sm";
 const dtClass = "text-xs font-bold uppercase";
 const ddClass = "text-right font-mono text-sm font-bold";
+
+const relatedLinks = [
+  {
+    href: "/tools/percentile-calculator/",
+    note: "Size for p99, not the mean — the mean hides the requests that time out.",
+  },
+  {
+    href: "/tools/transfer-time-calculator/",
+    note: "Check whether the bottleneck is compute or the pipe feeding it.",
+  },
+  {
+    href: "/blog/horizontal-vs-vertical-scaling/",
+    note: "Which direction to spend the headroom this calculator says you need.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/smart-auto-scaling-ai/",
+    note: "Autoscaling on a signal that tracks demand instead of one that lags it.",
+    kind: "Post" as const,
+  },
+];
 ---
 
 <Page
@@ -818,6 +840,8 @@ const ddClass = "text-right font-mono text-sm font-bold";
       </li>
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>

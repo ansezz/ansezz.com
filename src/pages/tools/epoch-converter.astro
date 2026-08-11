@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -102,6 +103,22 @@ const chunkyButtonClass =
   "inline-flex items-center justify-center border-[3px] border-ink rounded-[6px] bg-paper px-4 py-2 text-xs font-bold uppercase tracking-wide shadow-neo-sm transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-md";
 const errorClass =
   "border-[3px] border-ink rounded-[4px] bg-paper px-3 py-2 text-sm font-bold text-accent-text";
+
+const relatedLinks = [
+  {
+    href: "/tools/cron-explainer/",
+    note: "Work out when the job that wrote that timestamp was supposed to fire.",
+  },
+  {
+    href: "/tools/uuid-generator/",
+    note: "UUIDv7 embeds a timestamp — useful when you want sortable ids.",
+  },
+  {
+    href: "/blog/logging-vs-monitoring/",
+    note: "Timestamps are only useful if you can correlate them across services.",
+    kind: "Post" as const,
+  },
+];
 ---
 
 <Page
@@ -683,6 +700,8 @@ const errorClass =
       </NeoButton>
     </div>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <style>

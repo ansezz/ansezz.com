@@ -1,5 +1,6 @@
 ---
 import Page from "@/layouts/Page.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
@@ -89,6 +90,26 @@ const paneClass =
   "w-full border-[3px] border-ink rounded-[4px] bg-paper p-3 font-mono text-sm shadow-neo-sm focus:outline-none resize-y break-all";
 const copyBtnClass =
   "inline-flex items-center gap-2 border-[2.5px] border-ink rounded-[4px] bg-paper px-3 py-1.5 mono text-[10px] font-bold uppercase tracking-widest shadow-neo-xs transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-yellow hover:shadow-neo-sm";
+
+const relatedLinks = [
+  {
+    href: "/tools/jwt-decoder/",
+    note: "A JWT is three base64url segments — decode the whole token instead of one part at a time.",
+  },
+  {
+    href: "/tools/hash-generator/",
+    note: "Encoding is not hashing. If you wanted something irreversible, you wanted this.",
+  },
+  {
+    href: "/tools/url-parser/",
+    note: "Percent-encoding and base64 solve different problems and are easy to confuse.",
+  },
+  {
+    href: "/blog/rest-vs-grpc/",
+    note: "Why gRPC puts bytes on the wire where REST puts base64 strings.",
+    kind: "Post" as const,
+  },
+];
 ---
 
 <Page
@@ -550,6 +571,8 @@ const copyBtnClass =
       </li>
     </ul>
   </section>
+
+  <RelatedLinks items={relatedLinks} />
 </Page>
 
 <script>
