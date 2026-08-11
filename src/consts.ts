@@ -938,6 +938,8 @@ export interface ToolEntry {
   tone: "yellow" | "pink" | "cyan" | "green" | "purple";
   status: "live" | "soon";
   group: ToolGroupId;
+  /** Join key to the blog. Posts surface tools sharing at least one tag. */
+  tags: BlogTag[];
 }
 
 export const TOOL_LIST: ToolEntry[] = [
@@ -951,6 +953,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "yellow",
     status: "live",
     group: "ai",
+    tags: ["llm", "ai-engineering", "llm-inference"],
   },
   {
     title: "Token Counter",
@@ -961,6 +964,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "cyan",
     status: "live",
     group: "ai",
+    tags: ["llm", "rag", "ai-engineering"],
   },
   {
     title: "Context Window Checker",
@@ -971,6 +975,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "purple",
     status: "live",
     group: "ai",
+    tags: ["llm", "rag", "agentic-ai"],
   },
   {
     title: "RAG Chunk Splitter",
@@ -981,6 +986,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "pink",
     status: "live",
     group: "ai",
+    tags: ["rag", "vector-search", "pgvector"],
   },
 
   // ── Encoding & secrets ──
@@ -993,6 +999,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "purple",
     status: "live",
     group: "encoding",
+    tags: ["security", "api-design"],
   },
   {
     title: "Base64 Encoder / Decoder",
@@ -1003,6 +1010,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "cyan",
     status: "live",
     group: "encoding",
+    tags: ["api-design"],
   },
   {
     title: "SHA Hash Generator",
@@ -1013,6 +1021,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "green",
     status: "live",
     group: "encoding",
+    tags: ["security"],
   },
   {
     title: "Secret & API Key Generator",
@@ -1023,6 +1032,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "pink",
     status: "live",
     group: "encoding",
+    tags: ["security"],
   },
   {
     title: "UUID Generator",
@@ -1033,6 +1043,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "green",
     status: "live",
     group: "encoding",
+    tags: ["databases", "api-design"],
   },
 
   // ── Data & APIs ──
@@ -1045,6 +1056,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "yellow",
     status: "live",
     group: "data",
+    tags: ["api-design", "networking"],
   },
   {
     title: "JSON Formatter & Validator",
@@ -1055,6 +1067,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "cyan",
     status: "live",
     group: "data",
+    tags: ["api-design"],
   },
   {
     title: "JSON to TypeScript & Zod",
@@ -1065,6 +1078,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "purple",
     status: "live",
     group: "data",
+    tags: ["api-design", "code-quality"],
   },
 
   // ── Infrastructure ──
@@ -1077,6 +1091,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "pink",
     status: "live",
     group: "infra",
+    tags: ["devops", "messaging"],
   },
   {
     title: "Epoch Converter",
@@ -1087,6 +1102,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "yellow",
     status: "live",
     group: "infra",
+    tags: ["devops", "databases"],
   },
   {
     title: "Chmod Calculator",
@@ -1097,6 +1113,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "purple",
     status: "live",
     group: "infra",
+    tags: ["devops", "self-hosting"],
   },
   {
     title: "Transfer Time Calculator",
@@ -1107,6 +1124,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "cyan",
     status: "live",
     group: "infra",
+    tags: ["networking", "performance", "infrastructure"],
   },
   {
     title: "Latency Percentile Calculator",
@@ -1117,6 +1135,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "green",
     status: "live",
     group: "infra",
+    tags: ["performance", "observability"],
   },
   {
     title: "Server Capacity Calculator",
@@ -1127,6 +1146,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "pink",
     status: "live",
     group: "infra",
+    tags: ["infrastructure", "scaling", "performance"],
   },
 
   // ── Shopify ──
@@ -1139,6 +1159,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "purple",
     status: "live",
     group: "shopify",
+    tags: ["shopify", "security"],
   },
   {
     title: "Shopify GID Decoder",
@@ -1149,6 +1170,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "green",
     status: "live",
     group: "shopify",
+    tags: ["shopify", "hydrogen"],
   },
 
   // ── Reference ──
@@ -1161,6 +1183,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "yellow",
     status: "live",
     group: "reference",
+    tags: ["api-design", "networking"],
   },
   {
     title: "HTTP Headers Cheat Sheet",
@@ -1171,6 +1194,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "cyan",
     status: "live",
     group: "reference",
+    tags: ["api-design", "networking", "security"],
   },
   {
     title: "Common Ports",
@@ -1181,6 +1205,7 @@ export const TOOL_LIST: ToolEntry[] = [
     tone: "pink",
     status: "live",
     group: "reference",
+    tags: ["networking", "devops"],
   },
 ];
 

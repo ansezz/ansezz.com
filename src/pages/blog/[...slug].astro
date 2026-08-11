@@ -2,6 +2,7 @@
 import { getCollection, render } from "astro:content";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import RelatedPosts from "@/components/blog/RelatedPosts.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import AuthorFooter from "@/components/blog/AuthorFooter.astro";
 import TableOfContents from "@/components/blog/TableOfContents.astro";
 import ShareBar from "@/components/blog/ShareBar.astro";
@@ -17,7 +18,13 @@ import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import { Icon } from "astro-icon/components";
 import { getReadingTime, getWordCount } from "@/lib/reading";
 import { tagSlug } from "@/lib/links";
-import { OWNER, SITE, CATEGORY_LABEL, CATEGORY_TONE } from "@/consts";
+import {
+  OWNER,
+  SITE,
+  CATEGORY_LABEL,
+  CATEGORY_TONE,
+  TOOL_LIST,
+} from "@/consts";
 import { webPage } from "@/lib/seo";
 
 export async function getStaticPaths() {
@@ -42,6 +49,27 @@ const nextPost =
 const related = all
   .filter((p) => p.id !== post.id && p.data.category === post.data.category)
   .slice(0, 3);
+
+// Tools sharing at least one tag with this post. Ranked by overlap so the
+// most relevant tool leads. Capped at 3 — this is a footer block, not a
+// directory. Inline contextual links inside post bodies are worth more and
+// are handled separately.
+const postTags = new Set<string>(post.data.tags);
+const relatedTools = TOOL_LIST.filter((t) => t.status === "live")
+  .map((t) => ({
+    tool: t,
+    overlap: t.tags.filter((x) => postTags.has(x)).length,
+  }))
+  .filter((x) => x.overlap > 0)
+  .sort(
+    (a, b) => b.overlap - a.overlap || a.tool.title.localeCompare(b.tool.title),
+  )
+  .slice(0, 3)
+  .map(({ tool }) => ({
+    href: tool.href,
+    note: tool.blurb,
+    kind: "Tool" as const,
+  }));
 
 const skillsChecklist = post.data.tags.slice(0, 6).map((t) => ({
   label: t,
@@ -403,6 +431,15 @@ const structured = relatedLd
   }
 
   <HalftoneSection tone="bg" class="pb-16">
+    {
+      relatedTools.length > 0 && (
+        <RelatedLinks
+          title="Tools for this"
+          items={relatedTools}
+          class="mx-auto max-w-5xl px-5"
+        />
+      )
+    }
     <RelatedPosts posts={related} />
   </HalftoneSection>
 </BaseLayout>
