@@ -1,6 +1,14 @@
 /**
- * The 188 -> 40 tag merge map. Single source of truth for the migration,
- * the redirect generator, and the assertion harness.
+ * The 188 -> 40 tag merge map for the one-shot taxonomy migration. The
+ * script this file was written for, `scripts/migrate-tags.mjs`, has since
+ * been deleted — the migration it ran is complete and the corpus is
+ * canonicalized. This file is now archival.
+ *
+ * Only `MAP` (transitively) and `ALIAS` are still consumed, by
+ * `scripts/gen-tag-redirects.mjs`. `DROP`, `ADD`, `MAX_TAGS`, `PINNED`,
+ * `resolveTags`, and `applyCap` have no remaining callers — they are kept,
+ * not deleted, as a record of exactly how the 188 -> 40 consolidation was
+ * carried out.
  *
  * Verified against the corpus: zero unmapped tags, every canonical tag at or
  * above the 3-post floor, exactly 3 posts hitting the 7-tag cap.
