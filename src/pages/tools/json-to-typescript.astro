@@ -6,7 +6,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
 
 const PAGE_DESCRIPTION =
   "Free JSON to TypeScript converter. Paste a JSON sample and generate typed interfaces plus a Zod v4 schema, with unions and optionals inferred, in your browser.";
@@ -59,6 +59,31 @@ const faq = [
 ];
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const howToLd = howTo({
+  name: "Generate a TypeScript interface or Zod schema from JSON",
+  description:
+    "Turn a sample JSON payload into a TypeScript interface or a Zod v4 schema, and know which parts of the output still need a human.",
+  url: new URL("/tools/json-to-typescript/", SITE.URL).href,
+  steps: [
+    {
+      name: "Paste a representative sample",
+      text: "Use a real response with every optional field populated. Anything absent from the sample cannot be inferred, so a thin sample produces a wrong type.",
+    },
+    {
+      name: "Choose the output format",
+      text: "Switch between a plain TypeScript interface and a Zod v4 schema depending on whether you need compile-time types or runtime validation.",
+    },
+    {
+      name: "Review the inferred optionality",
+      text: "A key missing from any object in an array is emitted as optional. Widen or narrow those by hand wherever the sample was not representative.",
+    },
+    {
+      name: "Check nested and union types",
+      text: "Nested objects become their own named types and mixed-type arrays become unions. Rename the generated types to match your domain vocabulary before committing them.",
+    },
+  ],
+});
 
 const SAMPLES: { label: string; value: unknown }[] = [
   {
@@ -234,7 +259,7 @@ const relatedLinks = [
   eyebrow="Free tool"
   heading="JSON to TypeScript & Zod."
   intro="Paste a JSON sample, get a TypeScript interface tree and a matching Zod v4 schema. It merges array elements into unions, marks the keys that went missing, and detects the string formats worth validating."
-  structuredData={[breadcrumbLd, appLd, faqLd]}
+  structuredData={[breadcrumbLd, appLd, faqLd, howToLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">

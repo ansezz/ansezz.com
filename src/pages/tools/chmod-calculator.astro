@@ -6,7 +6,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
 
 const PAGE_TITLE = "Chmod Permissions Calculator";
 const PAGE_DESCRIPTION =
@@ -104,6 +104,31 @@ const appLd = {
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
 
+const howToLd = howTo({
+  name: "Work out a Unix file permission mode",
+  description:
+    "Build an octal chmod mode from read, write and execute permissions for owner, group and others, and read back the symbolic form.",
+  url: new URL("/tools/chmod-calculator/", SITE.URL).href,
+  steps: [
+    {
+      name: "Set the owner permissions",
+      text: "Tick read, write and execute for the file's owner. They are worth 4, 2 and 1, summed into the first digit.",
+    },
+    {
+      name: "Set group and others",
+      text: "Repeat for the group and for everyone else, producing the second and third digits of the mode.",
+    },
+    {
+      name: "Read both forms",
+      text: "The tool shows the octal mode (755) alongside the symbolic form (rwxr-xr-x) and the ready-to-run chmod command.",
+    },
+    {
+      name: "Add a special bit if you need one",
+      text: "setuid, setgid and the sticky bit form an optional fourth leading digit, worth 4, 2 and 1 respectively — 4755 is setuid plus 755.",
+    },
+  ],
+});
+
 const related = [
   {
     href: "/blog/container-vs-pod/",
@@ -145,7 +170,7 @@ const relatedLinks = [
   eyebrow="Free tool"
   heading="Chmod Permissions Calculator."
   intro="Tick the boxes or type the number — both directions stay in sync. Includes the setuid, setgid, and sticky bits, with the S/T rendering everyone else gets wrong."
-  structuredData={[breadcrumbLd, appLd, faqLd]}
+  structuredData={[breadcrumbLd, appLd, faqLd, howToLd]}
 >
   <section class="mx-auto max-w-4xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">

@@ -6,7 +6,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
 import { Icon } from "astro-icon/components";
 import { SITE } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
 
 const TOOL_NAME = "Shopify Webhook HMAC Verifier";
 const TOOL_PATH = "/tools/shopify-hmac-verifier/";
@@ -105,6 +105,31 @@ const appLd = {
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const howToLd = howTo({
+  name: "Verify a Shopify webhook HMAC signature",
+  description:
+    "Confirm that a webhook payload genuinely came from Shopify by recomputing its HMAC-SHA256 signature against your app's shared secret.",
+  url: new URL("/tools/shopify-hmac-verifier/", SITE.URL).href,
+  steps: [
+    {
+      name: "Paste the raw request body",
+      text: "Copy the webhook payload exactly as received — byte for byte, before any JSON parsing or re-serialisation. Any whitespace change invalidates the signature.",
+    },
+    {
+      name: "Paste the shared secret",
+      text: "Use the API secret key for the app that registered the webhook, found in your Shopify Partner dashboard.",
+    },
+    {
+      name: "Paste the header signature",
+      text: "Copy the base64 value of the X-Shopify-Hmac-SHA256 request header.",
+    },
+    {
+      name: "Compare the result",
+      text: "The tool recomputes HMAC-SHA256 over the body with your secret and compares it to the header in constant time. A mismatch means the request was not signed by Shopify.",
+    },
+  ],
+});
 
 const expressSnippet = `import express from "express";
 import crypto from "node:crypto";
@@ -220,7 +245,7 @@ const relatedLinks = [
   eyebrow="Free tool"
   heading="Shopify Webhook HMAC Verifier."
   intro="Paste the raw webhook body, the X-Shopify-Hmac-Sha256 header and your client secret. The digest is computed with the Web Crypto API on this page — your secret never leaves the browser."
-  structuredData={[breadcrumbLd, appLd, faqLd]}
+  structuredData={[breadcrumbLd, appLd, faqLd, howToLd]}
 >
   <section class="mx-auto max-w-4xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">

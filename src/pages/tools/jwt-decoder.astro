@@ -5,7 +5,7 @@ import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import { Icon } from "astro-icon/components";
 import { SITE } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
 
 const TOOL_NAME = "JWT Decoder";
 const TOOL_PATH = "/tools/jwt-decoder/";
@@ -99,6 +99,35 @@ const appLd = {
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
 
+const howToLd = howTo({
+  name: "Decode a JSON Web Token",
+  description:
+    "Read the header, payload and expiry of a JWT so you can see what a token actually claims before trusting it.",
+  url: new URL("/tools/jwt-decoder/", SITE.URL).href,
+  steps: [
+    {
+      name: "Paste the token",
+      text: "Copy the full JWT including both dots. The three base64url segments are the header, the payload and the signature.",
+    },
+    {
+      name: "Read the header",
+      text: "The header names the signing algorithm (alg) and key id (kid). Confirm alg is what your service expects — `none`, or an algorithm you did not choose, is an attack rather than a quirk.",
+    },
+    {
+      name: "Read the payload claims",
+      text: "Check that iss, aud and sub identify the issuer, audience and subject you expect, then read any custom claims your application depends on.",
+    },
+    {
+      name: "Check the expiry",
+      text: "exp and nbf are Unix timestamps. The tool converts them to local time and flags a token that has expired or is not yet valid.",
+    },
+    {
+      name: "Verify the signature server-side",
+      text: "Decoding is not verification. This tool never receives your signing key — validate the signature on your server before trusting any claim in the payload.",
+    },
+  ],
+});
+
 const related = [
   {
     href: "/tools/base64-encoder/",
@@ -160,7 +189,7 @@ const relatedLinks = [
   eyebrow="Free tool"
   heading="JWT Decoder."
   intro="Paste a JWT to read its header and payload. Decoding happens in your browser — the token never leaves the page."
-  structuredData={[breadcrumbLd, appLd, faqLd]}
+  structuredData={[breadcrumbLd, appLd, faqLd, howToLd]}
 >
   <section class="mx-auto max-w-4xl px-5 pb-6">
     <StickyNote tone="pink" tilt={-1.5} class="max-w-md">

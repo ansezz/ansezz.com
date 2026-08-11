@@ -5,7 +5,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
 
 const TOOL_NAME = "Cron Explainer";
 const TOOL_PATH = "/tools/cron-explainer/";
@@ -108,6 +108,35 @@ const appLd = {
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
 
+const howToLd = howTo({
+  name: "Read a cron expression",
+  description:
+    "Break a five-field cron schedule down field by field to see exactly when it fires, and catch the two mistakes that cause most surprise runs.",
+  url: new URL("/tools/cron-explainer/", SITE.URL).href,
+  steps: [
+    {
+      name: "Paste the five-field schedule",
+      text: "Minute, hour, day-of-month, month, day-of-week, in that order, separated by spaces.",
+    },
+    {
+      name: "Read the field breakdown",
+      text: "Each field is explained on its own, so you can see which one is not doing what you assumed.",
+    },
+    {
+      name: "Check how day-of-month and day-of-week interact",
+      text: "When both are restricted, cron fires on either match rather than requiring both. This is the single most common reason a job runs on an unexpected day.",
+    },
+    {
+      name: "Check your step values",
+      text: "A step like */7 restarts its count at the top of every hour, so it does not mean 'every 7 minutes' continuously across the hour boundary.",
+    },
+    {
+      name: "Confirm the timezone",
+      text: "Cron uses the host's system timezone, not UTC, unless the host itself is set to UTC. Check the machine rather than the expression.",
+    },
+  ],
+});
+
 const related = [
   {
     href: "/tools/epoch-converter/",
@@ -150,7 +179,7 @@ const related = [
   eyebrow="Free tool"
   heading="Cron Explainer."
   intro="Paste a 5-field cron expression — get a plain-English description of exactly when it fires. Built it for my own schedulers."
-  structuredData={[breadcrumbLd, appLd, faqLd]}
+  structuredData={[breadcrumbLd, appLd, faqLd, howToLd]}
 >
   <section class="mx-auto max-w-3xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
