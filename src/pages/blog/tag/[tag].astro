@@ -2,8 +2,9 @@
 import { getCollection } from "astro:content";
 import Page from "@/layouts/Page.astro";
 import PostCard from "@/components/blog/PostCard.astro";
-import { SITE, CARD_TONES, TAG_OG_MIN_POSTS } from "@/consts";
-import { breadcrumbList } from "@/lib/seo";
+import { SITE, CARD_TONES, TAG_OG_MIN_POSTS, BLOG_TAGS } from "@/consts";
+import type { BlogTag } from "@/consts";
+import { breadcrumbList, collectionPage } from "@/lib/seo";
 import { tagSlug } from "@/lib/links";
 
 export async function getStaticPaths() {
@@ -50,16 +51,41 @@ const isThin = all.length < TAG_OG_MIN_POSTS;
 
 // Generated tag card only exists above the threshold; else reuse blog card.
 const ogImage = isThin ? "/og/page/blog.png" : `/og/tag/${slug}.png`;
+
+// Every tag in the closed vocabulary carries its own copy. Before this, the
+// page rendered the templated string "N posts with this tag." — identical
+// across every tag, which is thin regardless of how many posts it listed.
+const entry = BLOG_TAGS[slug as BlogTag];
+
+// `related` is a readonly tuple of string literals because BLOG_TAGS is
+// declared `as const`, and every literal is a key of BLOG_TAGS. Spreading
+// widens it to BlogTag[]. Do NOT reach for a `(t): t is BlogTag` type
+// predicate here — the parameter is already the narrow literal union, so
+// BlogTag is not assignable to it and TS rejects the predicate.
+const relatedTags: BlogTag[] = [...(entry?.related ?? [])];
+
+const collectionLd = collectionPage({
+  url: new URL(`/blog/tag/${slug}/`, SITE.URL).href,
+  title: `${entry?.label ?? tag} — posts`,
+  description: entry?.description ?? `Posts tagged ${label}.`,
+  items: all.map((p) => ({
+    url: `/blog/${p.id}/`,
+    name: p.data.title,
+    description: p.data.description,
+    datePublished: p.data.publishDate.toISOString(),
+  })),
+  itemType: "BlogPosting",
+});
 ---
 
 <Page
-  title={`Posts tagged ${label}`}
-  description={`${all.length} ${all.length === 1 ? "post" : "posts"} tagged with ${label}.`}
+  title={`${entry?.label ?? tag} — ${all.length} ${all.length === 1 ? "post" : "posts"}`}
+  description={entry?.description ?? `${all.length} posts tagged ${label}.`}
   eyebrow={`Tag · ${label}`}
-  heading={`Posts tagged ${label}.`}
-  intro={`${all.length} ${all.length === 1 ? "post" : "posts"} with this tag.`}
+  heading={`${entry?.label ?? tag}.`}
+  intro={entry?.description}
   image={ogImage}
-  structuredData={breadcrumbLd}
+  structuredData={[breadcrumbLd, collectionLd]}
   noindex={isThin}
   robots={isThin ? "noindex,follow" : undefined}
 >
@@ -72,6 +98,27 @@ const ogImage = isThin ? "/og/page/blog.png" : `/og/tag/${slug}.png`;
         ← Back to all posts
       </a>
     </p>
+
+    {
+      relatedTags.length > 0 && (
+        <nav
+          aria-label="Related tags"
+          class="flex flex-wrap items-center gap-2"
+        >
+          <span class="mono text-xs font-bold tracking-widest uppercase opacity-70">
+            Related
+          </span>
+          {relatedTags.map((t) => (
+            <a
+              href={`/blog/tag/${t}/`}
+              class="border-ink hover:bg-yellow hover:text-on-accent rounded-[4px] border-[3px] px-2 py-1 text-xs font-bold"
+            >
+              #{BLOG_TAGS[t].label}
+            </a>
+          ))}
+        </nav>
+      )
+    }
 
     {
       all.length > 0 ? (
