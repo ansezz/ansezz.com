@@ -65,7 +65,7 @@ giscus               Blog comments (GitHub Discussions), loaded on demand
 Web3Forms            Contact form delivery, no backend
 ```
 
-**No analytics.** No tracking scripts, no pixels, no cookies set by the site — see [`/privacy/`](https://ansezz.com/privacy/). The only off-domain requests are giscus and Web3Forms, and only when you engage with them. The CSP in `public/_headers` is scoped to exactly those two.
+**Analytics.** No Google Analytics, no pixels, no cookies set by the site. Cloudflare Pages may inject its privacy-oriented Web Analytics / Pages Analytics beacon (`static.cloudflareinsights.com`) when enabled in the Cloudflare dashboard — disclosed on [`/privacy/`](https://ansezz.com/privacy/). Opt-in off-domain requests: giscus and Web3Forms. CSP in `public/_headers` allows those plus the Cloudflare insights beacon.
 
 ---
 
