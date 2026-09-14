@@ -17,7 +17,7 @@ const privacyBreadcrumbLd = breadcrumbList([
 // Bump this by hand when the substance of the notice changes. Do NOT derive
 // it from the file's mtime — a clean CI checkout stamps every file with the
 // build time, which made the page claim it was updated today, every day.
-const UPDATED = "2026-08-10";
+const UPDATED = "2026-09-14";
 
 const updatedAt = new Date(UPDATED);
 const updatedLabel = updatedAt.toLocaleDateString("en-US", {
@@ -28,7 +28,7 @@ const updatedLabel = updatedAt.toLocaleDateString("en-US", {
 
 const tldr = [
   { label: "No accounts", tone: "green" as const },
-  { label: "No analytics or tracking", tone: "green" as const },
+  { label: "Cloudflare Pages Analytics only", tone: "yellow" as const },
   { label: "No cookies set by me", tone: "green" as const },
   { label: "Comments & contact form opt-in", tone: "yellow" as const },
   { label: "No selling data — ever", tone: "yellow" as const },
@@ -88,10 +88,10 @@ const sections = [
 
 <Page
   title="Privacy"
-  description="Privacy notice for ansezz.com — what data is collected, why it's collected, and your rights. No analytics, no tracking, no cookies set by me."
+  description="Privacy notice for ansezz.com — what data is collected, why it's collected, and your rights. Cloudflare Pages Analytics (privacy-oriented) only; no cookies set by me."
   eyebrow="Legal"
   heading="Privacy notice."
-  intro="Short version: this site collects nothing about you personally. No accounts, no analytics, no cookies set by me. Comments and the contact form are strictly opt-in. Long version below — written in plain English."
+  intro="Short version: no accounts, no cookies set by me, no ad trackers. The host injects Cloudflare Pages Analytics (privacy-oriented, no cookies). Comments and the contact form are strictly opt-in. Long version below."
   structuredData={privacyBreadcrumbLd}
 >
   <div class="mx-auto max-w-4xl px-5 pb-20">
@@ -174,10 +174,15 @@ const sections = [
           <h2 class="heading text-xl uppercase">Analytics</h2>
         </div>
         <p class="text-sm leading-relaxed">
-          None. I run <strong>no</strong> analytics, no tracking scripts, and no tracking
-          pixels — no Google Analytics, no Plausible, nothing. I have no visibility
-          into who you are or which pages you read. The only traffic data that exists
-          is the host's standard access logs (see Hosting &amp; CDN below).
+          I do <strong>not</strong> run Google Analytics, Plausible, Meta Pixel, or any
+          first-party tracking script in this repo. Cloudflare Pages does inject{" "}
+          <strong>Cloudflare Web Analytics / Pages Analytics</strong> (the{" "}
+          <code>static.cloudflareinsights.com/beacon.min.js</code> beacon) when the
+          project has analytics enabled in the Cloudflare dashboard. That beacon is
+          privacy-oriented: no cookies, no cross-site tracking, aggregated page views
+          only. I cannot identify you from it. To turn it off, disable Pages Analytics
+          in the Cloudflare project settings — it is not controlled from this codebase.
+          Access logs from the CDN still exist (see Hosting &amp; CDN below).
         </p>
       </NeoCard>
 
@@ -228,10 +233,11 @@ const sections = [
         </div>
         <p class="text-sm leading-relaxed">
           Fonts and images are self-hosted from this domain. There are no
-          embedded social timelines, no ad tags, and no third-party scripts on
-          page load. Exactly two features reach outside this domain, and only
-          when you engage with them: <strong>giscus / GitHub</strong> (blog comments)
-          and <strong>Web3Forms</strong> (contact form delivery). Each loads under
+          embedded social timelines and no ad tags. On every page load the host
+          may inject the Cloudflare Pages Analytics beacon (see Analytics). Two
+          features reach outside this domain only when you engage with them:{" "}
+          <strong>giscus / GitHub</strong> (blog comments) and{" "}
+          <strong>Web3Forms</strong> (contact form delivery). Each loads under
           its own privacy policy. External links in blog posts point elsewhere — once
           you leave this domain, the destination's policy applies.
         </p>
