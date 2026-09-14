@@ -1,1 +1,1 @@
-@/workspace/consts-upload.ts
+file:///workspace/RESTORE_CONTENT.ts
