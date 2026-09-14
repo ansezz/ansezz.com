@@ -7,5 +7,6 @@ export * from "./01b-blog-meta";
 export * from "./02a-blog-tags-data";
 export * from "./02b-blog-tags-types";
 export * from "./03-services-now";
-export * from "./04a-tools";
+export * from "./04a1-tools-meta";
+export * from "./04a2-tools-list";
 export * from "./04b-library";
