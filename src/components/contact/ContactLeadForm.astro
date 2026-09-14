@@ -1,0 +1,118 @@
+---
+import { Icon } from "astro-icon/components";
+import { CONTACT_FORM, SERVICES } from "@/consts";
+
+interface Props {
+  prefillId: string | null;
+  prefillLabel: string | null;
+}
+const { prefillId, prefillLabel } = Astro.props;
+---
+
+<form id="contact-form" class="grid gap-4" novalidate>
+  <input type="hidden" name="access_key" value={CONTACT_FORM.ACCESS_KEY} />
+  <input type="hidden" name="subject" value="New inquiry from ansezz.com" />
+  <input type="hidden" name="from_name" value="ansezz.com contact form" />
+  {/* honeypot */}
+  <input
+    type="checkbox"
+    name="botcheck"
+    tabindex="-1"
+    autocomplete="off"
+    class="hidden"
+    aria-hidden="true"
+  />
+  {/* Human-readable package for the email body (Web3Forms). */}
+  <input
+    type="hidden"
+    id="contact-package-hidden"
+    name="package"
+    value={prefillLabel ?? ""}
+  />
+  <div
+    id="contact-package-banner"
+    hidden={!prefillLabel}
+    class="border-ink bg-yellow text-on-accent shadow-neo-xs mb-1 flex items-start gap-3 rounded-[4px] border-[2.5px] px-3 py-2.5"
+    role="status"
+  >
+    <Icon name="lucide:package" class="mt-0.5 h-4 w-4 shrink-0" />
+    <p class="text-sm leading-snug font-bold">
+      You picked{" "}
+      <span id="contact-package-label">{prefillLabel ?? "…"}</span>
+      {" "}
+      — I'll scope the intro around that package.
+    </p>
+  </div>
+  <label class="block">
+    <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
+      Package
+    </span>
+    <select
+      id="contact-package"
+      name="package_id"
+      class="border-ink bg-paper shadow-neo-xs focus:shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-2.5 font-medium focus:outline-none"
+    >
+      <option value="">Not sure yet / something else</option>
+      {
+        SERVICES.map((s) => (
+          <option value={s.id} selected={prefillId === s.id}>
+            {s.title}
+          </option>
+        ))
+      }
+    </select>
+  </label>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <label class="block">
+      <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
+        Name
+      </span>
+      <input
+        type="text"
+        name="name"
+        required
+        autocomplete="name"
+        class="border-ink bg-paper shadow-neo-xs focus:shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-2.5 font-medium focus:outline-none"
+      />
+    </label>
+    <label class="block">
+      <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
+        Email
+      </span>
+      <input
+        type="email"
+        name="email"
+        required
+        autocomplete="email"
+        class="border-ink bg-paper shadow-neo-xs focus:shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-2.5 font-medium focus:outline-none"
+      />
+    </label>
+  </div>
+  <label class="block">
+    <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
+      What do you need built?
+    </span>
+    <textarea
+      name="message"
+      rows="5"
+      required
+      placeholder="Scope, rough timeline, link to the product if it exists."
+      class="border-ink bg-paper shadow-neo-xs focus:shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] px-3 py-2.5 font-medium focus:outline-none"
+    />
+  </label>
+  <div class="flex flex-wrap items-center gap-3">
+    <button
+      type="submit"
+      class="border-ink bg-ink text-bg shadow-neo-sm hover:shadow-neo-md inline-flex items-center gap-2 border-[3px] px-5 py-2.5 text-sm font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 disabled:opacity-60"
+    >
+      <Icon name="lucide:send" class="h-4 w-4" />
+      <span id="contact-submit-label">Send message</span>
+    </button>
+    <p
+      id="contact-status"
+      class="text-sm font-bold"
+      role="status"
+      aria-live="polite"
+    />
+  </div>
+</form>
