@@ -1,0 +1,172 @@
+---
+import TagPill from "@/components/neobrutalist/TagPill.astro";
+import TagPillRow from "@/components/neobrutalist/TagPillRow.astro";
+import HalftoneSection from "@/components/neobrutalist/HalftoneSection.astro";
+import SocialButton from "@/components/neobrutalist/SocialButton.astro";
+import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
+import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
+import RobotMascot from "@/components/neobrutalist/RobotMascot.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, AVAILABLE_FOR } from "@/consts";
+
+const tones = ["yellow", "pink", "cyan", "green", "red", "blue", "purple"] as const;
+---
+
+<section class="mx-auto max-w-5xl px-5 py-14">
+  <PanelDivider shape="dots" tone="cyan" class="!my-0 mb-8" />
+  <div class="grid items-center gap-8 md:grid-cols-[1fr_auto]">
+    <div>
+      <BurstBadge tone="green" size="sm" class="mb-4">05</BurstBadge>
+      <h2 class="display text-3xl leading-tight md:text-4xl">
+        Other channels.
+      </h2>
+      <p class="text-ink-soft mt-3 max-w-2xl text-base leading-snug">
+        Email is fastest. Everything else still works.
+      </p>
+    </div>
+    <div class="relative mx-auto max-w-[220px] md:mx-0" data-mascot="contact">
+      <RobotMascot tone="cyan" size={140} />
+    </div>
+  </div>
+
+  <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <li>
+      <a
+        href={`tel:${SITE.PHONE}`}
+        class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
+      >
+        <Icon name="lucide:phone" class="mt-0.5 h-5 w-5 shrink-0" />
+        <div class="min-w-0 flex-1">
+          <p
+            class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
+          >
+            Phone / WhatsApp
+          </p>
+          <p class="truncate text-sm font-bold">{SITE.PHONE_DISPLAY}</p>
+        </div>
+      </a>
+    </li>
+    <li>
+      <a
+        href="https://linkedin.com/in/ansezz"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
+      >
+        <Icon name="lucide:linkedin" class="mt-0.5 h-5 w-5 shrink-0" />
+        <div class="min-w-0 flex-1">
+          <p
+            class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
+          >
+            LinkedIn
+          </p>
+          <p class="truncate text-sm font-bold">/in/ansezz</p>
+        </div>
+      </a>
+    </li>
+    <li>
+      <a
+        href="https://github.com/ansezz"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
+      >
+        <Icon name="lucide:github" class="mt-0.5 h-5 w-5 shrink-0" />
+        <div class="min-w-0 flex-1">
+          <p
+            class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
+          >
+            GitHub
+          </p>
+          <p class="truncate text-sm font-bold">@ansezz</p>
+        </div>
+      </a>
+    </li>
+    <li>
+      <a
+        href={SITE.RESUME_URL}
+        target="_blank"
+        rel="noopener"
+        class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
+      >
+        <Icon name="lucide:file-text" class="mt-0.5 h-5 w-5 shrink-0" />
+        <div class="min-w-0 flex-1">
+          <p
+            class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
+          >
+            Resume (PDF)
+          </p>
+          <p class="truncate text-sm font-bold">For procurement</p>
+        </div>
+      </a>
+    </li>
+  </ul>
+
+  <div class="mt-8">
+    <p
+      class="mono text-accent-text mb-3 text-xs font-bold tracking-widest uppercase"
+    >
+      ▸ Available for
+    </p>
+    <TagPillRow scrollOnMobile>
+      {
+        AVAILABLE_FOR.map((label, i) => (
+          <li>
+            <TagPill tone={tones[i % tones.length]}>{label}</TagPill>
+          </li>
+        ))
+      }
+    </TagPillRow>
+  </div>
+</section>
+
+<HalftoneSection tone="ink" bordered class="py-14">
+  <div class="text-bg mx-auto max-w-5xl px-5">
+    <div class="grid items-center gap-6 md:grid-cols-[1fr_auto]">
+      <div>
+        <p class="display text-2xl leading-tight md:text-3xl">
+          Find me elsewhere
+        </p>
+        <p class="text-bg/70 mt-2 text-sm">Same person, different rooms.</p>
+      </div>
+      <ul class="flex flex-wrap items-center gap-4">
+        <li>
+          <SocialButton
+            href="https://github.com/ansezz"
+            icon="lucide:github"
+            label="GitHub"
+            tone="paper"
+            size="md"
+          />
+        </li>
+        <li>
+          <SocialButton
+            href="https://linkedin.com/in/ansezz"
+            icon="lucide:linkedin"
+            label="LinkedIn"
+            tone="cyan"
+            size="md"
+          />
+        </li>
+        <li>
+          <SocialButton
+            href={`mailto:${SITE.EMAIL}`}
+            icon="lucide:mail"
+            label="Email"
+            tone="yellow"
+            size="md"
+          />
+        </li>
+        <li>
+          <SocialButton
+            href="/rss.xml"
+            icon="lucide:rss"
+            label="RSS"
+            tone="pink"
+            size="md"
+          />
+        </li>
+      </ul>
+    </div>
+  </div>
+</HalftoneSection>
