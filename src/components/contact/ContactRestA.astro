@@ -1,0 +1,122 @@
+---
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
+import { Icon } from "astro-icon/components";
+import { SERVICES } from "@/consts";
+
+const flow = [
+  {
+    step: "01",
+    title: "Send a short email",
+    icon: "lucide:mail",
+    tone: "yellow" as const,
+    body: "Couple of paragraphs. Problem, rough timeline, link to the product if it exists. No big spec needed.",
+  },
+  {
+    step: "02",
+    title: "15-min intro call",
+    icon: "lucide:phone-call",
+    tone: "pink" as const,
+    body: "Free. We see if it's a fit — scope, stack, stakes, my honest take on whether I'm the right person.",
+  },
+  {
+    step: "03",
+    title: "Scoped proposal",
+    icon: "lucide:clipboard-list",
+    tone: "cyan" as const,
+    body: "Within 48h: phased plan, milestones, deliverables, fixed price or weekly retainer — your pick.",
+  },
+];
+---
+
+<section class="mx-auto max-w-5xl px-5 pb-16">
+  <div class="mb-8 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
+    <div class="max-w-2xl">
+      <BurstBadge tone="cyan" size="sm" class="mb-4">01</BurstBadge>
+      <h2 class="display text-3xl leading-tight md:text-4xl">
+        How a typical engagement starts.
+      </h2>
+      <p class="text-ink-soft mt-3 text-base leading-snug md:text-lg">
+        Three small steps, then we're either building or you have a clear no.
+        Both outcomes are useful.
+      </p>
+    </div>
+  </div>
+  <ol class="grid gap-5 md:grid-cols-3">
+    {
+      flow.map((f, i) => (
+        <li>
+          <NeoCard
+            tone={f.tone}
+            shadow="md"
+            tilt={i === 1 ? 0 : i === 0 ? -0.4 : 0.4}
+            class="flex h-full flex-col gap-4"
+          >
+            <header class="flex items-start justify-between gap-2">
+              <span
+                class="border-ink bg-paper text-ink shadow-neo-xs inline-flex h-12 w-12 items-center justify-center rounded-[6px] border-[2.5px]"
+                aria-hidden="true"
+              >
+                <Icon name={f.icon} class="h-5 w-5" />
+              </span>
+              <span
+                class="display text-3xl leading-none opacity-40 md:text-4xl"
+                aria-hidden="true"
+              >
+                {f.step}
+              </span>
+            </header>
+            <h3 class="heading text-xl leading-tight uppercase md:text-2xl">
+              {f.title}
+            </h3>
+            <p class="text-sm leading-snug opacity-90">{f.body}</p>
+          </NeoCard>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<section class="mx-auto max-w-5xl px-5 pb-16">
+  <div class="mb-8 max-w-2xl">
+    <BurstBadge tone="pink" size="sm" class="mb-4">02</BurstBadge>
+    <h2 class="display text-3xl leading-tight md:text-4xl">
+      Pick a lane to make scoping easy.
+    </h2>
+    <p class="text-ink-soft mt-3 text-base leading-snug md:text-lg">
+      Most clients pick one. Some stack two. All are scoped and time-boxed.
+    </p>
+  </div>
+  <ul class="grid gap-5 md:grid-cols-2">
+    {
+      SERVICES.map((s, i) => (
+        <li>
+          <NeoCard
+            href={`/contact/?package=${s.id}`}
+            tone={s.tone}
+            shadow="md"
+            hover
+            tilt={i % 2 === 0 ? -0.3 : 0.3}
+            class="flex h-full flex-col gap-3"
+          >
+            <h3 class="heading text-xl leading-tight uppercase">{s.title}</h3>
+            <p class="text-sm leading-snug opacity-90">{s.body}</p>
+            <ul class="mt-1 space-y-1.5 text-sm">
+              {
+                s.bullets.map((b) => (
+                  <li class="flex items-start gap-2">
+                    <Icon
+                      name="lucide:check"
+                      class="mt-1 h-4 w-4 shrink-0 opacity-80"
+                    />
+                    <span>{b}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </NeoCard>
+        </li>
+      ))
+    }
+  </ul>
+</section>
