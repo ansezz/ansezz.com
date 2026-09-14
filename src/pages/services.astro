@@ -21,8 +21,6 @@ const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
   { name: "Services", url: "/services/" },
 ]);
-
-const PACKAGE_IDS = ["mvp", "ai", "shopify", "audit"] as const;
 ---
 
 <Page
@@ -73,7 +71,7 @@ const PACKAGE_IDS = ["mvp", "ai", "shopify", "audit"] as const;
               </ul>
               <div class="mt-auto pt-3">
                 <NeoButton
-                  href={`/contact/?package=${PACKAGE_IDS[i]}`}
+                  href={`/contact/?package=${s.id}`}
                   variant="ink"
                   size="sm"
                   fullWidth
