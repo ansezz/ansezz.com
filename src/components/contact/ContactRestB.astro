@@ -1,0 +1,169 @@
+---
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import HalftoneSection from "@/components/neobrutalist/HalftoneSection.astro";
+import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
+import SpeechBubble from "@/components/neobrutalist/SpeechBubble.astro";
+import { Icon } from "astro-icon/components";
+
+const bestFor = [
+  "Founders shipping a Laravel SaaS MVP",
+  "Teams stuck on multi-tenant architecture",
+  "Shopify Plus brands needing custom apps",
+  "Agencies adding AI features without an in-house ML team",
+  "CTOs wanting an honest architecture audit",
+  "Existing apps fighting Octane / queues / observability",
+];
+
+const notFor = [
+  "Pure WordPress / no-code work",
+  "Mobile-only native apps",
+  "Pixel-perfect static landing-page sprints",
+  "Crypto / NFT projects",
+];
+
+const faq = [
+  {
+    q: "Are you available right now?",
+    a: "I keep 1–2 senior slots open per quarter. Current status sits in the badge at the top of this page — if it says Open, I have capacity.",
+  },
+  {
+    q: "What should the first email actually say?",
+    a: "Two or three paragraphs is plenty: what you're building, what's broken or missing, a rough timeline, and a link if the product already exists. No spec, no NDA-first, no discovery form. If I need more I'll ask on the call.",
+  },
+  {
+    q: "What happens after I book the intro call?",
+    a: "Fifteen minutes, camera optional. We cover scope, stack, and stakes, and I give you a straight answer on fit. If it's a yes, a written proposal with phases, milestones and pricing lands within 48h. If it's a no, I'll usually point you at someone better suited.",
+  },
+  {
+    q: "Will you take an equity-only project?",
+    a: "Only if I'm already convinced — cap-table fit, founder fit, traction. Cash + equity hybrids: open to discussing. Pure equity: rare.",
+  },
+  {
+    q: "Can I see code samples?",
+    a: "Shipped work is on the work page, and open-source contributions are on GitHub. Client code is under NDA, but I'm happy to walk through architecture decisions and trade-offs live on a call.",
+  },
+  {
+    q: "What about rates, contracts, and time zones?",
+    a: "All answered on the services page — fixed-scope pricing, weekly retainers, NDAs and statements of work, and the EU / US-East overlap windows I keep.",
+  },
+];
+---
+
+<section class="mx-auto max-w-5xl px-5 pb-16">
+  <div class="mb-8 max-w-2xl">
+    <BurstBadge tone="yellow" size="sm" class="mb-4">03</BurstBadge>
+    <h2 class="display text-3xl leading-tight md:text-4xl">
+      Best for. Not for.
+    </h2>
+    <p class="text-ink-soft mt-3 text-base leading-snug md:text-lg">
+      Saves both of us a call. Honesty up front.
+    </p>
+  </div>
+  <div class="grid gap-5 md:grid-cols-2">
+    <NeoCard tone="green" shadow="md" tilt={-0.4} class="space-y-3">
+      <div class="flex items-center gap-3">
+        <span
+          class="border-ink bg-paper shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
+          aria-hidden="true"
+        >
+          <Icon name="lucide:thumbs-up" class="h-5 w-5" />
+        </span>
+        <h3 class="heading text-xl uppercase">Best for</h3>
+      </div>
+      <ul class="space-y-2">
+        {
+          bestFor.map((b) => (
+            <li class="flex items-start gap-2 text-sm font-medium">
+              <Icon name="lucide:check" class="mt-1 h-4 w-4 shrink-0" />
+              <span>{b}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </NeoCard>
+    <NeoCard tone="red" shadow="md" tilt={0.4} class="space-y-3">
+      <div class="flex items-center gap-3">
+        <span
+          class="border-ink bg-paper shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
+          aria-hidden="true"
+        >
+          <Icon name="lucide:x" class="h-5 w-5" />
+        </span>
+        <h3 class="heading text-xl uppercase">Not for</h3>
+      </div>
+      <ul class="space-y-2">
+        {
+          notFor.map((b) => (
+            <li class="flex items-start gap-2 text-sm font-medium">
+              <Icon name="lucide:slash" class="mt-1 h-4 w-4 shrink-0" />
+              <span>{b}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </NeoCard>
+  </div>
+</section>
+
+<HalftoneSection tone="bg" class="py-16">
+  <div class="mx-auto max-w-5xl px-5">
+    <div class="mb-8 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
+      <div class="max-w-2xl">
+        <BurstBadge tone="purple" size="sm" class="mb-4">04</BurstBadge>
+        <h2 class="display text-3xl leading-tight md:text-4xl">FAQ.</h2>
+        <p class="text-ink-soft mt-3 text-base leading-snug md:text-lg">
+          Questions clients ask before they hit send. Rates, contracts and
+          engagement terms are answered on
+          <a
+            href="/services/"
+            class="hover:bg-yellow font-bold underline decoration-[3px] underline-offset-4"
+            >the services page</a
+          >.
+        </p>
+      </div>
+      <SpeechBubble
+        tone="pink"
+        tail="br"
+        class="hidden max-w-[280px] md:inline-block"
+      >
+        <span class="text-sm leading-snug font-bold">
+          "Email rough scope. Reply ≤24h weekdays — every time."
+        </span>
+      </SpeechBubble>
+    </div>
+    <ul class="grid gap-4 md:grid-cols-2">
+      {
+        faq.map((item, i) => (
+          <li>
+            <details class="group border-ink bg-paper shadow-neo-md overflow-hidden rounded-[4px] border-[3px]">
+              <summary class="flex cursor-pointer list-none items-start justify-between gap-3 p-5 font-bold tracking-tight uppercase [&::-webkit-details-marker]:hidden">
+                <span class="flex min-w-0 items-start gap-3">
+                  <span
+                    class="border-ink bg-yellow mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-[2px] text-xs font-black"
+                    aria-hidden="true"
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span class="text-base leading-snug md:text-lg">
+                    {item.q}
+                  </span>
+                </span>
+                <span
+                  class="border-ink bg-bg inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-[2.5px] transition-transform group-open:rotate-45"
+                  aria-hidden="true"
+                >
+                  <Icon name="lucide:plus" class="h-4 w-4" />
+                </span>
+              </summary>
+              <div class="border-ink/15 border-t-[2px] px-5 pt-0 pb-5">
+                <p class="pt-4 text-sm leading-snug opacity-90 md:text-base">
+                  {item.a}
+                </p>
+              </div>
+            </details>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</HalftoneSection>

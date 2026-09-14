@@ -70,7 +70,12 @@ const breadcrumbLd = breadcrumbList([
                 ))}
               </ul>
               <div class="mt-auto pt-3">
-                <NeoButton href="/contact/" variant="ink" size="sm" fullWidth>
+                <NeoButton
+                  href={`/contact/?package=${s.id}`}
+                  variant="ink"
+                  size="sm"
+                  fullWidth
+                >
                   Start this →
                 </NeoButton>
               </div>

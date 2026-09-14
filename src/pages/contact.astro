@@ -1,109 +1,35 @@
 ---
 import Page from "@/layouts/Page.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
-import TagPill from "@/components/neobrutalist/TagPill.astro";
-import TagPillRow from "@/components/neobrutalist/TagPillRow.astro";
-import HalftoneSection from "@/components/neobrutalist/HalftoneSection.astro";
-import SocialButton from "@/components/neobrutalist/SocialButton.astro";
 import AvailabilityBadge from "@/components/neobrutalist/AvailabilityBadge.astro";
-import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
-import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
-import SpeechBubble from "@/components/neobrutalist/SpeechBubble.astro";
-import RobotMascot from "@/components/neobrutalist/RobotMascot.astro";
+import ContactLeadForm from "@/components/contact/ContactLeadForm.astro";
+import ContactRest from "@/components/contact/ContactRest.astro";
 import { Icon } from "astro-icon/components";
 import {
   CONTACT,
   CONTACT_FORM,
   SITE,
-  AVAILABLE_FOR,
   OWNER,
-  SERVICES,
+  PACKAGE_LABEL,
+  LANE_TO_PACKAGE,
 } from "@/consts";
 import { breadcrumbList } from "@/lib/seo";
 
 const formEnabled = CONTACT_FORM.ACCESS_KEY !== "";
 
-const tones = [
-  "yellow",
-  "pink",
-  "cyan",
-  "green",
-  "red",
-  "blue",
-  "purple",
-] as const;
-
-const flow = [
-  {
-    step: "01",
-    title: "Send a short email",
-    icon: "lucide:mail",
-    tone: "yellow" as const,
-    body: "Couple of paragraphs. Problem, rough timeline, link to the product if it exists. No big spec needed.",
-  },
-  {
-    step: "02",
-    title: "15-min intro call",
-    icon: "lucide:phone-call",
-    tone: "pink" as const,
-    body: "Free. We see if it's a fit — scope, stack, stakes, my honest take on whether I'm the right person.",
-  },
-  {
-    step: "03",
-    title: "Scoped proposal",
-    icon: "lucide:clipboard-list",
-    tone: "cyan" as const,
-    body: "Within 48h: phased plan, milestones, deliverables, fixed price or weekly retainer — your pick.",
-  },
-];
-
-const bestFor = [
-  "Founders shipping a Laravel SaaS MVP",
-  "Teams stuck on multi-tenant architecture",
-  "Shopify Plus brands needing custom apps",
-  "Agencies adding AI features without an in-house ML team",
-  "CTOs wanting an honest architecture audit",
-  "Existing apps fighting Octane / queues / observability",
-];
-
-const notFor = [
-  "Pure WordPress / no-code work",
-  "Mobile-only native apps",
-  "Pixel-perfect static landing-page sprints",
-  "Crypto / NFT projects",
-];
-
-// Deliberately scoped to "what happens when I hit send". Commercial terms
-// (rates, contracts, NDAs, time zones, taking over a codebase) live on
-// /services/ and carry the FAQPage schema there — one canonical answer per
-// question, not two competing ones across two pages.
-const faq = [
-  {
-    q: "Are you available right now?",
-    a: "I keep 1–2 senior slots open per quarter. Current status sits in the badge at the top of this page — if it says Open, I have capacity.",
-  },
-  {
-    q: "What should the first email actually say?",
-    a: "Two or three paragraphs is plenty: what you're building, what's broken or missing, a rough timeline, and a link if the product already exists. No spec, no NDA-first, no discovery form. If I need more I'll ask on the call.",
-  },
-  {
-    q: "What happens after I book the intro call?",
-    a: "Fifteen minutes, camera optional. We cover scope, stack, and stakes, and I give you a straight answer on fit. If it's a yes, a written proposal with phases, milestones and pricing lands within 48h. If it's a no, I'll usually point you at someone better suited.",
-  },
-  {
-    q: "Will you take an equity-only project?",
-    a: "Only if I'm already convinced — cap-table fit, founder fit, traction. Cash + equity hybrids: open to discussing. Pure equity: rare.",
-  },
-  {
-    q: "Can I see code samples?",
-    a: "Shipped work is on the work page, and open-source contributions are on GitHub. Client code is under NDA, but I'm happy to walk through architecture decisions and trade-offs live on a call.",
-  },
-  {
-    q: "What about rates, contracts, and time zones?",
-    a: "All answered on the services page — fixed-scope pricing, weekly retainers, NDAs and statements of work, and the EU / US-East overlap windows I keep.",
-  },
-];
+const rawPrefill = (
+  Astro.url.searchParams.get("package") ??
+  Astro.url.searchParams.get("lane") ??
+  ""
+)
+  .toLowerCase()
+  .trim();
+const prefillId =
+  rawPrefill in PACKAGE_LABEL
+    ? (rawPrefill as keyof typeof PACKAGE_LABEL)
+    : (LANE_TO_PACKAGE[rawPrefill] ?? null);
+const prefillLabel = prefillId ? PACKAGE_LABEL[prefillId] : null;
 ---
 
 <Page
@@ -139,85 +65,7 @@ const faq = [
           <p class="display mb-5 text-2xl leading-tight md:text-3xl">
             Send a message
           </p>
-          <form id="contact-form" class="grid gap-4" novalidate>
-            <input
-              type="hidden"
-              name="access_key"
-              value={CONTACT_FORM.ACCESS_KEY}
-            />
-            <input
-              type="hidden"
-              name="subject"
-              value="New inquiry from ansezz.com"
-            />
-            <input
-              type="hidden"
-              name="from_name"
-              value="ansezz.com contact form"
-            />
-            {/* honeypot */}
-            <input
-              type="checkbox"
-              name="botcheck"
-              tabindex="-1"
-              autocomplete="off"
-              class="hidden"
-              aria-hidden="true"
-            />
-            <div class="grid gap-4 sm:grid-cols-2">
-              <label class="block">
-                <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
-                  Name
-                </span>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  autocomplete="name"
-                  class="border-ink bg-paper shadow-neo-xs focus:shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-2.5 font-medium focus:outline-none"
-                />
-              </label>
-              <label class="block">
-                <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
-                  Email
-                </span>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  autocomplete="email"
-                  class="border-ink bg-paper shadow-neo-xs focus:shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-2.5 font-medium focus:outline-none"
-                />
-              </label>
-            </div>
-            <label class="block">
-              <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
-                What do you need built?
-              </span>
-              <textarea
-                name="message"
-                rows="5"
-                required
-                placeholder="Scope, rough timeline, link to the product if it exists."
-                class="border-ink bg-paper shadow-neo-xs focus:shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] px-3 py-2.5 font-medium focus:outline-none"
-              />
-            </label>
-            <div class="flex flex-wrap items-center gap-3">
-              <button
-                type="submit"
-                class="border-ink bg-ink text-bg shadow-neo-sm hover:shadow-neo-md inline-flex items-center gap-2 border-[3px] px-5 py-2.5 text-sm font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 disabled:opacity-60"
-              >
-                <Icon name="lucide:send" class="h-4 w-4" />
-                <span id="contact-submit-label">Send message</span>
-              </button>
-              <p
-                id="contact-status"
-                class="text-sm font-bold"
-                role="status"
-                aria-live="polite"
-              />
-            </div>
-          </form>
+          <ContactLeadForm prefillId={prefillId} prefillLabel={prefillLabel} />
         </NeoCard>
       )
     }
@@ -293,371 +141,23 @@ const faq = [
     </ul>
   </section>
 
-  <section class="mx-auto max-w-5xl px-5 pb-16">
-    <div class="mb-8 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
-      <div class="max-w-2xl">
-        <BurstBadge tone="cyan" size="sm" class="mb-4">01</BurstBadge>
-        <h2 class="display text-3xl leading-tight md:text-4xl">
-          How a typical engagement starts.
-        </h2>
-        <p class="text-ink-soft mt-3 text-base leading-snug md:text-lg">
-          Three small steps, then we're either building or you have a clear no.
-          Both outcomes are useful.
-        </p>
-      </div>
-    </div>
-    <ol class="grid gap-5 md:grid-cols-3">
-      {
-        flow.map((f, i) => (
-          <li>
-            <NeoCard
-              tone={f.tone}
-              shadow="md"
-              tilt={i === 1 ? 0 : i === 0 ? -0.4 : 0.4}
-              class="flex h-full flex-col gap-4"
-            >
-              <header class="flex items-start justify-between gap-2">
-                <span
-                  class="border-ink bg-paper text-ink shadow-neo-xs inline-flex h-12 w-12 items-center justify-center rounded-[6px] border-[2.5px]"
-                  aria-hidden="true"
-                >
-                  <Icon name={f.icon} class="h-5 w-5" />
-                </span>
-                <span
-                  class="display text-3xl leading-none opacity-40 md:text-4xl"
-                  aria-hidden="true"
-                >
-                  {f.step}
-                </span>
-              </header>
-              <h3 class="heading text-xl leading-tight uppercase md:text-2xl">
-                {f.title}
-              </h3>
-              <p class="text-sm leading-snug opacity-90">{f.body}</p>
-            </NeoCard>
-          </li>
-        ))
-      }
-    </ol>
-  </section>
-
-  <section class="mx-auto max-w-5xl px-5 pb-16">
-    <div class="mb-8 max-w-2xl">
-      <BurstBadge tone="pink" size="sm" class="mb-4">02</BurstBadge>
-      <h2 class="display text-3xl leading-tight md:text-4xl">
-        Pick a lane to make scoping easy.
-      </h2>
-      <p class="text-ink-soft mt-3 text-base leading-snug md:text-lg">
-        Most clients pick one. Some stack two. All are scoped and time-boxed.
-      </p>
-    </div>
-    <ul class="grid gap-5 md:grid-cols-2">
-      {
-        SERVICES.map((s, i) => (
-          <li>
-            <NeoCard
-              tone={s.tone}
-              shadow="md"
-              tilt={i % 2 === 0 ? -0.3 : 0.3}
-              class="flex h-full flex-col gap-3"
-            >
-              <h3 class="heading text-xl leading-tight uppercase">{s.title}</h3>
-              <p class="text-sm leading-snug opacity-90">{s.body}</p>
-              <ul class="mt-1 space-y-1.5 text-sm">
-                {s.bullets.map((b) => (
-                  <li class="flex items-start gap-2">
-                    <Icon
-                      name="lucide:check"
-                      class="mt-1 h-4 w-4 shrink-0 opacity-80"
-                    />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-            </NeoCard>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-
-  <section class="mx-auto max-w-5xl px-5 pb-16">
-    <div class="mb-8 max-w-2xl">
-      <BurstBadge tone="yellow" size="sm" class="mb-4">03</BurstBadge>
-      <h2 class="display text-3xl leading-tight md:text-4xl">
-        Best for. Not for.
-      </h2>
-      <p class="text-ink-soft mt-3 text-base leading-snug md:text-lg">
-        Saves both of us a call. Honesty up front.
-      </p>
-    </div>
-    <div class="grid gap-5 md:grid-cols-2">
-      <NeoCard tone="green" shadow="md" tilt={-0.4} class="space-y-3">
-        <div class="flex items-center gap-3">
-          <span
-            class="border-ink bg-paper shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
-            aria-hidden="true"
-          >
-            <Icon name="lucide:thumbs-up" class="h-5 w-5" />
-          </span>
-          <h3 class="heading text-xl uppercase">Best for</h3>
-        </div>
-        <ul class="space-y-2">
-          {
-            bestFor.map((b) => (
-              <li class="flex items-start gap-2 text-sm font-medium">
-                <Icon name="lucide:check" class="mt-1 h-4 w-4 shrink-0" />
-                <span>{b}</span>
-              </li>
-            ))
-          }
-        </ul>
-      </NeoCard>
-      <NeoCard tone="red" shadow="md" tilt={0.4} class="space-y-3">
-        <div class="flex items-center gap-3">
-          <span
-            class="border-ink bg-paper shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
-            aria-hidden="true"
-          >
-            <Icon name="lucide:x" class="h-5 w-5" />
-          </span>
-          <h3 class="heading text-xl uppercase">Not for</h3>
-        </div>
-        <ul class="space-y-2">
-          {
-            notFor.map((b) => (
-              <li class="flex items-start gap-2 text-sm font-medium">
-                <Icon name="lucide:slash" class="mt-1 h-4 w-4 shrink-0" />
-                <span>{b}</span>
-              </li>
-            ))
-          }
-        </ul>
-      </NeoCard>
-    </div>
-  </section>
-
-  <HalftoneSection tone="bg" class="py-16">
-    <div class="mx-auto max-w-5xl px-5">
-      <div class="mb-8 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
-        <div class="max-w-2xl">
-          <BurstBadge tone="purple" size="sm" class="mb-4">04</BurstBadge>
-          <h2 class="display text-3xl leading-tight md:text-4xl">FAQ.</h2>
-          <p class="text-ink-soft mt-3 text-base leading-snug md:text-lg">
-            Questions clients ask before they hit send. Rates, contracts and
-            engagement terms are answered on
-            <a
-              href="/services/"
-              class="hover:bg-yellow font-bold underline decoration-[3px] underline-offset-4"
-              >the services page</a
-            >.
-          </p>
-        </div>
-        <SpeechBubble
-          tone="pink"
-          tail="br"
-          class="hidden max-w-[280px] md:inline-block"
-        >
-          <span class="text-sm leading-snug font-bold">
-            "Email rough scope. Reply ≤24h weekdays — every time."
-          </span>
-        </SpeechBubble>
-      </div>
-      <ul class="grid gap-4 md:grid-cols-2">
-        {
-          faq.map((item, i) => (
-            <li>
-              <details class="group border-ink bg-paper shadow-neo-md overflow-hidden rounded-[4px] border-[3px]">
-                <summary class="flex cursor-pointer list-none items-start justify-between gap-3 p-5 font-bold tracking-tight uppercase [&::-webkit-details-marker]:hidden">
-                  <span class="flex min-w-0 items-start gap-3">
-                    <span
-                      class="border-ink bg-yellow mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-[2px] text-xs font-black"
-                      aria-hidden="true"
-                    >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span class="text-base leading-snug md:text-lg">
-                      {item.q}
-                    </span>
-                  </span>
-                  <span
-                    class="border-ink bg-bg inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-[2.5px] transition-transform group-open:rotate-45"
-                    aria-hidden="true"
-                  >
-                    <Icon name="lucide:plus" class="h-4 w-4" />
-                  </span>
-                </summary>
-                <div class="border-ink/15 border-t-[2px] px-5 pt-0 pb-5">
-                  <p class="pt-4 text-sm leading-snug opacity-90 md:text-base">
-                    {item.a}
-                  </p>
-                </div>
-              </details>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </HalftoneSection>
-
-  <section class="mx-auto max-w-5xl px-5 py-14">
-    <PanelDivider shape="dots" tone="cyan" class="!my-0 mb-8" />
-    <div class="grid items-center gap-8 md:grid-cols-[1fr_auto]">
-      <div>
-        <BurstBadge tone="green" size="sm" class="mb-4">05</BurstBadge>
-        <h2 class="display text-3xl leading-tight md:text-4xl">
-          Other channels.
-        </h2>
-        <p class="text-ink-soft mt-3 max-w-2xl text-base leading-snug">
-          Email is fastest. Everything else still works.
-        </p>
-      </div>
-      <div class="relative mx-auto max-w-[220px] md:mx-0" data-mascot="contact">
-        <RobotMascot tone="cyan" size={140} />
-      </div>
-    </div>
-
-    <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <li>
-        <a
-          href={`tel:${SITE.PHONE}`}
-          class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
-        >
-          <Icon name="lucide:phone" class="mt-0.5 h-5 w-5 shrink-0" />
-          <div class="min-w-0 flex-1">
-            <p
-              class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
-            >
-              Phone / WhatsApp
-            </p>
-            <p class="truncate text-sm font-bold">{SITE.PHONE_DISPLAY}</p>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a
-          href="https://linkedin.com/in/ansezz"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
-        >
-          <Icon name="lucide:linkedin" class="mt-0.5 h-5 w-5 shrink-0" />
-          <div class="min-w-0 flex-1">
-            <p
-              class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
-            >
-              LinkedIn
-            </p>
-            <p class="truncate text-sm font-bold">/in/ansezz</p>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a
-          href="https://github.com/ansezz"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
-        >
-          <Icon name="lucide:github" class="mt-0.5 h-5 w-5 shrink-0" />
-          <div class="min-w-0 flex-1">
-            <p
-              class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
-            >
-              GitHub
-            </p>
-            <p class="truncate text-sm font-bold">@ansezz</p>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a
-          href={SITE.RESUME_URL}
-          target="_blank"
-          rel="noopener"
-          class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
-        >
-          <Icon name="lucide:file-text" class="mt-0.5 h-5 w-5 shrink-0" />
-          <div class="min-w-0 flex-1">
-            <p
-              class="mono text-[10px] font-bold tracking-widest uppercase opacity-70"
-            >
-              Resume (PDF)
-            </p>
-            <p class="truncate text-sm font-bold">For procurement</p>
-          </div>
-        </a>
-      </li>
-    </ul>
-
-    <div class="mt-8">
-      <p
-        class="mono text-accent-text mb-3 text-xs font-bold tracking-widest uppercase"
-      >
-        ▸ Available for
-      </p>
-      <TagPillRow scrollOnMobile>
-        {
-          AVAILABLE_FOR.map((label, i) => (
-            <li>
-              <TagPill tone={tones[i % tones.length]}>{label}</TagPill>
-            </li>
-          ))
-        }
-      </TagPillRow>
-    </div>
-  </section>
-
-  <HalftoneSection tone="ink" bordered class="py-14">
-    <div class="text-bg mx-auto max-w-5xl px-5">
-      <div class="grid items-center gap-6 md:grid-cols-[1fr_auto]">
-        <div>
-          <p class="display text-2xl leading-tight md:text-3xl">
-            Find me elsewhere
-          </p>
-          <p class="text-bg/70 mt-2 text-sm">Same person, different rooms.</p>
-        </div>
-        <ul class="flex flex-wrap items-center gap-4">
-          <li>
-            <SocialButton
-              href="https://github.com/ansezz"
-              icon="lucide:github"
-              label="GitHub"
-              tone="paper"
-              size="md"
-            />
-          </li>
-          <li>
-            <SocialButton
-              href="https://linkedin.com/in/ansezz"
-              icon="lucide:linkedin"
-              label="LinkedIn"
-              tone="cyan"
-              size="md"
-            />
-          </li>
-          <li>
-            <SocialButton
-              href={`mailto:${SITE.EMAIL}`}
-              icon="lucide:mail"
-              label="Email"
-              tone="yellow"
-              size="md"
-            />
-          </li>
-          <li>
-            <SocialButton
-              href="/rss.xml"
-              icon="lucide:rss"
-              label="RSS"
-              tone="pink"
-              size="md"
-            />
-          </li>
-        </ul>
-      </div>
-    </div>
-  </HalftoneSection>
+  <ContactRest />
 </Page>
 
-{formEnabled && <script>import "@/scripts/contact-form";</script>}
+{
+  formEnabled && (
+    <>
+      <script
+        type="application/json"
+        id="contact-package-map"
+        set:html={JSON.stringify(PACKAGE_LABEL)}
+      />
+      <script
+        type="application/json"
+        id="contact-lane-map"
+        set:html={JSON.stringify(LANE_TO_PACKAGE)}
+      />
+      <script>import "@/scripts/contact-form";</script>
+    </>
+  )
+}
