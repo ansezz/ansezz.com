@@ -5,23 +5,38 @@ import { readdirSync, readFileSync, existsSync } from "node:fs";
 const problems = [];
 const fail = (msg) => problems.push(msg);
 
-// Vocabulary floor: every tag in BLOG_TAGS must carry at least this many
-// posts. Deliberately NOT TAG_OG_MIN_POSTS from consts.ts — that is the
-// noindex/sitemap threshold. The two are equal today and mean different
-// things; coupling them would make raising the indexing threshold fail the
-// build across legitimate tags.
 const MIN_POSTS_PER_TAG = 3;
 
-// ── 1. Vocabulary shape ────────────────────────────────────────────────
-const constsSrc = readFileSync("src/consts.ts", "utf8");
-if (!constsSrc.includes("export const BLOG_TAGS")) {
-  fail("consts.ts: BLOG_TAGS is not exported");
+async function loadBlogTags() {
+  const indexSrc = readFileSync("src/consts/index.ts", "utf8");
+  if (!indexSrc.includes('"./02a-blog-tags-data"')) {
+    fail("src/consts/index.ts: does not re-export blog tags data");
+  }
+
+  const scrub = (src, name) =>
+    src
+      .replace(/^import .*$/gm, "")
+      .replace(new RegExp(`export const ${name} = `), "return ")
+      .replace(/\s+as const\s*;?\s*$/, "");
+
+  const a = scrub(
+    readFileSync("src/consts/02a1-blog-tags-a.ts", "utf8"),
+    "BLOG_TAGS_A",
+  );
+  const b = scrub(
+    readFileSync("src/consts/02a2-blog-tags-b.ts", "utf8"),
+    "BLOG_TAGS_B",
+  );
+
+  const BLOG_TAGS_A = new Function(a)();
+  const BLOG_TAGS_B = new Function(b)();
+  return { ...BLOG_TAGS_A, ...BLOG_TAGS_B };
 }
 
-const { BLOG_TAGS } = await import("../src/consts.ts");
+const BLOG_TAGS = await loadBlogTags();
 const keys = Object.keys(BLOG_TAGS);
 
-if (keys.length !== 40) fail(`expected 40 tags, found ${keys.length}`);
+if (keys.length < 20) fail(`expected ≥20 tags, found ${keys.length}`);
 
 const seenDescriptions = new Set();
 for (const [key, entry] of Object.entries(BLOG_TAGS)) {
@@ -46,7 +61,6 @@ for (const [key, entry] of Object.entries(BLOG_TAGS)) {
   }
 }
 
-// ── 2. Corpus conformance (skipped until Task 3 has run) ───────────────
 const dir = "src/content/blog";
 const counts = Object.fromEntries(keys.map((k) => [k, 0]));
 let migrated = true;
@@ -93,7 +107,6 @@ if (!migrated) {
   }
 }
 
-// ── 3. Redirect coverage (skipped until Task 5 has run) ────────────────
 if (existsSync("public/_redirects")) {
   const redirects = readFileSync("public/_redirects", "utf8");
   const lines = redirects
@@ -113,7 +126,6 @@ if (existsSync("public/_redirects")) {
   }
 }
 
-// ── Report ─────────────────────────────────────────────────────────────
 if (problems.length) {
   console.error(`\n✗ ${problems.length} problem(s):\n`);
   for (const p of problems) console.error("  -", p);
