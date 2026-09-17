@@ -1,6 +1,6 @@
----
 title: "MobileTic — content delivery + mobile apps"
 description: "Web platform and Android apps for paid mobile content distribution across MENA, with a Laravel backend, REST APIs, and operator billing integrations."
+outcome: "Paid content delivery across MENA — Laravel API, Android apps, operator billing"
 category: saas
 stack:
   - "PHP"
