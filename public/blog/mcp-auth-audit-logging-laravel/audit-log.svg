@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Audit log console with allowed and denied MCP tool rows">
+  <rect width="1280" height="720" fill="#0a0a0a"/>
+  <rect x="60" y="50" width="1160" height="620" fill="#1a1a1a" stroke="#ffd93d" stroke-width="6"/>
+  <text x="90" y="110" font-family="ui-monospace,Menlo,monospace" font-size="28" font-weight="700" fill="#ffd93d">mcp_audit_events · live</text>
+  <text x="90" y="150" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#7ae582">filter: tenant=acme  decision=*</text>
+  <!-- header -->
+  <rect x="90" y="190" width="1100" height="50" fill="#2a2a2a" stroke="#4a4a4a" stroke-width="2"/>
+  <text x="110" y="222" font-family="ui-monospace,Menlo,monospace" font-size="16" fill="#fafaf5">TIME</text>
+  <text x="280" y="222" font-family="ui-monospace,Menlo,monospace" font-size="16" fill="#fafaf5">TOOL</text>
+  <text x="520" y="222" font-family="ui-monospace,Menlo,monospace" font-size="16" fill="#fafaf5">DECISION</text>
+  <text x="720" y="222" font-family="ui-monospace,Menlo,monospace" font-size="16" fill="#fafaf5">REASON</text>
+  <text x="980" y="222" font-family="ui-monospace,Menlo,monospace" font-size="16" fill="#fafaf5">ACTOR</text>
+  <!-- row allowed -->
+  <rect x="90" y="250" width="1100" height="70" fill="#12301f" stroke="#7ae582" stroke-width="3"/>
+  <text x="110" y="292" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#7ae582">03:14:02</text>
+  <text x="280" y="292" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#fafaf5">get_invoice</text>
+  <text x="520" y="292" font-family="ui-monospace,Menlo,monospace" font-size="18" font-weight="700" fill="#7ae582">ALLOWED</text>
+  <text x="720" y="292" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#3dd9c9">ok</text>
+  <text x="980" y="292" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#fafaf5">u_9182</text>
+  <!-- row denied -->
+  <rect x="90" y="340" width="1100" height="70" fill="#3a1214" stroke="#ff5a5f" stroke-width="3"/>
+  <text x="110" y="382" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#ff5a5f">03:14:07</text>
+  <text x="280" y="382" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#fafaf5">refund_order</text>
+  <text x="520" y="382" font-family="ui-monospace,Menlo,monospace" font-size="18" font-weight="700" fill="#ff5a5f">DENIED</text>
+  <text x="720" y="382" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#ffd93d">missing_scope</text>
+  <text x="980" y="382" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#fafaf5">u_9182</text>
+  <!-- row denied foreign -->
+  <rect x="90" y="430" width="1100" height="70" fill="#3a1214" stroke="#ff5a5f" stroke-width="3"/>
+  <text x="110" y="472" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#ff5a5f">03:14:11</text>
+  <text x="280" y="472" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#fafaf5">get_invoice</text>
+  <text x="520" y="472" font-family="ui-monospace,Menlo,monospace" font-size="18" font-weight="700" fill="#ff5a5f">DENIED</text>
+  <text x="720" y="472" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#ffd93d">not_found_or_foreign</text>
+  <text x="980" y="472" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#fafaf5">sess_44</text>
+  <text x="90" y="560" font-family="Georgia,serif" font-size="28" fill="#ffd93d">Deny is a first-class event.</text>
+  <text x="90" y="610" font-family="ui-monospace,Menlo,monospace" font-size="18" fill="#fafaf5">redacted args · hash · idempotency_key · duration_ms</text>
+</svg>

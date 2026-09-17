@@ -6,6 +6,9 @@ category: laravel
 tags: [laravel, mcp, agentic-ai, security, multi-tenancy]
 featured: false
 draft: false
+heroImage:
+  url: "/blog/mcp-auth-audit-logging-laravel/hero.svg"
+  alt: "Neo illustration of an MCP session gate in front of a Laravel lock"
 ---
 
 Giving Claude a tool that can read tickets and billing is useful. Giving it the same credentials your admin panel uses is how you invent a new incident class.
@@ -33,6 +36,8 @@ That works in a sandbox. In production it fails the moment:
 MCP does not invent tenancy for you. Laravel already has it. The job is to force every tool through that gate.
 
 ## One actor per request
+
+![Actor context flowing from AI agent through locked MCP tools into Laravel domain services](/blog/mcp-auth-audit-logging-laravel/actor-flow.svg)
 
 Treat an MCP tool invocation like an HTTP request that happens to arrive over JSON-RPC. Bind an actor before any tool runs:
 
@@ -104,6 +109,8 @@ Notice what is missing: a raw GraphQL passthrough, a `DB::table` query that forg
 If you already enforce tenancy in Eloquent global scopes, keep them. MCP is not a reason to bypass them "just this once."
 
 ## Audit log shape that survives an incident
+
+![Comic audit log console showing ALLOWED get_invoice and DENIED refund_order rows](/blog/mcp-auth-audit-logging-laravel/audit-log.svg)
 
 I log one row per tool attempt — allowed or denied — with enough to reconstruct the call without storing secrets:
 
