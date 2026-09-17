@@ -193,7 +193,7 @@ export const NOW = {
   DESCRIPTION:
     "What Anass Ez-zouaine is building right now — agentic commerce, MCP, RAG, and the scoped builds I'm taking this season.",
   // Keep this honest and current. Update the date when you edit it.
-  UPDATED: "2026-09-14",
+  UPDATED: "2026-09-18",
   FOCUS: [
     {
       icon: "lucide:brain-circuit",
@@ -211,7 +211,7 @@ export const NOW = {
       icon: "lucide:pen-line",
       tone: "yellow" as const,
       title: "Writing",
-      body: "August 2026 stretch covered agentic commerce, MCP vs A2A/ACP, RAG failure modes, and vibe-coding → agentic engineering. More of that — from the build, not the brochure.",
+      body: "August 2026 stretch covered agentic commerce, MCP vs A2A/ACP, RAG failure modes, and vibe-coding → agentic engineering. Next posts when the build teaches something worth publishing — not on a fake weekly cadence.",
     },
     {
       icon: "lucide:handshake",
