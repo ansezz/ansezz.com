@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "ansezz.com",
   "type": "module",
   "version": "0.0.1",
   "engines": {
@@ -8,14 +8,15 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && pagefind --site dist",
+    "build": "pnpm assert:taxonomy && astro build",
     "preview": "astro preview",
-    "check": "astro check",
+    "check": "pnpm assert:taxonomy && astro check",
     "lighthouse": "pnpm dlx @lhci/cli@0.15.x autorun",
     "format": "prettier --write .",
     "optimize:images": "node scripts/optimize-images.mjs",
     "generate:icons": "node scripts/generate-icons.mjs",
-    "astro": "astro"
+    "astro": "astro",
+    "assert:taxonomy": "node scripts/assert-taxonomy.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.0",
