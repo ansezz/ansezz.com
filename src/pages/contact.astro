@@ -148,11 +148,13 @@ const prefillLabel = prefillId ? PACKAGE_LABEL[prefillId] : null;
   formEnabled && (
     <>
       <script
+        is:inline
         type="application/json"
         id="contact-package-map"
         set:html={JSON.stringify(PACKAGE_LABEL)}
       />
       <script
+        is:inline
         type="application/json"
         id="contact-lane-map"
         set:html={JSON.stringify(LANE_TO_PACKAGE)}
