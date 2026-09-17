@@ -82,7 +82,7 @@ A `Product` in the `Inventory` module is not the same object as a `Product` in t
 
 Three rules keep boundaries intact:
 
-1. **Enforce them mechanically.** Human discipline fails under deadline. Add an architecture test that fails the build when `Modules\Billing` imports `Modules\Inventory\Models`. In PHP, [Deptrac](https://github.com/qossmic/deptrac) or a Pest arch test does this in a few lines. Any language has an equivalent.
+1. **Enforce them mechanically.** Human discipline fails under deadline. Add an architecture test that fails the build when `Modules\Billing` imports `Modules\Inventory\Models`. In PHP, [Deptrac](https://github.com/opensoftwareconsulting/deptrac) or a Pest arch test does this in a few lines. Any language has an equivalent.
 2. **Keep the shared kernel tiny.** A little shared code is fine. A giant `Common` package that every module depends on is a monolith wearing a costume — you can never split anything out of it.
 3. **Prefer events over direct calls.** When `Orders` needs `Shipping` to react, emit a domain event instead of calling a method. Replacing an in-process listener with a message queue later becomes a config change, not a rewrite.
 
