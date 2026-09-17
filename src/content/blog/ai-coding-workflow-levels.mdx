@@ -127,12 +127,13 @@ public function updateProductInventory(string $inventoryItemId, int $newQuantity
         'input' => [
             'name' => 'available',
             'reason' => 'correction',
-            'ignoreCompareQuantity' => true,
+            // Required on current Admin API: compare-and-set. null skips the check.
             'quantities' => [
                 [
                     'inventoryItemId' => $inventoryItemId,
                     'locationId' => config('shopify.default_location_id'),
                     'quantity' => $newQuantity,
+                    'changeFromQuantity' => null,
                 ],
             ],
         ],

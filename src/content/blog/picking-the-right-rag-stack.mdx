@@ -113,7 +113,8 @@ Since I work a lot with [custom web development using Laravel](/), I want to sho
 
 ```php
 // finding the most relevant document chunks
-$embedding = Ai::embed($query); // get vector from OpenAI/Claude
+// Pseudocode — inject your embedder; there is no Laravel Ai:: facade.
+$embedding = $embedder->embed($query);
 
 $results = Document::query()
     ->select('content')

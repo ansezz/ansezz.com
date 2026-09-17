@@ -71,7 +71,8 @@ Imagine a user searching for "shoes for rainy weather." In a traditional databas
 
 ```php
 // Example of a semantic search in Laravel using pgvector
-$queryEmbedding = AI::generateEmbedding("shoes for rainy weather");
+// Pseudocode — inject your embedder; there is no Laravel AI:: facade.
+$queryEmbedding = $embedder->embed("shoes for rainy weather");
 
 $products = Product::query()
     ->selectRaw('name, description, embedding <=> ? as distance', [$queryEmbedding])
