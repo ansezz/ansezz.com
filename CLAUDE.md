@@ -22,7 +22,7 @@ Deploy target: **Cloudflare Pages** (project `ansezz-com`, custom domain `ansezz
 | `pnpm optimize:images` | Sharp pass over images in `public/blog`                   |
 | `pnpm generate:icons`  | Regenerate PWA + apple-touch icons                        |
 
-No test runner — except `scripts/assert-taxonomy.mjs`, the tag taxonomy's verification harness: it checks vocabulary size and shape, description uniqueness and length, `related` tag validity, the per-tag post floor, per-post tag counts, and that no `/blog/tag/` redirect sits below the `/*` catch-all in `public/_redirects`. Run it with `node --experimental-strip-types scripts/assert-taxonomy.mjs`. No lint command — `astro check` enforces types; Prettier formats via `.prettierrc.json` (`prettier-plugin-astro` + `prettier-plugin-tailwindcss`). Both plugins must stay listed there — Prettier 3 does not auto-load them, and without the config `.astro` files are silently skipped.
+No test runner — except `scripts/assert-taxonomy.mjs`, the tag taxonomy's verification harness: it checks vocabulary size and shape, description uniqueness and length, `related` tag validity, the per-tag post floor, per-post tag counts, and that no `/blog/tag/` redirect sits below the `/*` catch-all in `public/_redirects`. Run it with `node scripts/assert-taxonomy.mjs`. No lint command — `astro check` enforces types; Prettier formats via `.prettierrc.json` (`prettier-plugin-astro` + `prettier-plugin-tailwindcss`). Both plugins must stay listed there — Prettier 3 does not auto-load them, and without the config `.astro` files are silently skipped.
 
 Search is Pagefind, indexed as a post-`astro build` step. It is therefore **inert in `pnpm dev`** and only live against a real build.
 
@@ -39,7 +39,7 @@ Content-driven static site. Three pillars:
    - Static: `about`, `services`, `uses`, `contact`, `now`, `library`, `feed`, `privacy`, `styleguide`, `404`.
    - Endpoints: `rss.xml.js`, `rss/[category].xml.js`, `feed.json.ts`, `resume.json.ts`, and generated OG cards under `og/**/*.png.ts`.
 
-3. **Site config** (`src/consts.ts`) — single source of truth. `CAREER_SINCE`/`REMOTE_SINCE` + derived `YEARS_EXPERIENCE`/`YEARS_REMOTE`, `SITE`, `OWNER`, `AVAILABLE_FOR`, `STATS`, `SOCIALS`, `X_HANDLE`, `NAV`, `FOOTER_MORE`, `HOME`, `ABOUT`, `WORK`, `BLOG`, `TAG_OG_MIN_POSTS`, `START_HERE`, `USES`, `CONTACT`, `CONTACT_FORM`, `BLOG_SERIES`, `BLOG_CATEGORIES`, `CATEGORY_LABEL`, `CATEGORY_TONE`, `BLOG_TAGS`, `BlogTag`, `TAG_KEYS`, `CARD_TONES`, `WHAT_I_DO`, `SERVICES`, `LANGUAGES`, `SERVICES_PAGE`, `SERVICES_FAQ`, `TESTIMONIALS`, `NOW`, `TOOLS`, `TOOL_GROUPS`, `TOOL_LIST`, `LIBRARY`, `LIBRARY_GROUPS`, `COMMENTS`, `OTHER_SHOPIFY_STOREFRONTS`, `OTHER_SHOPIFY_APPS`, `OTHER_PLATFORMS`. `astro.config.mjs` imports `SITE` and `TAG_OG_MIN_POSTS` from it.
+3. **Site config** (`src/consts/`) — single source of truth. `CAREER_SINCE`/`REMOTE_SINCE` + derived `YEARS_EXPERIENCE`/`YEARS_REMOTE`, `SITE`, `OWNER`, `AVAILABLE_FOR`, `STATS`, `SOCIALS`, `X_HANDLE`, `NAV`, `FOOTER_MORE`, `HOME`, `ABOUT`, `WORK`, `BLOG`, `TAG_OG_MIN_POSTS`, `START_HERE`, `USES`, `CONTACT`, `CONTACT_FORM`, `BLOG_SERIES`, `BLOG_CATEGORIES`, `CATEGORY_LABEL`, `CATEGORY_TONE`, `BLOG_TAGS`, `BlogTag`, `TAG_KEYS`, `CARD_TONES`, `WHAT_I_DO`, `SERVICES`, `LANGUAGES`, `SERVICES_PAGE`, `SERVICES_FAQ`, `TESTIMONIALS`, `NOW`, `TOOLS`, `TOOL_GROUPS`, `TOOL_LIST`, `LIBRARY`, `LIBRARY_GROUPS`, `COMMENTS`, `OTHER_SHOPIFY_STOREFRONTS`, `OTHER_SHOPIFY_APPS`, `OTHER_PLATFORMS`. `astro.config.mjs` imports `SITE` and `TAG_OG_MIN_POSTS` from it.
 
 ### Key wiring
 
@@ -70,7 +70,7 @@ A page's `<script>` block should contain nothing but `import "@/scripts/<name>";
 - **Blog post**: drop `.md`/`.mdx` in `src/content/blog/` matching the schema:
   - required: `title`, `description`, `publishDate`, `category` (one of `BLOG_CATEGORIES`)
   - optional: `updatedDate`, `tags[]`, `featured`, `draft`, `heroImage` (`{ url, alt }` — an **object**, not a string)
-  - images go in `public/blog/<post-id>/`; tags are a closed vocabulary — every tag must be a key in `BLOG_TAGS` (`src/consts.ts`, 40 entries, each with a label, an 80-200 char description, and 3-5 related tags, each carrying ≥3 posts); `src/content.config.ts` enforces this with `z.enum(TAG_KEYS)`, so an unknown tag fails `pnpm check` and `pnpm build`. Adding a tag means defining it in `BLOG_TAGS` first. Posts carry 2-7 tags (tags with < `TAG_OG_MIN_POSTS` posts are `noindex,follow` and sitemap-excluded)
+  - images go in `public/blog/<post-id>/`; tags are a closed vocabulary — every tag must be a key in `BLOG_TAGS` (`src/consts/`, 40 entries, each with a label, an 80-200 char description, and 3-5 related tags, each carrying ≥3 posts); `src/content.config.ts` enforces this with `z.enum(TAG_KEYS)`, so an unknown tag fails `pnpm check` and `pnpm build`. Adding a tag means defining it in `BLOG_TAGS` first. Posts carry 2-7 tags (tags with < `TAG_OG_MIN_POSTS` posts are `noindex,follow` and sitemap-excluded)
   - to place it in a reading path, add its id to a `BLOG_SERIES` entry — a post belongs to **at most one** series
   - `updatedDate` moves **only when body content changes materially**. Retagging, typo fixes and formatting do not qualify. The field is already rendered, already feeds `Article.dateModified`, and already drives sitemap `lastmod` — it needs no wiring, only honest data.
 - **Work entry**: drop `.md`/`.mdx` in `src/content/work/` matching the schema:
@@ -78,7 +78,7 @@ A page's `<script>` block should contain nothing but `import "@/scripts/<name>";
   - optional: `stack[]`, `outcome`, `liveUrl`, `githubUrl`, `order`, `featured`
   - `order` must be unique within a category, or sort order is nondeterministic
   - `featured: true` generates `/work/<slug>/`, so it needs a Markdown body; non-featured entries render as cards only and can have an empty body
-- **New page**: add `.astro` under `src/pages/`. Use `Page.astro` for standard pages, `BaseLayout.astro` for custom hero shells. Add it to `NAV` or `FOOTER_MORE` in `consts.ts` so it's linked, and to `PAGE_OG` in `lib/og-pages.ts` if it deserves a branded OG card.
+- **New page**: add `.astro` under `src/pages/`. Use `Page.astro` for standard pages, `BaseLayout.astro` for custom hero shells. Add it to `NAV` or `FOOTER_MORE` in `src/consts/` so it's linked, and to `PAGE_OG` in `lib/og-pages.ts` if it deserves a branded OG card.
 
 ## Design system
 
@@ -99,7 +99,7 @@ Composites: `src/components/home/*`, `src/components/blog/*`, `src/components/wo
 - **Coloured surfaces need a pinned foreground.** `--color-ink`/`--color-paper`/`--color-bg` invert between themes, but the accents (`yellow`, `cyan`, `green`, `red`, `pink`, `purple`, `blue`) do not. So `bg-ink text-bg` is correct, while `bg-yellow text-ink` collapses to ~1.4:1 in dark mode. Pair bright accents with `text-on-accent` and deep ones (purple/blue) with `text-on-deep`; both are theme-invariant. A tone map that sets a background but no foreground is a bug.
 - Grid and flex items default to `min-width: auto`, so a `truncate`/`whitespace-nowrap` descendant forces the track to its full text width and the card overflows the viewport. Card-grid `<li>`s carry `min-w-0`.
 - External links go through `externalLinkAttrs()` from `@/lib/links`, not hand-written `target`/`rel`.
-- Never hardcode a number that `consts.ts` already derives (years of experience, post counts, tag counts) — they drift.
+- Never hardcode a number that `src/consts/` already derives (years of experience, post counts, tag counts) — they drift.
 - Don't render the same component twice with a fixed `id`; two `<ThemeToggle />` instances is why that hook is `[data-theme-toggle]`.
 
 ### SEO rules that are load-bearing
@@ -110,7 +110,7 @@ Composites: `src/components/home/*`, `src/components/blog/*`, `src/components/wo
 
 ## Deploy
 
-**Cloudflare Pages** auto-deploys on push to `main`. No GitHub Actions configured — Cloudflare runs `pnpm install --frozen-lockfile && pnpm build` against `dist/` directly.
+**Cloudflare Pages** auto-deploys on push to `main`. No GitHub Actions configured — Cloudflare runs `pnpm install --frozen-lockfile && pnpm build` against `dist/` directly. `pnpm build` runs `assert:taxonomy` first, then `astro build` (+ pagefind).
 
 Required Cloudflare settings:
 

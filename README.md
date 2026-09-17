@@ -126,7 +126,7 @@ src/
 ├── pages/               file-based routing (incl. /og/**/*.png endpoints)
 ├── scripts/             client-side behaviour, one file per feature
 ├── styles/global.css    Tailwind v4 entry + @theme tokens
-└── consts.ts            single source of truth — SITE, OWNER, NAV, …
+└── consts/              single source of truth (barrel) — SITE, OWNER, NAV, …
 ```
 
 Path alias `@/*` resolves to `src/*`.
@@ -173,7 +173,7 @@ heroImage: # optional, but an object — not a string
 ---
 ```
 
-Images live in `public/blog/<post-id>/`. To put the post in a reading path, add its id to a `BLOG_SERIES` entry in `src/consts.ts` — a post belongs to at most one series.
+Images live in `public/blog/<post-id>/`. To put the post in a reading path, add its id to a `BLOG_SERIES` entry in `src/consts/` — a post belongs to at most one series.
 
 **Work entry** — drop `.md` in `src/content/work/`:
 
@@ -205,6 +205,7 @@ Connected to **Cloudflare Pages** project `ansezz-com`. Auto-deploys on push to 
 Build image:       v3              ← REQUIRED (v1 ships Node 18, this targets Node 24)
 Framework preset:  Astro
 Build command:     pnpm install --frozen-lockfile && pnpm build
+                   # build runs assert:taxonomy then astro build
 Build output dir:  dist
 Root directory:    /
 ```
