@@ -37,15 +37,20 @@ import { SERVICES } from "@/consts";
           <NeoCard
             tone={s.tone}
             shadow="md"
+            hover
+            href={`/contact/?package=${s.id}`}
             tilt={i % 2 === 0 ? -0.3 : 0.3}
-            class="flex h-full flex-col gap-4"
+            class="group flex h-full flex-col gap-4"
           >
             <h3 class="heading text-xl leading-tight uppercase md:text-2xl">
               {s.title}
             </h3>
             <p class="text-sm leading-snug opacity-90 md:text-base">{s.body}</p>
-            <p class="mono mt-auto pt-2 text-[10px] font-bold tracking-widest uppercase opacity-90">
-              ▸ {s.bullets.length} deliverables · see the breakdown
+            <p class="mono mt-auto flex items-center gap-2 border-ink/20 border-t-[2px] pt-3 text-[10px] font-bold tracking-widest uppercase opacity-90 transition-colors group-hover:border-ink/40">
+              <span>▸ Start this package</span>
+              <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">
+                →
+              </span>
             </p>
           </NeoCard>
         </li>
