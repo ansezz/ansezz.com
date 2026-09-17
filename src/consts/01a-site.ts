@@ -160,10 +160,14 @@ export const CONTACT = {
     "Scoped builds first — MVP, AI Integration Sprint, Shopify Plus app, architecture audit. Book a free intro and I'll quote fixed-scope. Senior / lead / advisory also available when it's a fit.",
 };
 
-// Web3Forms-backed contact form (no backend). Get a free access key at
-// https://web3forms.com, paste it here, and the form replaces the mailto CTA.
-// Empty key => form is hidden, mailto stays. CSP already allows the endpoint.
+// Web3Forms-backed contact form (no backend). Prefer PUBLIC_WEB3FORMS_ACCESS_KEY
+// in Cloudflare Pages env (or .env) so rotation does not require a code edit.
+// Fallback keeps the live form working until the env var is set. Empty string
+// hides the form and leaves mailto. CSP already allows the endpoint.
+// Also lock the key to ansezz.com in the Web3Forms dashboard.
 export const CONTACT_FORM = {
-  ACCESS_KEY: "06e57a3e-7478-4447-b601-9cd3bd46e211",
+  ACCESS_KEY:
+    import.meta.env.PUBLIC_WEB3FORMS_ACCESS_KEY ??
+    "06e57a3e-7478-4447-b601-9cd3bd46e211",
   ENDPOINT: "https://api.web3forms.com/submit",
 };
