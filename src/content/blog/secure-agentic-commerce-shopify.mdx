@@ -1,10 +1,9 @@
----
 title: "Building secure agentic commerce on Shopify in 2026"
 description: "How agentic commerce on Shopify stays safe: UCP negotiation, an MCP governance layer, scoped credentials, signed requests, and human approval at checkout."
 publishDate: 2026-08-07
 category: shopify
 tags: [shopify, agentic-commerce, mcp, security, ai, architecture]
-featured: false
+featured: true
 heroImage:
   url: "/blog/secure-agentic-commerce-shopify/hero.webp"
   alt: "A secure AI shopping agent connected to a Shopify catalog, APIs, checkout, and human approval"
@@ -15,6 +14,10 @@ An AI agent can discover a product, build a cart, and reach checkout faster than
 Agentic commerce changes the security boundary of a Shopify store. A storefront is no longer only serving pages to people. It exposes product data, pricing, inventory, fulfillment options, checkout actions, and order state to autonomous software.
 
 That creates a real problem. If an agent receives broad Shopify credentials, a prompt injection or an implementation bug can expose customer data or trigger an unauthorized transaction. The fix isn't to block agents. It's to give them a narrow, observable, policy-controlled path through the commerce stack.
+
+The principle is short:
+
+> Let the agent reason about commerce, but never let it define its own permissions.
 
 ## The security problem in agentic commerce
 
@@ -33,10 +36,6 @@ A buyer agent may:
 Every step carries model uncertainty. The agent may misread intent. Product data may be stale. A tool description may be too broad. An external page may carry malicious instructions. A retry may duplicate an action that moves money.
 
 This is why agentic commerce needs a different engineering model. The agent should never hold unrestricted access to Shopify Admin APIs. It should reach approved commerce capabilities through a controlled protocol layer.
-
-The principle is short:
-
-> Let the agent reason about commerce, but never let it define its own permissions.
 
 ## How Shopify agentic commerce works with UCP
 
