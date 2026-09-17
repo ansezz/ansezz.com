@@ -7,8 +7,8 @@ tags: [laravel, mcp, agentic-ai, security, multi-tenancy]
 featured: false
 draft: false
 heroImage:
-  url: "/blog/mcp-auth-audit-logging-laravel/hero.svg"
-  alt: "Neo illustration of an MCP session gate in front of a Laravel lock"
+  url: "/blog/mcp-auth-audit-logging-laravel/hero.webp"
+  alt: "Comic pop-art hero: Laravel MCP auth gate, tenant isolation, and audit ticker"
 ---
 
 Giving Claude a tool that can read tickets and billing is useful. Giving it the same credentials your admin panel uses is how you invent a new incident class.
@@ -37,7 +37,7 @@ MCP does not invent tenancy for you. Laravel already has it. The job is to force
 
 ## One actor per request
 
-![Actor context flowing from AI agent through locked MCP tools into Laravel domain services](/blog/mcp-auth-audit-logging-laravel/actor-flow.svg)
+![Actor context flowing from AI agent through locked MCP tools into Laravel domain services](/blog/mcp-auth-audit-logging-laravel/actor-flow.webp)
 
 Treat an MCP tool invocation like an HTTP request that happens to arrive over JSON-RPC. Bind an actor before any tool runs:
 
@@ -110,7 +110,7 @@ If you already enforce tenancy in Eloquent global scopes, keep them. MCP is not 
 
 ## Audit log shape that survives an incident
 
-![Comic audit log console showing ALLOWED get_invoice and DENIED refund_order rows](/blog/mcp-auth-audit-logging-laravel/audit-log.svg)
+![Comic audit log console showing ALLOWED get_invoice and DENIED refund_order rows](/blog/mcp-auth-audit-logging-laravel/audit-log.webp)
 
 I log one row per tool attempt — allowed or denied — with enough to reconstruct the call without storing secrets:
 
