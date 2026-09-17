@@ -211,7 +211,7 @@ export const NOW = {
       icon: "lucide:pen-line",
       tone: "yellow" as const,
       title: "Writing",
-      body: "August 2026 stretch covered agentic commerce, MCP vs A2A/ACP, RAG failure modes, and vibe-coding → agentic engineering. Next posts when the build teaches something worth publishing — not on a fake weekly cadence.",
+      body: "September shipped MCP auth and audit logging for multi-tenant Laravel SaaS. August covered agentic commerce, MCP vs A2A/ACP, RAG failure modes, and vibe-coding → agentic engineering. Next posts when the build teaches something worth publishing — not on a fake weekly cadence.",
     },
     {
       icon: "lucide:handshake",
