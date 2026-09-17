@@ -192,6 +192,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "laravel-octane-high-traffic",
       "replication-vs-backup-laravel",
       "mcp-auth-audit-logging-laravel",
+      "mcp-idempotency-laravel-mutations",
     ],
   },
 ];

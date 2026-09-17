@@ -1,0 +1,321 @@
+---
+title: "Idempotency keys for MCP mutations in Laravel"
+description: "Refunds, seat resets, and password emails need more than audit logging. Client-supplied idempotency keys, server-side short-circuits, and race-safe storage under Octane."
+publishDate: 2026-09-19
+category: laravel
+tags: [laravel, mcp, agentic-ai, security, multi-tenancy]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/mcp-idempotency-laravel-mutations/hero.webp"
+  alt: "Comic pop-art hero: idempotency keys collapsing duplicate MCP refund_order calls into one allowed audit result"
+---
+
+[Auth and audit logging](/blog/mcp-auth-audit-logging-laravel/) keep an MCP tool attributable. They do not keep a retry from charging the card twice.
+
+Agents retry. Transports retry. Humans mash "send" when the spinner hangs. If your mutation tools treat every call as a new intent, you will invent double refunds, duplicate password emails, and seat resets that fire three times for one user request.
+
+This post is the follow-on pattern: client-supplied idempotency keys, a server short-circuit that returns the first result, keys stored on the same audit rows you already trust at 3am, and the race conditions that show up the moment you put Octane and Horizon in the path.
+
+## The failure mode is boring and expensive
+
+A support agent asks Claude to refund order `ord_9f2`. The tool runs. The HTTP connection from the MCP client drops at 30s. The client retries with the same arguments. Your handler has no memory of the first call, so Stripe sees two refunds.
+
+Same story for:
+
+- `reset_seat` — second call wipes a freshly restored seat.
+- `send_password_reset` — user gets three emails in ninety seconds.
+- `apply_credit` — ledger entry lands twice because Horizon re-dispatched after a worker restart.
+
+None of these are exotic. They are the default behavior of any system that treats "call arrived" as "intent is new."
+
+The fix is not "tell the model not to retry." Models and clients will retry. Make the server safe when they do.
+
+## Client supplies the key. Server owns the semantics.
+
+Every mutating tool requires an `idempotency_key` in the arguments. The client generates it — UUID v4 is fine — and reuses it for retries of the *same* intent.
+
+```php
+final class RefundOrderTool
+{
+    public function __construct(
+        private readonly McpActor $actor,
+        private readonly IdempotencyGate $gate,
+        private readonly OrderRefunder $refunder,
+        private readonly McpAuditLogger $audit,
+    ) {}
+
+    public function __invoke(array $args): array
+    {
+        $key = trim((string) ($args['idempotency_key'] ?? ''));
+        if ($key === '' || strlen($key) > 128) {
+            $this->audit->denied('refund_order', $args, 'missing_idempotency_key');
+            return ['error' => 'idempotency_key_required'];
+        }
+
+        if (! in_array('billing:refund', $this->actor->scopes, true)) {
+            $this->audit->denied('refund_order', $args, 'missing_scope');
+            return ['error' => 'forbidden'];
+        }
+
+        return $this->gate->run(
+            actor: $this->actor,
+            tool: 'refund_order',
+            key: $key,
+            args: $args,
+            execute: fn () => $this->refunder->refund(
+                tenantId: $this->actor->tenantId,
+                orderId: (string) $args['order_id'],
+                amountCents: (int) $args['amount_cents'],
+            ),
+        );
+    }
+}
+```
+
+Rules I enforce at the edge:
+
+- **Required on mutations, ignored on reads.** `get_invoice` does not need one. `refund_order` does not run without one.
+- **Client-generated, not server-minted.** If the server invents the key, a retry cannot present the same one.
+- **Length-bounded.** Cap at 128 chars. Reject empty, whitespace-only, and absurdly long strings.
+- **Scoped to the actor's tenant.** The uniqueness constraint is never global. See below.
+
+The model is allowed to *pass* the key. It is not allowed to invent tenancy, scopes, or "just this once" bypasses. Same discipline as the auth post: tools read `McpActor`, they do not accept `tenant_id` from the payload.
+
+## Short-circuit before the domain runs
+
+The gate is the whole product. First call executes and records. Later calls with the same key return the stored outcome without touching Stripe, the mailer, or the seat service.
+
+```php
+final class IdempotencyGate
+{
+    public function __construct(
+        private readonly IdempotencyStore $store,
+        private readonly McpAuditLogger $audit,
+    ) {}
+
+    /**
+     * @param  callable(): array  $execute
+     * @return array<string, mixed>
+     */
+    public function run(
+        McpActor $actor,
+        string $tool,
+        string $key,
+        array $args,
+        callable $execute,
+    ): array {
+        $fingerprint = $this->fingerprint($args);
+        $claim = $this->store->claim(
+            tenantId: $actor->tenantId,
+            tool: $tool,
+            key: $key,
+            argsHash: $fingerprint,
+            ttlSeconds: 86_400,
+        );
+
+        if ($claim->status === ClaimStatus::Replay) {
+            $this->audit->replayed($tool, $args, $key, $claim->result);
+            return $claim->result;
+        }
+
+        if ($claim->status === ClaimStatus::Conflict) {
+            $this->audit->denied($tool, $args, 'idempotency_payload_mismatch');
+            return ['error' => 'idempotency_key_reuse_with_different_args'];
+        }
+
+        if ($claim->status === ClaimStatus::InFlight) {
+            $this->audit->denied($tool, $args, 'idempotency_in_flight');
+            return ['error' => 'request_in_flight'];
+        }
+
+        try {
+            $result = $execute();
+            $this->store->complete($actor->tenantId, $tool, $key, $result);
+            $this->audit->allowed($tool, $args, $result, $key);
+            return $result;
+        } catch (\Throwable $e) {
+            $this->store->fail($actor->tenantId, $tool, $key, $e);
+            $this->audit->denied($tool, $args, 'execution_failed', $key);
+            throw $e;
+        }
+    }
+
+    private function fingerprint(array $args): string
+    {
+        $copy = $args;
+        unset($copy['idempotency_key']);
+        ksort($copy);
+
+        return hash('sha256', json_encode($copy, JSON_THROW_ON_ERROR));
+    }
+}
+```
+
+Four outcomes matter:
+
+1. **Fresh claim** — you own the key; run the mutation.
+2. **Replay** — same key, same args hash; return the stored result.
+3. **Conflict** — same key, *different* args hash; reject. Reusing a key for a different order is a bug or an attack, not a retry.
+4. **In flight** — another worker holds the claim; tell the client to wait and retry with the *same* key. Do not start a second refund.
+
+That conflict case is non-negotiable. Idempotency is "same intent, same result," not "this UUID is a free pass for whatever args you send next."
+
+## Store the key on the audit row
+
+You already write one audit event per tool attempt. Put the key there. When finance asks "did we double-refund `ord_9f2`?", you join on `idempotency_key` instead of guessing from timestamps.
+
+```php
+McpAuditEvent::query()->create([
+    'tenant_id' => $actor->tenantId,
+    'user_id' => $actor->userId,
+    'session_id' => $actor->sessionId,
+    'tool' => $tool,
+    'decision' => $decision, // allowed | denied | replayed
+    'reason' => $reason,
+    'args_hash' => hash('sha256', json_encode($redactedArgs)),
+    'args' => $redactedArgs,
+    'result_summary' => $summary,
+    'idempotency_key' => $idempotencyKey,
+    'duration_ms' => $ms,
+]);
+```
+
+`replayed` is a first-class decision. It is not a silent cache hit. Ops needs to see that the client retried and the server refused to mutate again.
+
+Index what you query:
+
+```php
+Schema::table('mcp_audit_events', function (Blueprint $table) {
+    $table->string('idempotency_key', 128)->nullable();
+    $table->string('args_hash', 64)->nullable();
+    $table->index(['tenant_id', 'tool', 'idempotency_key']);
+});
+```
+
+The audit table is the narrative. The idempotency store is the lock. Do not merge them into one table and hope — audit wants append-only history; the gate wants a unique claim row you can update from `in_flight` to `completed`.
+
+## What to hash vs what to store
+
+Separate three things people keep collapsing:
+
+| Field | Purpose | Store raw? |
+| --- | --- | --- |
+| `idempotency_key` | Client retry identity | Yes — you need it for lookups and support |
+| `args_hash` | Detect key reuse with different payloads | Hash only of redacted, sorted args |
+| `args` / `result_summary` | Incident reconstruction | Redacted IDs and counts, never secrets |
+
+Hash the fingerprint of the business args (order ID, amount, seat ID) after stripping the key itself. Store the raw key. Store redacted args on the audit row the same way you already do for reads.
+
+Do **not** hash the idempotency key into oblivion "for privacy." You will need the original string when a client asks why their retry returned `request_in_flight`, and when you correlate MCP logs with Stripe's `Idempotency-Key` header if you forward the same value downstream.
+
+Forwarding is optional but clean: if Stripe already keys refunds, pass the MCP key through. One identity across your audit log and the payment provider.
+
+## Uniqueness is per tenant, per tool, with a TTL
+
+A global unique index on `idempotency_key` alone is wrong in a multi-tenant SaaS. Two tenants can generate the same UUID. Two tools can legitimately reuse a key namespace if you are not careful. The claim identity is:
+
+```text
+(tenant_id, tool, idempotency_key)
+```
+
+That matches how [Laravel multi-tenancy](/blog/laravel-multi-tenancy/) already scopes every other sensitive row. MCP is not special.
+
+TTL matters because keys are not forever:
+
+- **24 hours** is a sane default for refunds and seat mutations — long enough for flaky clients, short enough that the table does not become a second ledger.
+- **Password reset emails** can be shorter (1–2 hours). The harm window is smaller; the spam window is not.
+- Expired keys may be reused for a *new* intent. Treat expiry like a new claim, not a silent replay of ancient results.
+
+```php
+Schema::create('mcp_idempotency_claims', function (Blueprint $table) {
+    $table->id();
+    $table->string('tenant_id');
+    $table->string('tool', 64);
+    $table->string('idempotency_key', 128);
+    $table->string('args_hash', 64);
+    $table->string('status', 16); // in_flight | completed | failed
+    $table->json('result')->nullable();
+    $table->timestamp('expires_at');
+    $table->timestamps();
+
+    $table->unique(['tenant_id', 'tool', 'idempotency_key']);
+});
+```
+
+Prune expired rows on a schedule. Do not rely on "we will never get collisions" as a retention policy.
+
+## Races under Octane and Horizon
+
+This is where the naive `SELECT` then `INSERT` dies.
+
+[Octane](/blog/laravel-octane-high-traffic/) keeps workers warm. Two concurrent MCP calls for the same key can hit two workers in the same second. Horizon can re-run a job after a SIGKILL mid-refund. Cache locks help for the in-process case; they are not enough alone if the mutation is async.
+
+What I ship:
+
+1. **Unique constraint in the database** on `(tenant_id, tool, idempotency_key)`. The database is the source of truth for "who won the claim."
+2. **Claim with `INSERT … ON CONFLICT` / `firstOrCreate` + catch unique violations.** The loser reads the winner's row and follows Replay / InFlight / Conflict logic. Never "just run it anyway."
+3. **Short Redis lock around the claim** (a few seconds) to reduce thundering herds — optional optimization, not a substitute for the unique index.
+4. **For Horizon-backed mutations**, the job payload *includes* the idempotency key. The job itself goes through the same gate before calling Stripe. A worker restart must not create a second domain effect.
+5. **In-flight timeout.** If a worker dies after claiming but before `complete`, the row sits in `in_flight`. Expire it (e.g. 60–120s) so a legitimate retry can reclaim — but only after you are sure the first side effect did not commit. Prefer making the downstream call itself idempotent (Stripe key, mail message-id) so reclaiming is safe.
+
+```php
+public function claim(
+    string $tenantId,
+    string $tool,
+    string $key,
+    string $argsHash,
+    int $ttlSeconds,
+): ClaimResult {
+    try {
+        $row = McpIdempotencyClaim::query()->create([
+            'tenant_id' => $tenantId,
+            'tool' => $tool,
+            'idempotency_key' => $key,
+            'args_hash' => $argsHash,
+            'status' => 'in_flight',
+            'expires_at' => now()->addSeconds($ttlSeconds),
+        ]);
+
+        return ClaimResult::fresh($row);
+    } catch (UniqueConstraintViolationException) {
+        $existing = McpIdempotencyClaim::query()
+            ->where('tenant_id', $tenantId)
+            ->where('tool', $tool)
+            ->where('idempotency_key', $key)
+            ->firstOrFail();
+
+        return $this->interpretExisting($existing, $argsHash);
+    }
+}
+```
+
+If you only remember one sentence: **the unique index is the lock; application locks are a courtesy.**
+
+## What I refuse to ship
+
+- Mutations that "probably won't be retried"
+- Server-generated keys the client never sees
+- Global idempotency uniqueness across tenants
+- Silent success when the key matches but the args hash does not
+- Storing card PANs or raw tokens in the claim `result` JSON
+- Bypassing the gate inside a Horizon job "because we already checked in the tool"
+- Infinite TTL that turns the claims table into an unbounded second database
+
+If a human admin UI would show a confirmation dialog before doing it twice, the agent path needs a key.
+
+## Wiring it into the series
+
+This sits on top of [MCP auth and audit logging](/blog/mcp-auth-audit-logging-laravel/) — same `McpActor`, same audit stream, stricter rules for anything that moves money or mail. Tenancy remains the Laravel model from [multi-tenancy](/blog/laravel-multi-tenancy/); concurrency reality is the [Octane](/blog/laravel-octane-high-traffic/) one.
+
+## Takeaways
+
+- **Require client idempotency keys on every MCP mutation.** Reads stay free; refunds do not.
+- **Short-circuit on the server.** Replay the first result; conflict on arg mismatch; reject in-flight duplicates.
+- **Store the key on the audit row** and keep a separate claims table with `(tenant_id, tool, key)` uniqueness.
+- **Hash args for comparison; store keys raw; redact everything else.**
+- **TTL per tool class.** 24h for money, shorter for mail. Prune expired claims.
+- **Unique DB constraint beats Redis hope** under Octane workers and Horizon restarts.
+- **Downstream idempotency** (Stripe, mail providers) makes reclaim-after-crash safe.
+
+If you are exposing refund or billing tools over MCP and want the gate reviewed before an agent holds a live key, [start with an AI Integration Sprint](/contact/?package=ai) — we will map which tools mutate, how keys flow, and what the audit trail must prove after a retry storm.
