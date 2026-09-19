@@ -7,7 +7,7 @@ tags: [laravel, mcp, agentic-ai, security, api-design, multi-tenancy]
 featured: false
 draft: false
 heroImage:
-  url: "/blog/mcp-structured-tool-errors-laravel/hero.webp"
+  url: "/blog/mcp-structured-tool-errors-laravel/hero-622561a6.webp"
   alt: "Comic pop-art hero: AI agent receiving an MCP isError tool card stamped not_found with a self-correct hint"
 ---
 
@@ -40,7 +40,7 @@ public function handle(string $invoiceId, McpActor $actor): array
 
 That second path is how the [MCP tools specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools) expects language models to self-correct. Hide the failure in a protocol error and you train the agent to flail.
 
-![Two MCP error channels: JSON-RPC protocol errors versus tool results with isError true](/blog/mcp-structured-tool-errors-laravel/error-channels.webp)
+![Two MCP error channels: JSON-RPC protocol errors versus tool results with isError true](/blog/mcp-structured-tool-errors-laravel/error-channels-c8925e3a.webp)
 
 ## Return isError. Do not throw across the wire.
 
@@ -200,7 +200,7 @@ Hint: wait ~30s and call refund_order again with the SAME idempotency_key and ar
 
 Your audit stream already records `allowed | denied | replayed`. Store the public error `code` on denials. When an agent loops on `not_found` fifty times, you want a query, not a vibes-based log scroll.
 
-![Error envelope fields flowing into the MCP audit table as denied reasons](/blog/mcp-structured-tool-errors-laravel/error-envelope.webp)
+![Error envelope fields flowing into the MCP audit table as denied reasons](/blog/mcp-structured-tool-errors-laravel/error-envelope-e4a7a7d5.webp)
 
 ```php
 McpAuditEvent::query()->create([
