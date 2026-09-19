@@ -310,14 +310,25 @@ article.prose img {
   outline-offset: 3px;
 }
 
-/* neobrutalist markdown tables in prose */
+/* neobrutalist markdown tables in prose — scroll on small screens
+   (body uses overflow-x: clip, so wide tables must scroll themselves) */
 article.prose table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 3px solid var(--color-ink);
   border-collapse: collapse;
   box-shadow: 6px 6px 0 var(--color-ink);
   background: var(--color-paper);
   margin: 1.5rem 0;
-  overflow: hidden;
+}
+article.prose thead,
+article.prose tbody {
+  display: table;
+  width: 100%;
+  min-width: 36rem;
 }
 article.prose thead {
   background: var(--color-yellow);

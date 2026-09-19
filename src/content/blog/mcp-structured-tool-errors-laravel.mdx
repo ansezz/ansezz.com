@@ -100,16 +100,16 @@ Notes that bite in production:
 
 Do not invent a new error dialect per tool. One mapper, shared with the [auth gate](/blog/mcp-auth-audit-logging-laravel/) denial reasons and the [idempotency](/blog/mcp-idempotency-laravel-mutations/) conflict codes:
 
-| Code | When | `retryable` | Typical hint |
+| Code | When | Retry? | Hint |
 | --- | --- | --- | --- |
-| `not_found` | Row missing **in this tenant** | false | Call the list tool; check the ID |
-| `forbidden` | Actor lacks scope | false | Ask the user to elevate or pick another resource |
-| `validation_failed` | Args fail domain rules | false | Which field and what shape is expected |
-| `conflict` | Idempotency key reuse with different args | false | New key for a new intent |
-| `in_flight` | Idempotency claim held | true | Retry the **same** key after a short wait |
-| `rate_limited` | Tool budget exhausted | true | Back off; include Retry-After seconds in the message |
-| `upstream_unavailable` | Stripe/mail/provider blip | true | Retry once; do not invent a second refund |
-| `internal` | Truly unexpected | false | Stop; tell the user to contact support |
+| `not_found` | Missing in this tenant | no | List first; check the ID |
+| `forbidden` | Actor lacks scope | no | Elevate or pick another resource |
+| `validation_failed` | Args fail domain rules | no | Name the bad field and expected shape |
+| `conflict` | Same key, different args | no | New key for a new intent |
+| `in_flight` | Idempotency claim held | yes | Retry the **same** key shortly |
+| `rate_limited` | Tool budget exhausted | yes | Back off; include Retry-After |
+| `upstream_unavailable` | Provider blip | yes | Retry once; no second refund |
+| `internal` | Truly unexpected | no | Stop; send the user to support |
 
 ```php
 final class McpErrorMapper
