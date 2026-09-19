@@ -193,6 +193,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "replication-vs-backup-laravel",
       "mcp-auth-audit-logging-laravel",
       "mcp-idempotency-laravel-mutations",
+      "mcp-structured-tool-errors-laravel",
     ],
   },
 ];

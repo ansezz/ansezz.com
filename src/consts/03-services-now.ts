@@ -193,7 +193,7 @@ export const NOW = {
   DESCRIPTION:
     "What Anass Ez-zouaine is building right now — agentic commerce, MCP, RAG, and the scoped builds I'm taking this season.",
   // Keep this honest and current. Update the date when you edit it.
-  UPDATED: "2026-09-18",
+  UPDATED: "2026-09-19",
   FOCUS: [
     {
       icon: "lucide:brain-circuit",
@@ -211,7 +211,7 @@ export const NOW = {
       icon: "lucide:pen-line",
       tone: "yellow" as const,
       title: "Writing",
-      body: "September shipped MCP auth/audit logging and idempotency keys for agent mutations on multi-tenant Laravel SaaS. August covered agentic commerce, MCP vs A2A/ACP, RAG failure modes, and vibe-coding → agentic engineering. Next posts when the build teaches something worth publishing — not on a fake weekly cadence.",
+      body: "September shipped the MCP safety trilogy for multi-tenant Laravel SaaS: auth/audit logging, idempotency keys for mutations, and structured tool errors agents can self-correct from. August covered agentic commerce, MCP vs A2A/ACP, RAG failure modes, and vibe-coding → agentic engineering. Next posts when the build teaches something worth publishing — not on a fake weekly cadence.",
     },
     {
       icon: "lucide:handshake",
