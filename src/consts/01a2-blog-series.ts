@@ -69,6 +69,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "api-vs-mcp",
       "mcp-vs-a2a-vs-acp",
       "mcp-context-aware-agents",
+      "mcp-first-is-the-new-mobile-first",
       "training-vs-inference",
     ],
   },
