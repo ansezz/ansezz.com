@@ -6,7 +6,7 @@ category: shopify
 tags: [shopify, api-design, production, architecture]
 featured: false
 heroImage:
-  url: "/blog/shopify-claims-pipeline-claimify/hero-c1268539.webp"
+  url: "/blog/shopify-claims-pipeline-claimify/hero-a252260c.webp"
   alt: "Neobrutal diagram of one Shopify claim pipeline taking returns, damage, and warranty into refund, replacement, and store credit"
 ---
 
@@ -35,7 +35,7 @@ If you only publish the policy, every exception becomes a negotiation in email. 
 
 One queue can hold all of them if the type is a field on the claim, not a separate product. Claim type drives which eligibility rules run, which evidence is required, and which resolutions are legal for that SKU. That is the difference between a generic "support form" and a claims system.
 
-![Customer files a claim with photos into a Kanban queue, then merchant resolves with refund or replace](/blog/shopify-claims-pipeline-claimify/file-queue-resolve-d86b7dc7.webp)
+![Customer files a claim with photos into a Kanban queue, then merchant resolves with refund or replace](/blog/shopify-claims-pipeline-claimify/file-queue-resolve-4f198524.webp)
 
 ## Customer file to merchant resolve
 
@@ -62,7 +62,7 @@ Treat warranty as a product surface:
 
 I shipped Claimify with warranty as a first-class path for exactly this reason. The App Store listing is under XCO Apps; the product thesis is the same either way: warranty is not a renamed form. Details and constraints from the build are on the [Claimify work page](/work/claimify-warranty-claims/).
 
-![Warranty lifecycle from registration and policy through claim evidence to Shopify resolution](/blog/shopify-claims-pipeline-claimify/warranty-lifecycle-990b3cdc.webp)
+![Warranty lifecycle from registration and policy through claim evidence to Shopify resolution](/blog/shopify-claims-pipeline-claimify/warranty-lifecycle-18573c74.webp)
 
 ## Resolutions that hit Shopify, not spreadsheets
 
