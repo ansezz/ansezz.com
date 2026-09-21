@@ -1,6 +1,6 @@
 ---
-title: "Agent Commerce Suite — AI optimization for Shopify"
-description: "Shopify app that prepares product catalogs for agentic shopping: LLM-readable fields, AI-traffic analytics, and UPC/GTIN compliance via the Catalog API."
+title: "Agent Commerce Suite: Shopify AI Catalogs"
+description: "Shopify app that structures catalogs for agentic shopping: LLM-readable fields, GTIN checks via Catalog API, and AI-traffic analytics merchants can review."
 category: ai
 stack:
   - "Laravel"
@@ -14,21 +14,38 @@ order: 2
 featured: true
 ---
 
-## The problem
+## Problem
 
-Agentic shopping only works if the catalog is legible to a model. Most Shopify product data is written for humans and Google — sparse attributes, messy titles, missing GTINs, zero structure an agent can trust when it has to compare SKUs and check out.
+Agentic shopping only works if the catalog is legible to a model. Most Shopify product data is written for humans and Google: sparse attributes, messy titles, missing GTINs, and little structure an agent can trust when it compares SKUs and checks out.
 
-## What I built
+Merchants who care about AI discovery need enrichment that does not break storefront copy they already like, plus a way to see when agents (not just browsers) hit product data.
 
-- A Shopify app that **rewrites and enriches catalog fields** into LLM-readable shapes without breaking the storefront copy merchants already like.
-- **UPC / GTIN compliance** checks via the Catalog API so agent surfaces don't choke on incomplete identifiers.
-- **AI-traffic analytics** so merchants can see when agents (not just browsers) are hitting product data.
-- Embedded admin UI with App Bridge + Polaris — lives where merchants already work.
+## Constraints
 
-## How it works
+- Enrich fields for LLMs without silently overwriting merchant-approved storefront copy.
+- Merchants must approve before anything ships to the live catalog.
+- UPC / GTIN gaps must surface via the Catalog API so agent surfaces do not choke on incomplete identifiers.
+- UI stays inside Admin (App Bridge + Polaris).
+- Model output needs guardrails so generated fields stay reviewable.
 
-Laravel backend, GraphQL Admin + Catalog API for reads/writes, Claude for structured enrichment passes with guardrails so generated fields stay reviewable. Merchants approve before anything ships to the live catalog.
+## What shipped
 
-## The result
+- A Shopify app that **rewrites and enriches catalog fields** into LLM-readable shapes while keeping human-facing copy intact until approval.
+- **UPC / GTIN compliance** checks via the Catalog API.
+- **AI-traffic analytics** so merchants can see agent hits on product data.
+- Embedded admin UI with App Bridge + Polaris.
+- Laravel backend; GraphQL Admin + Catalog API for reads/writes; Claude for structured enrichment passes.
 
-Catalogs that agents can actually shop against — structured fields, identifiers that validate, and a clear view of AI-driven discovery traffic. Built for the agentic commerce wave, not a demo storefront.
+For the broader problem framing, see [agentic commerce](/agentic-commerce/).
+
+## Result
+
+Catalogs that agents can shop against: structured fields, identifiers that validate, and a clear view of AI-driven discovery traffic. Built for real merchant Admin workflows, not a demo storefront. Outcomes here are structural readiness and reviewable enrichment, not invented GMV or traffic percentages.
+
+## Stack
+
+Laravel, Shopify Catalog API, Shopify GraphQL Admin API, Anthropic Claude, App Bridge, Polaris.
+
+## Want agent-ready Shopify catalogs?
+
+If you are shipping agentic commerce or AI enrichment on Shopify, see [Shopify Plus Apps](/services/shopify-plus-apps/), the [agentic commerce](/agentic-commerce/) page, or [start a Shopify package conversation](/contact/?package=shopify).
