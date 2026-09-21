@@ -3,96 +3,99 @@ import Page from "@/layouts/Page.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
-import TagPill from "@/components/neobrutalist/TagPill.astro";
-import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
 import HalftoneSection from "@/components/neobrutalist/HalftoneSection.astro";
+import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
 import { Icon } from "astro-icon/components";
 import {
-  SERVICES,
   SERVICES_PAGE,
-  SERVICES_FAQ,
-  AVAILABLE_FOR,
   SITE,
-  SERVICE_LANDERS_BY_PACKAGE,
+  type ServiceLander,
 } from "@/consts";
 import { faqPage, breadcrumbList } from "@/lib/seo";
 
-const faqLd = faqPage(SERVICES_FAQ);
+interface Props {
+  lander: ServiceLander;
+}
+
+const { lander } = Astro.props;
+
+const faqLd = faqPage(lander.faq);
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
   { name: "Services", url: "/services/" },
+  { name: lander.title.split("|")[0].trim(), url: `/services/${lander.slug}/` },
 ]);
+
+const contactHref = `/contact/?package=${lander.packageId}`;
 ---
 
 <Page
-  title={SERVICES_PAGE.TITLE}
-  description={SERVICES_PAGE.DESCRIPTION}
-  eyebrow="Work with me"
-  heading="Senior engineering, hired by the engagement."
-  intro={SERVICES_PAGE.DESCRIPTION}
+  title={lander.title}
+  description={lander.description}
+  eyebrow={lander.eyebrow}
+  heading={lander.heading}
+  intro={lander.intro}
   structuredData={[faqLd, breadcrumbLd]}
 >
-  <!-- Service packages -->
+  <!-- Who for + what you get -->
   <section class="mx-auto max-w-6xl px-5 pb-14">
-    <div class="mb-7">
-      <BurstBadge tone="yellow" size="sm" class="mb-4">01</BurstBadge>
-      <h2 class="display text-2xl leading-tight md:text-3xl">
-        Pick a package.
-      </h2>
-      <p
-        class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60"
-      >
-        ▸ Fixed scope · senior-only · remote-first
-      </p>
-    </div>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <NeoCard tone="paper" shadow="md" class="flex flex-col gap-4">
+        <div class="flex items-center gap-3">
+          <BurstBadge tone={lander.tone} size="sm">01</BurstBadge>
+          <h2 class="heading text-xl leading-tight uppercase md:text-2xl">
+            {lander.whoForTitle}
+          </h2>
+        </div>
+        <ul class="space-y-3">
+          {
+            lander.whoFor.map((item) => (
+              <li class="flex items-start gap-2 text-sm font-medium leading-snug md:text-base">
+                <Icon
+                  name="lucide:arrow-right"
+                  class="mt-0.5 h-4 w-4 shrink-0"
+                />
+                <span>{item}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </NeoCard>
 
-    <ul class="grid gap-6 md:grid-cols-2">
-      {
-        SERVICES.map((s, i) => (
-          <li>
-            <NeoCard
-              tone={s.tone}
-              shadow="md"
-              tilt={i % 2 === 0 ? -0.3 : 0.3}
-              class="flex h-full flex-col gap-4"
-            >
-              <h3 class="heading text-xl leading-tight uppercase md:text-2xl">
-                {s.title}
-              </h3>
-              <p class="text-sm leading-snug opacity-90 md:text-base">
-                {s.body}
-              </p>
-              <ul class="mt-1 space-y-2">
-                {s.bullets.map((b) => (
-                  <li class="flex items-start gap-2 text-sm font-medium">
-                    <Icon name="lucide:check" class="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-              <div class="mt-auto flex flex-col gap-2 pt-3">
-                <NeoButton
-                  href={`/contact/?package=${s.id}`}
-                  variant="ink"
-                  size="sm"
-                  fullWidth
-                >
-                  Start this →
-                </NeoButton>
-                <NeoButton
-                  href={`/services/${SERVICE_LANDERS_BY_PACKAGE[s.id].slug}/`}
-                  variant="secondary"
-                  size="sm"
-                  fullWidth
-                >
-                  Package details →
-                </NeoButton>
-              </div>
-            </NeoCard>
-          </li>
-        ))
-      }
-    </ul>
+      <NeoCard
+        tone={lander.tone}
+        shadow="md"
+        class="flex flex-col gap-4"
+      >
+        <div class="flex items-center gap-3">
+          <span
+            class="border-ink bg-paper text-ink shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
+            aria-hidden="true"
+          >
+            <Icon name={lander.icon} class="h-5 w-5" />
+          </span>
+          <h2 class="heading text-xl leading-tight uppercase md:text-2xl">
+            {lander.whatYouGetTitle}
+          </h2>
+        </div>
+        <ul class="space-y-3">
+          {
+            lander.whatYouGet.map((item) => (
+              <li class="flex items-start gap-2 text-sm font-medium leading-snug md:text-base">
+                <Icon name="lucide:check" class="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{item}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="mt-auto pt-2">
+          <NeoButton href={contactHref} variant="ink" size="sm" fullWidth>
+            {lander.ctaLabel}
+          </NeoButton>
+        </div>
+      </NeoCard>
+    </div>
   </section>
 
   <section class="mx-auto max-w-6xl px-5 pb-6">
@@ -107,7 +110,7 @@ const breadcrumbLd = breadcrumbList([
       <p
         class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60"
       >
-        ▸ No black box. You see progress, not promises.
+        ▸ Same process across every package
       </p>
     </div>
 
@@ -140,27 +143,12 @@ const breadcrumbLd = breadcrumbList([
     </ol>
   </section>
 
-  <!-- Available for -->
-  <section class="mx-auto max-w-6xl px-5 pb-14">
-    <NeoCard tone="paper" class="space-y-4">
-      <p
-        class="mono text-accent-text text-xs font-bold tracking-widest uppercase"
-      >
-        ▸ Also available for
-      </p>
-      <ul class="flex flex-wrap gap-2">
-        {
-          AVAILABLE_FOR.map((role) => (
-            <li>
-              <TagPill tone="yellow" size="md">
-                {role}
-              </TagPill>
-            </li>
-          ))
-        }
-      </ul>
-    </NeoCard>
-  </section>
+  <!-- Related -->
+  <RelatedLinks
+    title="Related writing and work"
+    items={lander.related}
+    class="!max-w-6xl"
+  />
 
   <!-- FAQ -->
   <section class="mx-auto max-w-6xl px-5 pb-16">
@@ -172,7 +160,7 @@ const breadcrumbLd = breadcrumbList([
     </div>
     <div class="grid max-w-5xl gap-4 md:grid-cols-2">
       {
-        SERVICES_FAQ.map((f) => (
+        lander.faq.map((f) => (
           <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
             <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
               <span>{f.question}</span>
@@ -196,19 +184,17 @@ const breadcrumbLd = breadcrumbList([
     >
       <div>
         <p class="display text-3xl leading-tight md:text-4xl">
-          Ready when you are.
+          {lander.ctaHeading}
         </p>
-        <p class="text-on-deep/90 mt-3 text-base">
-          Free 15-minute discovery call. I'll tell you honestly if it's a fit.
-        </p>
+        <p class="text-on-deep/90 mt-3 text-base">{lander.ctaBody}</p>
       </div>
       <div class="flex flex-wrap gap-3">
         <NeoButton href={SITE.BOOKING_URL} variant="primary" size="lg">
           <Icon name="lucide:calendar" class="h-4 w-4" />
           Book a call
         </NeoButton>
-        <NeoButton href="/contact/" variant="ink" size="lg">
-          Contact →
+        <NeoButton href={contactHref} variant="ink" size="lg">
+          {lander.ctaLabel}
         </NeoButton>
       </div>
     </div>
