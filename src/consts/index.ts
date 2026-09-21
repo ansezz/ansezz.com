@@ -12,3 +12,4 @@ export * from "./04a2-tools-list";
 export * from "./04b-library";
 export * from "./05-service-landers";
 export * from "./06-problem-pages";
+export * from "./07-topic-hubs";

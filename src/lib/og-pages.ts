@@ -112,6 +112,27 @@ export const PAGE_OG: PageOg[] = [
     title: "RAG on Laravel that survives evals.",
   },
 
+
+  // ── SEO topic hubs + how I work ──
+  {
+    slug: "topics-mcp",
+    path: "/topics/mcp/",
+    label: "Topic",
+    title: "MCP for product teams who ship.",
+  },
+  {
+    slug: "topics-rag",
+    path: "/topics/rag/",
+    label: "Topic",
+    title: "RAG that survives past the demo.",
+  },
+  {
+    slug: "how-i-work",
+    path: "/how-i-work/",
+    label: "Engage",
+    title: "How I work: discovery to handoff.",
+  },
+
   // ── Individual tool pages ──
   {
     slug: "tool-llm-cost-calculator",
