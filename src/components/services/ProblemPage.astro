@@ -1,0 +1,218 @@
+---
+import Page from "@/layouts/Page.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import NeoButton from "@/components/neobrutalist/NeoButton.astro";
+import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
+import HalftoneSection from "@/components/neobrutalist/HalftoneSection.astro";
+import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, type ProblemPage as ProblemPageData } from "@/consts";
+import { faqPage, breadcrumbList } from "@/lib/seo";
+
+interface Props {
+  page: ProblemPageData;
+}
+
+const { page } = Astro.props;
+
+const faqLd = faqPage(page.faq);
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: page.title.split("|")[0].trim(), url: `/${page.slug}/` },
+]);
+
+const contactHref = `/contact/?package=${page.packageId}`;
+---
+
+<Page
+  title={page.title}
+  description={page.description}
+  eyebrow={page.eyebrow}
+  heading={page.heading}
+  intro={page.intro}
+  structuredData={[faqLd, breadcrumbLd]}
+>
+  <!-- Problem -->
+  <section class="mx-auto max-w-6xl px-5 pb-14">
+    <NeoCard tone="paper" shadow="md" class="flex flex-col gap-4">
+      <div class="flex items-center gap-3">
+        <BurstBadge tone={page.tone} size="sm">01</BurstBadge>
+        <h2 class="heading text-xl leading-tight uppercase md:text-2xl">
+          {page.problemTitle}
+        </h2>
+      </div>
+      <div class="space-y-3">
+        {
+          page.problem.map((para) => (
+            <p class="text-sm leading-relaxed opacity-90 md:text-base">{para}</p>
+          ))
+        }
+      </div>
+    </NeoCard>
+  </section>
+
+  <!-- Who for + what you get -->
+  <section class="mx-auto max-w-6xl px-5 pb-14">
+    <div class="grid gap-6 lg:grid-cols-2">
+      <NeoCard tone="paper" shadow="md" class="flex flex-col gap-4">
+        <div class="flex items-center gap-3">
+          <BurstBadge tone="yellow" size="sm">02</BurstBadge>
+          <h2 class="heading text-xl leading-tight uppercase md:text-2xl">
+            {page.whoForTitle}
+          </h2>
+        </div>
+        <ul class="space-y-3">
+          {
+            page.whoFor.map((item) => (
+              <li class="flex items-start gap-2 text-sm font-medium leading-snug md:text-base">
+                <Icon
+                  name="lucide:arrow-right"
+                  class="mt-0.5 h-4 w-4 shrink-0"
+                />
+                <span>{item}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </NeoCard>
+
+      <NeoCard tone={page.tone} shadow="md" class="flex flex-col gap-4">
+        <div class="flex items-center gap-3">
+          <span
+            class="border-ink bg-paper text-ink shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
+            aria-hidden="true"
+          >
+            <Icon name={page.icon} class="h-5 w-5" />
+          </span>
+          <h2 class="heading text-xl leading-tight uppercase md:text-2xl">
+            {page.whatYouGetTitle}
+          </h2>
+        </div>
+        <ul class="space-y-3">
+          {
+            page.whatYouGet.map((item) => (
+              <li class="flex items-start gap-2 text-sm font-medium leading-snug md:text-base">
+                <Icon name="lucide:check" class="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{item}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="mt-auto flex flex-col gap-2 pt-2">
+          <NeoButton href={contactHref} variant="ink" size="sm" fullWidth>
+            {page.ctaLabel}
+          </NeoButton>
+          <NeoButton
+            href={page.serviceHref}
+            variant="secondary"
+            size="sm"
+            fullWidth
+          >
+            {page.serviceLabel} →
+          </NeoButton>
+        </div>
+      </NeoCard>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-5 pb-6">
+    <PanelDivider shape="zigzag" tone="cyan" />
+  </section>
+
+  <!-- Approach -->
+  <section class="mx-auto max-w-6xl px-5 pb-14">
+    <div class="mb-7">
+      <BurstBadge tone="cyan" size="sm" class="mb-4">03</BurstBadge>
+      <h2 class="display text-2xl leading-tight md:text-3xl">
+        {page.approachTitle}
+      </h2>
+      <p
+        class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60"
+      >
+        ▸ Problem-specific, not a generic playbook
+      </p>
+    </div>
+
+    <ol class="grid gap-5 sm:grid-cols-2">
+      {
+        page.approach.map((step, i) => (
+          <li>
+            <NeoCard
+              tone={i % 2 === 0 ? "paper" : page.tone}
+              shadow="sm"
+              class="flex h-full flex-col gap-3 !p-5"
+            >
+              <div class="flex items-center justify-between">
+                <span class="display text-2xl opacity-40">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+              <h3 class="heading text-lg leading-tight uppercase">
+                {step.title}
+              </h3>
+              <p class="text-sm leading-snug opacity-90">{step.body}</p>
+            </NeoCard>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <!-- Related -->
+  <RelatedLinks
+    title="Related reading"
+    items={page.related}
+    class="!max-w-6xl"
+  />
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-6xl px-5 pb-16">
+    <div class="mb-7">
+      <BurstBadge tone="pink" size="sm" class="mb-4">04</BurstBadge>
+      <h2 class="display text-2xl leading-tight md:text-3xl">
+        Questions, answered.
+      </h2>
+    </div>
+    <div class="grid max-w-5xl gap-4 md:grid-cols-2">
+      {
+        page.faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.question}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">
+              {f.answer}
+            </p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <HalftoneSection tone="blue" bordered class="text-paper py-14">
+    <div
+      class="mx-auto grid max-w-5xl items-center gap-6 px-5 md:grid-cols-[1fr_auto]"
+    >
+      <div>
+        <p class="display text-3xl leading-tight md:text-4xl">
+          {page.ctaHeading}
+        </p>
+        <p class="text-on-deep/90 mt-3 text-base">{page.ctaBody}</p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <NeoButton href={SITE.BOOKING_URL} variant="primary" size="lg">
+          <Icon name="lucide:calendar" class="h-4 w-4" />
+          Book a call
+        </NeoButton>
+        <NeoButton href={contactHref} variant="ink" size="lg">
+          {page.ctaLabel}
+        </NeoButton>
+      </div>
+    </div>
+  </HalftoneSection>
+</Page>

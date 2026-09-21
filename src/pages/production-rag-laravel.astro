@@ -1,0 +1,9 @@
+---
+import ProblemPage from "@/components/services/ProblemPage.astro";
+import { PROBLEM_PAGES_BY_SLUG } from "@/consts";
+
+const page = PROBLEM_PAGES_BY_SLUG["production-rag-laravel"];
+if (!page) throw new Error("Missing problem page: production-rag-laravel");
+---
+
+<ProblemPage page={page} />
