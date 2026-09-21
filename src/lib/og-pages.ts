@@ -91,6 +91,27 @@ export const PAGE_OG: PageOg[] = [
     title: "No analytics. No tracking. No cookies.",
   },
 
+
+  // ── SEO problem / intent pages ──
+  {
+    slug: "mcp-for-laravel-saas",
+    path: "/mcp-for-laravel-saas/",
+    label: "Problem",
+    title: "Add MCP to Laravel SaaS without breaking tenancy.",
+  },
+  {
+    slug: "agentic-commerce",
+    path: "/agentic-commerce/",
+    label: "Problem",
+    title: "Secure agentic commerce on Shopify.",
+  },
+  {
+    slug: "production-rag-laravel",
+    path: "/production-rag-laravel/",
+    label: "Problem",
+    title: "RAG on Laravel that survives evals.",
+  },
+
   // ── Individual tool pages ──
   {
     slug: "tool-llm-cost-calculator",

@@ -1,0 +1,9 @@
+---
+import ProblemPage from "@/components/services/ProblemPage.astro";
+import { PROBLEM_PAGES_BY_SLUG } from "@/consts";
+
+const page = PROBLEM_PAGES_BY_SLUG["agentic-commerce"];
+if (!page) throw new Error("Missing problem page: agentic-commerce");
+---
+
+<ProblemPage page={page} />

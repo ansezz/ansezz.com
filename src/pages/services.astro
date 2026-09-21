@@ -14,6 +14,7 @@ import {
   AVAILABLE_FOR,
   SITE,
   SERVICE_LANDERS_BY_PACKAGE,
+  PROBLEM_PAGES,
 } from "@/consts";
 import { faqPage, breadcrumbList } from "@/lib/seo";
 
@@ -88,6 +89,47 @@ const breadcrumbLd = breadcrumbList([
                   Package details →
                 </NeoButton>
               </div>
+            </NeoCard>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+
+  <!-- Popular problems (SEO intent pages) -->
+  <section class="mx-auto max-w-6xl px-5 pb-14">
+    <div class="mb-7">
+      <BurstBadge tone="purple" size="sm" class="mb-4">Popular</BurstBadge>
+      <h2 class="display text-2xl leading-tight md:text-3xl">
+        Popular problems.
+      </h2>
+      <p
+        class="mono mt-2 text-[11px] font-bold tracking-widest uppercase opacity-60"
+      >
+        ▸ Intent pages · same senior bar
+      </p>
+    </div>
+    <ul class="grid gap-4 md:grid-cols-3">
+      {
+        PROBLEM_PAGES.map((p) => (
+          <li>
+            <NeoCard
+              tone={p.tone}
+              shadow="sm"
+              hover
+              href={`/${p.slug}/`}
+              class="flex h-full flex-col gap-2 !p-5"
+            >
+              <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-70">
+                ▸ Problem
+              </p>
+              <h3 class="heading text-base leading-tight uppercase md:text-lg">
+                {p.heading}
+              </h3>
+              <p class="mt-auto mono pt-2 text-[10px] font-bold tracking-widest uppercase opacity-70">
+                {p.serviceLabel} →
+              </p>
             </NeoCard>
           </li>
         ))
