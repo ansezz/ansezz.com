@@ -5,6 +5,9 @@ import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import TagPill from "@/components/neobrutalist/TagPill.astro";
 import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
 import HalftoneSection from "@/components/neobrutalist/HalftoneSection.astro";
+import RelatedLinks, {
+  type RelatedLink,
+} from "@/components/RelatedLinks.astro";
 import { Icon } from "astro-icon/components";
 import { OWNER, SITE } from "@/consts";
 import { webPage, breadcrumbList } from "@/lib/seo";
@@ -26,6 +29,131 @@ const categoryLabel: Record<string, string> = {
   shopify: "Shopify Plus",
   saas: "SaaS platform",
 };
+
+/** Soft package CTA for the bottom band. */
+const packageByWork: Record<string, "ai" | "shopify" | "mvp" | "audit"> = {
+  "claimify-warranty-claims": "shopify",
+  "agent-commerce-suite": "shopify",
+  "mcp-saas-server": "ai",
+  "rag-hybrid-search": "ai",
+  "youcan-commerce": "mvp",
+  "maestro-theme-scheduler": "shopify",
+  "uae-home-shopify": "shopify",
+};
+
+const packageByCategory: Record<string, "ai" | "shopify" | "mvp"> = {
+  ai: "ai",
+  shopify: "shopify",
+  saas: "mvp",
+};
+
+const packageId =
+  packageByWork[entry.id] ?? packageByCategory[entry.data.category] ?? "mvp";
+
+const relatedByWork: Record<string, RelatedLink[]> = {
+  "claimify-warranty-claims": [
+    {
+      href: "/services/shopify-plus-apps/",
+      label: "Shopify Plus Apps",
+      note: "Embedded Admin apps, GraphQL, billing, and webhooks for merchants.",
+      kind: "Page",
+    },
+    {
+      href: "/contact/?package=shopify",
+      label: "Shopify package",
+      note: "Tell me about the claims or post-purchase flow you need.",
+      kind: "Page",
+    },
+  ],
+  "agent-commerce-suite": [
+    {
+      href: "/agentic-commerce/",
+      label: "Agentic commerce",
+      note: "How to make Shopify catalogs legible to shopping agents.",
+      kind: "Page",
+    },
+    {
+      href: "/services/shopify-plus-apps/",
+      label: "Shopify Plus Apps",
+      note: "Public or private apps with Catalog API and Admin UI.",
+      kind: "Page",
+    },
+  ],
+  "mcp-saas-server": [
+    {
+      href: "/mcp-for-laravel-saas/",
+      label: "MCP for Laravel SaaS",
+      note: "Tenant-safe MCP auth, audit logs, and tool design.",
+      kind: "Page",
+    },
+    {
+      href: "/services/ai-mcp/",
+      label: "AI & MCP Integration",
+      note: "Claude, MCP servers, RAG, and evals on your product.",
+      kind: "Page",
+    },
+  ],
+  "rag-hybrid-search": [
+    {
+      href: "/production-rag-laravel/",
+      label: "Production RAG on Laravel",
+      note: "Hybrid search, rerank, evals, without a second vector DB.",
+      kind: "Page",
+    },
+    {
+      href: "/services/ai-mcp/",
+      label: "AI & MCP Integration",
+      note: "Ship RAG and agent features with cost guardrails.",
+      kind: "Page",
+    },
+  ],
+  "youcan-commerce": [
+    {
+      href: "/services/laravel-saas/",
+      label: "Laravel SaaS MVP",
+      note: "Multi-tenant Laravel with auth, billing, and CI/CD.",
+      kind: "Page",
+    },
+    {
+      href: "/contact/?package=mvp",
+      label: "MVP package",
+      note: "Scope a multi-tenant commerce or B2B SaaS build.",
+      kind: "Page",
+    },
+  ],
+};
+
+const relatedFallback: Record<string, RelatedLink[]> = {
+  ai: [
+    {
+      href: "/services/ai-mcp/",
+      label: "AI & MCP Integration",
+      note: "Claude, MCP, RAG, and evals on an existing product.",
+      kind: "Page",
+    },
+  ],
+  shopify: [
+    {
+      href: "/services/shopify-plus-apps/",
+      label: "Shopify Plus Apps",
+      note: "Embedded Admin, billing, GraphQL, and Functions.",
+      kind: "Page",
+    },
+  ],
+  saas: [
+    {
+      href: "/services/laravel-saas/",
+      label: "Laravel SaaS MVP",
+      note: "Multi-tenant Laravel built to ship.",
+      kind: "Page",
+    },
+  ],
+};
+
+const related =
+  relatedByWork[entry.id] ?? relatedFallback[entry.data.category] ?? [];
+
+const contactHref = `/contact/?package=${packageId}`;
 
 const canonicalUrl = new URL(`/work/${entry.id}/`, SITE.URL).href;
 
@@ -141,6 +269,16 @@ const breadcrumbLd = breadcrumbList([
     </article>
   </section>
 
+  {
+    related.length > 0 && (
+      <RelatedLinks
+        title="Related services"
+        items={related}
+        class="!max-w-4xl"
+      />
+    )
+  }
+
   <HalftoneSection tone="blue" bordered class="text-paper py-14">
     <div
       class="mx-auto grid max-w-4xl items-center gap-6 px-5 md:grid-cols-[1fr_auto]"
@@ -150,14 +288,14 @@ const breadcrumbLd = breadcrumbList([
           Want something like this built?
         </p>
         <p class="text-on-deep/90 mt-3 text-base">
-          {OWNER.NAME} — senior engineering, by the engagement.
+          {OWNER.NAME}: senior engineering, by the engagement.
         </p>
       </div>
       <div class="flex flex-wrap gap-3">
         <NeoButton href="/services/" variant="primary" size="lg">
           See services
         </NeoButton>
-        <NeoButton href="/contact/" variant="ink" size="lg">
+        <NeoButton href={contactHref} variant="ink" size="lg">
           Let's work together →
         </NeoButton>
       </div>
