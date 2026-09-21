@@ -1,0 +1,9 @@
+---
+import TopicHubPage from "@/components/services/TopicHubPage.astro";
+import { TOPIC_HUBS_BY_SLUG } from "@/consts";
+
+const hub = TOPIC_HUBS_BY_SLUG["mcp"];
+if (!hub) throw new Error("Missing topic hub: mcp");
+---
+
+<TopicHubPage hub={hub} />

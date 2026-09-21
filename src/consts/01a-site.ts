@@ -111,6 +111,7 @@ export const FOOTER_MORE = [
   { LABEL: "Tools", HREF: "/tools/" },
   { LABEL: "Library", HREF: "/library/" },
   { LABEL: "Series", HREF: "/blog/series/" },
+  { LABEL: "How I work", HREF: "/how-i-work/" },
 ];
 
 export const HOME = {
