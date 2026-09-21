@@ -50,6 +50,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "shopify-ucp-quick-start",
       "agentic-commerce-shopify",
       "secure-agentic-commerce-shopify",
+      "shopify-claims-pipeline-claimify",
     ],
   },
   {
