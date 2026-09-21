@@ -193,7 +193,7 @@ export const NOW = {
   DESCRIPTION:
     "What Anass Ez-zouaine is building right now — agentic commerce, MCP, RAG, and the scoped builds I'm taking this season.",
   // Keep this honest and current. Update the date when you edit it.
-  UPDATED: "2026-09-20",
+  UPDATED: "2026-09-21",
   FOCUS: [
     {
       icon: "lucide:brain-circuit",
@@ -211,7 +211,7 @@ export const NOW = {
       icon: "lucide:pen-line",
       tone: "yellow" as const,
       title: "Writing",
-      body: "September shipped the MCP safety trilogy for multi-tenant Laravel SaaS, then the product thesis: MCP first is the new mobile first — tools, skills, and permissions before the human UI. August covered agentic commerce, MCP vs A2A/ACP, RAG failure modes, and vibe-coding → agentic engineering. Next posts when the build teaches something worth publishing — not on a fake weekly cadence.",
+      body: "September added an end-to-end Shopify claims pipeline piece (Claimify as the concrete example), after the MCP safety trilogy and MCP-first-is-the-new-mobile-first. August covered agentic commerce, MCP vs A2A/ACP, RAG failure modes, and vibe-coding to agentic engineering. Next posts when the build teaches something worth publishing, not on a fake weekly cadence.",
     },
     {
       icon: "lucide:handshake",

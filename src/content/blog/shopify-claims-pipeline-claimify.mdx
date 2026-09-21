@@ -1,0 +1,114 @@
+---
+title: "One Shopify claims pipeline for every claim type"
+description: "A returns policy is not a returns process. Build one Shopify claims pipeline for returns, damage, and warranty: file, eligibility, queue, Shopify resolve."
+publishDate: 2026-09-21
+category: shopify
+tags: [shopify, api-design, production, architecture]
+featured: false
+heroImage:
+  url: "/blog/shopify-claims-pipeline-claimify/hero-c1268539.webp"
+  alt: "Neobrutal diagram of one Shopify claim pipeline taking returns, damage, and warranty into refund, replacement, and store credit"
+---
+
+Your returns policy PDF is not a returns process.
+
+A customer emails a blurry photo of a cracked box. Support digs through orders to confirm the purchase. Someone promises a refund in Slack. Three days later the same claim is still "waiting on photos," and nobody can say who owns it. That is not a claims system. That is an inbox wearing a policy hat.
+
+I built [Claimify](https://apps.shopify.com/claimify) because I kept seeing the same pattern on Shopify stores: every claim type sprawling into its own spreadsheet, helpdesk macro, or ad-hoc Google Form. Returns in one place. Damage in another. Warranty buried in a shared mailbox. The fix is not a prettier form. It is one end-to-end pipeline that every claim type walks through, from the moment a customer files to the moment Shopify actually refunds, replacements, or credits.
+
+## Policy is not process
+
+A policy answers *what* you allow. A process answers *how* it moves.
+
+Policy: "You have 30 days to return unused items." Process: the customer files from their order, eligibility checks the fulfilment date and product tags, the claim lands in a queue with an owner, photos are required when the type needs them, and resolution writes back to Shopify with an audit trail.
+
+If you only publish the policy, every exception becomes a negotiation in email. If you only build a form without states, you get a ticket graveyard. The pipeline is the missing middle: typed claim in, typed resolution out, with explicit transitions in between.
+
+## What "any claim type" actually means
+
+"Claims" is not a synonym for returns. On a real storefront you usually need at least:
+
+- **Returns and exchanges (RMA)** with tracking states: requested, label issued, in transit, received, inspected, resolved.
+- **Damage on arrival** with photo requirements up front, not after three reply-all threads.
+- **Warranty** as a first-class lifecycle: policies, registration, serials, coverage windows. Not a renamed return form with the word "warranty" in the title.
+- **Refund and goodwill paths** that are still claims, even when no product comes back.
+
+One queue can hold all of them if the type is a field on the claim, not a separate product. Claim type drives which eligibility rules run, which evidence is required, and which resolutions are legal for that SKU. That is the difference between a generic "support form" and a claims system.
+
+![Customer files a claim with photos into a Kanban queue, then merchant resolves with refund or replace](/blog/shopify-claims-pipeline-claimify/file-queue-resolve-d86b7dc7.webp)
+
+## Customer file to merchant resolve
+
+The loop should be boring and complete.
+
+**Customer side.** File from the account page, from an order action, or from a theme app block on a help page. Pick the order line, pick the claim type, describe the issue, attach evidence. No copying order numbers into a contact form that pretend-matches later.
+
+**Merchant side.** The claim opens in Shopify Admin with live order context: line items, fulfilment dates, customer tags, previous claims on the same order. Assign an owner. Move it through a Kanban (new, review, resolve) or list view. Comment with history that does not vanish when someone leaves the company.
+
+**Integrations.** Status changes should fire webhooks and talk to the tools you already run: Shopify Flow, Gorgias, Klaviyo, Zapier, Make. The helpdesk does not need to *be* the system of record. It needs to stay in sync with it.
+
+If a claim can die in a thread without a state change, you do not have a pipeline. You have chat.
+
+## Warranty is its own lifecycle
+
+Warranty is where most "claims apps" quietly fail. They slap a warranty label on a return flow and call it done. That breaks the moment you need registration, a serial number, a coverage window that starts at fulfilment (or at first activation), or a different resolution set than a 30-day return.
+
+Treat warranty as a product surface:
+
+1. **Register** against the order and serial when you care about authenticity.
+2. **Policy** with explicit windows, covered failure modes, and excluded SKUs or vendors.
+3. **Claim** with the evidence that policy demands.
+4. **Resolve** into Shopify: refund, replacement draft order, gift card, discount, store credit, or a custom out-of-band path that still records the decision.
+
+I shipped Claimify with warranty as a first-class path for exactly this reason. The App Store listing is under XCO Apps; the product thesis is the same either way: warranty is not a renamed form. Details and constraints from the build are on the [Claimify work page](/work/claimify-warranty-claims/).
+
+![Warranty lifecycle from registration and policy through claim evidence to Shopify resolution](/blog/shopify-claims-pipeline-claimify/warranty-lifecycle-990b3cdc.webp)
+
+## Resolutions that hit Shopify, not spreadsheets
+
+A claim is not resolved when someone types "approved" in Slack. It is resolved when money or inventory moves in Shopify and the audit row says who did it, when, and why.
+
+That means resolution actions should map to real Admin API outcomes:
+
+- Refund against the original order (partial or full).
+- Replacement via draft order (or your fulfilment path) so inventory and shipping are first-class.
+- Gift card, discount code, or store credit when that is the goodwill path.
+- Custom resolution when the merchant still needs a recorded decision without an automatic money move.
+
+Copy-pasting order IDs between tabs is how refunds get double-issued and how replacements ship without a paper trail. Keep order context live from the GraphQL Admin API. Do not cache a stale snapshot as the source of truth for money.
+
+## Rules that take the easy half of the queue
+
+Not every claim needs a human. Auto-approval and eligibility rules should eat the boring half of the queue:
+
+- Time since fulfilment (or since delivery) for returns vs warranty windows.
+- Product tags, collections, vendors, and customer tags.
+- Required photos for damage and some warranty types.
+- Claim type and order totals that are safe to auto-approve under a cap.
+
+The point is not to remove judgment. It is to stop burning senior support time on "yes, this is inside the 14-day window and the tag says returnable." Humans stay on the edge cases. Rules handle the rest, and every auto decision still writes an audit event.
+
+Public numbers from the Claimify listing, nothing invented: 5.0 from 6 reviews, plans at $9 / $19 / $49, and a 3-day trial. Useful as a product fact. Useless as a substitute for your own ops metrics.
+
+## Engineering notes from shipping it
+
+A few constraints that mattered when I built this as an embedded Shopify app (Laravel backend, Remix + App Bridge + Polaris admin, evidence on S3/R2):
+
+- **Stay in Admin.** Merchants abandon separate portals. App Bridge + Polaris keep triage where they already work.
+- **Live order context.** Pull line items and fulfilment from the GraphQL Admin API at decision time. Do not resolve against a stale copy.
+- **Explicit state transitions.** Every move is an event: for audit history, for webhooks, for Flow and helpdesk sync.
+- **Evidence off the app servers.** Signed uploads to object storage so photo blobs never choke the app process.
+- **Protected customer data** handled to Shopify's requirements, because claims are full of PII by nature.
+
+If you are scoping a similar public or private app, the same shape shows up on [Shopify Plus apps](/services/shopify-plus-apps/): embedded admin, billing, webhooks, and a real resolution path into Shopify.
+
+## Takeaways
+
+1. A policy PDF is not a process. Inbox volume is not a claims system.
+2. Returns, damage, and warranty can share one pipeline if claim type drives rules, evidence, and allowed resolutions.
+3. Warranty needs registration, policy windows, and serials as first-class concepts, not a renamed return form.
+4. Resolution means Shopify money or inventory moved, with an audit row, not a Slack emoji.
+5. Auto-approval should clear the easy half of the queue; humans keep the edge cases.
+6. Embed in Admin, keep order context live, treat state changes as events, store evidence outside the app process.
+
+If your claims still live in a shared inbox, which claim type is creating the most silent backlog right now, and what would change if it had to move through one queue with an owner and a Shopify resolution?
