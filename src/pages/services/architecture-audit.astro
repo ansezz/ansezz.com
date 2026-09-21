@@ -1,0 +1,9 @@
+---
+import ServiceLanderPage from "@/components/services/ServiceLanderPage.astro";
+import { SERVICE_LANDERS_BY_SLUG } from "@/consts";
+
+const lander = SERVICE_LANDERS_BY_SLUG["architecture-audit"];
+if (!lander) throw new Error("Missing service lander: architecture-audit");
+---
+
+<ServiceLanderPage lander={lander} />
