@@ -211,7 +211,7 @@ export const NOW = {
       icon: "lucide:pen-line",
       tone: "yellow" as const,
       title: "Writing",
-      body: "September shipped Storefront MCP cart → UCP Cart MCP migration, then Laravel MCP 1.0 searchable tool catalogs and cache hints. More agentic commerce and Laravel MCP posts through early October. Next posts when the build teaches something worth publishing, not on a fake weekly cadence.",
+      body: "September posts: Storefront MCP → UCP Cart MCP, Laravel MCP searchable catalogs, and why commerce RAG is not document RAG. More UCP/auth and Laravel MCP pieces through early October.",
     },
     {
       icon: "lucide:handshake",
