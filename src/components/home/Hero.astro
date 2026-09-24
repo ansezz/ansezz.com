@@ -1,7 +1,6 @@
 ---
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import TagPill from "@/components/neobrutalist/TagPill.astro";
-import RobotMascot from "@/components/neobrutalist/RobotMascot.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import PageNumber from "@/components/neobrutalist/PageNumber.astro";
 import AvailabilityBadge from "@/components/neobrutalist/AvailabilityBadge.astro";
@@ -135,25 +134,39 @@ const cardFacts = [
           </span>
         </header>
 
-        <div
-          class="relative flex flex-col items-center gap-3 px-5 pt-5 pb-4 text-center"
-        >
-          <RobotMascot
-            tone="yellow"
-            size={130}
-            class="md:!h-[150px] md:!w-[150px]"
+        <div class="hero-video relative z-10 aspect-square w-full overflow-hidden">
+          <video
+            class="hero-video__media border-ink h-full w-full object-cover"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            poster="/home/hero-loop-31be0b3f-poster.webp"
+            aria-label="Ansezz comic hero loop: backends, AI evals, shipping lanes"
+          >
+            <source src="/home/hero-loop-31be0b3f.mp4" type="video/mp4" />
+          </video>
+          <img
+            class="hero-video__poster border-ink hidden h-full w-full object-cover"
+            src="/home/hero-loop-31be0b3f-poster.webp"
+            alt="Ansezz comic hero: backends, AI evals, shipping lanes"
+            width="720"
+            height="720"
+            decoding="async"
           />
-          <div>
-            <p class="display text-2xl leading-[1] tracking-tight md:text-3xl">
-              {OWNER.NAME}
-            </p>
-            <p
-              class="mono mt-1 text-[10px] font-bold tracking-widest uppercase opacity-80"
-            >
-              Backend · Architect · AI
-            </p>
-          </div>
         </div>
+
+        <style>
+          @media (prefers-reduced-motion: reduce) {
+            .hero-video__media {
+              display: none;
+            }
+            .hero-video__poster {
+              display: block;
+            }
+          }
+        </style>
 
         <ul class="border-ink relative z-10 grid grid-cols-3 border-t-[3px]">
           {
