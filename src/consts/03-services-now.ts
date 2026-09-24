@@ -211,7 +211,7 @@ export const NOW = {
       icon: "lucide:pen-line",
       tone: "yellow" as const,
       title: "Writing",
-      body: "Series live: UCP cart migration, agent profiles, buyer-linked tokens, commerce RAG, Laravel MCP searchable catalogs, stateless servers, and OAuth PKCE for multi-tenant SaaS. HITL mutation gates next.",
+      body: "Just shipped an 8-post series across UCP cart migration, agent profiles, buyer-linked tokens, commerce RAG, Laravel MCP catalogs/stateless/OAuth PKCE, and HITL gates for agent mutations. Next posts when the build teaches something worth publishing.",
     },
     {
       icon: "lucide:handshake",
