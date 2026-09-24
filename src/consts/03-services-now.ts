@@ -211,7 +211,7 @@ export const NOW = {
       icon: "lucide:pen-line",
       tone: "yellow" as const,
       title: "Writing",
-      body: "September posts: Storefront MCP → UCP Cart MCP, Laravel MCP searchable catalogs, and why commerce RAG is not document RAG. More UCP/auth and Laravel MCP pieces through early October.",
+      body: "September posts: UCP Cart MCP migration, Laravel MCP searchable catalogs, commerce RAG vs document RAG, and UCP agent profiles as the new OAuth app. Buyer-linked tokens and more Laravel MCP next.",
     },
     {
       icon: "lucide:handshake",
