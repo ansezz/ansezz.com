@@ -211,7 +211,7 @@ export const NOW = {
       icon: "lucide:pen-line",
       tone: "yellow" as const,
       title: "Writing",
-      body: "September posts: UCP Cart MCP migration, Laravel MCP searchable catalogs, commerce RAG vs document RAG, and UCP agent profiles as the new OAuth app. Buyer-linked tokens and more Laravel MCP next.",
+      body: "Recent posts: UCP Cart MCP migration, Laravel MCP searchable catalogs, commerce RAG, UCP agent profiles, and buyer-linked tokens for agent checkout. Laravel MCP stateless/OAuth and HITL gates next.",
     },
     {
       icon: "lucide:handshake",
