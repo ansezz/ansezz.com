@@ -1,0 +1,109 @@
+---
+title: "HITL gates for agent mutations"
+description: "Human-in-the-loop risk gates for refunds, inventory, and spend. Verify mutations after tool calls so agents cannot declare early victory."
+publishDate: 2026-10-02
+category: architecture
+tags: [mcp, agentic-ai, security, architecture, ai, laravel]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/hitl-gates-for-agent-mutations/hero-add682d6.webp"
+  alt: "Comic: tool call passes through a HITL gate then verify before celebrate"
+---
+
+Agents are optimistic. They call a tool, see a JSON blob that looks success-shaped, and tell the user "refund sent." Sometimes the refund is pending. Sometimes the tool returned a structured error the model ignored. Sometimes the write never happened.
+
+**Human-in-the-loop (HITL) gates** and **post-mutation verification** are how you stop early victory. The model can propose. Policy decides. The system checks reality before anyone celebrates.
+
+This is the mutation half of [MCP first](/blog/mcp-first-is-the-new-mobile-first/): tools without judgment burn money. Pair with [idempotency](/blog/mcp-idempotency-laravel-mutations/), [structured tool errors](/blog/mcp-structured-tool-errors-laravel/), [auth and audit](/blog/mcp-auth-audit-logging-laravel/), and commerce paths in [secure agentic commerce](/blog/secure-agentic-commerce-shopify/).
+
+## Which mutations need a gate
+
+![Risk classes: refunds, inventory writes, spend, credential rotate](/blog/hitl-gates-for-agent-mutations/risk-classes-51aa7916.webp)
+
+Not every tool needs a human. Read-only lookups should be fast. Mutations that move money, stock, or trust should slow down.
+
+| Risk class | Examples | Default gate |
+| --- | --- | --- |
+| Money out | Refunds, payouts, store credit | Approve above threshold; auto only inside policy |
+| Inventory | Force adjust, unpublish, bulk price | Approve or dual-control for large deltas |
+| Spend / buy | Agent checkout complete, ad spend | Buyer confirm or spend ceiling |
+| Credentials | Rotate keys, invite admins | Always human for production |
+| Irreversible comms | Mass email, legal notices | Approve + preview |
+
+Thresholds are product decisions. A  shipping adjustment is not the same as a 00 refund. Encode ceilings in policy config, not prompt text.
+
+For Shopify-style claims and refunds, the same idea shows up as queue triage with human resolution ([claims pipeline](/blog/shopify-claims-pipeline-claimify/)): auto-clear the easy half; keep edge cases for people.
+
+## Gate shapes that work
+
+1. **Pre-tool approval:** agent prepares a `proposed_action` payload; UI or Slack asks a human to approve; only then does `execute_refund` run with the approval id.
+2. **Two-step tools:** `draft_refund` (safe) then `commit_refund` (requires `approval_token`).
+3. **Async review queue:** mutation creates a `pending` record; worker waits for approve/deny; agent polls status.
+4. **Policy auto-approve:** small, low-risk, fully validated cases skip the human but still write audit + verification.
+
+Always bind approvals to:
+
+- Actor (who asked)
+- Tenant
+- Exact action hash / idempotency key
+- Expiry (stale approvals must not run tomorrow)
+
+Do not let the model invent an `approval_id`. Issue it from your system after a real human (or policy engine) decision.
+
+## Anti early-victory: verify after tools
+
+![Model claims refund done vs system checks order.refunds and audit row](/blog/hitl-gates-for-agent-mutations/verify-3994ec23.webp)
+
+The failure mode is consistent across stacks:
+
+1. Tool returns something the model interprets as success.
+2. Model narrates completion to the user.
+3. Downstream system never applied the change (validation, partial write, wrong environment).
+
+**Verification** is a second read (or event) that proves the world moved:
+
+- After refund: fetch order transactions / refund set; confirm amount and status.
+- After inventory adjust: read InventoryLevel (or your source of truth); confirm quantity.
+- After spend: read ledger entry or checkout status; confirm `completed` not `open`.
+- After key rotate: confirm old key rejected and new key works in a dry probe.
+
+Put verification in **code** the agent must call (or that your tool runner calls automatically), not only in a skill paragraph. Skills help sequencing; code enforces it.
+
+Pattern for a tool runner:
+
+```text
+authorize -> idempotency begin -> mutate -> verify -> audit -> respond
+```
+
+If verify fails, return a recoverable structured error (`verification_failed`) with what was expected vs observed. Do not return a soft "ok" with a warning buried in prose.
+
+## Where HITL sits in MCP / UCP
+
+- **Your SaaS MCP:** gate inside the tool or a preceding approval tool; never expose bare Admin credentials to the model ([secure agentic commerce](/blog/secure-agentic-commerce-shopify/) for the commerce variant).
+- **Shopify UCP checkout:** `complete_checkout` already sits behind trust tiers and permissions ([agent profiles](/blog/ucp-agent-profiles-are-the-new-oauth-app/), [buyer-linked tokens](/blog/buyer-linked-tokens-agent-checkout/)). Still verify order state before telling the buyer "paid."
+- **Laravel MCP:** combine gates with [idempotency](/blog/mcp-idempotency-laravel-mutations/) so a double-approved click cannot double-refund.
+
+Stateless servers ([stateless MCP](/blog/stateless-mcp-servers-laravel/)) make this cleaner: approval records live in your DB, not in a vanished MCP session.
+
+## Implementation checklist
+
+1. Classify tools: read / low-risk mutate / high-risk mutate.
+2. Define numeric ceilings per tenant for auto-approve.
+3. Require `approval_id` (system-issued) on high-risk commits.
+4. Expire approvals; bind them to idempotency keys.
+5. Auto-verify after mutate; fail closed on mismatch.
+6. Audit propose, approve, execute, verify as separate events.
+7. Teach skills: "never claim success without verify tool result."
+8. UX: show the human the exact payload (amount, SKU, customer) before approve.
+
+## Takeaways
+
+1. HITL gates belong on refunds, inventory writes, spend, and credential changes.
+2. Issue approval ids from your system; never trust model-invented tokens.
+3. Verify mutations with a second read before user-facing success copy.
+4. Encode ceilings and dual-control in policy config, not only prompts.
+5. Audit propose → approve → execute → verify as distinct events.
+6. Early victory is a product bug, not a charming agent quirk.
+
+When your agent last said "all done," did the ledger agree within a second, or did a human discover the gap in a support ticket two days later?
