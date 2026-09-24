@@ -1,0 +1,120 @@
+---
+title: "MCP OAuth PKCE for multi-tenant SaaS"
+description: "Laravel MCP requires PKCE S256 and prefers Client ID Metadata Documents. How multi-tenant SaaS should bind workspace at consent and avoid common agent auth failures."
+publishDate: 2026-10-01
+category: laravel
+tags: [laravel, mcp, security, multi-tenancy, ai, agentic-ai]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/mcp-oauth-pkce-multi-tenant-saas/hero-fee75ac5.webp"
+  alt: "Comic: PKCE S256 required and client id as HTTPS metadata document URL"
+---
+
+Agent OAuth fails in boring ways: missing PKCE, wrong `APP_URL`, a new dynamic client on every redirect, a token that has scopes but no tenant. Laravel MCP 1.0 makes two of those failures explicit.
+
+As of the [1.0 upgrade guide](https://github.com/laravel/mcp/blob/main/UPGRADE.md) and [Laravel MCP auth docs](https://laravel.com/docs/mcp):
+
+1. **PKCE is required.** `OAuthClient::redirect()` throws if the authorization server metadata omits `code_challenge_methods_supported` (and S256 is the expected method).
+2. **Client ID Metadata Documents** are preferred over Dynamic Client Registration (DCR). Your `client_id` can be an HTTPS URL to a JSON document your app hosts.
+
+This post is the multi-tenant SaaS reading of those rules: how to register clients, where tenant binding belongs, and the auth failures agents hit in production. Pair with [stateless MCP servers](/blog/stateless-mcp-servers-laravel/), [MCP auth and audit](/blog/mcp-auth-audit-logging-laravel/), and [Laravel multi-tenancy](/blog/laravel-multi-tenancy/).
+
+## PKCE is not optional anymore
+
+Previously, some servers omitted `code_challenge_methods_supported` and clients proceeded anyway. Laravel MCP 1.0 rejects that. If you operate the authorization server (Passport / your IdP), publish:
+
+```json
+"code_challenge_methods_supported": ["S256"]
+```
+
+in `/.well-known/oauth-authorization-server`.
+
+If you are the MCP **client** connecting to a third party that will not advertise PKCE, you need another grant that fits (for example pre-issued credentials where appropriate). There is no "turn off PKCE" flag in `redirect()`.
+
+For public agents and desktop hosts, PKCE is how you survive without embedding a client secret. Treat missing PKCE metadata as a hard misconfiguration, not a soft warning.
+
+## Client ID Metadata Documents
+
+MCP revision `2026-07-28` deprecates DCR in favor of metadata documents. Flow in Laravel:
+
+- `Mcp::oAuthRoutesFor('github', $handler)` registers connect, callback, and **`GET /mcp/oauth/{client}/client-metadata.json`**
+- When the auth server advertises `client_id_metadata_document_supported`, Laravel can use that document URL as `client_id`
+- The app is treated as a **public** client: `token_endpoint_auth_method` is `none`, and `$token->clientSecret` is `null`
+
+Implications:
+
+- Database columns for `client_secret` must be **nullable**
+- Refresh / token calls must accept a null secret
+- `APP_URL` must be correct in production; the document is built from it, not from the incoming Host header
+- The metadata route is **unauthenticated** on purpose so the authorization server can fetch it
+
+Custom path / extra fields:
+
+```php
+Mcp::oAuthRoutesFor(
+    'github',
+    $handler,
+    clientMetadataUri: 'oauth/github/metadata.json',
+    clientMetadata: [
+        'client_name' => 'Acme Dashboard',
+        'logo_uri' => 'https://acme.com/logo.png',
+    ],
+);
+```
+
+This also fixed a nasty 0.x footgun: calling `redirect()` repeatedly could DCR a **new** client every time. Metadata documents stop that churn.
+
+![Common agent auth failure checklist](/blog/mcp-oauth-pkce-multi-tenant-saas/failures-520ef931.webp)
+
+## Multi-tenant: bind workspace at consent
+
+![Consent picks workspace; token carries tenant id enforced on tools](/blog/mcp-oauth-pkce-multi-tenant-saas/tenant-7517435e.webp)
+
+Scopes alone do not name a tenant. A token with `mcp:use` (or your custom scopes) that is not bound to workspace `acme-eu` will happily call tools until your handler guesses wrong.
+
+Pattern that holds up:
+
+1. **Consent UI** lets the human pick the workspace (or confirms the only one they can access).
+2. Persist `tenant_id` / `workspace_id` on the authorization code or token record you issue.
+3. On every tool call, resolve tenant from the **token**, not from a free-form argument the model invents.
+4. Optionally allow a tool argument to *select among authorized tenants*, never to invent a new one.
+5. Audit `user_id + tenant_id + tool + idempotency_key`.
+
+If you connect **outbound** as an MCP client to GitHub-like servers per tenant, store the TokenSet per `user_id + tenant_id + mcp_client_name`. Do not share one refresh across workspaces.
+
+Resource indicators / audience checks (RFC 8707 style) matter when the same IdP protects multiple APIs. Validate that the access token was minted for your MCP resource, not for an unrelated API.
+
+## Common agent auth failures
+
+| Failure | Symptom | Fix |
+| --- | --- | --- |
+| No PKCE advertisement | `OAuthException` on redirect | Publish `code_challenge_methods_supported: ["S256"]` |
+| Wrong `APP_URL` | Metadata `client_id` / redirect mismatch | Fix env; redeploy metadata |
+| DCR every connect | Orphan clients on IdP | Prefer metadata documents |
+| Null secret surprise | Insert fails / refresh breaks | Nullable columns; auth method `none` |
+| Scope without tenant | Cross-tenant tool calls | Bind tenant at consent; enforce in tools |
+| Legacy tests | 400 / `-32020` | Send MCP headers + `_meta` on 2026-07-28 |
+
+Agents will narrate these as "the tool is broken." Your job is to make the HTTP and OAuth errors structured enough that the model (or your skill) can tell the human to reconnect.
+
+## Checklist for SaaS MCP OAuth
+
+1. Advertise PKCE S256 on your auth server metadata.
+2. Prefer Client ID Metadata Documents; keep DCR only as fallback.
+3. Ensure metadata route is public; connect/callback stay behind `web` (or your chosen) middleware.
+4. Make `client_secret` storage nullable.
+5. Bind tenant at consent; enforce on every tool.
+6. Store outbound MCP tokens per tenant.
+7. Log auth failures with correlation ids ([stateless servers](/blog/stateless-mcp-servers-laravel/)).
+8. Dogfood with Claude / Cursor / your bot against a second workspace to prove isolation.
+
+## Takeaways
+
+1. Laravel MCP 1.0 requires PKCE support in authorization server metadata before redirect.
+2. Client ID Metadata Documents replace habitual DCR; `client_id` may be a URL with null secret.
+3. Multi-tenant safety is consent-time binding plus per-tool enforcement, not scope strings alone.
+4. Fix `APP_URL`, nullable secrets, and header/`_meta` tests before blaming the model.
+5. Treat reconnect UX as part of the product; agents cannot heal a broken OAuth client id.
+
+If an agent can call `refund_order` with a token from workspace A while the chat is about workspace B, where did tenant binding fail: consent, token storage, or the tool handler?
