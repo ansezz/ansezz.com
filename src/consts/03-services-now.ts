@@ -211,7 +211,7 @@ export const NOW = {
       icon: "lucide:pen-line",
       tone: "yellow" as const,
       title: "Writing",
-      body: "September shipped a Storefront MCP cart → UCP Cart MCP migration guide (deadline Aug 31, 2026), after the Shopify claims pipeline piece and the MCP safety trilogy. More agentic commerce and Laravel MCP posts landing through early October. Next posts when the build teaches something worth publishing, not on a fake weekly cadence.",
+      body: "September shipped Storefront MCP cart → UCP Cart MCP migration, then Laravel MCP 1.0 searchable tool catalogs and cache hints. More agentic commerce and Laravel MCP posts through early October. Next posts when the build teaches something worth publishing, not on a fake weekly cadence.",
     },
     {
       icon: "lucide:handshake",
