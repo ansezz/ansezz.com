@@ -1,0 +1,153 @@
+---
+title: "Migrate Storefront MCP carts to UCP Cart MCP"
+description: "Storefront MCP get_cart and update_cart on /api/mcp are deprecated. Move agents to UCP Cart MCP at /api/ucp/mcp with create, get, update, and cancel."
+publishDate: 2026-09-25
+category: shopify
+tags: [shopify, agentic-commerce, mcp, agentic-ai, ai]
+featured: true
+draft: false
+heroImage:
+  url: "/blog/migrate-storefront-mcp-cart-to-ucp/hero-8723cf75.webp"
+  alt: "Comic split: deprecated Storefront MCP cart on /api/mcp vs cyan robot pushing UCP Cart MCP at /api/ucp/mcp"
+---
+
+If your shopping agent still calls `get_cart` and `update_cart` on `https://{shop}.myshopify.com/api/mcp`, you are on borrowed time.
+
+Shopify announced the deprecation on June 24, 2026. Those Storefront MCP cart tools stay up through **August 31, 2026**. After that, agents that never moved will fail mid-conversation while buyers still expect a cart.
+
+The replacement is **UCP Cart MCP** at `https://{shop-domain}/api/ucp/mcp`. Same commerce job. Different endpoint, tool set, and request shape. This post is the migration map: what breaks, what replaces it, and a checklist you can run against any agent still wired to `/api/mcp`.
+
+For the broader agent-ready storefront story, start with the [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/) and [secure agentic commerce on Shopify](/blog/secure-agentic-commerce-shopify/).
+
+## What is being deprecated
+
+On Storefront MCP (`/api/mcp`), cart support was essentially two tools:
+
+- `get_cart`
+- `update_cart`
+
+Those tools mixed "create if missing" behavior into update, patched line items like a classic AJAX cart, and lived next to policy search on the legacy storefront MCP surface.
+
+UCP Cart MCP implements the UCP cart capability (`dev.ucp.shopping.cart`, version `2026-08-25` in current Shopify docs) and exposes four tools on `/api/ucp/mcp`:
+
+| Tool | Job |
+| --- | --- |
+| `create_cart` | Start a cart with line items and optional buyer context |
+| `get_cart` | Read current cart state and estimated totals |
+| `update_cart` | **Replace** the full cart state (PUT semantics) |
+| `cancel_cart` | Delete the cart; requires an idempotency key |
+
+Catalog discovery (`search_catalog`, `lookup_catalog`, `get_product`) already moved toward the UCP endpoint. Cart is catching up. Treat `/api/mcp` cart calls as a compatibility shim, not a long-term contract.
+
+Official references: [deprecation changelog](https://shopify.dev/changelog/storefront-mcp-cart-tools-are-being-deprecated-in-favour-of-ucp-cart-mcp) and [Cart MCP docs](https://shopify.dev/docs/agents/carts-and-checkout/cart-mcp).
+
+## Endpoint and request shape
+
+Point every cart `tools/call` at:
+
+```text
+POST https://{shop-domain}/api/ucp/mcp
+```
+
+Cart tools accept **unauthenticated** requests. That lets an agent estimate totals and share a `continue_url` before the buyer signs in. Checkout is a different server with stricter auth and rate limits; keep exploratory work on Cart MCP.
+
+Every cart call must include `meta` in `arguments`:
+
+```json
+{
+  "meta": {
+    "ucp-agent": {
+      "profile": "https://your-agent.example/.well-known/ucp"
+    }
+  }
+}
+```
+
+That profile URI is how the merchant negotiates capabilities. Skipping it is not a soft warning; it is a failed request. Hosting that profile is the agent equivalent of registering an OAuth app. Pair this post with the secure agentic commerce guidance when you harden trust tiers.
+
+For `get_cart`, `update_cart`, and `cancel_cart`, pass the cart id as a **top-level** `id` in `arguments`. Do not nest `id` inside the `cart` object on write.
+
+Responses land in `result.structuredContent`. Read the `cart` object there. Business problems (expired cart, quantity adjusted) often arrive as a successful JSON-RPC `result` with entries in `cart.messages`, not as a protocol `error`. If your client only checks JSON-RPC errors, you will miss quantity adjustments and `not_found`.
+
+## create_cart is not optional
+
+Legacy `update_cart` often created a cart when no id was sent. UCP splits that out.
+
+Use `create_cart` when the buyer has selected variants and you want estimated totals, multi-turn edits, or a shareable `continue_url` without starting checkout. Include:
+
+- `cart.line_items[]` with `quantity` and `item.id` (variant GID)
+- optional `context` (`address_country`, region, postal code) for pricing and availability hints
+- optional `attribution` (UTM / click ids) if you will later convert to checkout
+- optional `buyer` for personalized estimates
+
+If you plan to call Checkout MCP `create_checkout` with this cart, set attribution on the cart **before** conversion. The merchant uses the cart's line items, context, buyer, and attribution when creating checkout and ignores overlapping fields in the checkout payload.
+
+When the buyer is ready to pay, pass the cart `id` as `cart_id` into `create_checkout`. Conversion is idempotent for the same cart id.
+
+## PUT semantics will break naive agents
+
+![Confused agent holding a partial PATCH note next to a PUT semantics warning and a cart carrying full line_items, context, and attribution](/blog/migrate-storefront-mcp-cart-to-ucp/put-semantics-60254f42.webp)
+
+This is the sharp edge of the migration.
+
+`update_cart` on UCP Cart MCP **replaces** the cart. Omit `line_items`, `context`, or `attribution` and those fields are removed. There is no server-side merge. That differs from Storefront API and AJAX cart mutations, and from the old Storefront MCP patch-style mental model.
+
+Practical rules for agent tool wrappers:
+
+1. Keep the last known full cart snapshot in your session store.
+2. Apply the buyer's delta in your code (qty change, remove line, new postal code).
+3. Send the **entire** desired `cart` object on every `update_cart`.
+4. Resend `attribution` and `context` if you still want them.
+
+If you teach the model "just send the field that changed," you will empty carts in production. Put that rule in the tool description and in your skill playbook, not only in a human README.
+
+## cancel_cart needs an idempotency key
+
+`cancel_cart` requires `meta["idempotency-key"]` as a UUID in addition to `ucp-agent.profile`. Cancel removes the cart from storage. Later `get_cart` returns a business `not_found` outcome.
+
+Use cancel when the buyer abandons, or when you need to clear a stale cart before starting clean. Retries without a stable idempotency key are how you get confusing double-cancel paths. The same discipline shows up in [MCP idempotency for Laravel mutations](/blog/mcp-idempotency-laravel-mutations/) even when the server is Shopify's, not yours.
+
+## Cart vs checkout: keep exploration cheap
+
+Carts are long-lived browsing containers. Checkouts are short-lived purchase sessions with stricter freshness and rate limits.
+
+| Use case | Prefer |
+| --- | --- |
+| Multi-turn browsing and total estimates | Cart MCP |
+| Share a link with the buyer | Cart MCP `continue_url` |
+| Buyer ready to purchase | Checkout MCP |
+| Complete payment in your app | Checkout MCP |
+
+Rate limits scale with how the agent identifies itself (Bearer, signed, anonymous). Anonymous Cart MCP works for exploration; Checkout MCP does not. Keep chatty quantity tweaks off checkout tools.
+
+This split matches the [MCP vs A2A vs ACP](/blog/mcp-vs-a2a-vs-acp/) idea: pick the protocol surface that matches the job, not the one your first tutorial used.
+
+## Migration checklist for agents on /api/mcp
+
+![Migration checklist clipboard for moving agent carts to UCP Cart MCP](/blog/migrate-storefront-mcp-cart-to-ucp/checklist-9a7b5f9d.webp)
+
+Run this against every agent, skill, and integration that still mentions Storefront MCP carts:
+
+1. **Find callers.** Search for `/api/mcp`, `get_cart`, and `update_cart` in agent configs, MCP client URLs, and tool wrappers.
+2. **Retarget the endpoint** to `/api/ucp/mcp` for cart tools.
+3. **Add `create_cart`** as an explicit step; stop inventing carts inside update.
+4. **Require `meta.ucp-agent.profile`** on every cart call.
+5. **Store and resend full cart state** on `update_cart` (PUT semantics).
+6. **Pass cart id as top-level `id`** for get, update, and cancel.
+7. **Add UUID `idempotency-key`** for `cancel_cart`.
+8. **Parse `structuredContent.cart.messages`** for business outcomes (`not_found`, `quantity_adjusted`, and friends).
+9. **Wire checkout separately:** cart id into `create_checkout` only when the buyer commits.
+10. **Dogfood before August 31, 2026.** Hit a staging shop with create → update (full replace) → get → cancel → create_checkout.
+
+If you are still designing the product around agents rather than bolting MCP onto a human-only flow, the [MCP first](/blog/mcp-first-is-the-new-mobile-first/) framing helps: ship the cart tools and skills as the capability contract, then let the chat UI sit on top.
+
+## Takeaways
+
+1. Storefront MCP `get_cart` / `update_cart` on `/api/mcp` are deprecated; maintenance runs through August 31, 2026.
+2. Migrate cart traffic to UCP Cart MCP at `/api/ucp/mcp` with `create_cart`, `get_cart`, `update_cart`, and `cancel_cart`.
+3. Every request needs `meta.ucp-agent.profile`; cancel also needs a UUID idempotency key.
+4. `update_cart` is full replacement. Partial payloads wipe omitted fields.
+5. Keep browsing on Cart MCP; move to Checkout MCP only when the buyer is ready to pay.
+6. Treat `cart.messages` as first-class outcomes, not optional log noise.
+
+If your agent still hard-codes `/api/mcp` for carts, which step fails first in staging: missing agent profile, empty cart after a partial update, or a checkout call that never saw a real cart id?

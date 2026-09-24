@@ -211,7 +211,7 @@ export const NOW = {
       icon: "lucide:pen-line",
       tone: "yellow" as const,
       title: "Writing",
-      body: "September added an end-to-end Shopify claims pipeline piece (Claimify as the concrete example), after the MCP safety trilogy and MCP-first-is-the-new-mobile-first. August covered agentic commerce, MCP vs A2A/ACP, RAG failure modes, and vibe-coding to agentic engineering. Next posts when the build teaches something worth publishing, not on a fake weekly cadence.",
+      body: "September shipped a Storefront MCP cart → UCP Cart MCP migration guide (deadline Aug 31, 2026), after the Shopify claims pipeline piece and the MCP safety trilogy. More agentic commerce and Laravel MCP posts landing through early October. Next posts when the build teaches something worth publishing, not on a fake weekly cadence.",
     },
     {
       icon: "lucide:handshake",
