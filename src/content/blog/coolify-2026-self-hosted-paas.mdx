@@ -6,7 +6,7 @@ category: devops
 tags: [coolify, self-hosting, devops, docker, deployment]
 featured: false
 heroImage:
-  url: "/blog/coolify-2026-self-hosted-paas/hero.webp"
+  url: "/blog/coolify-2026-self-hosted-paas/hero-41f1dd71.webp"
   alt: "Pop-art illustration of a self-hosted PaaS control plane running on developer-owned servers"
 ---
 
@@ -32,7 +32,7 @@ Practically, a mature project means the things that bite you at 2am are handled 
 
 Underneath the dashboard, Coolify is an orchestrator for Docker. Every app, database, and service you deploy is a container. Your local environment and your production server run the same image, which is the entire point.
 
-![Docker architecture and containerization across a self-hosted PaaS](/blog/coolify-2026-self-hosted-paas/docker-containerization.webp)
+![Docker architecture and containerization across a self-hosted PaaS](/blog/coolify-2026-self-hosted-paas/docker-containerization-061d3cae.webp)
 
 When you push to your repo, Coolify pulls the code, builds an image, and starts the replacement container. Build sources are flexible: a Dockerfile if you have one, a `docker-compose.yaml` for multi-service stacks, static output for a plain frontend, or **Nixpacks** when you want zero config and can live with its opinions.
 
@@ -51,7 +51,7 @@ For the ground-floor version of this setup, I wrote it up in [Coolify and Docker
 
 This is the part people underrate. The service catalog is not a gimmick — it's the difference between "I'll set up Plausible this weekend" and "Plausible is running, next task."
 
-![Bento grid of one-click services available in Coolify](/blog/coolify-2026-self-hosted-paas/one-click-services.webp)
+![Bento grid of one-click services available in Coolify](/blog/coolify-2026-self-hosted-paas/one-click-services-99f7314e.webp)
 
 Worth splitting into two things that get conflated. **Databases are first-class resources**, not templates — eight of them: PostgreSQL, MySQL, MariaDB, MongoDB, Redis, DragonFly, KeyDB, and ClickHouse. They get their own connection UI, their own lifecycle, and — for the SQL and document stores — their own backup scheduling.
 
@@ -124,7 +124,7 @@ Do those three and your self-hosted setup is meaningfully harder to reach than m
 
 Strip away the features and the case for Coolify is one sentence: you stop renting your deployment pipeline.
 
-![Illustration of migrating off a managed cloud provider onto owned infrastructure](/blog/coolify-2026-self-hosted-paas/vendor-independence.webp)
+![Illustration of migrating off a managed cloud provider onto owned infrastructure](/blog/coolify-2026-self-hosted-paas/vendor-independence-b9a7f33c.webp)
 
 The math is not subtle. Ten small projects on a managed platform — a few hobby-tier databases, some build minutes, a bit of bandwidth — lands somewhere around $150–250/month once you're past free tiers. The same ten projects fit on a single mid-tier VPS with 8 vCPU and 16 GB of RAM, with headroom to spare. On Hetzner that's a low-double-digit euro bill on the ARM line, roughly double on x86. Either way it's an order of magnitude, not a percentage.
 
