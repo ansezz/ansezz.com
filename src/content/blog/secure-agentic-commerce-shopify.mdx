@@ -6,7 +6,7 @@ category: shopify
 tags: [shopify, agentic-commerce, mcp, security, ai, architecture]
 featured: true
 heroImage:
-  url: "/blog/secure-agentic-commerce-shopify/hero.webp"
+  url: "/blog/secure-agentic-commerce-shopify/hero-bfdc7525.webp"
   alt: "A secure AI shopping agent connected to a Shopify catalog, APIs, checkout, and human approval"
 ---
 
@@ -72,7 +72,7 @@ merchant capabilities ∩ agent capabilities = negotiated capabilities
 
 Only compatible capabilities become active. Extensions — `dev.ucp.shopping.discounts`, `dev.ucp.shopping.buyer_consent`, `dev.ucp.shopping.fulfillment` — carry an `extends` field naming their parent capability, and they never auto-activate. If the parent isn't in the negotiated set, the extension drops out with it.
 
-![Diagram of UCP profile discovery, capability negotiation, and payment handler selection](/blog/secure-agentic-commerce-shopify/ucp-negotiation.webp)
+![Diagram of UCP profile discovery, capability negotiation, and payment handler selection](/blog/secure-agentic-commerce-shopify/ucp-negotiation-8774af38.webp)
 
 A trimmed platform profile, showing the shape rather than a complete document:
 
@@ -226,7 +226,7 @@ if (!hash_equals($expected, $receivedSignature)) {
 
 Never verify an HMAC over a parsed and re-serialized JSON object. Whitespace and key ordering change the bytes. Verify the original payload.
 
-![Security layers: scoped credentials, HMAC verification, signed requests, and a protected checkout](/blog/secure-agentic-commerce-shopify/security-layers.webp)
+![Security layers: scoped credentials, HMAC verification, signed requests, and a protected checkout](/blog/secure-agentic-commerce-shopify/security-layers-b47ff06e.webp)
 
 ## Human approval is a protocol state
 
