@@ -7,7 +7,7 @@ tags: [shopify, agentic-commerce, mcp, agentic-ai, ai]
 featured: true
 draft: false
 heroImage:
-  url: "/blog/migrate-storefront-mcp-cart-to-ucp/hero-8723cf75.webp"
+  url: "/blog/migrate-storefront-mcp-cart-to-ucp/hero-0958b96c.webp"
   alt: "Comic split: deprecated Storefront MCP cart on /api/mcp vs cyan robot pushing UCP Cart MCP at /api/ucp/mcp"
 ---
 
@@ -86,7 +86,7 @@ When the buyer is ready to pay, pass the cart `id` as `cart_id` into `create_che
 
 ## PUT semantics will break naive agents
 
-![Confused agent holding a partial PATCH note next to a PUT semantics warning and a cart carrying full line_items, context, and attribution](/blog/migrate-storefront-mcp-cart-to-ucp/put-semantics-60254f42.webp)
+![Confused agent holding a partial PATCH note next to a PUT semantics warning and a cart carrying full line_items, context, and attribution](/blog/migrate-storefront-mcp-cart-to-ucp/put-semantics-2e94c6cc.webp)
 
 This is the sharp edge of the migration.
 
@@ -124,7 +124,7 @@ This split matches the [MCP vs A2A vs ACP](/blog/mcp-vs-a2a-vs-acp/) idea: pick 
 
 ## Migration checklist for agents on /api/mcp
 
-![Migration checklist clipboard for moving agent carts to UCP Cart MCP](/blog/migrate-storefront-mcp-cart-to-ucp/checklist-9a7b5f9d.webp)
+![Migration checklist clipboard for moving agent carts to UCP Cart MCP](/blog/migrate-storefront-mcp-cart-to-ucp/checklist-637f2dbc.webp)
 
 Run this against every agent, skill, and integration that still mentions Storefront MCP carts:
 

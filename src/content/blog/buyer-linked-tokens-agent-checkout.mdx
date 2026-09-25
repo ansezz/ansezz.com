@@ -7,7 +7,7 @@ tags: [shopify, agentic-commerce, security, mcp, ai, agentic-ai]
 featured: false
 draft: false
 heroImage:
-  url: "/blog/buyer-linked-tokens-agent-checkout/hero-2f88bc09.webp"
+  url: "/blog/buyer-linked-tokens-agent-checkout/hero-bda22a7c.webp"
   alt: "Comic pipeline: Shop OAuth to token exchange to JWT redeem to ~60 minute buyer-linked token"
 ---
 
@@ -32,7 +32,7 @@ Think of it as identity linking for agentic checkout, not as a forever API key.
 
 ## The three-step chain (server-side)
 
-![Warning: never put client_secret in browser or mobile; run exchange on your server](/blog/buyer-linked-tokens-agent-checkout/server-side-2e8400d6.webp)
+![Warning: never put client_secret in browser or mobile; run exchange on your server](/blog/buyer-linked-tokens-agent-checkout/server-side-5bf0995c.webp)
 
 **Confidential client secret stays on a server you control.** Public clients cannot complete this flow safely. Do not ship the secret in browser or mobile binaries.
 
@@ -69,7 +69,7 @@ For merchant checkout, discovery points at the store's authorization server; set
 
 ## TTL reality: 60s grant, ~60 min token, no refresh
 
-![Grant expires in 60 seconds single-use; buyer-linked token lasts about 60 minutes with no refresh](/blog/buyer-linked-tokens-agent-checkout/ttl-3b978241.webp)
+![Grant expires in 60 seconds single-use; buyer-linked token lasts about 60 minutes with no refresh](/blog/buyer-linked-tokens-agent-checkout/ttl-fee2ff0c.webp)
 
 Two clocks, often confused:
 
