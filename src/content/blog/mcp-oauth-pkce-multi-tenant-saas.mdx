@@ -7,7 +7,7 @@ tags: [laravel, mcp, security, multi-tenancy, ai, agentic-ai]
 featured: false
 draft: false
 heroImage:
-  url: "/blog/mcp-oauth-pkce-multi-tenant-saas/hero-fee75ac5.webp"
+  url: "/blog/mcp-oauth-pkce-multi-tenant-saas/hero-699dfa1c.webp"
   alt: "Comic: PKCE S256 required and client id as HTTPS metadata document URL"
 ---
 
@@ -65,11 +65,11 @@ Mcp::oAuthRoutesFor(
 
 This also fixed a nasty 0.x footgun: calling `redirect()` repeatedly could DCR a **new** client every time. Metadata documents stop that churn.
 
-![Common agent auth failure checklist](/blog/mcp-oauth-pkce-multi-tenant-saas/failures-520ef931.webp)
+![Common agent auth failure checklist](/blog/mcp-oauth-pkce-multi-tenant-saas/failures-8071d83c.webp)
 
 ## Multi-tenant: bind workspace at consent
 
-![Consent picks workspace; token carries tenant id enforced on tools](/blog/mcp-oauth-pkce-multi-tenant-saas/tenant-7517435e.webp)
+![Consent picks workspace; token carries tenant id enforced on tools](/blog/mcp-oauth-pkce-multi-tenant-saas/tenant-e39adf8c.webp)
 
 Scopes alone do not name a tenant. A token with `mcp:use` (or your custom scopes) that is not bound to workspace `acme-eu` will happily call tools until your handler guesses wrong.
 

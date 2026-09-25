@@ -7,7 +7,7 @@ tags: [shopify, rag, ai, llm, agentic-commerce, pgvector]
 featured: false
 draft: false
 heroImage:
-  url: "/blog/commerce-rag-is-not-document-rag/hero-32b03adf.webp"
+  url: "/blog/commerce-rag-is-not-document-rag/hero-ea0d7b7c.webp"
   alt: "Comic split: PDF LangChain demo vs catalog stack with hybrid retrieve and commerce rank"
 ---
 
@@ -57,7 +57,7 @@ Practical embedding content:
 
 If you are on pgvector in Laravel, the hybrid pattern still holds: SQL `tsvector` / external search engine for lexical, ANN for semantic, fuse, then rank. Stack choice is secondary to the split. See [picking the right RAG stack](/blog/picking-the-right-rag-stack/) when you are still selecting stores.
 
-![Pipeline strip: BM25, vector ANN, RRF fusion, then rank and filters](/blog/commerce-rag-is-not-document-rag/hybrid-rank-a1d7865b.webp)
+![Pipeline strip: BM25, vector ANN, RRF fusion, then rank and filters](/blog/commerce-rag-is-not-document-rag/hybrid-rank-bd01484c.webp)
 
 ## Stage 2: commerce ranking is not optional
 
@@ -80,7 +80,7 @@ Do not pretend one cosine score encodes margin. It does not.
 
 ## Keep volatile fields out of the vector
 
-![Do not embed price stock margin; pull them live into rank layer](/blog/commerce-rag-is-not-document-rag/volatile-fields-e0e1631f.webp)
+![Do not embed price stock margin; pull them live into rank layer](/blog/commerce-rag-is-not-document-rag/volatile-fields-9dd3a34c.webp)
 
 Common failure mode: concatenate `"price: $49 in stock: 3 margin: high"` into the embedding text. Overnight a sale and a sell-through change the truth; the vector still argues yesterday.
 

@@ -7,7 +7,7 @@ tags: [laravel, mcp, architecture, ai, agentic-ai, performance]
 featured: false
 draft: false
 heroImage:
-  url: "/blog/stateless-mcp-servers-laravel/hero-cfd7a7ad.webp"
+  url: "/blog/stateless-mcp-servers-laravel/hero-26121bcc.webp"
   alt: "Comic: MCP session APIs gone; keep auth, idempotency, and correlation ids"
 ---
 
@@ -33,7 +33,7 @@ You do **not** lose:
 
 If a feature needed a session, give it a **first-class id** the client sends (workspace id, run id, approval id) in tool arguments or `_meta`.
 
-![Octane workers, queue jobs, and Redis/DB state as the scale path](/blog/stateless-mcp-servers-laravel/octane-queues-a017452c.webp)
+![Octane workers, queue jobs, and Redis/DB state as the scale path](/blog/stateless-mcp-servers-laravel/octane-queues-f7d194dc.webp)
 
 ## Scale with Octane and queues
 
@@ -56,7 +56,7 @@ Streaming tools (generators + SSE on web servers) still work for progress notifi
 
 ## Auth and idempotency become the session
 
-![params._meta carries protocol version and client features on each call](/blog/stateless-mcp-servers-laravel/meta-66238307.webp)
+![params._meta carries protocol version and client features on each call](/blog/stateless-mcp-servers-laravel/meta-56ea03dc.webp)
 
 Every mutation tool should already:
 

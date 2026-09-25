@@ -7,7 +7,7 @@ tags: [mcp, agentic-ai, security, architecture, ai, laravel]
 featured: false
 draft: false
 heroImage:
-  url: "/blog/hitl-gates-for-agent-mutations/hero-add682d6.webp"
+  url: "/blog/hitl-gates-for-agent-mutations/hero-da1ef70c.webp"
   alt: "Comic: tool call passes through a HITL gate then verify before celebrate"
 ---
 
@@ -19,7 +19,7 @@ This is the mutation half of [MCP first](/blog/mcp-first-is-the-new-mobile-first
 
 ## Which mutations need a gate
 
-![Risk classes: refunds, inventory writes, spend, credential rotate](/blog/hitl-gates-for-agent-mutations/risk-classes-51aa7916.webp)
+![Risk classes: refunds, inventory writes, spend, credential rotate](/blog/hitl-gates-for-agent-mutations/risk-classes-c4dae7cc.webp)
 
 Not every tool needs a human. Read-only lookups should be fast. Mutations that move money, stock, or trust should slow down.
 
@@ -53,7 +53,7 @@ Do not let the model invent an `approval_id`. Issue it from your system after a 
 
 ## Anti early-victory: verify after tools
 
-![Model claims refund done vs system checks order.refunds and audit row](/blog/hitl-gates-for-agent-mutations/verify-3994ec23.webp)
+![Model claims refund done vs system checks order.refunds and audit row](/blog/hitl-gates-for-agent-mutations/verify-4ca7aadc.webp)
 
 The failure mode is consistent across stacks:
 

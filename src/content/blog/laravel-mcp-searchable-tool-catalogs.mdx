@@ -7,7 +7,7 @@ tags: [laravel, mcp, agentic-ai, ai, architecture, claude]
 featured: false
 draft: false
 heroImage:
-  url: "/blog/laravel-mcp-searchable-tool-catalogs/hero-2b9b2217.webp"
+  url: "/blog/laravel-mcp-searchable-tool-catalogs/hero-a9c8079c.webp"
   alt: "Comic split: bloated all-tools context dump vs hot tools plus ToolSearch discovery"
 ---
 
@@ -75,7 +75,7 @@ Tune those before an agent can fan out ten heavy tools in one `execute_tools` ca
 
 ## When to expose vs discover
 
-![Two columns: expose always-listed tools vs discover via ToolSearch](/blog/laravel-mcp-searchable-tool-catalogs/expose-vs-discover-20fbb90f.webp)
+![Two columns: expose always-listed tools vs discover via ToolSearch](/blog/laravel-mcp-searchable-tool-catalogs/expose-vs-discover-1fd1aafc.webp)
 
 Use this as a decision table, not a vibe:
 
@@ -98,7 +98,7 @@ If your agent already struggles with wrong tool choice, searchable catalogs alon
 
 ## Cache hints: stop refetching discovery
 
-![Cache hint cards for tools/list, resources/read, non-cacheable tool calls, and ttlMs zero](/blog/laravel-mcp-searchable-tool-catalogs/cache-hints-43dc8881.webp)
+![Cache hint cards for tools/list, resources/read, non-cacheable tool calls, and ttlMs zero](/blog/laravel-mcp-searchable-tool-catalogs/cache-hints-7e868f3c.webp)
 
 Laravel MCP attaches **advisory** cache hints to responses that may be cached: server discovery, primitive listings, and resource reads. Defaults are conservative: private scope, `ttlMs` of zero (do not cache).
 
