@@ -11,9 +11,9 @@ heroImage:
   alt: "Comic split: deprecated Storefront MCP cart on /api/mcp vs cyan robot pushing UCP Cart MCP at /api/ucp/mcp"
 ---
 
-If your shopping agent still calls `get_cart` and `update_cart` on `https://{shop}.myshopify.com/api/mcp`, you are on borrowed time.
+If your shopping agent still calls `get_cart` and `update_cart` on `https://{shop}.myshopify.com/api/mcp`, you are running on deprecated tools.
 
-Shopify announced the deprecation on June 24, 2026. Those Storefront MCP cart tools stay up through **August 31, 2026**. After that, agents that never moved will fail mid-conversation while buyers still expect a cart.
+Shopify announced the deprecation on June 24, 2026. Maintenance for those Storefront MCP cart tools ended on **August 31, 2026**. Agents that have not moved are now on unmaintained tools, and they can fail mid-conversation while buyers still expect a cart.
 
 The replacement is **UCP Cart MCP** at `https://{shop-domain}/api/ucp/mcp`. Same commerce job. Different endpoint, tool set, and request shape. This post is the migration map: what breaks, what replaces it, and a checklist you can run against any agent still wired to `/api/mcp`.
 
@@ -137,13 +137,13 @@ Run this against every agent, skill, and integration that still mentions Storefr
 7. **Add UUID `idempotency-key`** for `cancel_cart`.
 8. **Parse `structuredContent.cart.messages`** for business outcomes (`not_found`, `quantity_adjusted`, and friends).
 9. **Wire checkout separately:** cart id into `create_checkout` only when the buyer commits.
-10. **Dogfood before August 31, 2026.** Hit a staging shop with create → update (full replace) → get → cancel → create_checkout.
+10. **Dogfood on staging before you cut over.** Hit a staging shop with create → update (full replace) → get → cancel → create_checkout.
 
 If you are still designing the product around agents rather than bolting MCP onto a human-only flow, the [MCP first](/blog/mcp-first-is-the-new-mobile-first/) framing helps: ship the cart tools and skills as the capability contract, then let the chat UI sit on top.
 
 ## Takeaways
 
-1. Storefront MCP `get_cart` / `update_cart` on `/api/mcp` are deprecated; maintenance runs through August 31, 2026.
+1. Storefront MCP `get_cart` / `update_cart` on `/api/mcp` are deprecated; maintenance ended August 31, 2026. Migrate now.
 2. Migrate cart traffic to UCP Cart MCP at `/api/ucp/mcp` with `create_cart`, `get_cart`, `update_cart`, and `cancel_cart`.
 3. Every request needs `meta.ucp-agent.profile`; cancel also needs a UUID idempotency key.
 4. `update_cart` is full replacement. Partial payloads wipe omitted fields.
