@@ -1,6 +1,7 @@
 ---
 import Page from "@/layouts/Page.astro";
 import ToolMeta from "@/components/tools/ToolMeta.astro";
+import ShareLink from "@/components/tools/ShareLink.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
@@ -615,6 +616,7 @@ const relatedLinks = [
       >
       </p>
     </NeoCard>
+    <div class="mt-6"><ShareLink /></div>
   </section>
 
   <!-- Explainer -->
@@ -736,10 +738,12 @@ const relatedLinks = [
       {
         faq.map((item) => (
           <div class="border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px] p-5">
-            <h3 class="heading mb-2 text-lg leading-tight uppercase">
+            <h3 class="heading mb-2 text-lg leading-tight [overflow-wrap:anywhere] uppercase">
               {item.q}
             </h3>
-            <p class="text-sm leading-relaxed opacity-90">{item.a}</p>
+            <p class="text-sm leading-relaxed [overflow-wrap:anywhere] opacity-90">
+              {item.a}
+            </p>
           </div>
         ))
       }

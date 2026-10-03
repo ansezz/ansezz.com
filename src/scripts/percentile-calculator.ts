@@ -5,6 +5,7 @@
 // percentile you asked for (~10 ÷ (1 − p) values), and a bucketed histogram.
 // Everything runs on the values in the textarea; nothing is transmitted.
 
+import { bindUrlState } from "@/lib/url-state";
 type Method = "nearest" | "linear";
 type Scale = "linear" | "log";
 type UnitKey = "ms" | "s" | "us" | "none";
@@ -833,5 +834,6 @@ function init(): void {
 
 init();
 document.addEventListener("astro:after-swap", init);
+bindUrlState("percentile-calculator-root");
 
 export {};

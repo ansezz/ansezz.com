@@ -2,8 +2,37 @@
 // Crypto API. Text is UTF-8 encoded with TextEncoder; a file is read into an
 // ArrayBuffer and handed straight to crypto.subtle.digest(). Nothing is
 // uploaded. MD5 is absent because Web Crypto deliberately does not implement it.
+// With a key filled in, every row switches to HMAC with that hash
+// (crypto.subtle.importKey + sign). The key is never stored or sent.
 
 type Format = "hex" | "base64";
+type KeyEncoding = "utf8" | "hex" | "base64";
+
+/** Decodes the HMAC key field. Returns null when the encoding is invalid. */
+function keyBytes(
+  value: string,
+  enc: KeyEncoding,
+): Uint8Array<ArrayBuffer> | null {
+  if (enc === "utf8") return new TextEncoder().encode(value);
+  if (enc === "hex") {
+    const clean = value.replace(/\s+/g, "").replace(/^0x/i, "");
+    if (clean.length % 2 !== 0 || !/^[0-9a-f]*$/i.test(clean)) return null;
+    const out = new Uint8Array(clean.length / 2);
+    for (let i = 0; i < out.length; i += 1) {
+      out[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
+    }
+    return out;
+  }
+  try {
+    const clean = value.trim().replace(/-/g, "+").replace(/_/g, "/");
+    const binary = atob(clean);
+    const out = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) out[i] = binary.charCodeAt(i);
+    return out;
+  } catch {
+    return null;
+  }
+}
 
 // crypto.subtle.digest() has no streaming interface, so the whole payload has
 // to be resident in memory. Refuse politely past this instead of killing the tab.
@@ -79,6 +108,14 @@ function init(): void {
   const statusEl = document.getElementById("hash-status");
   const errorEl = document.getElementById("hash-error");
   const base64Radio = document.getElementById("hash-format-base64");
+  const keyInput = document.getElementById(
+    "hash-key",
+  ) as HTMLInputElement | null;
+  const keyEnc = document.getElementById(
+    "hash-key-enc",
+  ) as HTMLSelectElement | null;
+  const keyToggle = document.getElementById("hash-key-toggle");
+  const titleEl = document.getElementById("hash-title");
 
   const rows = Array.from(
     root.querySelectorAll<HTMLElement>("[data-hash-row]"),
@@ -173,9 +210,39 @@ function init(): void {
       if (mine === token) setStatus("Hashing…");
     }, BUSY_DELAY_MS);
 
+    const keyText = keyInput?.value ?? "";
+    const hmac = keyText !== "";
+    let key: Uint8Array<ArrayBuffer> | null = null;
+    if (hmac) {
+      key = keyBytes(keyText, (keyEnc?.value ?? "utf8") as KeyEncoding);
+      if (!key || key.length === 0) {
+        window.clearTimeout(busyTimer);
+        cache = null;
+        render();
+        setError("That key is not valid for the chosen key encoding.");
+        setStatus("Bad key");
+        return;
+      }
+    }
+    root!.querySelectorAll<HTMLElement>("[data-hash-name]").forEach((el) => {
+      el.textContent = `${hmac ? "HMAC-" : ""}${el.dataset.hashName}`;
+    });
+    if (titleEl) titleEl.textContent = hmac ? "▸ HMAC tags" : "▸ Digests";
+
     try {
       const pairs = await Promise.all(
         algorithms.map(async (algorithm) => {
+          if (key) {
+            const k = await digest.importKey(
+              "raw",
+              key,
+              { name: "HMAC", hash: algorithm },
+              false,
+              ["sign"],
+            );
+            const buffer = await digest.sign("HMAC", k, bytes);
+            return [algorithm, new Uint8Array(buffer)] as const;
+          }
           const buffer = await digest.digest(algorithm, bytes);
           return [algorithm, new Uint8Array(buffer)] as const;
         }),
@@ -184,7 +251,9 @@ function init(): void {
       cache = new Map(pairs);
       setError(null);
       render();
-      setStatus(`Hashed ${label}`);
+      setStatus(
+        key ? `HMAC of ${label}, ${key.length}-byte key` : `Hashed ${label}`,
+      );
     } catch (err) {
       if (mine !== token) return;
       cache = null;
@@ -249,6 +318,15 @@ function init(): void {
   });
 
   clearBtn?.addEventListener("click", () => clearFile(true));
+  keyInput?.addEventListener("input", scheduleRun);
+  keyEnc?.addEventListener("change", () => void run());
+  keyToggle?.addEventListener("click", () => {
+    if (!keyInput) return;
+    const reveal = keyInput.type === "password";
+    keyInput.type = reveal ? "text" : "password";
+    keyToggle.setAttribute("aria-pressed", reveal ? "true" : "false");
+    keyToggle.textContent = reveal ? "Hide" : "Show";
+  });
 
   root
     .querySelectorAll<HTMLInputElement>("[name='hash-format']")

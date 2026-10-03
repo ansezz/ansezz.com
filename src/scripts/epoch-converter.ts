@@ -4,6 +4,7 @@
 // Intl.RelativeTimeFormat. Also converts a wall-clock date back to epoch.
 // Everything is computed locally — no network calls.
 
+import { bindUrlState } from "@/lib/url-state";
 type Unit = "seconds" | "milliseconds" | "microseconds" | "nanoseconds";
 
 const UNITS: readonly Unit[] = [
@@ -678,5 +679,6 @@ function init(): void {
 
 init();
 document.addEventListener("astro:after-swap", init);
+bindUrlState("epoch-root");
 
 export {};

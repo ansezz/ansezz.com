@@ -2,6 +2,7 @@
 // Size units switch between decimal (10^3) and binary (2^10); link rates are
 // always decimal because that is how network gear and ISPs quote them.
 
+import { bindUrlState } from "@/lib/url-state";
 type SizeUnit = "KB" | "MB" | "GB" | "TB";
 type SpeedUnit = "Kbps" | "Mbps" | "Gbps" | "MBps";
 
@@ -348,5 +349,6 @@ function init(): void {
 
 init();
 document.addEventListener("astro:after-swap", init);
+bindUrlState("transfer-time-calculator-root");
 
 export {};

@@ -8,13 +8,14 @@ import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
+import { createHmac } from "node:crypto";
 
 const tool = getTool("/tools/shopify-hmac-verifier/");
 
 const TOOL_NAME = "Shopify Webhook HMAC Verifier";
 const TOOL_PATH = "/tools/shopify-hmac-verifier/";
 const TOOL_DESCRIPTION =
-  "Free Shopify webhook HMAC verifier. Paste the raw body, the X-Shopify-Hmac-Sha256 header, and your client secret — checked in your browser, never uploaded.";
+  "Free Shopify HMAC verifier for webhooks, app proxy requests and OAuth callbacks. Paste the body or URL and your client secret. Checked in your browser, never uploaded.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -32,6 +33,44 @@ const DEMO_HMAC = "e4oNH7EgBPzCIZ8lu6PxgOoDtAQOj8JpSb+r/u2BmMk=";
 // Same object, re-serialised with indentation — the single most common reason
 // a verification that "should work" doesn't.
 const DEMO_BODY_PRETTY = JSON.stringify(JSON.parse(DEMO_BODY), null, 2);
+
+// App proxy and OAuth samples, signed at build time with the same throwaway
+// key, using the exact message rules the browser code applies.
+const sign = (msg: string) =>
+  createHmac("sha256", DEMO_KEY).update(msg).digest("hex");
+const PROXY_PARAMS: [string, string][] = [
+  ["shop", "demo-store.myshopify.com"],
+  ["path_prefix", "/apps/loyalty"],
+  ["timestamp", "1767225600"],
+  ["logged_in_customer_id", "7044"],
+];
+const proxyMessage = [...PROXY_PARAMS]
+  .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+  .map(([k, v]) => `${k}=${v}`)
+  .join("");
+const DEMO_PROXY_URL = `https://demo-store.myshopify.com/apps/loyalty/points?${new URLSearchParams(
+  [...PROXY_PARAMS, ["signature", sign(proxyMessage)]],
+).toString()}`;
+const OAUTH_PARAMS: [string, string][] = [
+  ["code", "0907a61c0c8d55e99db179b68161bc00"],
+  ["shop", "demo-store.myshopify.com"],
+  ["state", "0.6784241404160823"],
+  ["timestamp", "1767225600"],
+  ["host", "YWRtaW4uc2hvcGlmeS5jb20vc3RvcmUvZGVtby1zdG9yZQ"],
+];
+const oauthMessage = new URLSearchParams(
+  [...OAUTH_PARAMS].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
+).toString();
+const DEMO_OAUTH_URL = `https://your-app.example.com/auth/callback?${new URLSearchParams(
+  [...OAUTH_PARAMS, ["hmac", sign(oauthMessage)]],
+).toString()}`;
+const pillCls =
+  "mono border-ink bg-bg-alt shadow-neo-xs inline-flex min-h-10 items-center rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-neo-sm";
+const MODES = [
+  { id: "webhook", label: "Webhook" },
+  { id: "proxy", label: "App proxy" },
+  { id: "oauth", label: "OAuth / install" },
+];
 
 const causes = [
   {
@@ -62,7 +101,7 @@ const causes = [
   {
     icon: "lucide:link-2",
     title: "Wrong signature scheme entirely",
-    body: "App proxy requests are not webhooks. They are signed with a hex digest over sorted query parameters and arrive in a signature query parameter, not in X-Shopify-Hmac-Sha256.",
+    body: "App proxy requests are not webhooks. They are signed with a hex digest over sorted query parameters and arrive in a signature query parameter, not in X-Shopify-Hmac-Sha256. Switch to the App proxy mode above to check one.",
   },
 ];
 
@@ -89,7 +128,11 @@ const faq = [
   },
   {
     q: "Does this tool work for Shopify app proxy signatures?",
-    a: "No — app proxy requests use a different scheme. Shopify sorts the query parameters, concatenates them, computes HMAC-SHA256 with the same client secret, and sends a lowercase hex digest in the signature query parameter rather than a base64 digest in a header. This page verifies webhook deliveries only. Mandatory compliance webhooks such as customers/data_request use the standard webhook scheme, so those do work here.",
+    a: "Yes, pick the App proxy mode and paste the full request URL. Shopify removes the signature parameter, sorts the rest by key, writes each one as key=value with multiple values joined by commas, and joins them with no separator at all. It signs that string with HMAC-SHA256 using your client secret and sends a lowercase hex digest in the signature parameter. The tool shows you the exact string it signed, which is the fastest way to spot a missing or decoded parameter.",
+  },
+  {
+    q: "How do I verify the hmac on a Shopify OAuth or install request?",
+    a: "Pick the OAuth / install mode and paste the callback URL. Shopify removes the hmac parameter, sorts the rest by key, joins them as a normal query string with & between pairs, and signs it with HMAC-SHA256 using your client secret. The digest is lowercase hex. The same scheme covers the install request, the OAuth callback and links from the Shopify admin into your app. Check the timestamp too, and reject old requests so a captured URL cannot be replayed.",
   },
 ];
 
@@ -249,7 +292,7 @@ const relatedLinks = [
   description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="Shopify Webhook HMAC Verifier."
-  intro="Paste the raw webhook body, the X-Shopify-Hmac-Sha256 header and your client secret. The digest is computed with the Web Crypto API on this page — your secret never leaves the browser."
+  intro="Check a webhook body against its X-Shopify-Hmac-Sha256 header, or an app proxy or OAuth URL against its signature. The digest is computed with the Web Crypto API on this page, and your secret never leaves the browser."
   structuredData={[breadcrumbLd, appLd, faqLd, howToLd]}
 >
   <section class="mx-auto max-w-4xl px-5 pb-6">
@@ -267,9 +310,28 @@ const relatedLinks = [
 
   <section class="mx-auto max-w-4xl px-5 pb-16" id="shmac-root">
     <NeoCard tone="paper" shadow="md" class="space-y-5">
+      <div
+        class="flex flex-wrap gap-2"
+        role="group"
+        aria-label="What are you verifying?"
+      >
+        {
+          MODES.map((m, i) => (
+            <button
+              type="button"
+              data-shmac-mode={m.id}
+              aria-pressed={i === 0 ? "true" : "false"}
+              class={`${pillCls} text-[11px]`}
+            >
+              {m.label}
+            </button>
+          ))
+        }
+      </div>
       <div class="space-y-2">
         <label
           for="shmac-body"
+          id="shmac-body-label"
           class="mono block text-[11px] font-bold tracking-widest uppercase"
         >
           Raw request body
@@ -284,33 +346,57 @@ const relatedLinks = [
         <div class="flex flex-wrap gap-2">
           <button
             type="button"
+            data-shmac-example="webhook"
             data-shmac-body={DEMO_BODY}
             data-shmac-header={DEMO_HMAC}
             data-shmac-secret={DEMO_KEY}
-            class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-green hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            class={`${pillCls} hover:bg-green`}
           >
             Load a passing example
           </button>
           <button
             type="button"
+            data-shmac-example="webhook"
             data-shmac-body={DEMO_BODY_PRETTY}
             data-shmac-header={DEMO_HMAC}
             data-shmac-secret={DEMO_KEY}
-            class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-red hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            class={`${pillCls} hover:bg-red`}
           >
             Same payload, pretty-printed
           </button>
           <button
             type="button"
+            data-shmac-example="proxy"
+            data-shmac-body={DEMO_PROXY_URL}
+            data-shmac-header=""
+            data-shmac-secret={DEMO_KEY}
+            hidden
+            class={`${pillCls} hover:bg-green`}
+          >
+            Load an app proxy example
+          </button>
+          <button
+            type="button"
+            data-shmac-example="oauth"
+            data-shmac-body={DEMO_OAUTH_URL}
+            data-shmac-header=""
+            data-shmac-secret={DEMO_KEY}
+            hidden
+            class={`${pillCls} hover:bg-green`}
+          >
+            Load an OAuth callback example
+          </button>
+          <button
+            type="button"
             id="shmac-clear"
-            class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            class={`${pillCls} hover:bg-yellow`}
           >
             Clear everything
           </button>
         </div>
       </div>
 
-      <div class="space-y-2">
+      <div class="space-y-2" id="shmac-header-group">
         <label
           for="shmac-header"
           class="mono block text-[11px] font-bold tracking-widest uppercase"
@@ -348,7 +434,7 @@ const relatedLinks = [
             type="button"
             id="shmac-secret-toggle"
             aria-pressed="false"
-            class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-[4px] border-[2px] px-3 py-2 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex min-h-11 items-center gap-1.5 rounded-[4px] border-[2px] px-3 py-2 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
           >
             <Icon name="lucide:eye" class="h-3.5 w-3.5" aria-hidden="true" />
             <span id="shmac-secret-toggle-label">Show</span>
@@ -373,7 +459,10 @@ const relatedLinks = [
       <div
         class="border-ink flex flex-wrap items-center justify-between gap-3 border-t-[2.5px] pt-4"
       >
-        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+        <p
+          id="shmac-scheme"
+          class="mono text-[11px] font-bold tracking-widest uppercase"
+        >
           HMAC-SHA256 · base64 · recomputed as you type
         </p>
         <p
@@ -445,7 +534,7 @@ const relatedLinks = [
             <button
               type="button"
               id="shmac-copy"
-              class="mono border-ink bg-paper shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex items-center gap-1.5 rounded-full border-[2px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+              class="mono border-ink bg-paper shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex min-h-10 items-center gap-1.5 rounded-full border-[2px] px-2.5 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
             >
               <Icon name="lucide:copy" class="h-3 w-3" aria-hidden="true" />
               <span id="shmac-copy-label">Copy</span>
@@ -458,8 +547,11 @@ const relatedLinks = [
           >
         </div>
         <div class="border-ink bg-bg-alt rounded-[4px] border-[2.5px] p-3">
-          <p class="mono mb-2 text-[10px] font-bold tracking-widest uppercase">
-            Supplied header
+          <p
+            id="shmac-supplied-label"
+            class="mono mb-2 text-[10px] font-bold tracking-widest uppercase"
+          >
+            From the header
           </p>
           <code
             id="shmac-supplied"
@@ -633,11 +725,15 @@ const relatedLinks = [
       the work on the request thread.
     </p>
     <p class="mt-4 text-base leading-relaxed">
-      One scope note. This page verifies webhook deliveries. App proxy requests
-      are signed differently — sorted query parameters, a hex digest, a
-      <code class="mono font-bold">signature</code> query parameter instead of a header
-      — so a perfectly valid proxy request will never verify here, and that is correct
-      behaviour rather than a bug in either of us.
+      App proxy requests and OAuth callbacks use the same secret but sign
+      something else. An app proxy request signs its sorted query parameters,
+      joined with no separator, and puts a hex digest in the
+      <code class="mono font-bold">signature</code> parameter. An install request,
+      an OAuth callback or an admin link signs its sorted parameters as a normal query
+      string and puts a hex digest in the
+      <code class="mono font-bold">hmac</code> parameter. Use the mode buttons at
+      the top to check either one. The tool shows the exact string it signed, so you
+      can compare it with what your server builds.
     </p>
   </section>
 

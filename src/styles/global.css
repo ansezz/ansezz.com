@@ -509,3 +509,17 @@ article.prose tbody th:last-child {
     page-break-inside: avoid;
   }
 }
+
+/* Tool pages: give pills, buttons and selects a 40px tap height on touch
+   screens and narrow viewports. Add .tap-exempt to opt a control out. */
+@layer base {
+  @media (pointer: coarse), (max-width: 767px) {
+    main[data-tools] :is(button, select, a.rounded-full):not(.tap-exempt) {
+      min-height: 2.5rem;
+    }
+    main[data-tools] a.rounded-full:not(.tap-exempt) {
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+}

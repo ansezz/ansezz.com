@@ -157,7 +157,7 @@ const CHARSETS: Record<ToggleKey, string> = {
   symbols: SYMBOLS,
 };
 
-type Mode = "custom" | "hex" | "base64url" | "passphrase";
+type Mode = "custom" | "hex" | "base64url" | "passphrase" | "laravel";
 
 interface Preset {
   mode: Mode;
@@ -176,6 +176,7 @@ const PRESETS: Record<string, Preset> = {
     toggles: { lower: true, upper: true, digits: true, symbols: false },
   },
   appsecret: { mode: "hex", length: 64 },
+  laravel: { mode: "laravel" },
   passphrase: { mode: "passphrase", words: 8 },
 };
 
@@ -248,6 +249,16 @@ function randomPassphrase(words: number, nextByte: () => number): string {
     parts.push(WORDS[randomIndex(WORDS.length, nextByte)] ?? "");
   }
   return parts.join("-");
+}
+
+// Laravel APP_KEY: "base64:" + standard base64 of 32 random bytes, the same
+// shape `php artisan key:generate` writes for the default AES-256-CBC cipher.
+function laravelAppKey(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return `base64:${btoa(bin)}`;
 }
 
 function entropyBits(length: number, size: number): number {
@@ -354,7 +365,7 @@ function init(): void {
 
   function paintMode(): void {
     const fixedAlphabet = mode === "hex" || mode === "base64url";
-    stringControls.hidden = mode === "passphrase";
+    stringControls.hidden = mode === "passphrase" || mode === "laravel";
     passphraseControls.hidden = mode !== "passphrase";
     charsetSet.disabled = fixedAlphabet;
     charsetSet.classList.toggle("opacity-50", fixedAlphabet);
@@ -382,6 +393,17 @@ function init(): void {
     output.rows = Math.min(14, Math.max(4, count));
 
     const nextByte = createByteSource();
+
+    if (mode === "laravel") {
+      setError(null);
+      output.value = Array.from({ length: count }, laravelAppKey).join("\n");
+      showStats(
+        256,
+        "32 random bytes × 8 = 256 bits per key",
+        "base64: prefix + standard base64 of 32 bytes (AES-256-CBC)",
+      );
+      return;
+    }
 
     if (mode === "passphrase") {
       const words = clampInt(wordsInput.value, 3, 12, 8);
