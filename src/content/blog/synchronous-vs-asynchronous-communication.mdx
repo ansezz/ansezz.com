@@ -69,7 +69,11 @@ In a technical stack, this is done with message queues like Redis or Amazon SQS,
   <div slot="after">An email. The job goes on a queue, the user gets an answer right away, and a background worker does the rest.</div>
 </BeforeAfter>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/synchronous-vs-asynchronous-communication/inline-1.webp"
+  alt="Comic panel of a robot stuck on the phone with a long queue behind it, next to a robot dropping envelopes into a busy conveyor"
+  caption="Synchronous calls make everyone wait. Queues let the work happen in the background."
+/>
 
 ### What belongs in the background
 
@@ -132,7 +136,11 @@ Worse, if your endpoint keeps failing, Shopify removes the webhook subscription 
 
 The best practice for [agentic commerce on Shopify](/blog/agentic-commerce-shopify/) is to receive the webhook, validate the signature, dispatch a Laravel Job, and return the response immediately. This keeps your app responsive and keeps Shopify happy with your delivery rates.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/synchronous-vs-asynchronous-communication/inline-2.webp"
+  alt="Comic panel of a doorman robot stamping a parcel instantly next to a stopwatch and passing it to a back-room worker"
+  caption="Answer the webhook fast, then do the real work in a queued job."
+/>
 
 <TryThis>
 Time your webhook route end to end. If anything after the HMAC check takes more than a few hundred milliseconds, move it into a job and return `200` first.

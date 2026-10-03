@@ -40,7 +40,11 @@ Ansible is a **configuration management** tool. Once the server exists, Ansible 
 
 It is designed to manage the internal state of the operating system and the applications running on it.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/terraform-vs-ansible/inline-1.webp"
+  alt="Comic panel of a builder robot craning a server rack into place while another robot carries software boxes into the finished room"
+  caption="Terraform builds the infrastructure. Ansible configures what runs on it."
+/>
 
 | Feature          | Terraform                   | Ansible                       |
 | :--------------- | :-------------------------- | :---------------------------- |
@@ -118,7 +122,11 @@ Ansible is **stateless**. It doesn't keep a record of what it did yesterday. It 
 
 If a server is down, Ansible reports a failure, but it has no "global view" of your infrastructure the way Terraform does. This makes Ansible easier to start with but harder to use for tracking the full lifecycle of high-level cloud resources.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/terraform-vs-ansible/inline-2.webp"
+  alt="Comic panel of a librarian robot with a glowing ledger spotting a server dial changed by hand"
+  caption="State lets Terraform spot changes someone made by hand."
+/>
 
 <TryThis>
 Run `terraform plan -refresh-only` against production. Anything it reports is drift someone introduced by hand, and a good first list of what to bring back under code.

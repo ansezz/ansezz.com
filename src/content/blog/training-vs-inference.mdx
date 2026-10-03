@@ -42,7 +42,11 @@ Training is usually a burst-heavy, high-upfront-cost activity. You might spend t
 
 Once the model reaches a satisfactory level of accuracy, the training phase ends. The model's weights are "frozen," and it is ready to be used in the real world.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/training-vs-inference/inline-1.webp"
+  alt="Comic panel of a sweating student robot buried in books next to red-hot servers and a jar spilling coins"
+  caption="Training is the slow, expensive part you do once in a while."
+/>
 
 ## The power of inference: applying knowledge
 
@@ -177,7 +181,11 @@ In a RAG system, you search a vector database for relevant information and "stuf
 
 Be careful, though. If you don't optimize your vector search, your inference latency will explode. You can read more about avoiding [RAG mistakes in production](/blog/7-rag-mistakes-production/) to keep your systems lean.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/training-vs-inference/inline-2.webp"
+  alt="Comic panel of a doctor robot talking to a patient while a helper robot pulls a fresh card from a filing cabinet"
+  caption="RAG hands the model fresh facts at inference time."
+/>
 
 <Takeaway>
 - **Training is about learning.** It is a one-time or periodic compute-heavy process that builds the model's intelligence.

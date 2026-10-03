@@ -59,7 +59,11 @@ Measuring throughput gives you the real picture of your system health. It tells 
 
 If your throughput is far lower than your bandwidth, you have a bottleneck that more "lanes" will not fix.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/bandwidth-vs-throughput/inline-1.webp"
+  alt="Comic panel of an empty wide highway with cars jammed at a tiny toll booth while a robot holds a useless giant pipe"
+  caption="More bandwidth does not fix a bottleneck somewhere else."
+/>
 
 <TryThis>
 Run `iperf3` between your app server and your database server to measure raw network throughput. Then time a real query or file transfer over the same path. The gap between the two numbers is your application overhead.
@@ -147,7 +151,11 @@ Closing this gap is how you get a "snappy" feel for your web applications.
 
 A well-designed system on a moderate 100 Mbps link will often outperform a bloated system on a 1 Gbps link. Focus on the efficiency of the data flow rather than the width of the pipe.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/bandwidth-vs-throughput/inline-2.webp"
+  alt="Comic panel of a mechanic robot comparing a maxed-out gauge with a barely moving one"
+  caption="Measure the gap between available bandwidth and delivered throughput."
+/>
 
 <Takeaway>
 - **Bandwidth is capacity**: It is the maximum potential of your network link, not the actual speed of your data.

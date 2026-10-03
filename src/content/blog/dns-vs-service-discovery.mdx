@@ -44,7 +44,11 @@ A service discovery system like Consul, or the internal registry in Kubernetes, 
 
 When a new container starts, it registers itself with the catalog. When it shuts down, it is removed. This happens in milliseconds, far faster than traditional DNS propagation.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/dns-vs-service-discovery/inline-1.webp"
+  alt="Comic panel of one robot pointing at an old paper map while another watches a live radar screen"
+  caption="DNS is a map that can go stale. Service discovery is a live radar."
+/>
 
 <TryThis>
 List the internal hostnames your services call each other by. For each one, write down what updates the record when an instance dies. If the answer is "a person," you have a staleness risk.
@@ -101,7 +105,11 @@ This gives you a level of self-healing that plain DNS cannot, and it pairs natur
 
 If you are [hosting a SaaS on Docker](/blog/coolify-docker-saas-hosting/), automated health-aware routing is the difference between a minor blip and a major outage.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/dns-vs-service-discovery/inline-2.webp"
+  alt="Comic panel of a traffic-cop robot with a stethoscope stopping requests from reaching a sick server robot"
+  caption="Health checks keep traffic away from servers that are down."
+/>
 
 <TryThis>
 Add a `/health` endpoint to one service that checks its own dependencies (database, cache), not just "the process is up." Point your registry or load balancer at it.

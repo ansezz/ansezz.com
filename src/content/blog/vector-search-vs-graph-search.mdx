@@ -50,7 +50,11 @@ However, vector search is limited by its lack of structural awareness. It treats
 
 It has no built-in understanding that "User A" is the "CEO" of "Company B" unless those words sit together in a single text chunk.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/vector-search-vs-graph-search/inline-1.webp"
+  alt="Comic panel of a robot using a magnet to pull a cluster of similar glowing dots out of space"
+  caption="Vector search finds things that look alike, not things that are linked."
+/>
 
 <TryThis>
 Write down three real questions your users ask that need two facts from different documents to answer. Run them against your current retriever and check whether both facts come back.
@@ -116,7 +120,11 @@ This hybrid approach needs a solid DevOps foundation. Tools like Docker and Cool
 
 If you are exploring how to host these stacks, our article on [Coolify and self-hosted SaaS](/blog/coolify-self-hosted-saas/) is a good starting point for infrastructure management.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/vector-search-vs-graph-search/inline-2.webp"
+  alt="Comic panel of a detective robot shining a flashlight on a corkboard of pins connected by red string"
+  caption="GraphRAG finds a starting point with vectors, then follows the links."
+/>
 
 <TryThis>
 Before building a full graph, extract only the two or three entity types your users ask about most (for example products and suppliers) and the one relationship between them. See whether that alone fixes your multi-hop questions.

@@ -54,7 +54,11 @@ Most Pods contain a single container, but the ability to group several is a core
 
 This coupling lets them behave as if they were processes on the same server, while each stays isolated in its own container.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/container-vs-pod/inline-1.webp"
+  alt="Comic panel of two small container robots talking through a tin-can phone inside one glass capsule"
+  caption="Containers in the same Pod share one network address and talk over localhost."
+/>
 
 <TryThis>
 Run `kubectl get pod <name> -o jsonpath='{.spec.containers[*].name}'` on a few of your Pods. You will see how many of them are really one container, and which already carry a helper.
@@ -116,7 +120,11 @@ Kubernetes now has first-class sidecar support. An init container with `restartP
 
 This feature reached stable in Kubernetes v1.33, so reach for native sidecars over plain co-containers when ordering matters.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/container-vs-pod/inline-2.webp"
+  alt="Comic panel of a robot on a motorcycle with a helper robot in the sidecar holding a scroll and a shield"
+  caption="A sidecar handles logs, proxies or security next to the main app."
+/>
 
 <TryThis>
 If you have a log shipper or proxy that must be up before your app starts, move it from `spec.containers` to `spec.initContainers` with `restartPolicy: Always`.
