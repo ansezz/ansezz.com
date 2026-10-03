@@ -110,7 +110,7 @@ The image you built with Docker still runs fine because it follows the OCI image
 
 Together, the two make updates smooth. You can perform rolling deployments where Kubernetes replaces old pods with new ones in a controlled rollout. This keeps the service available throughout.
 
-If the new version has a bug, Kubernetes can automatically roll back to the previous stable image.
+If the new version has a bug, Kubernetes stops the rollout when health checks fail, and one command (`kubectl rollout undo`) takes you back to the previous stable image.
 
 <TryThis>
 Run `kubectl get nodes -o wide` on your cluster and look at the CONTAINER-RUNTIME column. It will most likely say containerd, not Docker.
