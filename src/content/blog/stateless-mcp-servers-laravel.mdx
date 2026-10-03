@@ -11,7 +11,15 @@ heroImage:
   alt: "Comic: MCP session APIs gone; keep auth, idempotency, and correlation ids"
 ---
 
-Laravel MCP 1.0 leans into protocol revision `2026-07-28`: **every request stands alone**. The `MCP-Session-Id` header is gone. `Request::sessionId()`, `setSessionId()`, and `SessionInitialized` are gone. If your tools cached "conversation state" under a session id, that design does not survive the upgrade.
+Laravel MCP 1.0 leans into protocol revision `2026-07-28`: **every request stands alone**.
+
+<Summary>
+- The `MCP-Session-Id` header and the session APIs are gone in Laravel MCP 1.0.
+- Scale with Octane and queues, and keep durable state in Redis or your database under your own ids.
+- Auth, tenant checks and idempotency now do the job the session used to do.
+</Summary>
+
+The `MCP-Session-Id` header is gone. `Request::sessionId()`, `setSessionId()`, and `SessionInitialized` are gone. If your tools cached "conversation state" under a session id, that design does not survive the upgrade.
 
 That sounds scary until you remember how you already scale Laravel: **Octane workers**, **queues**, and **explicit keys**. Stateless MCP is the same idea with stricter honesty.
 
@@ -33,9 +41,17 @@ You do **not** lose:
 
 If a feature needed a session, give it a **first-class id** the client sends (workspace id, run id, approval id) in tool arguments or `_meta`.
 
-![Octane workers, queue jobs, and Redis/DB state as the scale path](/blog/stateless-mcp-servers-laravel/octane-queues-f7d194dc.webp)
+<TryThis>
+Search your code for `sessionId` and list every feature that depends on it. Each one needs its own explicit id.
+</TryThis>
 
 ## Scale with Octane and queues
+
+<Figure
+  src="/blog/stateless-mcp-servers-laravel/octane-queues-f7d194dc.webp"
+  alt="Comic pop-art panel: Octane workers, queue jobs, and Redis and database state as the scale path"
+  caption="Warm workers in front, queues behind, state in Redis or the database."
+/>
 
 HTTP MCP endpoints are ordinary Laravel routes (`Mcp::web`). Octane helps when you want warm workers and lower boot cost for chatty agents. Rules that already apply to Octane still apply:
 
@@ -43,7 +59,7 @@ HTTP MCP endpoints are ordinary Laravel routes (`Mcp::web`). Octane helps when y
 - Resolve tenant and auth **per request**
 - Prefer short tool handlers; push heavy work to queues
 
-Long-running work pattern:
+### The long-running work pattern
 
 1. Tool validates auth + input.
 2. Dispatch a job; return a structured `job_id` / status URL immediately.
@@ -54,9 +70,11 @@ That is more reliable than holding an SSE stream open for ten minutes of report 
 
 Streaming tools (generators + SSE on web servers) still work for progress notifications. Treat them as **transport**, not as durable session state.
 
-## Auth and idempotency become the session
+<TryThis>
+Take your slowest tool, make it dispatch a job and return a `job_id`, and add a `get_job_status` tool that reads progress.
+</TryThis>
 
-![params._meta carries protocol version and client features on each call](/blog/stateless-mcp-servers-laravel/meta-56ea03dc.webp)
+## Auth and idempotency become the session
 
 Every mutation tool should already:
 
@@ -67,6 +85,12 @@ Every mutation tool should already:
 5. Write an [audit line](/blog/mcp-auth-audit-logging-laravel/).
 
 Without MCP sessions, those five are not optional polish. They are how two Octane workers and a retried agent call stay coherent. See [MCP idempotency for Laravel mutations](/blog/mcp-idempotency-laravel-mutations/).
+
+<Figure
+  src="/blog/stateless-mcp-servers-laravel/meta-56ea03dc.webp"
+  alt="Comic pop-art panel: params._meta carries protocol version and client features on each call"
+  caption="Each call carries its own protocol version and client features in params._meta."
+/>
 
 For protocol `2026-07-28` HTTP clients, also send matching `MCP-Protocol-Version`, `Mcp-Method`, and (for calls) `Mcp-Name` headers. Mismatches return HTTP 400 with JSON-RPC `-32020`. Update feature tests that used bare `postJson`.
 
@@ -92,7 +116,9 @@ Pass your own identifiers:
 
 Log `app.correlation_id` (or your chosen key) beside tenant and user ids. Agents can resume by asking for status with that id. Humans can grep it in observability.
 
-Searchable catalogs and cache hints from Laravel MCP 1.0 ([searchable tool catalogs](/blog/laravel-mcp-searchable-tool-catalogs/)) also assume list/read responses may be cached while tool calls stay uncacheable. Stateless fits that model: discovery can be hot; mutations stay cold and keyed.
+Searchable catalogs and cache hints from Laravel MCP 1.0 ([searchable tool catalogs](/blog/laravel-mcp-searchable-tool-catalogs/)) also assume list/read responses may be cached while tool calls stay uncacheable.
+
+Stateless fits that model: discovery can be hot; mutations stay cold and keyed.
 
 ## Migration checklist from 0.9 session code
 
@@ -104,11 +130,14 @@ Searchable catalogs and cache hints from Laravel MCP 1.0 ([searchable tool catal
 6. Load-test Octane with concurrent tool calls for the same tenant.
 7. Document for agent authors: "no server session; send correlation + idempotency."
 
-
-
 ## What "stateless" does not mean
 
 Stateless MCP does not mean "forget the user." It means the **MCP transport** does not own a sticky session bag between JSON-RPC messages.
+
+<BeforeAfter beforeLabel="Session era" afterLabel="Stateless">
+  <div slot="before">The MCP session holds conversation state, wizard progress and auth context set once at initialize.</div>
+  <div slot="after">Each request carries identity. Your database carries history under ids you issued.</div>
+</BeforeAfter>
 
 Your product still has:
 
@@ -117,16 +146,18 @@ Your product still has:
 - Conversation threads in *your* tables if you build a chat product
 - Approval records waiting for a human
 
-Those live in application storage. The MCP server becomes a thin, horizontally scalable door into that storage. That is the same split you want for [multi-tenant Laravel](/blog/laravel-multi-tenancy/) APIs: the request carries identity; the database carries history.
+Those live in application storage. The MCP server becomes a thin, horizontally scalable door into that storage. That is the same split you want for [multi-tenant Laravel](/blog/laravel-multi-tenancy/) APIs.
+
+<PullQuote>The request carries identity; the database carries history.</PullQuote>
 
 When an agent "resumes" work, it should call a tool with the ids you issued earlier (`run_id`, `draft_id`, `approval_id`), not hope the same load balancer owns an in-memory map from last Tuesday.
 
-## Takeaways
-
-1. Laravel MCP 1.0 processes each request independently; MCP session APIs are removed.
-2. Scale with Octane and queues; keep durable state in Redis/DB under your own ids.
-3. Auth, tenant checks, and idempotency replace "remembered" session context.
-4. Modern calls carry protocol + capabilities in `params._meta` (and matching HTTP headers).
-5. Streaming is fine for progress; it is not a substitute for durable job state.
+<Takeaway>
+- Laravel MCP 1.0 processes each request independently; MCP session APIs are removed.
+- Scale with Octane and queues; keep durable state in Redis/DB under your own ids.
+- Auth, tenant checks, and idempotency replace "remembered" session context.
+- Modern calls carry protocol + capabilities in `params._meta` (and matching HTTP headers).
+- Streaming is fine for progress; it is not a substitute for durable job state.
+</Takeaway>
 
 If you deleted `MCP-Session-Id` tomorrow, which of your tools would still be safe under two parallel Octane workers retrying the same agent turn?
