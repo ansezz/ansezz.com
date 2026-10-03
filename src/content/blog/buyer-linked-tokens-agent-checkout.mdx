@@ -19,8 +19,6 @@ A Token-tier agent credential identifies **your app**. A **buyer-linked token** 
 - The grant lives about 60 seconds. The token lives about 60 minutes and never refreshes, so plan to remint.
 </Summary>
 
-That is the difference between "an agent is shopping" and "this buyer is shopping through an agent."
-
 As of Sep 2026, Shopify documents a UCP delegated identity provider flow: authorize with Shop (`accounts.shop.app`), exchange the Shop access token for a short-lived JWT grant, redeem that grant at Shopify for a buyer-linked JWT.
 
 The resulting token lasts about **60 minutes** and **does not refresh**. When it expires, remint from the Shop session.

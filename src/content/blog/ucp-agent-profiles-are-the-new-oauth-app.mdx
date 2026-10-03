@@ -28,9 +28,13 @@ Every Cart MCP and Checkout MCP call on Shopify asks for that URL in `meta.ucp-a
 
 No profile, no serious cart/checkout conversation.
 
-This post covers what to put in the profile, why cart and checkout belong together, and how Anonymous / Signed / Token tiers change what you can do. Cross-read [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/), [secure agentic commerce](/blog/secure-agentic-commerce-shopify/), and the [Storefront MCP cart → UCP migration](/blog/migrate-storefront-mcp-cart-to-ucp/).
+This post covers what to put in the profile, why cart and checkout belong together, and how Anonymous / Signed / Token tiers change what you can do.
 
-Official guides: [Define your agent profile](https://shopify.dev/docs/agents/get-started/profile) and [Auth and rate limiting](https://shopify.dev/docs/agents/profiles/auth-and-rate-limiting). Soften version pins with "as of Sep 2026" if your installed docs differ.
+Cross-read [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/), [secure agentic commerce](/blog/secure-agentic-commerce-shopify/), and the [Storefront MCP cart → UCP migration](/blog/migrate-storefront-mcp-cart-to-ucp/).
+
+Official guides: [Define your agent profile](https://shopify.dev/docs/agents/get-started/profile) and [Auth and rate limiting](https://shopify.dev/docs/agents/profiles/auth-and-rate-limiting).
+
+Version pins below are as of Sep 2026; check them against the current docs.
 
 ## What the profile is
 
@@ -127,7 +131,7 @@ Write down which tier your agent runs on today, and what it would take to reach 
 
 Think of the profile as your OAuth app listing plus capability manifest.
 
-<PullQuote>Merchants and platforms will judge you by what it claims and what your traffic tier can actually do.</PullQuote>
+<PullQuote>Merchants will judge your profile by what it claims and what your traffic tier can actually do.</PullQuote>
 
 ## Relation to MCP-first product design
 

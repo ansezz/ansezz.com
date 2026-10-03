@@ -11,7 +11,7 @@ heroImage:
   alt: "Comic split: bloated all-tools context dump vs hot tools plus ToolSearch discovery"
 ---
 
-Every tool you advertise to a model costs tokens, before the user asks a single question.
+Every tool you advertise to a model costs tokens, up front.
 
 <Summary>
 - A fat `tools/list` taxes the context window. Keep a few hot tools and park the long tail behind `ToolSearch`.
@@ -198,7 +198,7 @@ Cache the listed collection when it is stable, as the AI SDK docs suggest for re
 - **Not** a reason to mark tenant-specific lists `Public` for a cheap cache hit.
 - **Not** automatic speed: hints are advisory; clients must opt in.
 
-Protocol note: Laravel MCP 1.0 speaks `2026-07-28` (including `server/discover`) while still negotiating older `initialize` clients. Soften assumptions if your host is mid-upgrade; verify against the [Laravel MCP docs](https://laravel.com/docs/mcp) for your installed package version.
+Protocol note: Laravel MCP 1.0 speaks `2026-07-28` (including `server/discover`) while still negotiating older `initialize` clients. If your host is mid-upgrade, check the [Laravel MCP docs](https://laravel.com/docs/mcp) for your installed package version.
 
 <Takeaway>
 - Fat `tools/list` payloads tax the context window before the user speaks.
