@@ -1,6 +1,6 @@
 ---
 title: "MCP tool errors agents can actually recover from"
-description: "Throwing exceptions hides failures from the model. MCP wants isError tool results with actionable text — mapped from Laravel domain failures, audited like auth denials."
+description: "Throwing exceptions hides failures from the model. MCP wants isError tool results with actionable text, mapped from Laravel domain failures and audited like auth denials."
 publishDate: 2026-09-19
 category: laravel
 tags: [laravel, mcp, agentic-ai, security, api-design, multi-tenancy]
@@ -11,11 +11,21 @@ heroImage:
   alt: "Comic pop-art hero: AI agent receiving an MCP isError tool card stamped not_found with a self-correct hint"
 ---
 
+When a tool fails, the model needs a sentence it can act on, not a crashed server.
+
+<Summary>
+- Business failures go back as a normal tool result with `isError: true`. JSON-RPC errors are for protocol problems only.
+- Catch once at the MCP adapter and map domain exceptions to a small, stable set of codes.
+- Each error needs a hint that names the next tool or field, and the same code goes into your audit log.
+</Summary>
+
 [Auth and audit logging](/blog/mcp-auth-audit-logging-laravel/) keep a tool attributable. [Idempotency keys](/blog/mcp-idempotency-laravel-mutations/) keep a retry from charging twice. Neither helps if a failed tool call looks like a crashed server to the model.
 
-I keep seeing the same bug in Laravel MCP servers: a domain failure throws, the transport turns it into a JSON-RPC error (or an empty 500), and Claude never gets a sentence it can use to self-correct. The agent retries the same bad invoice ID, invents a different tool, or apologizes to the user. The invoice was simply not in that tenant.
+I keep seeing the same bug in Laravel MCP servers. A domain failure throws, the transport turns it into a JSON-RPC error (or an empty 500), and Claude never gets a sentence it can use to self-correct.
 
-This post is the third gate I ship with every mutating MCP surface: **tool execution errors that stay inside the tool result**, carry a stable code, and tell the model what to try next — without leaking stack traces or other tenants' IDs.
+The agent retries the same bad invoice ID, invents a different tool, or apologizes to the user. The invoice was simply not in that tenant.
+
+This post is the third gate I ship with every mutating MCP surface: **tool execution errors that stay inside the tool result**, carry a stable code, and tell the model what to try next, without leaking stack traces or other tenants' IDs.
 
 ## The failure mode
 
@@ -33,14 +43,22 @@ public function handle(string $invoiceId, McpActor $actor): array
 }
 ```
 
-`firstOrFail()` is correct for an HTTP controller that should return 404. Over MCP it is wrong. The Model Context Protocol draws a hard line:
+`firstOrFail()` is correct for an HTTP controller that should return 404. Over MCP it is wrong.
 
-1. **Protocol / request errors** — unknown tool name, malformed arguments at the RPC layer. JSON-RPC `error` object. The client may surface these; models rarely recover well.
-2. **Tool execution errors** — business failure, missing row, permission denial you already decided to explain, upstream timeout. Reported as a **successful** `tools/call` result with `isError: true` and actionable text in `content`.
+### Two channels for errors
+
+The Model Context Protocol draws a hard line:
+
+1. **Protocol / request errors:** unknown tool name, malformed arguments at the RPC layer. JSON-RPC `error` object. The client may surface these; models rarely recover well.
+2. **Tool execution errors:** business failure, missing row, permission denial you already decided to explain, upstream timeout. Reported as a **successful** `tools/call` result with `isError: true` and actionable text in `content`.
 
 That second path is how the [MCP tools specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools) expects language models to self-correct. Hide the failure in a protocol error and you train the agent to flail.
 
-![Two MCP error channels: JSON-RPC protocol errors versus tool results with isError true](/blog/mcp-structured-tool-errors-laravel/error-channels-c8925e3a.webp)
+<Figure
+  src="/blog/mcp-structured-tool-errors-laravel/error-channels-c8925e3a.webp"
+  alt="Comic pop-art panel: two MCP error channels, JSON-RPC protocol errors on one side and tool results with isError true on the other"
+  caption="Protocol errors stop the loop. Tool results with isError let the model fix itself."
+/>
 
 ## Return isError. Do not throw across the wire.
 
@@ -96,9 +114,13 @@ Notes that bite in production:
 - **Be careful with `structuredContent` on errors** if the tool declares `outputSchema`. Some clients still validate error payloads against the success schema. The safe default today: actionable text in `content`, no structured error object, unless you have verified your client stack.
 - **Never put secrets, stack traces, SQL, or other tenants' identifiers in the text the model sees.** Audit can keep a redacted internal reason; the agent gets a public message.
 
+<TryThis>
+Search your MCP tools for `firstOrFail()` and uncaught exceptions. Each one is a place where the model gets a crash instead of a hint.
+</TryThis>
+
 ## Map Laravel domain failures to a small code set
 
-Do not invent a new error dialect per tool. One mapper, shared with the [auth gate](/blog/mcp-auth-audit-logging-laravel/) denial reasons and the [idempotency](/blog/mcp-idempotency-laravel-mutations/) conflict codes:
+Do not invent a new error dialect per tool. Use one mapper, shared with the [auth gate](/blog/mcp-auth-audit-logging-laravel/) denial reasons and the [idempotency](/blog/mcp-idempotency-laravel-mutations/) conflict codes:
 
 | Code | When | Retry? | Hint |
 | --- | --- | --- | --- |
@@ -153,7 +175,9 @@ final class McpErrorMapper
 }
 ```
 
-Catch at the MCP adapter boundary — once — not inside every tool with a different string. Tools throw domain exceptions. The adapter decides what the model is allowed to see.
+### Catch once, at the adapter
+
+Catch at the MCP adapter boundary, once, not inside every tool with a different string. Tools throw domain exceptions. The adapter decides what the model is allowed to see.
 
 ```php
 public function invoke(string $tool, array $args, McpActor $actor): array
@@ -173,21 +197,22 @@ public function invoke(string $tool, array $args, McpActor $actor): array
 }
 ```
 
-`not_found` must mean "not in **this** tenant," the same rule as your global scopes from [Laravel multi-tenancy](/blog/laravel-multi-tenancy/). A row that exists for another customer is still `not_found` to this actor. Never return `forbidden` with the other tenant's ID in the message — that is an enumeration leak dressed as honesty.
+`not_found` must mean "not in **this** tenant," the same rule as your global scopes from [Laravel multi-tenancy](/blog/laravel-multi-tenancy/). A row that exists for another customer is still `not_found` to this actor.
+
+Never return `forbidden` with the other tenant's ID in the message. That is an enumeration leak dressed as honesty.
 
 ## Hints beat apologies
 
-Bad tool error:
+<BeforeAfter beforeLabel="Bad tool error" afterLabel="Better">
+  <div slot="before">Something went wrong.</div>
+  <div slot="after">Invoice not found in your workspace. Hint: call `list_invoices` for this customer, then retry `get_invoice` with an ID from that list.</div>
+</BeforeAfter>
 
-> Something went wrong.
+The first one is useless. The model will guess.
 
-Useless. The model will guess.
+The hint should name **another tool the agent already has**, or a field to fix, not a URL to your internal runbook.
 
-Better:
-
-> Invoice not found in your workspace. Hint: call `list_invoices` for this customer, then retry `get_invoice` with an ID from that list.
-
-The hint should name **another tool the agent already has**, or a field to fix — not a URL to your internal runbook. You are writing for an LLM tool loop, not a human SRE.
+<PullQuote>You are writing for an LLM tool loop, not a human SRE.</PullQuote>
 
 For `retryable: true`, say what to reuse. Idempotency taught us that "retry" without "same key" creates double refunds. Encode that in the hint every time:
 
@@ -196,11 +221,21 @@ A refund with this idempotency key is still in flight.
 Hint: wait ~30s and call refund_order again with the SAME idempotency_key and arguments.
 ```
 
+<TryThis>
+Rewrite your three most common error messages so each one ends with a hint that names a tool the agent already has.
+</TryThis>
+
 ## Audit the code the model saw
 
-Your audit stream already records `allowed | denied | replayed`. Store the public error `code` on denials. When an agent loops on `not_found` fifty times, you want a query, not a vibes-based log scroll.
+Your audit stream already records `allowed | denied | replayed`. Store the public error `code` on denials.
 
-![Error envelope fields flowing into the MCP audit table as denied reasons](/blog/mcp-structured-tool-errors-laravel/error-envelope-e4a7a7d5.webp)
+When an agent loops on `not_found` fifty times, you want a query, not a vibes-based log scroll.
+
+<Figure
+  src="/blog/mcp-structured-tool-errors-laravel/error-envelope-e4a7a7d5.webp"
+  alt="Comic pop-art panel: error envelope fields flowing into the MCP audit table as denied reasons"
+  caption="The same error code the model saw lands in the audit table."
+/>
 
 ```php
 McpAuditEvent::query()->create([
@@ -230,21 +265,25 @@ Ops dashboard: top denied codes per tool, per tenant, last 24h. Product signal: 
 - Swallowing idempotency `conflict` / `in_flight` into a generic `internal`
 - Marking money-moving failures `retryable: true` without a key
 
-If a human API would return 404/409/422 with a problem+json body, the agent path needs `isError` with a code and a hint — not a thrown Exception.
+If a human API would return 404/409/422 with a problem+json body, the agent path needs `isError` with a code and a hint, not a thrown Exception.
 
 ## Wiring it into the series
 
-This sits on top of [MCP auth and audit logging](/blog/mcp-auth-audit-logging-laravel/) and [idempotency keys for mutations](/blog/mcp-idempotency-laravel-mutations/). Same `McpActor`, same audit table, same claim codes — now visible to the model instead of only to your pager. Tenancy rules stay the [Laravel multi-tenancy](/blog/laravel-multi-tenancy/) ones; do not invent a parallel "agent ACL."
+This sits on top of [MCP auth and audit logging](/blog/mcp-auth-audit-logging-laravel/) and [idempotency keys for mutations](/blog/mcp-idempotency-laravel-mutations/). Same `McpActor`, same audit table, same claim codes, now visible to the model instead of only to your pager.
 
-For wallet-level token budgets at the LLM edge, that is a different layer — see [rate limiting your AI wallet](/blog/rate-limiting-ai-wallet/). Tool errors are what happen **after** the model is already allowed to call you.
+Tenancy rules stay the [Laravel multi-tenancy](/blog/laravel-multi-tenancy/) ones; do not invent a parallel "agent ACL."
 
-## Takeaways
+For wallet-level token budgets at the LLM edge, that is a different layer. See [rate limiting your AI wallet](/blog/rate-limiting-ai-wallet/). Tool errors are what happen **after** the model is already allowed to call you.
 
+If your MCP tools still throw through to the client and you want the error surface reviewed before agents hold live keys, [start with an AI Integration Sprint](/contact/?package=ai). We will inventory which failures are recoverable, which must stop the loop, and how the audit trail proves it after a bad night.
+
+<Takeaway>
 - **Use MCP tool-result errors (`isError: true`) for business failures.** Reserve JSON-RPC errors for protocol problems.
 - **Catch once at the adapter.** Map domain exceptions to a small, stable code set.
 - **Write for the model:** message + hint that names the next tool or field; set `retryable` honestly.
 - **Omit or carefully handle `structuredContent` on errors** if `outputSchema` is in play.
 - **Audit the same codes** the agent saw. Spikes are product bugs, not just noise.
 - **Never leak cross-tenant existence** through clever error text.
+</Takeaway>
 
-If your MCP tools still throw through to the client and you want the error surface reviewed before agents hold live keys, [start with an AI Integration Sprint](/contact/?package=ai) — we will inventory which failures are recoverable, which must stop the loop, and how the audit trail proves it after a bad night.
+When your agent hits a missing invoice today, does it get a hint it can act on, or a crash it can only apologize for?

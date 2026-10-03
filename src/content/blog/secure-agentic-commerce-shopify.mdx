@@ -12,13 +12,21 @@ heroImage:
 
 An AI agent can discover a product, build a cart, and reach checkout faster than a human. It can also make an expensive mistake in seconds.
 
-Agentic commerce changes the security boundary of a Shopify store. A storefront is no longer only serving pages to people. It exposes product data, pricing, inventory, fulfillment options, checkout actions, and order state to autonomous software.
+<Summary>
+- Never hand an agent broad Shopify credentials. Put an MCP governance server between the agent and the store.
+- UCP profile negotiation, signed requests and idempotency keys are security controls, not formalities.
+- Human approval is a checkout state. Respect `requires_escalation` instead of routing around it.
+</Summary>
 
-That creates a real problem. If an agent receives broad Shopify credentials, a prompt injection or an implementation bug can expose customer data or trigger an unauthorized transaction. The fix isn't to block agents. It's to give them a narrow, observable, policy-controlled path through the commerce stack.
+Agentic commerce changes the security boundary of a Shopify store. A storefront is no longer only serving pages to people.
 
-The principle is short:
+It exposes product data, pricing, inventory, fulfillment options, checkout actions, and order state to autonomous software.
 
-> Let the agent reason about commerce, but never let it define its own permissions.
+That creates a real problem. If an agent receives broad Shopify credentials, a prompt injection or an implementation bug can expose customer data or trigger an unauthorized transaction.
+
+The fix isn't to block agents. It's to give them a narrow, observable, policy-controlled path through the commerce stack. The principle is short:
+
+<PullQuote>Let the agent reason about commerce, but never let it define its own permissions.</PullQuote>
 
 ## The security problem in agentic commerce
 
@@ -50,19 +58,23 @@ Shopify's UCP implementation covers the main buyer journey:
 - Checkout creation and completion
 - Order monitoring and post-purchase events
 
-UCP is not a replacement for Shopify's commerce APIs. It's a standardized interaction layer so different agents and merchant systems can speak in shared commerce concepts. It supports multiple transports — REST, JSON-RPC, MCP, and A2A, plus the JSON-RPC 2.0 channel behind Shopify's Embedded Checkout Protocol — while the business logic stays the same.
+UCP is not a replacement for Shopify's commerce APIs. It's a standardized interaction layer so different agents and merchant systems can speak in shared commerce concepts.
 
-The mechanism that matters for security is profile negotiation.
+It supports multiple transports (REST, JSON-RPC, MCP, and A2A, plus the JSON-RPC 2.0 channel behind Shopify's Embedded Checkout Protocol) while the business logic stays the same.
 
-A merchant publishes a business profile, usually at:
+### Profile negotiation
+
+The mechanism that matters for security is profile negotiation. A merchant publishes a business profile, usually at:
 
 ```text
 https://store.example.com/.well-known/ucp
 ```
 
-On Shopify, that profile is tied to the merchant storefront. It's a self-contained document declaring `version`, `services`, `capabilities`, `payment_handlers`, and — via `supported_versions` — the profile URIs for older protocol versions. (See the [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/) for getting the manifest live.)
+On Shopify, that profile is tied to the merchant storefront. It's a self-contained document declaring `version`, `services`, `capabilities`, `payment_handlers`, and (via `supported_versions`) the profile URIs for older protocol versions. (See the [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/) for getting the manifest live.)
 
-The agent hosts its own platform profile at an HTTPS URL and passes that URL on every request through the `UCP-Agent` header. The platform profile mirrors the business one and adds a `signing_keys` registry. That single document is both the capability declaration and the key-resolution mechanism — which is why profile validation is a security control, not a formality.
+The agent hosts its own platform profile at an HTTPS URL and passes that URL on every request through the `UCP-Agent` header. The platform profile mirrors the business one and adds a `signing_keys` registry.
+
+That single document is both the capability declaration and the key-resolution mechanism, which is why profile validation is a security control, not a formality.
 
 Shopify then computes the intersection:
 
@@ -70,9 +82,13 @@ Shopify then computes the intersection:
 merchant capabilities ∩ agent capabilities = negotiated capabilities
 ```
 
-Only compatible capabilities become active. Extensions — `dev.ucp.shopping.discounts`, `dev.ucp.shopping.buyer_consent`, `dev.ucp.shopping.fulfillment` — carry an `extends` field naming their parent capability, and they never auto-activate. If the parent isn't in the negotiated set, the extension drops out with it.
+Only compatible capabilities become active. Extensions (`dev.ucp.shopping.discounts`, `dev.ucp.shopping.buyer_consent`, `dev.ucp.shopping.fulfillment`) carry an `extends` field naming their parent capability, and they never auto-activate. If the parent isn't in the negotiated set, the extension drops out with it.
 
-![Diagram of UCP profile discovery, capability negotiation, and payment handler selection](/blog/secure-agentic-commerce-shopify/ucp-negotiation-8774af38.webp)
+<Figure
+  src="/blog/secure-agentic-commerce-shopify/ucp-negotiation-8774af38.webp"
+  alt="Comic pop-art panels: a robot discovers the merchant profile, negotiates capabilities and picks a payment handler"
+  caption="Discover the profile, negotiate capabilities, then pick a payment handler."
+/>
 
 A trimmed platform profile, showing the shape rather than a complete document:
 
@@ -98,7 +114,9 @@ A trimmed platform profile, showing the shape rather than a complete document:
 }
 ```
 
-Protocol versions are still moving through 2026 — check the [UCP specification](https://ucp.dev/specification/reference/) for the current registry shape. Pin the version your integration uses, validate it strictly, and test version negotiation before rollout. Never silently downgrade to an older capability set.
+Protocol versions are still moving through 2026. Check the [UCP specification](https://ucp.dev/specification/reference/) for the current registry shape.
+
+Pin the version your integration uses, validate it strictly, and test version negotiation before rollout. Never silently downgrade to an older capability set.
 
 For the wider shift from visual storefronts to programmable commerce, see [why agentic commerce will change the way you build Shopify stores](/blog/agentic-commerce-shopify/).
 
@@ -139,6 +157,11 @@ One tool, one well-defined job, every parameter validated against a schema befor
 
 Never accept arbitrary GraphQL from an agent. Use fixed queries and allowlisted fields. That prevents data overexposure and shrinks the blast radius of prompt injection.
 
+<BeforeAfter beforeLabel="Risky" afterLabel="Safe">
+  <div slot="before">One generic `shopify_admin_request` tool that accepts arbitrary GraphQL.</div>
+  <div slot="after">Narrow tools like `search_products` and `create_checkout`, fixed queries and allowlisted fields.</div>
+</BeforeAfter>
+
 ### 2. Keep Admin tokens server-side
 
 Admin API tokens belong in a secret manager. Never in:
@@ -163,6 +186,10 @@ Use separate credentials for:
 
 Revocation and incident analysis get much easier when the blast radius is already partitioned.
 
+<TryThis>
+Search your prompts, tool responses, logs and `agents.md` for any Admin API token. Move every one you find into a secret manager.
+</TryThis>
+
 ### 3. Apply capability and state policies
 
 Authorization depends on both the tool and the current commerce state.
@@ -183,9 +210,17 @@ Treat every checkout completion as a state transition, not an ordinary tool call
 
 The protocol has to authenticate more than the model. It authenticates the agent profile, request origin, capability set, and transaction context.
 
-UCP signs every HTTP-based transport with [RFC 9421 HTTP Message Signatures](https://www.rfc-editor.org/rfc/rfc9421.html). Signing is asymmetric: ES256 is mandatory, ES384 optional. Public keys are JWKs (RFC 7517) published in the `signing_keys` array of the signer's profile, and the body is bound in through a `Content-Digest` header (RFC 9530) computed over the raw body bytes.
+UCP signs every HTTP-based transport with [RFC 9421 HTTP Message Signatures](https://www.rfc-editor.org/rfc/rfc9421.html). Signing is asymmetric: ES256 is mandatory, ES384 optional.
 
-A request signature covers `@method`, `@authority`, `@path`, the query, `ucp-agent`, `idempotency-key`, and the content headers. Responses cover `@status` instead of the method. That component list is the security property worth internalizing: the idempotency key is _inside_ the signature, so a replayed request can't be re-pointed at a new operation without invalidating it. UCP deliberately handles replay protection at the business layer through idempotency keys rather than at the signature layer — the RFC 9421 `created` parameter is optional. If your governance server treats idempotency as an optional convenience, you've removed the replay control.
+Public keys are JWKs (RFC 7517) published in the `signing_keys` array of the signer's profile, and the body is bound in through a `Content-Digest` header (RFC 9530) computed over the raw body bytes.
+
+### What the signature covers
+
+A request signature covers `@method`, `@authority`, `@path`, the query, `ucp-agent`, `idempotency-key`, and the content headers. Responses cover `@status` instead of the method.
+
+That component list is the security property worth internalizing. The idempotency key is _inside_ the signature, so a replayed request can't be re-pointed at a new operation without invalidating it.
+
+UCP deliberately handles replay protection at the business layer through idempotency keys rather than at the signature layer; the RFC 9421 `created` parameter is optional. If your governance server treats idempotency as an optional convenience, you've removed the replay control.
 
 At the governance layer, verify:
 
@@ -199,7 +234,9 @@ At the governance layer, verify:
 - The `Content-Digest` matches the raw body you actually read.
 - Idempotency keys are enforced, stored, and honored on retry.
 
-For custom endpoints, webhooks, or internal proxy routes, HMAC adds a shared-secret check. HMAC does not replace UCP's asymmetric message-signature model — it's an extra control where both parties already share a secret.
+### HMAC for your own endpoints
+
+For custom endpoints, webhooks, or internal proxy routes, HMAC adds a shared-secret check. HMAC does not replace UCP's asymmetric message-signature model. It's an extra control where both parties already share a secret.
 
 A webhook verifier should:
 
@@ -226,7 +263,11 @@ if (!hash_equals($expected, $receivedSignature)) {
 
 Never verify an HMAC over a parsed and re-serialized JSON object. Whitespace and key ordering change the bytes. Verify the original payload.
 
-![Security layers: scoped credentials, HMAC verification, signed requests, and a protected checkout](/blog/secure-agentic-commerce-shopify/security-layers-b47ff06e.webp)
+<Figure
+  src="/blog/secure-agentic-commerce-shopify/security-layers-b47ff06e.webp"
+  alt="Comic pop-art panel: stacked security layers of scoped credentials, HMAC check, signed requests and human approval around a protected checkout"
+  caption="Scoped credentials, HMAC, signed requests and human approval, stacked."
+/>
 
 ## Human approval is a protocol state
 
@@ -234,17 +275,21 @@ Autonomous doesn't mean every action is automatic.
 
 UCP models graceful escalation through checkout states such as:
 
-- `incomplete` — required information is missing
-- `requires_escalation` — buyer input is needed
-- `ready_for_complete` — everything is collected and the agent may finalize programmatically
+- `incomplete`: required information is missing
+- `requires_escalation`: buyer input is needed
+- `ready_for_complete`: everything is collected and the agent may finalize programmatically
 
 Those three sit alongside `complete_in_progress`, `completed`, and `canceled` in the checkout state machine. A checkout can move back and forth between `incomplete` and `requires_escalation`, and it can reach `canceled` from anywhere.
 
 An agent may select a product and calculate shipping but still need buyer input for a 3DS challenge, address validation, terms acceptance, age verification, or custom selling terms.
 
-Escalation isn't an error path. A `requires_escalation` response must carry a `continue_url` and at least one message at escalation severity — that's the merchant handing you a place to send the buyer, plus the reason. Send them there with the cart intact instead of starting over.
+### Escalation is not an error
 
-Your agent should not try to route around this state. It should surface the escalation messages verbatim and preserve the exact checkout context the merchant returned. The same applies to compliance disclosures: a `warning` message with `presentation: "disclosure"` — Prop 65, allergens, age restrictions — must be displayed next to the item it applies to, never collapsed or auto-dismissed. If your surface can't render it faithfully, escalate to `continue_url` rather than silently downgrading.
+A `requires_escalation` response must carry a `continue_url` and at least one message at escalation severity. That's the merchant handing you a place to send the buyer, plus the reason. Send them there with the cart intact instead of starting over.
+
+Your agent should not try to route around this state. It should surface the escalation messages verbatim and preserve the exact checkout context the merchant returned.
+
+The same applies to compliance disclosures. A `warning` message with `presentation: "disclosure"` (Prop 65, allergens, age restrictions) must be displayed next to the item it applies to, never collapsed or auto-dismissed. If your surface can't render it faithfully, escalate to `continue_url` rather than silently downgrading.
 
 Add approval gates for:
 
@@ -260,7 +305,7 @@ Use idempotency keys on every money-moving request. A retry must not create a se
 
 ## Use agents.md for discovery and operational policy
 
-An `agents.md` file helps compatible tools discover how your application expects agents to behave. Treat it as documentation and policy guidance — never as proof of identity or authorization.
+An `agents.md` file helps compatible tools discover how your application expects agents to behave. Treat it as documentation and policy guidance, never as proof of identity or authorization.
 
 A useful file describes safe defaults, tool boundaries, and failure handling:
 
@@ -289,11 +334,13 @@ A useful file describes safe defaults, tool boundaries, and failure handling:
 
 Keep it version-controlled and review changes like code. Sign or hash the policy bundle if your architecture supports it. A compromised instruction file must never grant permissions the server itself doesn't enforce.
 
-For more on MCP tool boundaries and context control, see [Claude MCP and real-time developer tools](/blog/claude-mcp-dev-tools/). The same least-privilege rules apply to commerce agents, and the [agentic workflow architecture guide](/blog/agentic-workflows-vibe-coding/) covers human approval and stateful tool loops.
+For more on MCP tool boundaries and context control, see [Claude MCP and real-time developer tools](/blog/claude-mcp-dev-tools/).
 
-## Technical takeaways
+The same least-privilege rules apply to commerce agents, and the [agentic workflow architecture guide](/blog/agentic-workflows-vibe-coding/) covers human approval and stateful tool loops.
 
-Secure agentic commerce is an API and policy engineering problem, not a prompt design problem. Launch checklist:
+## Launch checklist
+
+Secure agentic commerce is an API and policy engineering problem, not a prompt design problem. Before launch:
 
 - Publish and validate UCP profiles over HTTPS.
 - Pin supported protocol and capability versions.
@@ -309,4 +356,13 @@ Secure agentic commerce is an API and policy engineering problem, not a prompt d
 - Log every tool call, policy decision, signature result, and transaction identifier.
 - Test malformed profiles, replay attempts, prompt injection, stale inventory, duplicate retries, and unauthorized checkout attempts.
 
-The opportunity in agentic commerce is large, but trust decides which implementations survive production. What authorization boundary stops your Shopify agent from turning a reasonable buyer request into an unauthorized transaction? If you want a second pair of eyes on that boundary, [here's how I work with teams](/services/).
+The opportunity in agentic commerce is large, but trust decides which implementations survive production. If you want a second pair of eyes on that boundary, [here's how I work with teams](/services/).
+
+<Takeaway>
+- Keep the agent on narrow, schema-validated tools behind a governance server. Admin tokens stay server-side.
+- Validate UCP profiles, pin versions, and verify signatures and content digests on every request.
+- Idempotency keys are your replay control. Treat them as required.
+- Model checkout as states, and send the buyer to `continue_url` when escalation is needed.
+</Takeaway>
+
+What authorization boundary stops your Shopify agent from turning a reasonable buyer request into an unauthorized transaction?

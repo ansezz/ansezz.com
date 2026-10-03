@@ -1,6 +1,6 @@
 ---
 title: "MCP first is the new mobile first"
-description: "Mobile first made every screen work on a phone. MCP first makes every product capability work for an AI agent — tools, skills, and permissions before the human UI."
+description: "Mobile first made every screen work on a phone. MCP first makes every product capability work for an AI agent: tools, skills, and permissions before the human UI."
 publishDate: 2026-09-20
 category: architecture
 tags: [mcp, architecture, agentic-ai, api-design, ai, claude]
@@ -8,18 +8,32 @@ featured: true
 draft: false
 heroImage:
   url: "/blog/mcp-first-is-the-new-mobile-first/hero-1994379b.webp"
-  alt: "Comic split: old mobile phone stamped MOBILE FIRST vs AI agent with MCP tool list — MCP first is the new mobile first"
+  alt: "Comic split: old mobile phone stamped MOBILE FIRST vs AI agent with MCP tool list"
 ---
 
-A decade ago the argument was settled in the hallway: **mobile first**. If the product did not work on a phone, it did not work. Teams stopped designing for a 27-inch monitor and shrinking later. They started with the constrained surface and let the desktop inherit the discipline.
+Mobile first made products work on a phone. MCP first makes them work for an AI agent.
+
+<Summary>
+- The hard constraint used to be a small screen. Now it is whether an authorized agent can finish the job.
+- Ship tools, permissions and skills first. The human UI becomes one client of the same capabilities.
+- Start small: one sprint and three outcomes your users already ask for.
+</Summary>
+
+A decade ago the argument was settled in the hallway: **mobile first**. If the product did not work on a phone, it did not work.
+
+Teams stopped designing for a 27-inch monitor and shrinking later. They started with the constrained surface and let the desktop inherit the discipline.
 
 That constraint was a screen.
 
-Today the constraint is a **capability contract**. Users still want a UI — but more and more of the real work is asked in chat: Claude, Cursor, Grok Bot, an in-product agent. They do not want another settings page. They want to say what they need and have it done. Docs, support tickets, and click-paths become the fallback when the product cannot be *operated* by an agent.
+Today the constraint is a **capability contract**. Users still want a UI, but more and more of the real work is asked in chat: Claude, Cursor, Grok Bot, an in-product agent.
 
-So the slogan flips: **MCP first** — or, more precisely, **agent first / skills first**. Ship the tools, permissions, and judgment an agent needs *before* you polish the human interface that wraps them.
+They do not want another settings page. They want to say what they need and have it done. Docs, support tickets, and click-paths become the fallback when the product cannot be *operated* by an agent.
 
-I am not arguing that MCP replaces your API. I already wrote [API vs MCP](/blog/api-vs-mcp/) for that fork. MCP is how agents *discover and call* capabilities. Skills are how they apply judgment. The UI is how humans supervise. Get the order wrong and you bolt a chatbot onto a product that was never operable.
+So the slogan flips: **MCP first**, or more precisely, **agent first / skills first**. Ship the tools, permissions, and judgment an agent needs *before* you polish the human interface that wraps them.
+
+I am not arguing that MCP replaces your API. I already wrote [API vs MCP](/blog/api-vs-mcp/) for that fork.
+
+MCP is how agents *discover and call* capabilities. Skills are how they apply judgment. The UI is how humans supervise. Get the order wrong and you bolt a chatbot onto a product that was never operable.
 
 ## What "MCP first" actually means
 
@@ -27,18 +41,24 @@ MCP first does **not** mean "add a Model Context Protocol server and call it a d
 
 It means you design the product as a set of **outcomes an agent can complete**, with:
 
-1. **Named tools** — create invoice, list delayed orders, refund within policy, rotate a key.
-2. **Clear inputs and outputs** — schemas the model can fill without guessing.
-3. **Permissions** — who the actor is, which tenant, which scopes ([auth and audit](/blog/mcp-auth-audit-logging-laravel/)).
-4. **Safe mutation rules** — idempotency, rate limits, structured errors ([idempotency](/blog/mcp-idempotency-laravel-mutations/), [tool errors](/blog/mcp-structured-tool-errors-laravel/)).
-5. **Skills** — playbooks and guardrails so the agent knows *when* to call which tool, not just *that* a tool exists.
-6. **A human UI that consumes the same capabilities** — screens become views and approvals over the same contract, not a parallel codebase.
+1. **Named tools:** create invoice, list delayed orders, refund within policy, rotate a key.
+2. **Clear inputs and outputs:** schemas the model can fill without guessing.
+3. **Permissions:** who the actor is, which tenant, which scopes ([auth and audit](/blog/mcp-auth-audit-logging-laravel/)).
+4. **Safe mutation rules:** idempotency, rate limits, structured errors ([idempotency](/blog/mcp-idempotency-laravel-mutations/), [tool errors](/blog/mcp-structured-tool-errors-laravel/)).
+5. **Skills:** playbooks and guardrails so the agent knows *when* to call which tool, not just *that* a tool exists.
+6. **A human UI that consumes the same capabilities:** screens become views and approvals over the same contract, not a parallel codebase.
 
-Mobile first forced responsive layout. MCP first forces **operable capability**. If an agent with the right credentials cannot complete the job end-to-end, the product is not finished — no matter how pretty the dashboard is.
+Mobile first forced responsive layout. MCP first forces **operable capability**.
+
+<PullQuote>If an agent with the right credentials cannot complete the job end-to-end, the product is not finished, no matter how pretty the dashboard is.</PullQuote>
 
 ## The two-customer problem
 
-![Two customers — a human at a laptop and an AI agent sharing the same product capability tools](/blog/mcp-first-is-the-new-mobile-first/two-customers-c9972efc.webp)
+<Figure
+  src="/blog/mcp-first-is-the-new-mobile-first/two-customers-c9972efc.webp"
+  alt="Comic pop-art panel: two customers, a human at a laptop and an AI agent, sharing the same product capability tools"
+  caption="Every serious product now serves a human and an agent."
+/>
 
 Every serious product now has **two customers**:
 
@@ -49,19 +69,22 @@ Every serious product now has **two customers**:
 
 Most teams still ship for the human and hope the agent can scrape the DOM or call undocumented REST. That is the 2012 equivalent of "we'll make the mobile site later."
 
-The fix is one capability layer. Humans get forms and tables. Agents get MCP (or an equivalent tool surface). Both hit the same domain services. When you add "export CSV," you add the tool *and* the button — not only the button.
+The fix is one capability layer. Humans get forms and tables. Agents get MCP (or an equivalent tool surface). Both hit the same domain services.
+
+When you add "export CSV," you add the tool *and* the button, not only the button.
+
+<TryThis>
+Next time you add a button, write the matching tool in the same pull request, calling the same domain service.
+</TryThis>
 
 ## Reverse the build sequence
 
-Classic SaaS sequence:
+<BeforeAfter beforeLabel="Classic SaaS" afterLabel="Agent first">
+  <div slot="before">screens → API → maybe docs → maybe "AI feature"</div>
+  <div slot="after">outcomes → tools → permissions → skills → API/CLI → UI</div>
+</BeforeAfter>
 
-> screens → API → maybe docs → maybe "AI feature"
-
-Agent-first sequence:
-
-> outcomes → tools → permissions → skills → API/CLI → UI
-
-Concrete example — an ops tool for delayed Shopify orders:
+Concrete example: an ops tool for delayed Shopify orders.
 
 1. **Outcome:** "Find delayed orders for this shop and propose a next action within policy."
 2. **Tools:** `list_delayed_orders`, `get_order`, `create_customer_message`, `issue_partial_refund` (scoped).
@@ -74,9 +97,15 @@ If you start with the queue page, the agent becomes a second-class citizen forev
 
 ## Chat is a front door, not the product
 
-![Chat as front door: agent asking to find delayed orders, MCP tools behind an approval gate, human support as backup](/blog/mcp-first-is-the-new-mobile-first/chat-door-75f15029.webp)
+<Figure
+  src="/blog/mcp-first-is-the-new-mobile-first/chat-door-75f15029.webp"
+  alt="Comic pop-art panel: chat as a front door, an agent asking to find delayed orders, MCP tools behind an approval gate, human support as backup"
+  caption="Chat is where people ask. Tools, approvals and audit logs sit behind it."
+/>
 
-People reach for chat because self-service still fails often enough to hurt. Industry surveys have long shown most customers try to solve a problem themselves before they contact a human — often cited around four in five attempts. Completion is the hard part. When the product cannot be operated by an agent with tools, chat becomes theater: a polite model that cannot refund, cannot look up the right tenant, and cannot tell you why the tool failed.
+People reach for chat because self-service still fails often enough to hurt. Industry surveys have long shown most customers try to solve a problem themselves before they contact a human, often cited around four in five attempts.
+
+Completion is the hard part. When the product cannot be operated by an agent with tools, chat becomes theater: a polite model that cannot refund, cannot look up the right tenant, and cannot tell you why the tool failed.
 
 Treat chat as a **front door**:
 
@@ -91,7 +120,7 @@ No more "read the docs, click twelve pages, then open a ticket." The docs become
 
 A tool without a skill is a loaded gun with no safety briefing.
 
-**Skills** (playbooks, runbooks, Cursor-style skill files, Claude Projects instructions — pick your stack) encode:
+**Skills** (playbooks, runbooks, Cursor-style skill files, Claude Projects instructions; pick your stack) encode:
 
 - which tools exist for this job
 - sequencing and stop conditions
@@ -100,14 +129,14 @@ A tool without a skill is a loaded gun with no safety briefing.
 
 MCP first without skills first produces agents that call `refund_order` because the user sounded upset. Skills first without MCP first produces beautiful instructions with nothing to execute.
 
-Ship both. In practice I write the skill outline in the same PR as the first tool handlers — same review, same tenant tests.
+Ship both. In practice I write the skill outline in the same PR as the first tool handlers: same review, same tenant tests.
 
 ## What this is not
 
 - **Not** "delete the UI." Humans still approve, explore, and debug. Agent-first products often need *better* UIs for supervision.
 - **Not** "every CRUD app needs a public MCP server tomorrow." Internal agent access (Cursor, Claude Desktop, your own bot) is enough to force the discipline. Public MCP is a distribution choice.
 - **Not** "skip the API." MCP sits on capabilities. Thin, boring domain services still win.
-- **Not** "let the model invent side effects." Auth, idempotency, structured errors, and rate limits are the mobile viewport of this era — constraints that make the product honest. That is why I shipped the [Laravel MCP safety trilogy](/blog/mcp-auth-audit-logging-laravel/) before preaching the slogan.
+- **Not** "let the model invent side effects." Auth, idempotency, structured errors, and rate limits are the mobile viewport of this era: constraints that make the product honest. That is why I shipped the [Laravel MCP safety trilogy](/blog/mcp-auth-audit-logging-laravel/) before preaching the slogan.
 
 ## A one-sprint checklist
 
@@ -119,16 +148,31 @@ If you already have a product, you do not need a rewrite. In one sprint:
 4. Wrap mutations in idempotency keys.
 5. Write a short skill that sequences those tools and names the escalate path.
 6. Point your internal agent (Claude / Cursor / your bot) at it and dogfood for a week.
-7. Only then decide whether the human UI needs a new screen — or just a better approval affordance on top of what the agent already uses.
+7. Only then decide whether the human UI needs a new screen, or just a better approval affordance on top of what the agent already uses.
 
 If the agent cannot finish the job with a human in the loop for money moves, you learned something cheap. If it can, you just shipped mobile-first for the agent decade.
 
-## Closing
+<TryThis>
+Open your last month of support tickets and pick the three requests that come up most. Those are your first three tools.
+</TryThis>
+
+## The hardest constraint first
 
 Mobile first was never really about phones. It was about designing for the **hardest real constraint** first.
 
 The hard constraint now is: *can an authorized agent complete the work safely, with skills and tools, while a human supervises?*
 
-Call it MCP first, agent first, or skills first — same idea. Prepare the tools and access. Then build the product. Chat becomes the place people ask; capability is what answers.
+Call it MCP first, agent first, or skills first; same idea. Prepare the tools and access. Then build the product. Chat becomes the place people ask; capability is what answers.
 
-If you are wiring this into multi-tenant Laravel, start with [auth and audit](/blog/mcp-auth-audit-logging-laravel/), [idempotency](/blog/mcp-idempotency-laravel-mutations/), and [structured tool errors](/blog/mcp-structured-tool-errors-laravel/). If you are still choosing the connector shape, read [API vs MCP](/blog/api-vs-mcp/) first.
+If you are wiring this into multi-tenant Laravel, start with [auth and audit](/blog/mcp-auth-audit-logging-laravel/), [idempotency](/blog/mcp-idempotency-laravel-mutations/), and [structured tool errors](/blog/mcp-structured-tool-errors-laravel/).
+
+If you are still choosing the connector shape, read [API vs MCP](/blog/api-vs-mcp/) first.
+
+<Takeaway>
+- Every product now has two customers: a human and an agent.
+- Build in this order: outcomes, tools, permissions, skills, API, then UI.
+- Chat is a front door. Tools, approval gates and audit logs do the work behind it.
+- Ship skills with tools, so the agent knows when to call what.
+</Takeaway>
+
+Which three things do your users ask support for that an agent with the right tools could finish today?

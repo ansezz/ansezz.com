@@ -13,7 +13,15 @@ heroImage:
 
 Giving Claude a tool that can read tickets and billing is useful. Giving it the same credentials your admin panel uses is how you invent a new incident class.
 
-I have been wiring [MCP servers](/blog/claude-mcp-dev-tools/) into real Laravel SaaS surfaces — the same domain that powers the [MCP SaaS case study](/work/mcp-saas-server/). The hard part is not JSON-RPC. The hard part is making sure every tool call is tenant-scoped, attributable, and auditable, without teaching the model a parallel permission system.
+<Summary>
+- Bind one actor (tenant, user, session, scopes) at the edge. Tools read it and never accept a tenant from the model.
+- Keep MCP tools thin and reuse the same finders and policies as your admin UI.
+- Log every attempt, allowed or denied, with redacted args, a reason and the idempotency key.
+</Summary>
+
+I have been wiring [MCP servers](/blog/claude-mcp-dev-tools/) into real Laravel SaaS surfaces, the same domain that powers the [MCP SaaS case study](/work/mcp-saas-server/).
+
+The hard part is not JSON-RPC. The hard part is making sure every tool call is tenant-scoped, attributable, and auditable, without teaching the model a parallel permission system.
 
 This post is the pattern I keep shipping: actor context on the request, tools that refuse to invent a tenant, and an audit log that survives a prompt injection attempt.
 
@@ -37,7 +45,11 @@ MCP does not invent tenancy for you. Laravel already has it. The job is to force
 
 ## One actor per request
 
-![Actor context flowing from AI agent through locked MCP tools into Laravel domain services](/blog/mcp-auth-audit-logging-laravel/actor-flow.webp)
+<Figure
+  src="/blog/mcp-auth-audit-logging-laravel/actor-flow.webp"
+  alt="Comic pop-art panel: actor context flowing from an AI agent through locked MCP tools into Laravel domain services"
+  caption="One actor per request, bound at the edge before any tool runs."
+/>
 
 Treat an MCP tool invocation like an HTTP request that happens to arrive over JSON-RPC. Bind an actor before any tool runs:
 
@@ -54,7 +66,7 @@ final class McpActor
 }
 ```
 
-Resolve it once at the transport edge — API token, signed agent session, or OAuth subject — and stash it on the container for the lifetime of that call:
+Resolve it once at the transport edge (API token, signed agent session, or OAuth subject) and stash it on the container for the lifetime of that call:
 
 ```php
 app()->instance(McpActor::class, $actor);
@@ -63,6 +75,10 @@ app()->instance(McpActor::class, $actor);
 Tools never accept `tenant_id` from the model. If the model passes one, drop it. The only tenant that exists is the one on `McpActor`.
 
 That single rule kills the most common cross-tenant footgun: an LLM that "found" an ID in context and used it.
+
+<TryThis>
+Grep your tool schemas for `tenant_id`. Remove it from every input and read it from `McpActor` instead.
+</TryThis>
 
 ## Tools are thin. Domain services stay thick.
 
@@ -110,9 +126,13 @@ If you already enforce tenancy in Eloquent global scopes, keep them. MCP is not 
 
 ## Audit log shape that survives an incident
 
-![Comic audit log console showing ALLOWED get_invoice and DENIED refund_order rows](/blog/mcp-auth-audit-logging-laravel/audit-log.webp)
+<Figure
+  src="/blog/mcp-auth-audit-logging-laravel/audit-log.webp"
+  alt="Comic pop-art panel: an audit log console showing ALLOWED get_invoice and DENIED refund_order rows"
+  caption="Denied calls are events too. Often they are the interesting ones."
+/>
 
-I log one row per tool attempt — allowed or denied — with enough to reconstruct the call without storing secrets:
+I log one row per tool attempt, allowed or denied, with enough to reconstruct the call without storing secrets:
 
 ```php
 McpAuditEvent::query()->create([
@@ -137,7 +157,12 @@ Rules that have paid for themselves:
 - **Deny is a first-class event.** Most teams only log successes. The interesting story is usually a denied `refund_order` right before a successful one from a different session.
 - **Idempotency keys for mutations.** Refunds, seat resets, and password emails must key on something the client retries with. Store it on the audit row and short-circuit duplicates.
 
-This is the same discipline I want on [agentic commerce checkouts](/blog/secure-agentic-commerce-shopify/) — money-moving tools are just the obvious version of the rule.
+This is the same discipline I want on [agentic commerce checkouts](/blog/secure-agentic-commerce-shopify/). Money-moving tools are just the obvious version of the rule.
+
+<BeforeAfter beforeLabel="Typical log" afterLabel="Audit row">
+  <div slot="before">`tool=refund_order ok=true`, with no actor, no tenant and no arguments.</div>
+  <div slot="after">Tenant, user, session, tool, decision, reason, redacted args, args hash, idempotency key and duration.</div>
+</BeforeAfter>
 
 ## Scopes beat role names
 
@@ -151,9 +176,15 @@ billing:refund
 docs:search
 ```
 
-Map your SaaS roles onto scopes at session mint time. The tool checks scopes. When a customer upgrades from "support viewer" to "billing ops," you change the session mint, not every tool.
+Map your SaaS roles onto scopes at session mint time. The tool checks scopes.
+
+When a customer upgrades from "support viewer" to "billing ops," you change the session mint, not every tool.
 
 Also expire sessions aggressively. An MCP session that lives for a week is a stolen-laptop story waiting to happen.
+
+<TryThis>
+Write down the scopes each of your SaaS roles maps to, then check how long an MCP session lives before it expires.
+</TryThis>
 
 ## What I refuse to expose
 
@@ -166,18 +197,22 @@ A short deny-list that has saved me more than any middleware:
 - Mutations without an idempotency key
 - Anything that bypasses the same policy class the HTTP API uses
 
-If a human support agent cannot do it in the admin UI, the model does not get a secret door.
+<PullQuote>If a human support agent cannot do it in the admin UI, the model does not get a secret door.</PullQuote>
 
 ## Wiring it into the series
 
-This sits next to [Laravel multi-tenancy](/blog/laravel-multi-tenancy/) and [Octane under load](/blog/laravel-octane-high-traffic/) on the framework side, and next to [MCP vs A2A](/blog/mcp-vs-a2a-vs-acp/) on the protocol side. The tenancy model is Laravel. The tool surface is MCP. The trust boundary is yours.
+This sits next to [Laravel multi-tenancy](/blog/laravel-multi-tenancy/) and [Octane under load](/blog/laravel-octane-high-traffic/) on the framework side, and next to [MCP vs A2A](/blog/mcp-vs-a2a-vs-acp/) on the protocol side.
 
-## Takeaways
+The tenancy model is Laravel. The tool surface is MCP. The trust boundary is yours.
 
+If you are putting Claude on top of a multi-tenant Laravel app and want a second pair of eyes on the boundary, [start with an AI Integration Sprint](/contact/?package=ai). We will map the tools, the scopes, and the audit trail before any agent sees production data.
+
+<Takeaway>
 - **Never let the model choose the tenant.** Bind `McpActor` at the edge; tools read it, they do not accept it.
 - **Thin tools, thick domain.** Reuse the same finders and policies as your admin UI.
 - **Audit allows and denies.** Include tool, actor, redacted args, reason, and idempotency key.
 - **Scopes over roles** at the MCP boundary. Mint short-lived sessions.
 - **No parallel API.** If it is dangerous in HTTP, it is dangerous in JSON-RPC.
+</Takeaway>
 
-If you are putting Claude on top of a multi-tenant Laravel app and want a second pair of eyes on the boundary, [start with an AI Integration Sprint](/contact/?package=ai) — we will map the tools, the scopes, and the audit trail before any agent sees production data.
+If you got paged tonight about a strange refund, could your audit log tell you which actor, tenant and session asked for it?
