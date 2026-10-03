@@ -98,7 +98,7 @@ Ansible is the king of **mutable infrastructure**. It is designed to go into exi
 
 This is often necessary for legacy systems or complex environments where spinning up a fresh cluster for every minor config change is too slow or expensive.
 
-For teams using self-hosted solutions like [Coolify for SaaS hosting](/blog/coolify-docker-saas-hosting/), Ansible can be a powerful ally in managing the underlying VPS environment.
+For teams using self-hosted solutions like [Coolify for SaaS hosting](/blog/coolify-docker-saas-hosting/), Ansible is a good fit for managing the underlying VPS environment.
 
 <TryThis>
 Pick one server you patch by hand today. Write the patch as a small Ansible playbook and run it with `--check --diff` first, so you see what would change before it changes.
@@ -113,8 +113,6 @@ When you run a command, Terraform compares your HCL code against this state file
 ### Drift detection
 
 This lets Terraform detect "drift": when someone manually changes a setting in the AWS console, Terraform sees the difference and offers to revert it.
-
-<PullQuote>Terraform's superpower (and its greatest complexity) is the state file.</PullQuote>
 
 ### Ansible keeps no record
 
@@ -134,7 +132,7 @@ Run `terraform plan -refresh-only` against production. Anything it reports is dr
 
 ## Better together: the hybrid workflow
 
-In a professional [DevOps](/blog/category/devops/) pipeline, you rarely choose just one. The most robust engineering teams use a "best of breed" approach.
+In a professional [DevOps](/blog/category/devops/) pipeline, you rarely choose just one. Most strong teams use both.
 
 ### A typical workflow
 

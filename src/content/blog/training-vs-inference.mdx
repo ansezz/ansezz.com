@@ -66,8 +66,6 @@ However, inference is where the "unbounded cost" problem lives. Training is a on
 
 If you have a million users making ten queries a day, you are running ten million inferences. Over the lifetime of a successful product, inference costs often end up far larger than training costs.
 
-<PullQuote>While training is a one-time or periodic expense, inference happens every time a user makes a request.</PullQuote>
-
 <TryThis>
 Estimate your monthly inference volume: daily active users, times queries per user, times 30. Multiply by your cost per request. Compare that with what the model cost to train or fine-tune.
 </TryThis>

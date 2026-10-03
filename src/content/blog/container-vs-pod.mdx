@@ -22,7 +22,7 @@ When you move from a simple Docker setup to an orchestrated environment like Kub
 
 You wonder why you can't just deploy a container directly, and why Kubernetes insists on wrapping your perfectly good Docker image in something called a Pod. The container vs Pod distinction is the first thing that trips people up.
 
-Treat a Pod as merely a "fancy container" and you miss the shared networking and storage that make Kubernetes powerful.
+Treat a Pod as merely a "fancy container" and you miss the shared networking and storage that make Kubernetes work.
 
 You end up with monolithic containers that are hard to scale, or sidecars that can't actually reach the main application. Understanding how a container relates to a Pod is the difference between a brittle deployment and a scalable, resilient system.
 
@@ -97,7 +97,7 @@ Without the Pod abstraction, you would have to deal with complex network mounts 
 
 ## The sidecar pattern: real-world multi-container Pods
 
-The "sidecar pattern" is the main reason we use multi-container Pods. It lets you add functionality to an application without changing the application code.
+The "sidecar pattern" is the main reason we use multi-container Pods.
 
 The "sidecar" container sits next to the "main" container and performs a supporting task.
 
@@ -164,7 +164,7 @@ Write down the one sidecar you need today. If it is a single proxy or log agent,
 - Shared Volumes allow containers within a Pod to exchange data through the filesystem.
 - The sidecar pattern uses multiple containers in one Pod to separate concerns like logging and security.
 - Kubernetes schedules and scales Pods as a single unit, ensuring all containers land on the same node.
-- Understanding Pods is crucial for managing complex deployments on GCP, AWS, or [self-hosted tools like Coolify](/blog/coolify-self-hosted-saas/).
+- Understanding Pods matters when you manage complex deployments on GCP, AWS, or [self-hosted tools like Coolify](/blog/coolify-self-hosted-saas/).
 </Takeaway>
 
 If you're architecting workloads that have outgrown plain Docker, [here's how I help teams ship it](/services/).

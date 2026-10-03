@@ -10,7 +10,7 @@ heroImage:
   alt: "Pop-art comic-style scene contrasting blocking and non-blocking request flows"
 ---
 
-A slow API call inside a web request does not just slow one user down. It ties up a worker that every other user is waiting for.
+A slow API call inside a web request ties up a worker that every other user is waiting for.
 
 <Summary>
 - Synchronous calls block: the worker waits until the task finishes. Fine for fast reads and writes, dangerous for slow third-party APIs.
@@ -134,7 +134,7 @@ Worse, if your endpoint keeps failing, Shopify removes the webhook subscription 
 
 <PullQuote>Receive the webhook, validate the signature, dispatch a Laravel Job, and return the response immediately.</PullQuote>
 
-The best practice for [agentic commerce on Shopify](/blog/agentic-commerce-shopify/) is to receive the webhook, validate the signature, dispatch a Laravel Job, and return the response immediately. This keeps your app responsive and keeps Shopify happy with your delivery rates.
+This is the best practice for [agentic commerce on Shopify](/blog/agentic-commerce-shopify/). It keeps your app responsive and keeps Shopify happy with your delivery rates.
 
 <Figure
   src="/blog/synchronous-vs-asynchronous-communication/inline-2.webp"
@@ -170,7 +170,7 @@ Choosing the right pattern depends on the user's expectations and the reliabilit
 | :------------------- | :-------------------------------- | :------------------------------------- |
 | **User Experience**  | Immediate feedback required.      | Background processing is okay.         |
 | **Data Integrity**   | Result needed for next step.      | Eventual consistency is okay.          |
-| **Reliability**      | Fails if the connection breaks.   | Retries automatically on failure.      |
+| **Reliability**      | Fails if the connection breaks.   | Can retry on failure (set $tries).     |
 | **Complexity**       | Simple code structure.            | Requires queue management and workers. |
 | **Example Use Case** | Login validation, viewing a cart. | Order fulfillment, image processing.   |
 
