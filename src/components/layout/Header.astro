@@ -8,7 +8,7 @@ import { externalLinkAttrs } from "@/lib/links";
 
 <header class="border-ink bg-bg sticky top-0 z-40 border-b-[3px]">
   <div
-    class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-3"
+    class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 px-5 py-3"
   >
     <a
       href="/"
@@ -57,7 +57,7 @@ import { externalLinkAttrs } from "@/lib/links";
     <div
       id="mobile-menu"
       hidden
-      class="border-ink bg-bg border-t-[3px] lg:hidden"
+      class="border-ink bg-bg absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-y-[3px] lg:hidden"
     >
       <div class="mx-auto max-w-5xl space-y-3 px-5 py-4">
         <Nav vertical />
@@ -85,6 +85,12 @@ import { externalLinkAttrs } from "@/lib/links";
       <style>
         #mobile-menu-toggle {
           display: none !important;
+        }
+        /* the no-JS menu sits in the header flex row: give it a full row */
+        header noscript {
+          display: block;
+          flex-basis: 100%;
+          margin: 0.75rem -1.25rem -0.75rem;
         }
       </style>
       <div class="border-ink bg-bg border-t-[3px] lg:hidden">
