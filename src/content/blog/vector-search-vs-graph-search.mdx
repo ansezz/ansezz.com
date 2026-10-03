@@ -1,6 +1,6 @@
 ---
 title: "Vector search vs graph search for RAG"
-description: "Compare vector search and graph search for RAG. When to use embeddings via pgvector vs relationship-based knowledge graphs — and why GraphRAG often wins."
+description: "Compare vector search and graph search for RAG. When to use embeddings via pgvector vs relationship-based knowledge graphs, and why GraphRAG often wins."
 publishDate: 2026-06-18
 category: ai
 tags: [rag, pgvector, vector-search, architecture, ai]
@@ -10,35 +10,79 @@ heroImage:
   alt: "Pop-art style comparison of vector search and graph search for RAG"
 ---
 
-Retrieval-Augmented Generation (RAG) forces a question most teams put off: how is data actually retrieved? Most production systems start with vector search because it is accessible and effective for basic similarity. But as queries get more complex, the limits of semantic similarity show. A system that finds "similar" things often fails when asked to explain "connected" things. That gap is where the choice between vector search and graph search decides whether your RAG strategy holds up.
+Vector search finds things that are similar. Graph search finds things that are connected. Multi-hop questions need the second.
 
-Relying solely on vector embeddings can lead to a phenomenon known as the semantic trap. You might retrieve five document chunks that all mention a specific topic, but if those chunks do not explicitly link to each other, the LLM will struggle to synthesize a multi-hop answer. This often results in hallucinations or incomplete reasoning. If your RAG pipeline cannot traverse relationships, it is essentially working with a deck of shuffled cards rather than an organized map.
+<Summary>
+- Vector search (for example pgvector) turns text into embeddings and finds the nearest ones. It is easy to start with and great for fuzzy, semantic matching.
+- Graph search stores entities and their relationships, so it can follow chains of facts that vector search misses.
+- GraphRAG combines them: vectors find the starting points, graph traversal pulls in the connected context.
+</Summary>
 
-The fix starts with understanding the trade-offs between vector-based and relationship-based retrieval. Vector search excels at high-dimensional similarity; graph search offers structured traversals that preserve the logic of your data. Combining the two into a hybrid architecture is usually the most robust path forward.
+Retrieval-Augmented Generation (RAG) forces a question most teams put off: how is data actually retrieved?
+
+Most production systems start with vector search because it is accessible and effective for basic similarity. But as queries get more complex, the limits of semantic similarity show.
+
+A system that finds "similar" things often fails when asked to explain "connected" things. That gap is where the choice between vector search and graph search decides whether your RAG strategy holds up.
+
+Relying only on vector embeddings can lead to what is known as the semantic trap. You might retrieve five document chunks that all mention a topic, but if those chunks do not link to each other, the LLM will struggle to put together a multi-hop answer.
+
+This often results in hallucinations or incomplete reasoning. If your RAG pipeline cannot traverse relationships, it is working with a deck of shuffled cards rather than an organized map.
+
+The fix starts with understanding the trade-offs between vector-based and relationship-based retrieval. Vector search excels at high-dimensional similarity; graph search offers structured traversals that preserve the logic of your data.
+
+Combining the two into a hybrid architecture is usually the safest path forward.
 
 ## Understanding vector search and embeddings
 
-Vector search operates by converting unstructured data into dense numerical arrays called embeddings. These embeddings represent the semantic meaning of the text in a multi-dimensional space. When a user submits a query, that query is also converted into a vector. The system then calculates the mathematical distance between the query vector and the stored vectors using algorithms like cosine similarity or Euclidean distance.
+Vector search works by converting unstructured data into dense numerical arrays called embeddings. These embeddings represent the semantic meaning of the text in a multi-dimensional space.
 
-For developers working within the Laravel or Node.js ecosystems, tools like pgvector have made this incredibly accessible. By adding a vector column to a standard Postgres database, you can perform similarity searches directly alongside your relational data. This approach is highly efficient for "fuzzy" matching. It can find a product description for a "crimson summer dress" even if the query only mentions a "red lightweight gown."
+When a user submits a query, that query is also converted into a vector. The system then calculates the distance between the query vector and the stored vectors using measures like cosine similarity or Euclidean distance.
 
-However, vector search is fundamentally limited by its lack of structural awareness. It treats every chunk of data as an independent point in space. It has no inherent understanding that "User A" is the "CEO" of "Company B" unless those specific words are clustered together in a single text chunk.
+### pgvector makes it accessible
 
-![A multi-dimensional vector embedding space with clustered points](/blog/vector-search-vs-graph-search/vector-embeddings.webp)
+For developers working within the Laravel or Node.js ecosystems, tools like pgvector have made this very accessible. By adding a vector column to a standard Postgres database, you can run similarity searches right next to your relational data.
+
+This approach is very efficient for "fuzzy" matching. It can find a product description for a "crimson summer dress" even if the query only mentions a "red lightweight gown."
+
+### No sense of structure
+
+However, vector search is limited by its lack of structural awareness. It treats every chunk of data as an independent point in space.
+
+It has no built-in understanding that "User A" is the "CEO" of "Company B" unless those words sit together in a single text chunk.
+
+<Figure
+  src="/blog/vector-search-vs-graph-search/inline-1.webp"
+  alt="Comic panel of a robot using a magnet to pull a cluster of similar glowing dots out of space"
+  caption="Vector search finds things that look alike, not things that are linked."
+/>
+
+<TryThis>
+Write down three real questions your users ask that need two facts from different documents to answer. Run them against your current retriever and check whether both facts come back.
+</TryThis>
 
 ## The mechanics of graph search
 
-Graph search takes a completely different approach by modeling data as nodes (entities) and edges (relationships). Instead of looking for similarity in a coordinate system, graph search traverses defined paths. A node might represent a person, a place, or a concept, while an edge defines how they interact. For example, an edge labeled "works_at" might connect a person node to a company node.
+Graph search takes a different approach by modeling data as nodes (entities) and edges (relationships). Instead of looking for similarity in a coordinate system, graph search follows defined paths.
 
-This structure allows for multi-hop queries that are nearly impossible for pure vector search. You can ask the system to "find all employees at companies that use Laravel and were founded after 2015." A graph database like Neo4j or a graph-capable extension can follow these links precisely. In the context of RAG, this means the retrieval engine can pull in a coherent chain of facts rather than a disjointed set of similar-sounding paragraphs.
+A node might represent a person, a place, or a concept, while an edge defines how they relate. For example, an edge labeled "works_at" might connect a person node to a company node.
 
-The challenge with graph search is the ingestion process. Unlike vector search, which only requires a simple embedding model, graph search requires entity extraction and schema mapping. You must identify which entities exist in your text and how they relate to one another before they can be stored in the graph. This adds complexity to your data pipeline but pays dividends in reasoning accuracy.
+### Multi-hop queries
 
-![A knowledge graph of nodes and labeled relationship edges](/blog/vector-search-vs-graph-search/knowledge-graph.webp)
+This structure allows multi-hop queries that are nearly impossible for pure vector search. You can ask the system to "find all employees at companies that use Laravel and were founded after 2015."
+
+A graph database like Neo4j or a graph-capable extension can follow these links precisely. In RAG, this means the retrieval engine can pull in a coherent chain of facts rather than a disjointed set of similar-sounding paragraphs.
+
+### The cost is ingestion
+
+The challenge with graph search is the ingestion process. Vector search only requires an embedding model. Graph search requires entity extraction and schema mapping.
+
+You must identify which entities exist in your text and how they relate before you can store them in the graph. This adds complexity to your data pipeline but pays off in reasoning accuracy.
+
+<PullQuote>A system that finds "similar" things often fails when asked to explain "connected" things.</PullQuote>
 
 ## Comparison: vector vs graph search
 
-Choosing the right approach depends on the nature of your data and the questions your users are asking. The table below outlines the primary technical differences.
+Choosing the right approach depends on the nature of your data and the questions your users ask. The table below outlines the main technical differences.
 
 | Feature        | Vector Search (pgvector)            | Graph Search (Knowledge Graph)           |
 | :------------- | :---------------------------------- | :--------------------------------------- |
@@ -49,48 +93,100 @@ Choosing the right approach depends on the nature of your data and the questions
 | **Ideal For**  | FAQ bots, general search, broad Q&A | Fraud detection, supply chain, reasoning |
 | **Scaling**    | Efficient with ANN indexing (HNSW)  | Sensitive to graph density and depth     |
 
-For a deeper look at avoiding common pitfalls in this space, see our guide on [7 RAG mistakes in production](/blog/7-rag-mistakes-production/). Many teams find that they start with vectors and only introduce graphs when they hit a "reasoning wall."
+For a deeper look at avoiding common pitfalls in this space, see our guide on [7 RAG mistakes in production](/blog/7-rag-mistakes-production/). Many teams start with vectors and only introduce graphs when they hit a "reasoning wall."
 
 ## GraphRAG: the hybrid evolution
 
-The most advanced RAG systems are moving toward a hybrid model often referred to as GraphRAG. This architecture does not choose one over the other. Instead, it uses both to provide the LLM with a richer context. In a GraphRAG setup, the system first performs a vector search to identify relevant starting points in the knowledge base. Once those starting points are found, it uses graph traversals to pull in related entities and contextual relationships.
+The most advanced RAG systems are moving toward a hybrid model often called GraphRAG. This architecture does not choose one over the other. It uses both to give the LLM richer context.
 
-Imagine a medical research application. A vector search might find a paper about a specific drug. The graph search then identifies the chemical compounds in that drug, the clinical trials associated with it, and the known side effects reported in other related papers. The resulting context provided to the LLM is a structured "subgraph" of knowledge. This significantly reduces the risk of hallucinations because the LLM is working with explicitly linked facts.
+In a GraphRAG setup, the system first runs a vector search to find relevant starting points in the knowledge base. From those starting points, it uses graph traversals to pull in related entities and their relationships.
 
-Implementing this hybrid approach requires a solid DevOps foundation. Tools like Docker and Coolify can help manage the multiple services involved, including your vector store, graph database, and the extraction services that keep them in sync. If you are exploring how to host these complex stacks, our article on [Coolify and self-hosted SaaS](/blog/coolify-self-hosted-saas/) provides a good starting point for infrastructure management.
+<BeforeAfter beforeLabel="Vector-only RAG" afterLabel="GraphRAG">
+  <div slot="before">Five chunks that all mention the topic, with no links between them. The LLM has to guess how they fit.</div>
+  <div slot="after">Vector search finds the entry points, then graph traversal adds the linked facts. The LLM gets a small, connected subgraph.</div>
+</BeforeAfter>
 
-![A GraphRAG pipeline combining vector discovery with graph context expansion](/blog/vector-search-vs-graph-search/graphrag-performance.webp)
+### A worked example
+
+Imagine a medical research application. A vector search might find a paper about a specific drug.
+
+The graph search then identifies the chemical compounds in that drug, the clinical trials associated with it, and the known side effects reported in other related papers.
+
+The context given to the LLM is a structured "subgraph" of knowledge. This reduces the risk of hallucinations because the LLM is working with explicitly linked facts.
+
+### Running the stack
+
+This hybrid approach needs a solid DevOps foundation. Tools like Docker and Coolify can help manage the services involved, including your vector store, graph database, and the extraction services that keep them in sync.
+
+If you are exploring how to host these stacks, our article on [Coolify and self-hosted SaaS](/blog/coolify-self-hosted-saas/) is a good starting point for infrastructure management.
+
+<Figure
+  src="/blog/vector-search-vs-graph-search/inline-2.webp"
+  alt="Comic panel of a detective robot shining a flashlight on a corkboard of pins connected by red string"
+  caption="GraphRAG finds a starting point with vectors, then follows the links."
+/>
+
+<TryThis>
+Before building a full graph, extract only the two or three entity types your users ask about most (for example products and suppliers) and the one relationship between them. See whether that alone fixes your multi-hop questions.
+</TryThis>
 
 ## Technical implementation with pgvector and SQL
 
-For teams already using Postgres, pgvector is the logical starting point for adding vector capabilities. It integrates seamlessly into existing SQL workflows. You can store your embeddings in a `vector` column and use the `<->` (Euclidean) or `<=>` (cosine) operators to query them.
+For teams already using Postgres, pgvector is the logical starting point for adding vector capabilities. It fits into existing SQL workflows.
+
+You can store your embeddings in a `vector` column and use the `<->` (Euclidean) or `<=>` (cosine distance) operators to query them.
 
 ```sql
 -- Example: Finding similar document chunks in Postgres
 SELECT content, 1 - (embedding <=> '[0.1, 0.2, 0.3, ...]') AS similarity
 FROM document_chunks
-WHERE 1 - (embedding <=> '[0.1, 0.2, 0.3, ...]') > 0.8
-ORDER BY similarity DESC
+ORDER BY embedding <=> '[0.1, 0.2, 0.3, ...]'
 LIMIT 5;
 ```
 
-To approximate a graph without a dedicated graph database, you can model simple one-to-many or many-to-many relationships with relational joins. But as the number of hops grows, recursive joins and `WITH RECURSIVE` queries get expensive fast, and the planner struggles to keep them efficient. That is the point to introduce a specialized graph layer such as Neo4j or the Apache AGE extension, which adds openCypher graph queries directly to Postgres. For the broader question of which retrieval components to assemble, see [picking the right RAG stack](/blog/picking-the-right-rag-stack/).
+### Let the index do its job
+
+Order by the distance expression itself and keep the `LIMIT`. That is the shape pgvector's HNSW and IVFFlat indexes can use.
+
+A `WHERE` filter on the similarity score (for example `> 0.8`) cannot use the index and forces a full scan, so apply a score threshold to the five rows you get back instead.
+
+### When joins stop scaling
+
+To approximate a graph without a dedicated graph database, you can model simple one-to-many or many-to-many relationships with relational joins.
+
+But as the number of hops grows, recursive joins and `WITH RECURSIVE` queries get expensive fast, and the planner struggles to keep them efficient.
+
+That is the point to introduce a specialized graph layer such as Neo4j or the Apache AGE extension, which adds openCypher graph queries directly to Postgres. For the broader question of which retrieval components to assemble, see [picking the right RAG stack](/blog/picking-the-right-rag-stack/).
+
+<TryThis>
+Run `EXPLAIN ANALYZE` on your similarity query. If you do not see an index scan on your HNSW or IVFFlat index, rewrite it to `ORDER BY embedding <=> ... LIMIT k`.
+</TryThis>
 
 ## Choosing your path
 
-The decision between vector and graph search is not binary. It is a spectrum of technical complexity versus reasoning capability. For simple semantic search over a collection of PDFs, vector search with pgvector is almost always the right answer. It is fast, easy to implement, and requires minimal maintenance.
+The decision between vector and graph search is not binary. It is a spectrum of technical complexity versus reasoning capability.
 
-If your application requires high precision, multi-step logic, or the ability to explain "why" a result was chosen, the investment in a knowledge graph is necessary. The architectural overhead of building an extraction pipeline is the price you pay for a system that truly understands the relationships within your data.
+For simple semantic search over a collection of PDFs, vector search with pgvector is almost always the right answer. It is fast, easy to implement, and needs little maintenance.
 
-Most production-grade AI systems will eventually land in the middle. They will use vectors for broad discovery and graphs for deep reasoning. By designing your system with a modular approach today, you can ensure that your infrastructure is ready to evolve as your AI needs grow.
+### When the graph is worth it
 
-## Takeaways
+If your application needs high precision, multi-step logic, or the ability to explain "why" a result was chosen, the investment in a knowledge graph is necessary.
 
+The overhead of building an extraction pipeline is the price you pay for a system that understands the relationships within your data.
+
+### Most systems land in the middle
+
+Most production AI systems will eventually use vectors for broad discovery and graphs for deep reasoning. If you design your system to be modular today, your infrastructure is ready to evolve as your AI needs grow.
+
+<Takeaway>
 - Vector search is best for semantic similarity and is easy to implement using tools like pgvector.
 - Graph search excels at multi-hop reasoning and mapping complex relationships between entities.
 - Vector search treats data points as isolated, while graph search treats them as connected nodes.
 - GraphRAG is a hybrid approach that uses vector search for discovery and graph search for context expansion.
 - Start with vector search for most projects, but prepare for graph search if your queries require complex structural reasoning.
 - Monitor retrieval metrics like recall and precision to spot when a vector-only strategy starts failing.
+</Takeaway>
 
-How is your current RAG pipeline handling multi-hop queries that connect data points across documents? If you're building one for production, [here's how I help teams ship it](/services/).
+If you're building a RAG pipeline for production, [here's how I help teams ship it](/services/).
+
+How is your current RAG pipeline handling multi-hop queries that connect data points across documents?
