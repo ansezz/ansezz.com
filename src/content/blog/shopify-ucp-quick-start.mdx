@@ -106,7 +106,7 @@ If you are using a custom Laravel backend to power your Shopify store's logic, m
 Here is your agent-readiness checklist:
 
 - Enable **Agentic storefronts** in your Shopify admin.
-- Verify the `/.well-known/ucp` path returns valid JSON.
+- Verify the `/.well-known/ucp` path returns valid JSON (my [JSON formatter](/tools/json-formatter/) points to the exact error if it does not).
 - Confirm your payment handlers (Shop Pay, Shopify Payments) are declared in the manifest.
 - Test your site with an agentic browser or a UCP validator tool.
 - Check your [Coolify Docker SaaS hosting](/blog/coolify-docker-saas-hosting/) configs if you're hosting custom middleware, to ensure the path isn't being dropped by your reverse proxy.

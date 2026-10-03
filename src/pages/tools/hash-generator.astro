@@ -1,13 +1,16 @@
 ---
 import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
 import { Icon } from "astro-icon/components";
-import { SITE } from "@/consts";
+import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const tool = getTool("/tools/hash-generator/");
 
 const TOOL_NAME = "SHA Hash Generator";
 const TOOL_PATH = "/tools/hash-generator/";
@@ -112,6 +115,7 @@ const faq = [
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Any (browser)",
@@ -190,7 +194,8 @@ const relatedLinks = [
 ---
 
 <Page
-  title={TOOL_NAME}
+  title={tool.seoTitle}
+  dateModified={tool.updated}
   description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="SHA Hash Generator."
@@ -536,6 +541,8 @@ const relatedLinks = [
       }
     </div>
   </section>
+
+  <ToolMeta tool={tool} />
 
   <RelatedLinks items={relatedLinks} />
 </Page>

@@ -38,7 +38,7 @@ To understand how to build with MCP I look at its three core primitives. These a
 
 ## Building your first MCP server
 
-I prefer using TypeScript for building MCP servers because of the mature official SDK. However the protocol itself is language-agnostic, with first-party SDKs for Python, Java, Go, and more. Here is a simplified look at how I structure a basic server that exposes a weather tool. This uses the low-level `Server` API to make the request handlers explicit; the higher-level `McpServer` class wraps the same boilerplate if you want less ceremony.
+I prefer using TypeScript for building MCP servers because of the mature official SDK. However the protocol itself is language-agnostic, with first-party SDKs for Python, Java, Go, and more. Here is a simplified look at how I structure a basic server that exposes a weather tool. This uses the low-level `Server` API to make the request handlers explicit; the higher-level `McpServer` class wraps the same boilerplate if you want less ceremony. If you have a sample tool response, my [JSON to TypeScript and Zod converter](/tools/json-to-typescript/) gives you the types.
 
 ```typescript
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";

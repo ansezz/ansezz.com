@@ -7,11 +7,7 @@ import HalftoneSection from "@/components/neobrutalist/HalftoneSection.astro";
 import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import { Icon } from "astro-icon/components";
-import {
-  SERVICES_PAGE,
-  SITE,
-  type ServiceLander,
-} from "@/consts";
+import { SERVICES_PAGE, SITE, TOOL_LIST, type ServiceLander } from "@/consts";
 import { faqPage, breadcrumbList } from "@/lib/seo";
 
 interface Props {
@@ -28,6 +24,16 @@ const breadcrumbLd = breadcrumbList([
 ]);
 
 const contactHref = `/contact/?package=${lander.packageId}`;
+
+// Free tools tied to this service. Tools whose main service is this one come
+// first; capped at 6 so the section stays a teaser, not a directory.
+const serviceTools = TOOL_LIST.filter(
+  (t) => t.status === "live" && t.services.includes(lander.packageId),
+)
+  .map((t, i) => ({ t, i, primary: t.services[0] === lander.packageId }))
+  .sort((a, b) => Number(b.primary) - Number(a.primary) || a.i - b.i)
+  .slice(0, 6)
+  .map(({ t }) => ({ href: t.href, note: t.blurb, kind: "Tool" as const }));
 ---
 
 <Page
@@ -51,7 +57,7 @@ const contactHref = `/contact/?package=${lander.packageId}`;
         <ul class="space-y-3">
           {
             lander.whoFor.map((item) => (
-              <li class="flex items-start gap-2 text-sm font-medium leading-snug md:text-base">
+              <li class="flex items-start gap-2 text-sm leading-snug font-medium md:text-base">
                 <Icon
                   name="lucide:arrow-right"
                   class="mt-0.5 h-4 w-4 shrink-0"
@@ -63,11 +69,7 @@ const contactHref = `/contact/?package=${lander.packageId}`;
         </ul>
       </NeoCard>
 
-      <NeoCard
-        tone={lander.tone}
-        shadow="md"
-        class="flex flex-col gap-4"
-      >
+      <NeoCard tone={lander.tone} shadow="md" class="flex flex-col gap-4">
         <div class="flex items-center gap-3">
           <span
             class="border-ink bg-paper text-ink shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
@@ -82,7 +84,7 @@ const contactHref = `/contact/?package=${lander.packageId}`;
         <ul class="space-y-3">
           {
             lander.whatYouGet.map((item) => (
-              <li class="flex items-start gap-2 text-sm font-medium leading-snug md:text-base">
+              <li class="flex items-start gap-2 text-sm leading-snug font-medium md:text-base">
                 <Icon name="lucide:check" class="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{item}</span>
               </li>
@@ -142,6 +144,23 @@ const contactHref = `/contact/?package=${lander.packageId}`;
       }
     </ol>
   </section>
+
+  <!-- Free tools -->
+  <RelatedLinks
+    title="Free tools I built for this work"
+    items={serviceTools}
+    class="!max-w-6xl !pb-6"
+  />
+  {
+    serviceTools.length > 0 && (
+      <p class="mx-auto max-w-6xl px-5 pb-14 text-sm">
+        <a href="/tools/" class="font-bold underline underline-offset-2">
+          See all free tools
+        </a>
+        . They run in your browser, with no signup.
+      </p>
+    )
+  }
 
   <!-- Related -->
   <RelatedLinks

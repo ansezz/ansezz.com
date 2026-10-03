@@ -52,7 +52,7 @@ For most developers starting out, I'd pick FrankenPHP at the install prompt and 
 
 ![A pool of warm Octane workers handling incoming requests](/blog/laravel-octane-high-traffic/worker-pool.webp)
 
-The secret sauce of Octane is the "worker pool." Instead of one process per request, you have a fixed number of workers waiting to handle incoming traffic. If you misconfigure this, you'll either leave performance on the table or crash your server.
+The secret sauce of Octane is the "worker pool." Instead of one process per request, you have a fixed number of workers waiting to handle incoming traffic. If you misconfigure this, you'll either leave performance on the table or crash your server. My [server capacity calculator](/tools/capacity-calculator/) turns requests per second and latency into the number of workers you need.
 
 A general rule of thumb for sizing your worker pool depends on whether your app is CPU-bound or I/O-bound.
 

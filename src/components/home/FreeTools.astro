@@ -1,0 +1,67 @@
+---
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
+import NeoButton from "@/components/neobrutalist/NeoButton.astro";
+import { Icon } from "astro-icon/components";
+import { TOOL_LIST } from "@/consts";
+
+// A short, hand-picked teaser for /tools/. One or two per area, leaning on the
+// niche tools that are most useful to the people who hire me.
+const PICKS = [
+  "/tools/llm-cost-calculator/",
+  "/tools/rag-chunk-splitter/",
+  "/tools/shopify-hmac-verifier/",
+  "/tools/capacity-calculator/",
+  "/tools/json-to-typescript/",
+  "/tools/jwt-decoder/",
+];
+
+const live = TOOL_LIST.filter((t) => t.status === "live");
+const picks = PICKS.map((href) => live.find((t) => t.href === href)).filter(
+  (t): t is (typeof live)[number] => Boolean(t),
+);
+---
+
+<section class="relative mx-auto max-w-6xl px-5 py-16 md:py-24">
+  <div class="mb-10 grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
+    <div class="max-w-2xl">
+      <BurstBadge tone="pink" size="sm" class="mb-5">05</BurstBadge>
+      <h2 class="display text-[clamp(2rem,4.5vw,3.25rem)] leading-[0.95]">
+        Free
+        <span class="bg-cyan text-on-accent -mx-1 inline-block px-2">tools</span
+        >.
+      </h2>
+      <p class="text-ink-soft mt-4 text-base leading-snug md:text-lg">
+        {live.length} small tools I built because I needed them. They run in your
+        browser, with no signup and nothing uploaded.
+      </p>
+    </div>
+    <NeoButton href="/tools/" variant="secondary" size="lg">
+      All tools →
+    </NeoButton>
+  </div>
+  <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {
+      picks.map((t) => (
+        <li class="min-w-0">
+          <NeoCard
+            href={t.href}
+            tone={t.tone}
+            shadow="sm"
+            hover
+            class="flex h-full flex-col gap-2"
+          >
+            <span
+              class="border-ink bg-paper text-ink shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-[6px] border-[2.5px]"
+              aria-hidden="true"
+            >
+              <Icon name={t.icon} class="h-5 w-5" />
+            </span>
+            <p class="heading text-lg leading-tight uppercase">{t.title}</p>
+            <p class="text-sm leading-snug opacity-90">{t.blurb}</p>
+          </NeoCard>
+        </li>
+      ))
+    }
+  </ul>
+</section>

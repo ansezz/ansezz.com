@@ -49,7 +49,7 @@ I often recommend using tools like [vLLM](https://github.com/vllm-project/vllm) 
 
 ## Prefix-aware routing: reuse the KV cache
 
-Here is a secret — the most expensive part of a RAG request is often re-processing the same system prompt or long context over and over again. If you send five consecutive questions about the same document to five different GPUs, each GPU has to perform the "prefill" phase for that document from scratch.
+Here is a secret — the most expensive part of a RAG request is often re-processing the same system prompt or long context over and over again. If you send five consecutive questions about the same document to five different GPUs, each GPU has to perform the "prefill" phase for that document from scratch. On hosted APIs, prompt caching attacks the same cost, and my [LLM cost calculator](/tools/llm-cost-calculator/) shows the effect on your monthly bill.
 
 ![Prefix-aware routing sending prompts with a shared prefix to the GPU holding a warm KV cache](/blog/gpu-aware-load-balancing/prefix-routing.webp)
 

@@ -2,7 +2,7 @@
 import Page from "@/layouts/Page.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import { Icon } from "astro-icon/components";
-import { TOOLS, TOOL_LIST, TOOL_GROUPS, SITE } from "@/consts";
+import { TOOLS, TOOL_LIST, TOOL_GROUPS, TOOLS_UPDATED, SITE } from "@/consts";
 import { breadcrumbList, collectionPage } from "@/lib/seo";
 
 const breadcrumbLd = breadcrumbList([
@@ -31,7 +31,8 @@ const groups = TOOL_GROUPS.map((g) => ({
 ---
 
 <Page
-  title={TOOLS.TITLE}
+  title="Free Developer Tools: AI, Infra and Shopify"
+  dateModified={TOOLS_UPDATED}
   description={TOOLS.DESCRIPTION}
   eyebrow="Free tools"
   heading="Tools I built because I needed them."

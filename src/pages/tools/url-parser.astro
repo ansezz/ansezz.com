@@ -1,12 +1,15 @@
 ---
 import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
-import { SITE } from "@/consts";
+import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const tool = getTool("/tools/url-parser/");
 
 const PAGE_DESCRIPTION =
   "Free URL parser and encoder. Break any URL into protocol, host, path, query and hash, edit query params live, and encode or decode text in your browser.";
@@ -20,6 +23,7 @@ const breadcrumbLd = breadcrumbList([
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  dateModified: tool.updated,
   name: "URL Parser & Encoder",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Any (browser)",
@@ -176,7 +180,8 @@ const relatedLinks = [
 ---
 
 <Page
-  title="URL Parser & Encoder"
+  title={tool.seoTitle}
+  dateModified={tool.updated}
   description={PAGE_DESCRIPTION}
   eyebrow="Free tool"
   heading="URL Parser & Encoder."
@@ -658,6 +663,8 @@ const relatedLinks = [
       }
     </ul>
   </section>
+
+  <ToolMeta tool={tool} />
 
   <RelatedLinks items={relatedLinks} />
 </Page>

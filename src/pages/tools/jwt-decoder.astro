@@ -1,11 +1,14 @@
 ---
 import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import { Icon } from "astro-icon/components";
-import { SITE } from "@/consts";
+import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
+
+const tool = getTool("/tools/jwt-decoder/");
 
 const TOOL_NAME = "JWT Decoder";
 const TOOL_PATH = "/tools/jwt-decoder/";
@@ -86,6 +89,7 @@ const faq = [
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Any (browser)",
@@ -184,7 +188,8 @@ const relatedLinks = [
 ---
 
 <Page
-  title={TOOL_NAME}
+  title={tool.seoTitle}
+  dateModified={tool.updated}
   description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="JWT Decoder."
@@ -438,6 +443,8 @@ const relatedLinks = [
       }
     </div>
   </section>
+
+  <ToolMeta tool={tool} />
 
   <RelatedLinks items={relatedLinks} />
 </Page>

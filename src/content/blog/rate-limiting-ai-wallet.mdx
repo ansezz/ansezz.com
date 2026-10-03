@@ -14,7 +14,7 @@ One runaway agent loop is all it takes to wake up to a $5,000 OpenAI bill.
 
 If you're building AI-powered SaaS or RAG systems, your biggest threat isn't a server crash. It's a "denial of wallet" attack. A buggy client, a malicious user, or even your own experimental agent can spam your API endpoints and burn through your tokens (and credits) in minutes.
 
-Traditional web apps care about requests per second to keep the CPU from melting. In the world of LLMs, we care about tokens per minute to keep the bank account from draining. Standard rate limiting isn't enough anymore. You need an architecture that understands cost, context, and the "noisy neighbor" problem before a single prompt even hits your vector DB.
+Traditional web apps care about requests per second to keep the CPU from melting. In the world of LLMs, we care about tokens per minute to keep the bank account from draining. For a quick feel of how text turns into tokens, try my [token counter](/tools/token-counter/). Standard rate limiting isn't enough anymore. You need an architecture that understands cost, context, and the "noisy neighbor" problem before a single prompt even hits your vector DB.
 
 ## Why requests per second (QPS) is a lie for AI
 

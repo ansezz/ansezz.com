@@ -71,4 +71,25 @@ export interface ToolEntry {
   group: ToolGroupId;
   /** Join key to the blog. Posts surface tools sharing at least one tag. */
   tags: BlogTag[];
+  /**
+   * Search-facing page title, without the brand suffix BaseLayout adds.
+   * Keep it at 47 characters or less so the full title stays near 55.
+   */
+  seoTitle: string;
+  /**
+   * ISO date (YYYY-MM-DD) the tool page or its data last changed. Feeds the
+   * visible "Last verified" line, dateModified in JSON-LD, and sitemap lastmod.
+   * Move it only when the tool, its data, or its explainer changes.
+   */
+  updated: string;
+  /** Overrides the visible "Last verified" text, e.g. when prices were checked earlier. */
+  verifiedLabel?: string;
+  /**
+   * Service packages this tool supports. The first one is the main CTA on the
+   * tool page; every listed service shows the tool on its lander.
+   */
+  services: ToolServiceId[];
 }
+
+/** Mirrors ServicePackageId in 05-service-landers (kept separate to avoid an import cycle). */
+export type ToolServiceId = "mvp" | "ai" | "shopify" | "audit";

@@ -34,7 +34,7 @@ This separation of concerns is a core pillar of what we do when building [custom
 
 ## The art of the zero-downtime deploy
 
-Nothing kills user trust faster than a "502 Bad Gateway" every time you push a small CSS fix. By default, many self-hosted setups just kill the old container and start the new one. There's a gap. That gap is where your users get frustrated.
+Nothing kills user trust faster than a ["502 Bad Gateway"](/tools/http-status-codes/) every time you push a small CSS fix. By default, many self-hosted setups just kill the old container and start the new one. There's a gap. That gap is where your users get frustrated.
 
 Coolify handles this beautifully with "rolling updates," but it only works if you tell it how to check the health of your app.
 
@@ -105,7 +105,7 @@ Managing a multi-server setup requires a bit of extra care. Here are a few pract
 
 - **Resource limits.** Always set CPU and RAM limits in Coolify for each application. This prevents a single "leaky" container from hogging all the resources and crashing the whole server.
 - **External backups.** If you do choose to run databases inside Coolify, use the S3-compatible backup feature. I personally use Backblaze B2 or Cloudflare R2 for this. Never rely on local backups alone.
-- **Docker pruning.** Coolify is good at cleaning up, but it's worth checking your disk space regularly. Large images can eat up your SSD fast. Set up a cron job or use Coolify's built-in cleanup settings.
+- **Docker pruning.** Coolify is good at cleaning up, but it's worth checking your disk space regularly. Large images can eat up your SSD fast. Set up a cron job (my [cron explainer](/tools/cron-explainer/) checks the schedule) or use Coolify's built-in cleanup settings.
 - **Monitoring.** Use a tool like Better Stack or GlitchTip to monitor your endpoints. Coolify tells you if the container is running, but an external monitor tells you if a human can actually use the site.
 
 ## Scaling is a journey

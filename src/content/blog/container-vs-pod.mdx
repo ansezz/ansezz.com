@@ -36,7 +36,7 @@ This shared network space changes how services communicate. In a standard Docker
 
 This has a few technical implications:
 
-1. **Port management**: Since they share an IP, containers in the same Pod cannot bind to the same port. If one container uses port 8080, another container in that same Pod must use a different port.
+1. **Port management**: Since they share an IP, containers in the same Pod cannot bind to the same port. If one container uses port 8080, another container in that same Pod must use a different port. To check which service usually owns a port, see my [common ports list](/tools/common-ports/).
 2. **Performance**: Communication over `localhost` is extremely fast. There is no need for complex routing or service discovery between the containers within the same Pod.
 3. **Simplicity**: You can build modular systems where a helper container provides a service to the main application without exposing that service to the rest of the cluster.
 

@@ -26,6 +26,7 @@ import {
   TOOL_LIST,
 } from "@/consts";
 import { webPage } from "@/lib/seo";
+import { assignRelatedTools } from "@/lib/related-tools";
 import { mdxComponents } from "@/components/mdx";
 
 export async function getStaticPaths() {
@@ -51,26 +52,24 @@ const related = all
   .filter((p) => p.id !== post.id && p.data.category === post.data.category)
   .slice(0, 3);
 
-// Tools sharing at least one tag with this post. Ranked by overlap so the
-// most relevant tool leads. Capped at 3 — this is a footer block, not a
-// directory. Inline contextual links inside post bodies are worth more and
-// are handled separately.
-const postTags = new Set<string>(post.data.tags);
-const relatedTools = TOOL_LIST.filter((t) => t.status === "live")
-  .map((t) => ({
-    tool: t,
-    overlap: t.tags.filter((x) => postTags.has(x)).length,
-  }))
-  .filter((x) => x.overlap > 0)
-  .sort(
-    (a, b) => b.overlap - a.overlap || a.tool.title.localeCompare(b.tool.title),
-  )
-  .slice(0, 3)
-  .map(({ tool }) => ({
-    href: tool.href,
-    note: tool.blurb,
-    kind: "Tool" as const,
-  }));
+// Related tools for the footer block. Assigned across all posts at once so
+// every tool gets shown somewhere (see lib/related-tools). Capped at 3: this is
+// a footer block, not a directory. Inline links inside post bodies are worth
+// more and are written by hand.
+const relatedTools = (
+  assignRelatedTools(
+    all.map((p) => ({
+      id: p.id,
+      tags: p.data.tags,
+      publishDate: p.data.publishDate,
+    })),
+    TOOL_LIST.filter((t) => t.status === "live"),
+  ).get(post.id) ?? []
+).map((tool) => ({
+  href: tool.href,
+  note: tool.blurb,
+  kind: "Tool" as const,
+}));
 
 const skillsChecklist = post.data.tags.slice(0, 6).map((t) => ({
   label: t,

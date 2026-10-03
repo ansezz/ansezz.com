@@ -7,6 +7,10 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "Estimate API spend across Claude, GPT, and friends. Tokens in/out × requests × model price — see the monthly bill before you ship.",
     href: "/tools/llm-cost-calculator/",
+    seoTitle: "LLM API Cost Calculator: Claude, GPT, Gemini",
+    updated: "2026-08-12",
+    verifiedLabel: "June 2026 (model prices)",
+    services: ["ai"],
     icon: "lucide:calculator",
     tone: "yellow",
     status: "live",
@@ -18,6 +22,9 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "Paste any text and estimate token count for Claude and GPT models — plus characters, words, and a rough per-call cost. All in your browser.",
     href: "/tools/token-counter/",
+    seoTitle: "Token Counter: Count GPT and Claude Tokens",
+    updated: "2026-08-10",
+    services: ["ai"],
     icon: "lucide:hash",
     tone: "cyan",
     status: "live",
@@ -29,6 +36,10 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "Will the prompt fit? Paste it and see tokens used, headroom left, and what's still free for the answer across Claude, GPT and Gemini windows.",
     href: "/tools/context-window-checker/",
+    seoTitle: "Context Window Checker: Will My Prompt Fit?",
+    updated: "2026-08-12",
+    verifiedLabel: "August 2026 (window sizes)",
+    services: ["ai"],
     icon: "lucide:ruler",
     tone: "purple",
     status: "live",
@@ -40,6 +51,9 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "Split text into retrieval chunks — fixed, sentence, paragraph, or markdown-heading aware — and see every chunk's token count and overlap seam.",
     href: "/tools/rag-chunk-splitter/",
+    seoTitle: "RAG Chunk Splitter: Test Chunk Size and Overlap",
+    updated: "2026-08-12",
+    services: ["ai"],
     icon: "lucide:scissors",
     tone: "pink",
     status: "live",
@@ -53,6 +67,9 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "Paste a JWT and read its header and payload — claims, algorithm, and expiry decoded in your browser. Decode-only; nothing is sent anywhere.",
     href: "/tools/jwt-decoder/",
+    seoTitle: "JWT Decoder Online: Decode Tokens, No Upload",
+    updated: "2026-08-12",
+    services: ["mvp", "ai"],
     icon: "lucide:key-round",
     tone: "purple",
     status: "live",
@@ -64,6 +81,9 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "Encode and decode base64 without the UTF-8 bugs — emoji and accents round-trip correctly. base64url and file-to-data-URI included.",
     href: "/tools/base64-encoder/",
+    seoTitle: "Base64 Encode and Decode Online, UTF-8 Safe",
+    updated: "2026-08-12",
+    services: ["mvp"],
     icon: "lucide:binary",
     tone: "cyan",
     status: "live",
@@ -75,6 +95,9 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "SHA-1, SHA-256, SHA-384 and SHA-512 for text or a file, in hex or base64. Web Crypto, in your browser. No MD5 — on purpose.",
     href: "/tools/hash-generator/",
+    seoTitle: "SHA-256 Hash Generator Online (SHA-1, SHA-512)",
+    updated: "2026-08-10",
+    services: ["mvp", "shopify"],
     icon: "lucide:shield-check",
     tone: "green",
     status: "live",
@@ -86,6 +109,9 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "Keys, hex secrets and passphrases from crypto.getRandomValues — never Math.random. Unbiased sampling, entropy readout, nothing logged.",
     href: "/tools/secret-generator/",
+    seoTitle: "Secret Key and API Key Generator, Client-Side",
+    updated: "2026-08-12",
+    services: ["mvp"],
     icon: "lucide:key-square",
     tone: "pink",
     status: "live",
@@ -97,6 +123,9 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "Generate v4 UUIDs in bulk, copy with one click. Crypto-random, instant, offline. Handy for seeds, fixtures, and quick IDs.",
     href: "/tools/uuid-generator/",
+    seoTitle: "UUID Generator: Bulk v4 UUIDs Online, Free",
+    updated: "2026-08-10",
+    services: ["mvp"],
     icon: "lucide:fingerprint",
     tone: "green",
     status: "live",
@@ -110,6 +139,9 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "Break a URL into every part, edit query params and watch it rebuild. Plus the four encode/decode functions people keep mixing up.",
     href: "/tools/url-parser/",
+    seoTitle: "URL Parser and Encoder: Edit Query Strings",
+    updated: "2026-08-10",
+    services: ["mvp"],
     icon: "lucide:link",
     tone: "yellow",
     status: "live",
@@ -121,6 +153,9 @@ export const TOOL_LIST_A: ToolEntry[] = [
     blurb:
       "Format, minify, sort keys — and when it breaks, get the line, the column, and a caret under the exact character, not just “Unexpected token”.",
     href: "/tools/json-formatter/",
+    seoTitle: "JSON Formatter and Validator: Exact Error Line",
+    updated: "2026-08-12",
+    services: ["mvp"],
     icon: "lucide:braces",
     tone: "cyan",
     status: "live",

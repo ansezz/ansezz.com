@@ -69,7 +69,7 @@ $users = Cache::remember('active_users', 3600, function () {
 });
 ```
 
-This code snippet ensures that the database is only queried once per hour for this specific data. To take this a step further, you would configure your web server to set `Cache-Control` headers that a CDN like Cloudflare or Akamai can interpret.
+This code snippet ensures that the database is only queried once per hour for this specific data. To take this a step further, you would configure your web server to set `Cache-Control` headers that a CDN like Cloudflare or Akamai can interpret. My [HTTP headers cheat sheet](/tools/http-headers/) lists the caching headers with real example values.
 
 In the world of [Shopify development](/blog/category/shopify/), you rely heavily on the platform's native CDN. Shopify uses a robust edge network to serve product images and storefront assets. However, when building custom apps or headless storefronts, you must manually manage how your API responses are cached to prevent performance bottlenecks.
 
