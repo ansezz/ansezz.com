@@ -10,33 +10,71 @@ heroImage:
   alt: "Pop-art comic-style dashboard contrasting SRE reliability and platform engineering"
 ---
 
-Your production environment is down and the error budget is burning. You have two choices. You can hire someone to fix the immediate fire and ensure it never happens again. Or you can hire someone to build the tools that prevent your developers from starting that fire in the first place. This is the fundamental tension between Site Reliability Engineering (SRE) and Platform Engineering.
+An SRE keeps production up for your users. A platform engineer makes shipping easy for your developers. Hire for the bottleneck you have today.
 
-For years, "DevOps" was the catch-all term for anyone who touched a server. But as systems have grown in complexity, the roles have fractured into specialized disciplines. SRE and Platform Engineering are the two most prominent results of this evolution. While they often share tools like Kubernetes, Terraform, and Docker, their missions are worlds apart. One focuses on the runtime reality of the user. The other focuses on the internal experience of the developer.
+<Summary>
+- SREs own production reliability: SLIs, SLOs, error budgets, on-call, incident response and automating away toil.
+- Platform engineers own developer experience: an internal developer platform with self-service "Golden Paths" from laptop to production.
+- The two feed each other: SREs find recurring failures, platform engineers bake the fix into the defaults so every new service gets it.
+</Summary>
+
+Your production environment is down and the error budget is burning. You have two choices.
+
+You can hire someone to fix the immediate fire and make sure it never happens again. Or you can hire someone to build the tools that keep your developers from starting that fire in the first place.
+
+This is the core tension between Site Reliability Engineering (SRE) and Platform Engineering.
+
+For years, "DevOps" was the catch-all term for anyone who touched a server. As systems grew more complex, the roles split into specialized disciplines. SRE and Platform Engineering are the two most visible results.
+
+They often share tools like Kubernetes, Terraform, and Docker, but their missions are worlds apart. One focuses on the runtime reality of the user. The other focuses on the internal experience of the developer.
 
 ## The SRE: the guardian of production
 
-Site Reliability Engineering is what happens when you ask a software engineer to design an operations function. Originally pioneered by Google, SRE is a discipline that treats operations as a software problem. The primary mission of an SRE is simple but difficult. They must ensure that production services are reliable, scalable, and performant.
+Site Reliability Engineering is what happens when you ask a software engineer to design an operations function. Originally pioneered by Google, SRE treats operations as a software problem.
 
-SREs live and breathe metrics. They define Service Level Indicators (SLIs) and Service Level Objectives (SLOs) to quantify what "up" actually means. If a service has a 99.9% availability target, the SRE manages the "error budget." This is the remaining 0.1% of downtime allowed before the team must stop shipping features and focus entirely on stability.
+The mission of an SRE is simple but difficult: make sure production services are reliable, scalable, and performant.
 
-The daily life of an SRE involves on-call rotations, incident response, and post-mortem analysis. They don't just fix bugs. They build automation to eliminate "toil." Toil is the manual, repetitive work like scaling clusters or rotating certificates that scales linearly with the size of the system. By writing code to automate these tasks, an SRE ensures that the infrastructure can grow without requiring a proportional increase in headcount.
+### SLOs and error budgets
 
-![SRE reliability and SLO dashboard tracking error budgets and latency](/blog/sre-vs-platform-engineer/sre-slo-dashboard.webp)
+SREs live and breathe metrics. They define Service Level Indicators (SLIs) and Service Level Objectives (SLOs) to put a number on what "up" actually means.
+
+If a service has a 99.9% availability target, the SRE manages the "error budget." This is the remaining 0.1% of downtime allowed before the team must stop shipping features and focus on stability.
+
+### Killing toil
+
+The daily life of an SRE involves on-call rotations, incident response, and post-mortem analysis. Beyond fixing bugs, they build automation to eliminate "toil."
+
+Toil is the manual, repetitive work, like scaling clusters or rotating certificates, that grows linearly with the size of the system.
+
+By writing code to automate these tasks, an SRE lets the infrastructure grow without a matching increase in headcount.
+
+{/* IMAGE: inline-1 */}
+
+<TryThis>
+Pick your most important user-facing endpoint and write one SLO for it, for example "99.9% of requests succeed in under 300ms over 30 days." Then work out how many minutes of failure that leaves you each month.
+</TryThis>
 
 ## The Platform Engineer: architect of the golden path
 
-Platform Engineering is the practice of building and operating internal developer platforms (IDPs). If the SRE is focused on the end-user, the Platform Engineer is focused on the internal developer. Their goal is to improve Developer Experience (DX) by abstracting away the complexity of the underlying infrastructure.
+Platform Engineering is the practice of building and running internal developer platforms (IDPs). If the SRE focuses on the end user, the Platform Engineer focuses on the internal developer.
 
-A Platform Engineer builds "Golden Paths." These are standardized, self-service workflows that allow a developer to go from "code on my laptop" to "running in production" without needing to open a ticket for the infrastructure team. Instead of every developer learning the nuances of AWS IAM roles or Kubernetes ingress controllers, they use a platform that handles these details automatically.
+Their goal is to improve Developer Experience (DX) by hiding the complexity of the underlying infrastructure.
 
-The success of a Platform Engineer is measured by lead time to production and developer satisfaction. They treat the platform as a product. They conduct user research with their internal developers to find friction points. They build CI/CD pipelines, environment provisioning tools, and internal portals that make shipping software feel effortless. You can see similar patterns in how tools like [Coolify simplify SaaS hosting](/blog/coolify-docker-saas-hosting/) by providing a cohesive management layer.
+### Golden Paths
 
-![Platform engineering developer experience and infrastructure abstraction](/blog/sre-vs-platform-engineer/platform-engineering-dx.webp)
+A Platform Engineer builds "Golden Paths." These are standardized, self-service workflows that let a developer go from "code on my laptop" to "running in production" without opening a ticket for the infrastructure team.
+
+Instead of every developer learning the details of AWS IAM roles or Kubernetes ingress controllers, they use a platform that handles these details automatically.
+
+### The platform is a product
+
+Platform Engineers are measured by lead time to production and developer satisfaction. They treat the platform as a product and run user research with their internal developers to find friction points.
+
+They build CI/CD pipelines, environment provisioning tools, and internal portals that make shipping software feel effortless. You can see similar patterns in how tools like [Coolify simplify SaaS hosting](/blog/coolify-docker-saas-hosting/) by providing one management layer.
 
 ## The core divergence: metrics and customers
 
-The easiest way to distinguish these roles is to look at who they serve and how they are measured.
+The easiest way to tell these roles apart is to look at who they serve and how they are measured.
 
 | Feature              | SRE                            | Platform Engineer                |
 | :------------------- | :----------------------------- | :------------------------------- |
@@ -45,24 +83,35 @@ The easiest way to distinguish these roles is to look at who they serve and how 
 | **Key Focus**        | Production reliability         | Developer productivity           |
 | **Artifacts**        | Alerting rules, runbooks, SLOs | IDPs, CLI tools, CI/CD templates |
 
-An SRE cares about the "now." Is the site up? Is the latency within limits? If a database query takes 500ms instead of the usual 50ms, the SRE is the first person to notice. They are the frontline defenders of the business's reputation.
+### The "now" and the "how"
 
-A Platform Engineer cares about the "how." How long does it take for a new hire to ship their first line of code? How many manual steps are in the deployment process? They are the industrial engineers of the software factory. They optimize the assembly line so that everyone else can move faster. This role is increasingly important as we move toward [agentic commerce and automated Shopify workflows](/blog/agentic-commerce-shopify/), where the speed of iteration is a competitive advantage.
+An SRE cares about the "now." Is the site up? Is the latency within limits? If a database query takes 500ms instead of the usual 50ms, the SRE is the first person to notice. They are the front line for the business's reputation.
+
+A Platform Engineer cares about the "how." How long does it take a new hire to ship their first line of code? How many manual steps are in the deployment process?
+
+They are the industrial engineers of the software factory. They optimize the assembly line so everyone else can move faster.
+
+This role matters more as we move toward [agentic commerce and automated Shopify workflows](/blog/agentic-commerce-shopify/), where the speed of iteration is a competitive advantage.
 
 ## A Formula 1 metaphor
 
-Imagine a Formula 1 team. The SRE is the pit crew and the race engineer. They are monitoring the car in real-time during the race. They check tire pressure, fuel levels, and engine temperature. If something goes wrong on lap 30, they are the ones making split-second decisions to keep the car on the track. They manage the "reliability" of the race.
+Imagine a Formula 1 team.
 
-The Platform Engineer is the engineer back at the factory who designed the car and the tools used to build it. They created the wind tunnel, the simulation software, and the standardized parts that make the car fast and safe. They ensure that the driver and the pit crew have the best possible equipment to do their jobs. Without the factory engineer, the car wouldn't be fast. Without the race engineer, the car wouldn't finish the race.
+<BeforeAfter beforeLabel="SRE: the race engineer" afterLabel="Platform Engineer: the factory engineer">
+  <div slot="before">Watches the car in real time during the race: tire pressure, fuel, engine temperature. If something goes wrong on lap 30, they make the split-second call that keeps the car on the track.</div>
+  <div slot="after">Designed the car and the tools used to build it: the wind tunnel, the simulation software, the standardized parts. They make sure the driver and pit crew have the best equipment for the job.</div>
+</BeforeAfter>
+
+<PullQuote>Without the factory engineer, the car wouldn't be fast. Without the race engineer, the car wouldn't finish the race.</PullQuote>
 
 ## The tools of the trade
 
-While both roles use similar technologies, they apply them differently.
+Both roles use similar technologies, but they apply them differently.
 
 **SRE tooling:**
 
 - **Observability:** Prometheus, Grafana, Datadog, Honeycomb.
-- **Incident management:** PagerDuty, Opsgenie.
+- **Incident management:** PagerDuty, Jira Service Management (Atlassian stopped selling Opsgenie in June 2025 and shuts it down in April 2027).
 - **Resilience:** Chaos Mesh, Gremlin.
 - **Automation:** Python, Go, Ansible.
 
@@ -73,35 +122,65 @@ While both roles use similar technologies, they apply them differently.
 - **CI/CD:** GitHub Actions, GitLab CI, ArgoCD.
 - **Developer environments:** Loft, DevPod, Docker.
 
-The SRE uses observability tools to find "unknown unknowns" in production. The Platform Engineer uses those same tools to bake monitoring defaults into the platform. If you want to dive deeper into the technical stack for modern applications, check our guide on the [API gateway for the AI stack](/blog/api-gateway-ai-stack/).
+### Same tools, different jobs
 
-## Better together: the synergy loop
+The SRE uses observability tools to find "unknown unknowns" in production. The Platform Engineer uses those same tools to bake monitoring defaults into the platform.
 
-In a high-performing organization, these two roles form a powerful feedback loop. The SRE discovers a recurring failure mode during an incident. Perhaps developers are forgetting to set proper resource limits on their containers. This causes nodes to run out of memory.
+If you want to dig deeper into the technical stack for modern applications, check our guide on the [API gateway for the AI stack](/blog/api-gateway-ai-stack/).
 
-Instead of just telling developers to "be more careful," the SRE brings this feedback to the Platform Engineer. The Platform Engineer then updates the "Golden Path" templates to include sensible default resource limits automatically. Now, every new service created on the platform is "reliable by design."
+## Better together: the feedback loop
 
-This synergy reduces the SRE's operational load. They spend less time fighting fires and more time on high-level architecture. Simultaneously, the developers are happier because the platform prevents them from making common mistakes. This is the pinnacle of [modern DevOps maturity](/blog/category/devops/).
+In a high-performing organization, these two roles form a tight feedback loop.
 
-![SRE and Platform Engineering feedback loop turning incidents into golden-path defaults](/blog/sre-vs-platform-engineer/feedback-loop.webp)
+The SRE discovers a recurring failure mode during an incident. Perhaps developers forget to set proper resource limits on their containers, and nodes run out of memory.
+
+### From incident to default
+
+Instead of telling developers to "be more careful," the SRE brings this feedback to the Platform Engineer. The Platform Engineer updates the "Golden Path" templates to include sensible default resource limits automatically.
+
+Now every new service created on the platform is "reliable by design."
+
+### Everyone wins
+
+This loop reduces the SRE's operational load. They spend less time fighting fires and more time on high-level architecture.
+
+At the same time, developers are happier because the platform keeps them from making common mistakes. This is what [mature DevOps](/blog/category/devops/) looks like.
+
+{/* IMAGE: inline-2 */}
+
+<TryThis>
+Take your last three post-mortems. For each one, ask: "Could a default in our templates or pipeline have prevented this?" Every yes is a ticket for whoever owns your platform.
+</TryThis>
 
 ## Which one do you need?
 
 The choice depends on your current pain points.
 
-If your developers are constantly struggling to set up environments, fighting with CI/CD pipelines, or waiting weeks for infrastructure tickets, you need a **Platform Engineer**. You have a productivity bottleneck. You need to productize your infrastructure to allow your team to scale.
+### Hire a Platform Engineer if...
 
-If your site is frequently down, your performance is unpredictable, and your developers are terrified of shipping on a Friday, you need an **SRE**. You have a reliability bottleneck. You need someone to instill the discipline of SLOs and incident management into your culture.
+Your developers keep struggling to set up environments, fighting CI/CD pipelines, or waiting weeks for infrastructure tickets. You have a productivity bottleneck. You need to productize your infrastructure so your team can scale.
 
-In many startups, a single "DevOps Engineer" handles both. But as you grow, the split is inevitable. Specialized roles allow for deeper expertise. An SRE who doesn't have to build CI/CD pipelines can focus entirely on making the system indestructible. A Platform Engineer who isn't on-call for every production blip can focus entirely on making the developer experience world-class.
+### Hire an SRE if...
 
-### Takeaways
+Your site is frequently down, your performance is unpredictable, and your developers are terrified of shipping on a Friday. You have a reliability bottleneck. You need someone to bring the discipline of SLOs and incident management into your culture.
 
+### The split comes with growth
+
+In many startups, a single "DevOps Engineer" handles both. As you grow, the split is inevitable, because specialized roles allow deeper expertise.
+
+An SRE who doesn't have to build CI/CD pipelines can focus on making the system hard to break. A Platform Engineer who isn't on call for every production blip can focus on making the developer experience excellent.
+
+<TryThis>
+For one week, tag every infrastructure complaint from your team as "it broke" or "it's slow to ship." Whichever pile is bigger tells you which role to hire first.
+</TryThis>
+
+<Takeaway>
 - SRE focuses on the reliability of production systems for end users.
 - Platform Engineering focuses on the developer experience and internal tooling.
 - SRE uses SLOs and error budgets to balance speed and stability.
 - Platform Engineering uses "Golden Paths" to provide self-service infrastructure.
 - The two roles are complementary. SRE provides the feedback, and Platform Engineering provides the abstractions.
 - Both roles are essential for scaling modern, complex software organizations.
+</Takeaway>
 
 How does your team handle the balance between shipping fast and staying up?
