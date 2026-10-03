@@ -26,6 +26,7 @@ import {
   TOOL_LIST,
 } from "@/consts";
 import { webPage } from "@/lib/seo";
+import { mdxComponents } from "@/components/mdx";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
@@ -309,12 +310,19 @@ const structured = relatedLd
           class="mb-8 max-w-3xl lg:hidden"
           data-pagefind-ignore
         />
+        {
+          /* The sticky sidebar TOC is lg-only; small screens get a closed,
+            tap-to-open version above the article instead. */
+        }
+        <div class="mb-8 max-w-[42rem] lg:hidden" data-pagefind-ignore>
+          <TableOfContents headings={headings} variant="collapsible" />
+        </div>
         <article
-          class="prose max-w-3xl min-w-0"
+          class="prose min-w-0"
           data-pagefind-body
           data-pagefind-meta={`title:${post.data.title}`}
         >
-          <Content />
+          <Content components={mdxComponents} />
         </article>
       </div>
       <aside class="hidden lg:block" data-pagefind-ignore>

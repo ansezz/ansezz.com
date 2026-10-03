@@ -1,0 +1,31 @@
+---
+// One actionable step at the end of a section. Children are Markdown and
+// may include a fenced code block.
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  title?: string;
+  class?: string;
+}
+
+const { title = "Try this", class: className = "" } = Astro.props;
+---
+
+<aside
+  class:list={[
+    "mdx-box mdx-list not-prose border-ink bg-paper text-ink shadow-neo-sm relative mt-10 mb-8 rounded-[4px] border-[3px] border-l-[12px] px-5 pt-6 pb-4",
+    "[border-left-color:var(--color-cyan)]",
+    className,
+  ]}
+  aria-label={title}
+>
+  <p
+    class="border-ink bg-cyan text-on-accent shadow-neo-xs mono absolute -top-4 left-4 inline-flex items-center gap-1.5 rounded-[3px] border-[2.5px] px-2.5 py-1 text-[11px] font-bold tracking-widest uppercase"
+  >
+    <Icon name="lucide:zap" class="h-3.5 w-3.5" aria-hidden="true" />
+    {title}
+  </p>
+  <div class="text-base leading-relaxed md:text-[1.0625rem]">
+    <slot />
+  </div>
+</aside>

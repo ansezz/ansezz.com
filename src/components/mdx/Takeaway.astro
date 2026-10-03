@@ -1,0 +1,30 @@
+---
+// Key-takeaway card for the end of a post. Children are Markdown (a short
+// list works best). Follow it with a closing question for the reader.
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  title?: string;
+  class?: string;
+}
+
+const { title = "Key takeaways", class: className = "" } = Astro.props;
+---
+
+<section
+  class:list={[
+    "mdx-box mdx-list not-prose border-ink bg-paper text-ink shadow-neo-pink my-12 overflow-hidden rounded-[4px] border-[3px]",
+    className,
+  ]}
+  aria-label={title}
+>
+  <p
+    class="border-ink bg-pink text-on-accent display flex items-center gap-2 border-b-[3px] px-5 py-3 text-lg tracking-tight uppercase md:text-xl"
+  >
+    <Icon name="lucide:flag" class="h-5 w-5" aria-hidden="true" />
+    {title}
+  </p>
+  <div class="px-5 py-5 text-base leading-relaxed md:text-[1.0625rem]">
+    <slot />
+  </div>
+</section>

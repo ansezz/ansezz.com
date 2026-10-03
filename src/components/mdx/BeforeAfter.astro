@@ -1,0 +1,62 @@
+---
+// Two-column contrast card that stacks on mobile.
+// Prop form:  <BeforeAfter before="Old way" after="New way" />
+// Slot form (Markdown allowed, survives the RSS feed):
+//   <BeforeAfter>
+//     <div slot="before">Old way</div>
+//     <div slot="after">New way</div>
+//   </BeforeAfter>
+interface Props {
+  before?: string;
+  after?: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+  class?: string;
+}
+
+const {
+  before,
+  after,
+  beforeLabel = "Before",
+  afterLabel = "After",
+  class: className = "",
+} = Astro.props;
+---
+
+<div
+  class:list={[
+    "mdx-box mdx-list not-prose relative my-10 grid gap-5 md:grid-cols-2 md:gap-6",
+    className,
+  ]}
+  role="group"
+  aria-label={`${beforeLabel} and ${afterLabel}`}
+>
+  <section
+    class="border-ink bg-bg-alt text-ink shadow-neo-sm min-w-0 rounded-[4px] border-[3px] p-5"
+  >
+    <p
+      class="border-ink bg-red text-on-accent mono mb-3 inline-block rounded-[3px] border-[2.5px] px-2.5 py-1 text-[11px] font-bold tracking-widest uppercase"
+    >
+      {beforeLabel}
+    </p>
+    <div class="text-base leading-relaxed">
+      {before ? <p>{before}</p> : <slot name="before" />}
+    </div>
+  </section>
+  <span
+    class="border-ink bg-yellow text-on-accent shadow-neo-xs display absolute top-1/2 left-1/2 z-10 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] text-lg md:flex"
+    aria-hidden="true">→</span
+  >
+  <section
+    class="border-ink bg-paper text-ink shadow-neo-md min-w-0 rounded-[4px] border-[3px] p-5"
+  >
+    <p
+      class="border-ink bg-green text-on-accent mono mb-3 inline-block rounded-[3px] border-[2.5px] px-2.5 py-1 text-[11px] font-bold tracking-widest uppercase"
+    >
+      {afterLabel}
+    </p>
+    <div class="text-base leading-relaxed">
+      {after ? <p>{after}</p> : <slot name="after" />}
+    </div>
+  </section>
+</div>

@@ -1,0 +1,63 @@
+---
+// Inline aside for a tip, warning or note. Children are Markdown.
+import { Icon } from "astro-icon/components";
+
+type Kind = "tip" | "warning" | "note";
+
+interface Props {
+  type?: Kind;
+  title?: string;
+  class?: string;
+}
+
+const { type = "note", title, class: className = "" } = Astro.props;
+
+const meta: Record<
+  Kind,
+  { label: string; icon: string; chip: string; stripe: string }
+> = {
+  tip: {
+    label: "Tip",
+    icon: "lucide:lightbulb",
+    chip: "bg-green text-on-accent",
+    stripe: "[border-left-color:var(--color-green)]",
+  },
+  warning: {
+    label: "Warning",
+    icon: "lucide:triangle-alert",
+    chip: "bg-red text-on-accent",
+    stripe: "[border-left-color:var(--color-red)]",
+  },
+  note: {
+    label: "Note",
+    icon: "lucide:info",
+    chip: "bg-cyan text-on-accent",
+    stripe: "[border-left-color:var(--color-cyan)]",
+  },
+};
+
+const m = meta[type];
+---
+
+<aside
+  class:list={[
+    "mdx-box mdx-list not-prose border-ink bg-paper text-ink shadow-neo-sm my-8 rounded-[4px] border-[3px] border-l-[10px] p-5",
+    m.stripe,
+    className,
+  ]}
+  role={type === "warning" ? "note" : undefined}
+  aria-label={title ?? m.label}
+>
+  <p
+    class:list={[
+      "border-ink mono mb-3 inline-flex items-center gap-1.5 rounded-[3px] border-[2.5px] px-2.5 py-1 text-[11px] font-bold tracking-widest uppercase",
+      m.chip,
+    ]}
+  >
+    <Icon name={m.icon} class="h-3.5 w-3.5" aria-hidden="true" />
+    {title ?? m.label}
+  </p>
+  <div class="text-base leading-relaxed">
+    <slot />
+  </div>
+</aside>
