@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "pnpm assert:taxonomy && astro build",
+    "build": "pnpm assert:taxonomy && astro build && pagefind --site dist",
     "preview": "astro preview",
     "check": "pnpm assert:taxonomy && astro check",
     "lighthouse": "pnpm dlx @lhci/cli@0.15.x autorun",
@@ -28,6 +28,7 @@
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.4.8",
     "astro-icon": "^1.1.5",
+    "gpt-tokenizer": "^4.0.0",
     "reading-time": "^1.5.0",
     "tailwindcss": "^4.3.0"
   },

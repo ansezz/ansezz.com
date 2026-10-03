@@ -1,7 +1,16 @@
-// Context window checker. Estimates prompt tokens (~4 chars/token blended with
-// a word count, same heuristic as the token counter), sums the four prompt
-// parts, subtracts an output reserve, and grades every model window as
-// fits / tight / overflow. Pure arithmetic, no network.
+// Context window checker. Counts prompt tokens with the exact GPT tokenizer
+// (o200k_base, lazy-loaded, same as the token counter) and scales that count
+// for Claude rows. Sums the four prompt parts, subtracts an output reserve,
+// and grades every model window as fits / tight / overflow. No network calls
+// beyond the one-time tokenizer download.
+
+import type { LlmTokenizer } from "@/data/llm-models";
+import {
+  heuristicTokens,
+  loadGptCounter,
+  tokensFor,
+  type GptCounter,
+} from "@/lib/tokens";
 
 type Mode = "compose" | "count";
 type Status = "fits" | "tight" | "overflow";
@@ -46,13 +55,11 @@ const COPY_LABEL = "Copy the breakdown";
 
 // ---------------------------------------------------------------- estimation
 
+let gptCounter: GptCounter | null = null;
+
 function estimateTokens(text: string): number {
   if (!text) return 0;
-  const words = (text.trim().match(/\S+/g) ?? []).length;
-  const byChars = text.length / 4;
-  const byWords = words * 1.33;
-  // Lean on characters — handles code, JSON, and punctuation far better.
-  return Math.round(byChars * 0.7 + byWords * 0.3);
+  return gptCounter ? gptCounter(text) : heuristicTokens(text);
 }
 
 function grade(used: number, reserve: number, windowSize: number): Status {
@@ -94,6 +101,7 @@ interface PartRef {
 interface RowRef {
   label: string;
   windowSize: number;
+  tokenizer: LlmTokenizer;
   used: HTMLElement | null;
   fill: HTMLElement | null;
   reserveBar: HTMLElement | null;
@@ -135,6 +143,7 @@ function collectRows(root: HTMLElement): RowRef[] {
     rows.push({
       label: row.dataset.cwLabel ?? "Model",
       windowSize,
+      tokenizer: (row.dataset.cwTok ?? "o200k") as LlmTokenizer,
       used: row.querySelector<HTMLElement>("[data-cw-used]"),
       fill: row.querySelector<HTMLElement>("[data-cw-fill]"),
       reserveBar: row.querySelector<HTMLElement>("[data-cw-reserve-bar]"),
@@ -267,11 +276,18 @@ function init(): void {
     );
   }
 
-  function renderRows(used: number, reserve: number): RowsResult {
+  // `scale` is true when the count came from pasted text: Claude rows then get
+  // the Claude estimate. A count typed in by hand is used as is everywhere.
+  function renderRows(
+    promptUsed: number,
+    reserve: number,
+    scale: boolean,
+  ): RowsResult {
     let fitting = 0;
     const lines: string[] = [];
 
     for (const row of rows) {
+      const used = scale ? tokensFor(row.tokenizer, promptUsed) : promptUsed;
       const status = grade(used, reserve, row.windowSize);
       if (status === "fits") fitting += 1;
 
@@ -365,11 +381,11 @@ function init(): void {
     setText(reservedEl, fmt(reserve));
     setText(neededEl, fmt(used + reserve));
 
-    const { fitting, lines } = renderRows(used, reserve);
+    const { fitting, lines } = renderRows(used, reserve, mode === "compose");
     setText(fitCountEl, `${fitting} of ${rows.length}`);
 
     summary = [
-      `Prompt: ${fmt(used)} tokens (est.)`,
+      `Prompt: ${fmt(used)} tokens${mode === "compose" && gptCounter ? " (GPT o200k_base, Claude rows scaled)" : mode === "compose" ? " (est.)" : ""}`,
       ...(partSummary ? [`  ${partSummary}`] : []),
       `Reserved for output: ${fmt(reserve)} tokens`,
       `Window needed: ${fmt(used + reserve)} tokens`,
@@ -432,6 +448,15 @@ function init(): void {
   });
 
   setMode("compose");
+
+  loadGptCounter()
+    .then((counter) => {
+      gptCounter = counter;
+      render();
+    })
+    .catch(() => {
+      // Keep the heuristic estimate if the tokenizer cannot load.
+    });
 }
 
 init();

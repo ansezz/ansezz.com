@@ -9,13 +9,18 @@ import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage } from "@/lib/seo";
+import {
+  LLM_MODELS,
+  LLM_DATA_VERIFIED,
+  PROVIDER_LABEL,
+} from "@/data/llm-models";
 
 const tool = getTool("/tools/llm-cost-calculator/");
 
 const TOOL_NAME = "LLM Cost Calculator";
 const TOOL_PATH = "/tools/llm-cost-calculator/";
 const TOOL_DESCRIPTION =
-  "LLM cost calculator: estimate API spend per request, day, and month for Claude, GPT, and Gemini. Free, prompt-cache aware, and it runs in your browser.";
+  "LLM cost calculator for Claude, GPT and Gemini. Estimate API spend per request, day and month, with real prompt-cache read and write prices. Runs in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -23,29 +28,25 @@ const breadcrumbLd = breadcrumbList([
   { name: TOOL_NAME, url: TOOL_PATH },
 ]);
 
-// Prices in USD per 1M tokens. List prices verified June 2026 against each
-// provider's official pricing page (claude.com/pricing,
-// developers.openai.com/api/docs/pricing, ai.google.dev/gemini-api/docs/pricing).
-// Always reconfirm before you bet a budget on it.
-const MODELS = [
-  { id: "claude-opus", label: "Claude Opus 4.8", in: 5, out: 25 },
-  { id: "claude-sonnet", label: "Claude Sonnet 4.6", in: 3, out: 15 },
-  { id: "claude-haiku", label: "Claude Haiku 4.5", in: 1, out: 5 },
-  { id: "gpt-5-5", label: "GPT-5.5", in: 5, out: 30 },
-  { id: "gpt-5-4", label: "GPT-5.4", in: 2.5, out: 15 },
-  { id: "gpt-5-4-mini", label: "GPT-5.4 mini", in: 0.75, out: 4.5 },
-  { id: "gpt-5-4-nano", label: "GPT-5.4 nano", in: 0.2, out: 1.25 },
-  { id: "gemini-pro", label: "Gemini 2.5 Pro", in: 1.25, out: 10 },
-  { id: "gemini-flash", label: "Gemini 2.5 Flash", in: 0.3, out: 2.5 },
-  {
-    id: "gemini-flash-lite",
-    label: "Gemini 2.5 Flash-Lite",
-    in: 0.1,
-    out: 0.4,
-  },
-  { id: "custom", label: "Custom (enter prices)", in: 0, out: 0 },
-];
-const modelsJson = JSON.stringify(MODELS);
+// Prices come from the shared model file, src/data/llm-models.ts, which
+// records where and when each number was checked.
+const modelsJson = JSON.stringify(LLM_MODELS);
+const verifiedText = new Date(
+  `${LLM_DATA_VERIFIED}T00:00:00Z`,
+).toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+});
+const providers = (["anthropic", "openai", "google"] as const).map((p) => ({
+  label: PROVIDER_LABEL[p],
+  models: LLM_MODELS.filter((m) => m.provider === p),
+}));
+const inputCls =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono font-bold focus:outline-none";
+const labelCls =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
 
 const batchColumns = [
   { label: "Realtime call", tone: "cyan" as const },
@@ -86,15 +87,15 @@ const faq = [
   },
   {
     q: "Why are output tokens more expensive than input tokens?",
-    a: "Because they are produced differently. Your whole prompt is processed in one parallel prefill pass, while output is generated one token at a time, each token needing a full forward pass through the model — that decode loop is memory-bandwidth bound and cannot be parallelised within a request. In the model list above, output runs 5× input on the Claude tiers, 6× on GPT-5.4 and GPT-5.5, and 8× on Gemini 2.5 Pro.",
+    a: "Because they are produced differently. Your whole prompt is processed in one parallel prefill pass, while output is generated one token at a time, and each token needs a full forward pass through the model. That decode loop is limited by memory bandwidth and cannot run in parallel within a request. In the model list above, output costs 5 times input on every Claude and GPT-6 model, 6 times on Gemini 3.1 Pro, and about 8 times on Gemini 3.5 Flash-Lite.",
   },
   {
     q: "How much does prompt caching actually save?",
-    a: "A cache read typically costs about 10% of the base input rate, and on Anthropic a cache write costs 1.25× base input for the 5-minute TTL or 2× for the 1-hour option. The write premium is 0.25× and every hit saves 0.9×, so a single reuse inside the TTL already pays for it. The caveat is that caching matches on an exact prefix — one timestamp or shuffled retrieval block near the top invalidates everything after it.",
+    a: "It depends on your hit rate. On Claude, writing a prefix into the cache costs 1.25 times the base input price for the 5 minute cache, or 2 times for the 1 hour cache. A hit costs 0.1 times base, and less on Opus 5.5 and Fable 5.1. GPT-6 models list the same 1.25 times write price and a 0.05 to 0.1 times read price. Gemini charges no write premium but bills storage per hour for explicit caches. With a 5 minute cache, one reuse pays for the write. With low traffic, most requests miss and pay the premium, so caching can cost more than it saves. Set the hit rate above and the calculator shows both sides.",
   },
   {
     q: "Are the LLM prices in this calculator up to date?",
-    a: "They are list rates checked against each provider's public pricing page and they will drift — providers change prices, add tiers, and charge extra for long-context requests above a threshold. Treat the dropdown as a fast starting point, then pick Custom and paste today's real numbers before you commit a budget. Nothing here knows about your enterprise discount, committed-use pricing, or batch rates.",
+    a: "They are standard list rates, checked against each provider's public pricing page on the date shown at the top of the tool. They will drift. Providers change prices, add tiers, and charge more for long-context requests: GPT-6 and Gemini 3.1 Pro roughly double the rate above a context threshold. Gemini 3.8 Flash is on a launch price that doubles on January 1, 2027. Treat the dropdown as a starting point, and edit the price fields if your numbers differ. Nothing here knows about enterprise discounts or batch rates.",
   },
   {
     q: "Why is my AI agent so expensive compared to a single chat call?",
@@ -102,7 +103,7 @@ const faq = [
   },
   {
     q: "Does this LLM cost calculator send my data anywhere?",
-    a: "No. The whole thing is a few lines of arithmetic running in your browser — no request is made, no numbers are stored, and there is no signup. Open the network tab and watch it stay empty, or load the page once and then go offline.",
+    a: "No. The whole thing is a few lines of arithmetic running in your browser. No request is made, no numbers are stored, and there is no signup. The share button only puts your inputs in the page address. Open the network tab and watch it stay empty, or load the page once and then go offline.",
   },
 ];
 
@@ -157,11 +158,11 @@ const relatedLinks = [
   <section class="mx-auto max-w-5xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
       <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
-        ▸ Heads up
+        ▸ Prices checked {verifiedText}
       </p>
       <p class="text-sm leading-snug font-bold">
-        Prices are approximate list rates. Always confirm against the provider's
-        current pricing page.
+        List prices from each provider's pricing page, standard tier. Confirm
+        before you commit a budget.
       </p>
     </StickyNote>
   </section>
@@ -169,125 +170,221 @@ const relatedLinks = [
   <section class="mx-auto max-w-5xl px-5 pb-16">
     <form
       id="cost-form"
-      class="grid items-start gap-6 md:grid-cols-[1fr_360px]"
+      class="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_360px]"
       data-models={modelsJson}
     >
       <!-- Inputs -->
-      <NeoCard tone="paper" shadow="md" class="space-y-5">
+      <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-5">
         <div>
-          <label
-            for="model"
-            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
-          >
-            Model
-          </label>
+          <label for="model" class={labelCls}>Model</label>
           <select
             id="model"
-            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-bold focus:outline-none"
+            class="border-ink bg-paper shadow-neo-sm min-h-11 w-full rounded-[4px] border-[3px] px-3 py-2.5 font-bold focus:outline-none"
           >
-            {MODELS.map((m) => <option value={m.id}>{m.label}</option>)}
+            {
+              providers.map((p) => (
+                <optgroup label={p.label}>
+                  {p.models.map((m) => (
+                    <option
+                      value={m.id}
+                      selected={m.id === "claude-sonnet-5-5"}
+                    >
+                      {m.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))
+            }
+            <option value="custom">Custom (enter prices)</option>
           </select>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              for="priceIn"
-              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
-            >
-              Input $ / 1M
-            </label>
-            <input
-              id="priceIn"
-              type="number"
-              min="0"
-              step="0.01"
-              value="5"
-              class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono font-bold focus:outline-none"
-            />
+        <fieldset class="space-y-3">
+          <legend class={labelCls}>Prices, $ per 1M tokens</legend>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="priceIn" class="mb-1 block text-xs font-bold"
+                >Input</label
+              >
+              <input
+                id="priceIn"
+                type="number"
+                min="0"
+                step="0.001"
+                value="2"
+                class={inputCls}
+              />
+            </div>
+            <div>
+              <label for="priceOut" class="mb-1 block text-xs font-bold"
+                >Output</label
+              >
+              <input
+                id="priceOut"
+                type="number"
+                min="0"
+                step="0.001"
+                value="10"
+                class={inputCls}
+              />
+            </div>
+            <div>
+              <label for="priceRead" class="mb-1 block text-xs font-bold"
+                >Cache read (hit)</label
+              >
+              <input
+                id="priceRead"
+                type="number"
+                min="0"
+                step="0.001"
+                value="0.2"
+                class={inputCls}
+              />
+            </div>
+            <div>
+              <label for="priceWrite" class="mb-1 block text-xs font-bold"
+                >Cache write</label
+              >
+              <input
+                id="priceWrite"
+                type="number"
+                min="0"
+                step="0.001"
+                value="2.5"
+                class={inputCls}
+              />
+            </div>
           </div>
-          <div>
-            <label
-              for="priceOut"
-              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
-            >
-              Output $ / 1M
-            </label>
-            <input
-              id="priceOut"
-              type="number"
-              min="0"
-              step="0.01"
-              value="25"
-              class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono font-bold focus:outline-none"
-            />
-          </div>
-        </div>
+        </fieldset>
 
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label
-              for="tokIn"
-              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
-            >
-              Input tokens / request
-            </label>
+            <label for="tokIn" class={labelCls}>Input tokens / request</label>
             <input
               id="tokIn"
               type="number"
               min="0"
               step="1"
-              value="2000"
-              class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono font-bold focus:outline-none"
+              value="12000"
+              class={inputCls}
             />
           </div>
           <div>
-            <label
-              for="tokOut"
-              class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
-            >
-              Output tokens / request
-            </label>
+            <label for="tokOut" class={labelCls}>Output tokens / request</label>
             <input
               id="tokOut"
               type="number"
               min="0"
               step="1"
               value="600"
-              class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono font-bold focus:outline-none"
+              class={inputCls}
+            />
+          </div>
+          <div>
+            <label for="tokCached" class={labelCls}>Cached prefix tokens</label>
+            <input
+              id="tokCached"
+              type="number"
+              min="0"
+              step="1"
+              value="8000"
+              class={inputCls}
+            />
+          </div>
+          <div>
+            <label for="reqs" class={labelCls}>Requests / day</label>
+            <input
+              id="reqs"
+              type="number"
+              min="0"
+              step="1"
+              value="1000"
+              class={inputCls}
             />
           </div>
         </div>
+        <p class="-mt-2 text-xs leading-snug opacity-80">
+          Cached prefix is the part of each input that repeats: system prompt,
+          tool definitions, a shared document. Set it to 0 to ignore caching.
+        </p>
 
-        <div>
-          <label
-            for="reqs"
-            class="mono mb-2 block text-[11px] font-bold tracking-widest uppercase"
+        <fieldset class="border-ink space-y-3 border-t-[2.5px] pt-4">
+          <legend class={labelCls}>Prompt cache</legend>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="hitRate" class="mb-1 block text-xs font-bold"
+                >Hit rate, %</label
+              >
+              <input
+                id="hitRate"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value="90"
+                class={inputCls}
+              />
+            </div>
+            <div>
+              <label for="cacheTtl" class="mb-1 block text-xs font-bold"
+                >Cache lifetime</label
+              >
+              <select
+                id="cacheTtl"
+                class="border-ink bg-paper shadow-neo-sm min-h-11 w-full rounded-[4px] border-[3px] px-3 py-2.5 font-bold focus:outline-none disabled:opacity-60"
+              >
+                <option value="5m">5 minutes</option>
+                <option value="1h">1 hour (Claude)</option>
+              </select>
+            </div>
+            <div>
+              <label for="storage" class="mb-1 block text-xs font-bold"
+                >Storage $ / 1M / hour</label
+              >
+              <input
+                id="storage"
+                type="number"
+                min="0"
+                step="0.01"
+                value="0"
+                class={inputCls}
+              />
+            </div>
+            <div>
+              <label for="storageHours" class="mb-1 block text-xs font-bold"
+                >Hours stored / day</label
+              >
+              <input
+                id="storageHours"
+                type="number"
+                min="0"
+                max="24"
+                step="1"
+                value="0"
+                class={inputCls}
+              />
+            </div>
+          </div>
+          <p
+            id="cache-hint"
+            class="text-xs leading-snug font-bold"
+            aria-live="polite"
           >
-            Requests / day
-          </label>
-          <input
-            id="reqs"
-            type="number"
-            min="0"
-            step="1"
-            value="1000"
-            class="border-ink bg-paper shadow-neo-sm w-full rounded-[4px] border-[3px] px-3 py-3 font-mono font-bold focus:outline-none"
-          />
-        </div>
-
-        <label class="flex cursor-pointer items-center gap-2 text-sm font-bold">
-          <input
-            id="cacheHits"
-            type="checkbox"
-            class="border-ink accent-pink h-6 w-6 border-[2.5px]"
-          />
-          Assume 50% input-token cache hit (×0.1 price on cached input)
-        </label>
+          </p>
+          <p class="text-xs leading-snug opacity-80">
+            Misses pay the write price for the prefix, hits pay the read price.
+            Storage only applies to explicit Gemini caches. Leave hours at 0 for
+            implicit caching.
+          </p>
+        </fieldset>
       </NeoCard>
 
       <!-- Output -->
-      <NeoCard tone="cyan" shadow="lg" class="space-y-4 md:sticky md:top-24">
+      <NeoCard
+        tone="cyan"
+        shadow="lg"
+        class="min-w-0 space-y-4 md:sticky md:top-24"
+      >
         <p class="mono text-[11px] font-bold tracking-widest uppercase">
           ▸ Estimated spend
         </p>
@@ -314,8 +411,49 @@ const relatedLinks = [
             </dd>
           </div>
         </dl>
+        <div class="border-ink space-y-1 border-t-[2.5px] pt-3 text-sm">
+          <p class="flex justify-between gap-2 font-bold">
+            <span>Same month, no cache</span><span id="out-nocache">$0</span>
+          </p>
+          <p id="out-saved" class="text-xs font-bold opacity-90"></p>
+        </div>
+        <details class="text-sm">
+          <summary class="flex min-h-10 cursor-pointer items-center font-bold">
+            Monthly breakdown
+          </summary>
+          <dl class="mt-2 space-y-1">
+            <div class="flex justify-between gap-2">
+              <dt>Uncached input</dt><dd id="br-in">$0</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt>Cache reads</dt><dd id="br-read">$0</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt>Cache writes</dt><dd id="br-write">$0</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt>Cache storage</dt><dd id="br-store">$0</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt>Output</dt><dd id="br-out">$0</dd>
+            </div>
+          </dl>
+        </details>
         <p class="mono pt-1 text-[10px] tracking-widest uppercase opacity-70">
           30-day month · live as you type
+        </p>
+        <button
+          type="button"
+          id="cost-share"
+          class="border-ink bg-paper shadow-neo-sm min-h-11 w-full rounded-[4px] border-[3px] px-3 py-2 text-sm font-bold uppercase"
+        >
+          Copy link to this estimate
+        </button>
+        <p
+          id="cost-share-status"
+          class="text-center text-xs font-bold"
+          aria-live="polite"
+        >
         </p>
         <NeoButton href="/contact/" variant="ink" size="sm" fullWidth>
           Need this productionized? →
@@ -331,10 +469,10 @@ const relatedLinks = [
         Input and output are two prices
       </h2>
       <p class="text-base leading-relaxed opacity-90">
-        Every provider bills two meters, not one. Tokens you send are input;
+        Every provider bills two meters, not one. Tokens you send are input,
         tokens the model generates are output, and output is always the
-        expensive side. In the dropdown above, output runs 5× input on every
-        Claude tier, 6× on GPT-5.4 and GPT-5.5, and 8× on Gemini 2.5 Pro.
+        expensive side. In the dropdown above, output costs 5 times input on
+        every Claude and GPT-6 model and 6 times on Gemini 3.1 Pro.
       </p>
       <p class="text-base leading-relaxed opacity-90">
         That gap is hardware, not margin games. Your prompt is processed in one
@@ -351,24 +489,50 @@ const relatedLinks = [
         Prompt caching redraws the maths
       </h2>
       <p class="text-base leading-relaxed opacity-90">
-        Caching is the biggest lever on this page, and the checkbox above only
-        gestures at it. The shape is the same everywhere: pay a premium once to
-        write a prompt prefix into the cache, then pay a steep discount whenever
-        a later request reuses that exact prefix. Anthropic makes it explicit —
-        mark a breakpoint with <code class="mono font-bold">cache_control</code
-        >, writes cost 1.25× base input on the 5-minute TTL (2× for an hour),
-        reads roughly 0.1×. OpenAI and Google discount repeated prefixes
-        automatically rather than charging for the write.
+        Caching is the biggest lever on this page. The shape is the same
+        everywhere: the first request writes a prompt prefix into the cache, and
+        later requests that reuse that exact prefix read it at a steep discount.
+        What differs is the price of the write.
       </p>
+      <ul class="space-y-2 text-base leading-relaxed opacity-90">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Claude.</strong> Mark a breakpoint with <code
+              class="mono font-bold">cache_control</code
+            >. A write costs 1.25 times base input for the 5 minute cache or 2
+            times for the 1 hour cache. A hit costs 0.1 times base, 0.05 times
+            on Opus 5.5 and 0.025 times on Fable 5.1. Each hit also resets the
+            timer.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>OpenAI.</strong> Caching is automatic on repeated prefixes. GPT-6
+            models list a cache write at 1.25 times input and a cached read at 0.05
+            to 0.1 times input.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Gemini.</strong> Implicit caching has no write premium. Explicit
+            caches bill a read rate of 0.1 times input plus storage per 1M tokens
+            per hour, so a cache you keep alive all day has a fixed cost.</span
+          >
+        </li>
+      </ul>
       <p class="text-base leading-relaxed opacity-90">
-        The break-even is trivial: the write premium is 0.25× and every hit
-        saves 0.9×, so one reuse inside the TTL pays for it. It fails two ways.
-        Matching is on an exact prefix, so a timestamp or re-ordered retrieval
-        block near the top invalidates everything after it — keep volatile parts
-        last. And the TTL is short, so a low-traffic endpoint pays the premium
-        more often than it collects the discount. The checkbox here assumes half
-        your input hits cache at 0.1×, or 0.55× on input overall, and charges
-        nothing for writes.
+        So the hit rate decides everything. Each miss pays the write price for
+        the whole prefix, each hit pays the read price. On Claude with the 5
+        minute cache, the premium is 0.25 times and each hit saves 0.9 times, so
+        one reuse pays for the write. On a quiet endpoint where requests are
+        farther apart than the cache lifetime, almost every request is a miss
+        and caching costs more than it saves. The hint under the cache inputs
+        tells you which side of that line your traffic sits on. Matching is on
+        an exact prefix, so keep timestamps and changing retrieval blocks at the
+        end of the prompt.
       </p>
     </div>
 
@@ -377,13 +541,14 @@ const relatedLinks = [
         Your token counts are estimates
       </h2>
       <p class="text-base leading-relaxed opacity-90">
-        This calculator does not tokenize anything — it multiplies the numbers
-        you hand it. If those came from the <a
+        This calculator does not tokenize anything. It multiplies the numbers
+        you hand it. The <a
           href="/tools/token-counter/"
           class="font-bold underline decoration-2 underline-offset-2"
           >token counter</a
-        > here, or any characters ÷ 4 rule of thumb, expect 10–15% error on English
-        prose and worse elsewhere:
+        > gives exact GPT counts and estimates for Claude and Gemini. If your numbers
+        come from a characters divided by 4 rule of thumb instead, expect 10 to 15%
+        error on English prose and worse elsewhere:
       </p>
       <ul class="space-y-2 text-base leading-relaxed opacity-90">
         <li class="flex gap-3">

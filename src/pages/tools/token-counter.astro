@@ -8,12 +8,22 @@ import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage } from "@/lib/seo";
+import { LLM_MODELS, LLM_DATA_VERIFIED } from "@/data/llm-models";
 
 const tool = getTool("/tools/token-counter/");
 
+const verifiedText = new Date(
+  `${LLM_DATA_VERIFIED}T00:00:00Z`,
+).toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+
 const TOOL_NAME = "Token Counter";
 const TOOL_DESCRIPTION =
-  "Token counter for LLM prompts — free and instant. Paste text to estimate tokens, characters, words, and per-call cost for Claude and GPT, in your browser.";
+  "Free token counter for LLM prompts. Exact GPT token counts (o200k_base), Claude and Gemini estimates, and per-call cost. Runs in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -22,52 +32,47 @@ const breadcrumbLd = breadcrumbList([
 ]);
 
 const estimateColumns = [
-  { label: "This page's estimate", tone: "yellow" as const },
-  { label: "The provider's tokenizer", tone: "cyan" as const },
+  { label: "GPT count on this page", tone: "cyan" as const },
+  { label: "Claude and Gemini on this page", tone: "yellow" as const },
 ];
 
 const estimateRows = [
   {
     label: "What it does",
     cells: [
-      "Blends chars ÷ 4 with a word-count estimate",
-      "Runs the model's real merge table",
+      "Runs the real o200k_base merge table",
+      "Scales the GPT count by a known ratio",
     ],
   },
   {
     label: "Where it runs",
-    cells: ["In this tab, as you type", "An API call or a local library"],
+    cells: ["In this tab, as you type", "In this tab, as you type"],
   },
   {
     label: "English prose",
-    cells: ["Usually within 10–20%", "Exact"],
+    cells: ["Exact", "Usually within 10 to 20%"],
   },
   {
-    label: "Code and JSON",
-    cells: ["Undercounts", "Exact"],
-  },
-  {
-    label: "Chinese, Japanese, Arabic",
-    cells: ["Undercounts, often by 3× or more", "Exact"],
+    label: "Code, JSON, other scripts",
+    cells: ["Exact", "Rougher, verify with the API"],
   },
   {
     label: "Counts images and tool schemas",
-    cells: [false, true],
-  },
-  {
-    label: "Portable across model families",
     cells: [false, false],
   },
   {
     label: "Use it for",
-    cells: ["Sizing a prompt, sanity checks", "Billing, hard limits, chunking"],
+    cells: [
+      "Billing, hard limits, chunking on GPT",
+      "Sizing a prompt, sanity checks",
+    ],
   },
 ];
 
 const faq = [
   {
     q: "How accurate is this token counter?",
-    a: "It is a heuristic, not a tokenizer. The page blends the four-characters-per-token rule with a word-based estimate, which lands within roughly 10–20% for ordinary English prose and drifts much further for code, JSON, and non-Latin scripts. Use it to size a prompt or sanity-check a chunking strategy, and use the provider's own tokenizer before you commit to a billing forecast or a hard context limit.",
+    a: "The GPT count is exact. The page loads OpenAI's o200k_base tokenizer in your browser, the same merge table used from GPT-4o through GPT-5.6, and counts the raw text. Claude and Gemini tokenizers are not public in a form a web page can run, so those two numbers are estimates based on the GPT count. Anthropic says Claude 4.7 and later produce about 30% more tokens than older Claude models, so the page scales by that. Before you bet a budget on a Claude or Gemini number, check it with the provider's count tokens endpoint.",
   },
   {
     q: "How many tokens is 1,000 words?",
@@ -79,7 +84,7 @@ const faq = [
   },
   {
     q: "Do Claude and GPT count tokens the same way?",
-    a: "No. Each model family ships its own tokenizer with its own vocabulary and merge table, so the same paragraph produces different counts on each one. OpenAI publishes tiktoken, with cl100k_base for the GPT-4 generation and o200k_base for newer models; Anthropic does not publish Claude's tokenizer and exposes a count_tokens endpoint on the Messages API instead; Google offers countTokens for Gemini. A number you measured on one model is only an estimate on any other.",
+    a: "No. Each model family ships its own tokenizer with its own vocabulary and merge table, so the same paragraph produces different counts on each one. OpenAI publishes tiktoken, with cl100k_base for the GPT-4 generation and o200k_base for newer models. Anthropic does not publish Claude's tokenizer and offers a count_tokens endpoint on the Messages API instead. Google offers countTokens for Gemini. A number you measured on one model is only an estimate on any other.",
   },
   {
     q: "Does Chinese, Japanese, or Arabic text cost more tokens?",
@@ -87,7 +92,7 @@ const faq = [
   },
   {
     q: "Does this token counter send my text anywhere?",
-    a: "No. The estimate runs entirely in your browser, so the text never leaves the page, there is no request, and there is no server that could log it. Open the network tab and watch it stay empty, or load the page once and then go offline.",
+    a: "No. Counting runs entirely in your browser. The only request is a one-time download of the tokenizer file from this site, and your text is never part of it. There is no server that could log what you paste. Open the network tab to check, or load the page once and then go offline.",
   },
 ];
 
@@ -177,17 +182,18 @@ const relatedLinks = [
   description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="Token Counter."
-  intro="Paste text, get an instant estimate of how many tokens it costs across Claude and GPT models. Nothing leaves your browser."
+  intro="Paste text and get an exact GPT token count, plus Claude and Gemini estimates and the cost per call. Nothing leaves your browser."
   structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
       <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
-        ▸ Estimate, not exact
+        ▸ Exact for GPT
       </p>
       <p class="text-sm leading-snug font-bold">
-        Uses the ~4 chars/token heuristic. Real tokenizers vary ±10-20%. For
-        billing precision, count with the provider's tokenizer.
+        GPT counts use the real o200k_base tokenizer. Claude and Gemini counts
+        are estimates. For billing on those, use the provider's count tokens
+        endpoint.
       </p>
     </StickyNote>
   </section>
@@ -211,13 +217,13 @@ const relatedLinks = [
 
       <NeoCard tone="cyan" shadow="lg" class="space-y-4 md:sticky md:top-24">
         <p class="mono text-[11px] font-bold tracking-widest uppercase">
-          ▸ Estimate
+          ▸ Token count
         </p>
         <dl class="space-y-2.5">
           <div
-            class="border-ink flex items-end justify-between border-b-[2.5px] pb-2"
+            class="border-ink flex items-end justify-between gap-2 border-b-[2.5px] pb-2"
           >
-            <dt class="text-sm font-bold uppercase">~ Tokens</dt>
+            <dt class="text-sm font-bold uppercase">GPT tokens</dt>
             <dd
               id="tok-tokens"
               class="display text-accent-text text-4xl leading-none"
@@ -225,15 +231,38 @@ const relatedLinks = [
               0
             </dd>
           </div>
-          <div class="flex items-end justify-between">
+          <div class="flex items-end justify-between gap-2">
+            <dt class="text-sm font-bold">Claude 4.7+ (est.)</dt>
+            <dd id="tok-claude" class="display text-xl leading-none">0</dd>
+          </div>
+          <div class="flex items-end justify-between gap-2">
+            <dt class="text-sm font-bold">Claude Haiku 4.5 (est.)</dt>
+            <dd id="tok-claude-legacy" class="display text-xl leading-none">
+              0
+            </dd>
+          </div>
+          <div class="flex items-end justify-between gap-2">
+            <dt class="text-sm font-bold">Gemini (est.)</dt>
+            <dd id="tok-gemini" class="display text-xl leading-none">0</dd>
+          </div>
+          <div
+            class="border-ink flex items-end justify-between gap-2 border-t-[2.5px] pt-2"
+          >
             <dt class="text-sm font-bold uppercase">Characters</dt>
             <dd id="tok-chars" class="display text-2xl leading-none">0</dd>
           </div>
-          <div class="flex items-end justify-between">
+          <div class="flex items-end justify-between gap-2">
             <dt class="text-sm font-bold uppercase">Words</dt>
             <dd id="tok-words" class="display text-2xl leading-none">0</dd>
           </div>
         </dl>
+        <p
+          id="tok-status"
+          class="mono text-[10px] tracking-widest uppercase opacity-80"
+          aria-live="polite"
+        >
+          Loading exact GPT tokenizer
+        </p>
         <div class="border-ink border-t-[2.5px] pt-3">
           <p
             class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-80"
@@ -241,19 +270,20 @@ const relatedLinks = [
             As input, once
           </p>
           <ul class="space-y-1 text-sm font-bold" id="tok-costs">
-            <li class="flex justify-between">
-              <span>Claude Opus</span><span data-cost="5">$0</span>
-            </li>
-            <li class="flex justify-between">
-              <span>Claude Sonnet</span><span data-cost="3">$0</span>
-            </li>
-            <li class="flex justify-between">
-              <span>GPT-5.5</span><span data-cost="5">$0</span>
-            </li>
-            <li class="flex justify-between">
-              <span>GPT-5.4 mini</span><span data-cost="0.75">$0</span>
-            </li>
+            {
+              LLM_MODELS.map((m) => (
+                <li class="flex justify-between gap-2">
+                  <span>{m.label}</span>
+                  <span data-cost={m.input} data-tok={m.tokenizer}>
+                    $0
+                  </span>
+                </li>
+              ))
+            }
           </ul>
+          <p class="mono mt-2 text-[10px] tracking-widest uppercase opacity-70">
+            List prices checked {verifiedText}
+          </p>
         </div>
       </NeoCard>
     </div>
@@ -389,15 +419,21 @@ const relatedLinks = [
     </div>
 
     <div class="space-y-4">
-      <h2 class="display text-2xl uppercase">When to stop estimating</h2>
+      <h2 class="display text-2xl uppercase">Exact here, estimated there</h2>
       <p class="text-base leading-relaxed opacity-90">
-        Estimates are for sizing decisions: is this prompt roughly 2k tokens or
-        roughly 200k, is this chunk in the right ballpark, is this feature going
-        to cost cents or hundreds. The moment a number becomes load-bearing,
-        switch to the real tokenizer — before a budget forecast at volume,
-        before anything that can hard-fail on a context limit in a batch job,
-        before you settle on a chunk size for a vector index, and always when
-        the content is code, JSON, or a non-Latin script.
+        The GPT number above is the real thing. The page downloads the
+        o200k_base merge table once, the first time you open it, and then counts
+        every keystroke locally. That is the tokenizer GPT-4o through GPT-5.6
+        use. OpenAI has not published a GPT-6 tokenizer yet, so treat GPT-6
+        counts as very close rather than guaranteed.
+      </p>
+      <p class="text-base leading-relaxed opacity-90">
+        Claude and Gemini are estimates. They start from the GPT count. For
+        Claude 4.7 and later the page adds about 30%, because Anthropic says its
+        newer tokenizer produces roughly that many more tokens than the old one.
+        Estimates are fine for sizing: is this prompt 2k tokens or 200k, is this
+        feature going to cost cents or hundreds. When a Claude or Gemini number
+        becomes load bearing, ask the provider's count tokens endpoint.
       </p>
       <ComparisonTable columns={estimateColumns} rows={estimateRows} />
     </div>
