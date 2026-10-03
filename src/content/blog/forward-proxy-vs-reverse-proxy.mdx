@@ -127,7 +127,7 @@ In complex microservices environments, the lines blur. Service meshes like Istio
 
 Each sidecar acts as both a forward and a reverse proxy depending on whether the traffic is ingress (incoming) or egress (outgoing).
 
-This allows for incredibly granular control over how services talk to each other. You can implement automatic retries, circuit breaking, and mutual TLS without writing a single line of application code.
+This gives you fine-grained control over how services talk to each other. You can implement automatic retries, circuit breaking, and mutual TLS without writing a single line of application code.
 
 While this adds complexity, it provides the level of observability and reliability required for enterprise-grade systems.
 
@@ -141,6 +141,6 @@ While this adds complexity, it provides the level of observability and reliabili
 
 Understanding which direction traffic flows is the first step toward building resilient systems.
 
-If you are managing a growing web application, you should focus on your reverse proxy configuration. It is the single most powerful tool in your DevOps kit for ensuring uptime and performance.
+If you are managing a growing web application, you should focus on your reverse proxy configuration. It is one of the most useful tools you have for uptime and performance.
 
 Have you ever found yourself troubleshooting an "IP mismatch" error caused by a misconfigured proxy header?
