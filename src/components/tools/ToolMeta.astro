@@ -1,0 +1,85 @@
+---
+/**
+ * Footer block for every tool page: a visible "Last verified" date and a
+ * link to the service this tool supports. Data comes from TOOL_LIST.
+ */
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import { Icon } from "astro-icon/components";
+import { SERVICE_LANDERS_BY_PACKAGE, type ToolEntry } from "@/consts";
+
+interface Props {
+  tool: ToolEntry;
+}
+
+const { tool } = Astro.props;
+
+const PITCH: Record<ToolEntry["services"][number], string> = {
+  mvp: "Building a Laravel SaaS? I design and ship multi-tenant Laravel apps, from first commit to production.",
+  ai: "Shipping AI features? I build RAG pipelines, MCP servers and agents that hold up in production.",
+  shopify:
+    "Building on Shopify Plus? I build custom apps, webhook pipelines and agent-ready storefronts.",
+  audit:
+    "Worried about scale or cost? My architecture audit finds the bottleneck before your users do.",
+};
+
+const [primaryId, ...otherIds] = tool.services;
+const primary = SERVICE_LANDERS_BY_PACKAGE[primaryId];
+const others = otherIds
+  .map((id) => SERVICE_LANDERS_BY_PACKAGE[id])
+  .filter(Boolean);
+
+const serviceName = (title: string) => title.split("|")[0].trim();
+
+const verifiedText =
+  tool.verifiedLabel ??
+  new Date(`${tool.updated}T00:00:00Z`).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+---
+
+<section class="mx-auto max-w-3xl space-y-5 px-5 pb-16">
+  <p class="mono text-xs font-bold tracking-widest uppercase opacity-80">
+    ▸ Last verified: <time datetime={tool.updated}>{verifiedText}</time>
+  </p>
+  {
+    primary && (
+      <NeoCard
+        href={`/services/${primary.slug}/`}
+        tone="paper"
+        shadow="sm"
+        hover
+      >
+        <p class="mono mb-2 text-[10px] font-bold tracking-widest uppercase opacity-70">
+          Need this in production?
+        </p>
+        <p class="text-base leading-snug">{PITCH[primaryId]}</p>
+        <p class="heading mt-3 flex items-center gap-2 text-lg uppercase">
+          {serviceName(primary.title)}
+          <Icon name="lucide:arrow-right" class="h-4 w-4" aria-hidden="true" />
+        </p>
+      </NeoCard>
+    )
+  }
+  {
+    others.length > 0 && (
+      <p class="text-sm opacity-90">
+        Also related:{" "}
+        {others.map((l, i) => (
+          <>
+            {i > 0 && ", "}
+            <a
+              href={`/services/${l.slug}/`}
+              class="font-bold underline underline-offset-2"
+            >
+              {serviceName(l.title)}
+            </a>
+          </>
+        ))}
+        .
+      </p>
+    )
+  }
+</section>

@@ -99,7 +99,7 @@ Legacy `update_cart` often created a cart when no id was sent. UCP splits that o
 
 Use `create_cart` when the buyer has selected variants and you want estimated totals, multi-turn edits, or a shareable `continue_url` without starting checkout. Include:
 
-- `cart.line_items[]` with `quantity` and `item.id` (variant GID)
+- `cart.line_items[]` with `quantity` and `item.id` (variant GID, which my [Shopify GID decoder](/tools/shopify-gid-decoder/) can unpack)
 - optional `context` (`address_country`, region, postal code) for pricing and availability hints
 - optional `attribution` (UTM / click ids) if you will later convert to checkout
 - optional `buyer` for personalized estimates
@@ -140,7 +140,7 @@ Put that rule in the tool description and in your skill playbook, not only in a 
 
 ## cancel_cart needs an idempotency key
 
-`cancel_cart` requires `meta["idempotency-key"]` as a UUID in addition to `ucp-agent.profile`. Cancel removes the cart from storage. Later `get_cart` returns a business `not_found` outcome.
+`cancel_cart` requires `meta["idempotency-key"]` as a [UUID](/tools/uuid-generator/) in addition to `ucp-agent.profile`. Cancel removes the cart from storage. Later `get_cart` returns a business `not_found` outcome.
 
 Use cancel when the buyer abandons, or when you need to clear a stale cart before starting clean.
 

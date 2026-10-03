@@ -10,7 +10,7 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { unified } from "@astrojs/markdown-remark";
 import rehypeImageDims from "./src/lib/rehype-image-dims.mjs";
 
-import { SITE, TAG_OG_MIN_POSTS } from "./src/consts";
+import { SITE, TAG_OG_MIN_POSTS, TOOL_LIST, TOOLS_UPDATED } from "./src/consts";
 
 const siteHost = new URL(SITE.URL).hostname;
 
@@ -34,7 +34,18 @@ function blogLastmod() {
   }
   return map;
 }
-const LASTMOD = blogLastmod();
+// Tool pages carry their own `updated` date in TOOL_LIST; the hub uses the
+// newest of them.
+function toolLastmod() {
+  const map = {};
+  for (const t of TOOL_LIST) {
+    if (t.status !== "live") continue;
+    map[`${SITE.URL}${t.href}`] = new Date(t.updated).toISOString();
+  }
+  map[`${SITE.URL}/tools/`] = new Date(TOOLS_UPDATED).toISOString();
+  return map;
+}
+const LASTMOD = { ...blogLastmod(), ...toolLastmod() };
 
 // Tag pages below TAG_OG_MIN_POSTS are noindex,follow (see
 // src/pages/blog/tag/[tag].astro) — keep them out of the sitemap too so we
@@ -185,6 +196,13 @@ export default defineConfig({
         }
         if (item.url.endsWith("/blog/")) {
           return { ...item, priority: 0.9, changefreq: "daily" };
+        }
+        if (item.url.includes("/tools/")) {
+          return {
+            ...item,
+            changefreq: "monthly",
+            ...(lastmod ? { lastmod } : {}),
+          };
         }
         return item;
       },

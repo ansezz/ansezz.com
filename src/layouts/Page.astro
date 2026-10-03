@@ -17,6 +17,8 @@ interface Props {
   prev?: string;
   next?: string;
   feeds?: { title: string; href: string }[];
+  /** ISO date; emitted as dateModified on the auto WebPage JSON-LD. */
+  dateModified?: string;
 }
 
 const {
@@ -32,6 +34,7 @@ const {
   prev,
   next,
   feeds,
+  dateModified,
 } = Astro.props;
 
 const pageUrl = new URL(Astro.url.pathname, SITE.URL).href;
@@ -45,6 +48,7 @@ const autoWebPage = noindex
       title,
       description: pageDesc,
       image: resolvedImage,
+      dateModified,
     });
 
 const extra = structuredData

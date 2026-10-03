@@ -1,12 +1,15 @@
 ---
 import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
-import { SITE } from "@/consts";
+import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const tool = getTool("/tools/rag-chunk-splitter/");
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -83,6 +86,7 @@ const faq = [
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  dateModified: tool.updated,
   name: "RAG Chunk Splitter",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Any (browser)",
@@ -131,7 +135,8 @@ const relatedLinks = [
 ---
 
 <Page
-  title="RAG Chunk Splitter"
+  title={tool.seoTitle}
+  dateModified={tool.updated}
   description={DESCRIPTION}
   eyebrow="Free tool"
   heading="RAG Chunk Splitter."
@@ -760,6 +765,8 @@ const relatedLinks = [
       </li>
     </ul>
   </section>
+
+  <ToolMeta tool={tool} />
 
   <RelatedLinks items={relatedLinks} />
 </Page>

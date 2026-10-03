@@ -18,7 +18,7 @@ Building a robust AI architecture requires a strategic mix of RAG, vector databa
 
 ## Understanding the context window
 
-The context window is the model's immediate working memory. It represents the total number of tokens (words or parts of words) the model can process at one specific moment. When you send a prompt to a frontier model like Claude or GPT, the context window includes your current instruction, the previous conversation history, and any files you have attached.
+The context window is the model's immediate working memory. It represents the total number of tokens (words or parts of words) the model can process at one specific moment. When you send a prompt to a frontier model like Claude or GPT, the context window includes your current instruction, the previous conversation history, and any files you have attached. To see how much of a window your own prompt uses, paste it into my [context window checker](/tools/context-window-checker/).
 
 Think of the context window as a physical desk. You can only fit so many papers on it at once. If you add a new stack of documents, you have to push the old ones off. Once a token falls out of this window, the model loses all awareness of it. It does not matter if the information was vital. It is gone.
 
@@ -57,7 +57,7 @@ For technical teams using the Laravel ecosystem, implementing RAG has become sig
 
 Choosing between a larger context window and a RAG pipeline is an economic decision. For a small internal tool with ten users, context stuffing is fine. The engineering hours required to build a RAG pipeline would exceed the token savings.
 
-However, for a SaaS application or a high-volume e-commerce store, the math shifts quickly. Sending 100,000 tokens per request at scale will destroy your margins. A well-optimized RAG system might only send 2,000 tokens per request.
+However, for a SaaS application or a high-volume e-commerce store, the math shifts quickly. Sending 100,000 tokens per request at scale will destroy your margins. A well-optimized RAG system might only send 2,000 tokens per request. Run both numbers through my [LLM cost calculator](/tools/llm-cost-calculator/) to see the monthly gap.
 
 The infrastructure cost of a vector database like Pinecone or a self-hosted pgvector instance is often a fraction of the cost of wasted tokens. The trade-offs between managed and self-hosted stores are worth weighing up front — see [picking the right RAG stack](/blog/picking-the-right-rag-stack/). Either way, you avoid the common [RAG mistakes in production](/blog/7-rag-mistakes-production/) by focusing on retrieval quality rather than just prompt size.
 

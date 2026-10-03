@@ -44,7 +44,7 @@ Effective monitoring requires meaningful thresholds. An alert that fires every t
 
 If monitoring tells you the plane is losing altitude, logging tells you why the engine stalled. Logs provide the forensic evidence needed to debug complex issues. In a distributed system, a single user action might touch multiple services. Without a centralized logging strategy, finding the root cause of a failure is like finding a needle in a haystack.
 
-The biggest mistake developers make is using unstructured logs. Standard text logs like `[2026-06-21] Error: something went wrong` are difficult for machines to parse. Modern engineering teams use structured logging. This involves formatting logs as JSON objects. This allows you to filter and query logs based on specific fields like `user_id`, `request_id`, or `environment`.
+The biggest mistake developers make is using unstructured logs. Standard text logs like `[2026-06-21] Error: something went wrong` are difficult for machines to parse. Modern engineering teams use structured logging. This involves formatting logs as JSON objects. This allows you to filter and query logs based on specific fields like `user_id`, `request_id`, or `environment`. When a log line will not parse, my [JSON formatter](/tools/json-formatter/) points to the exact character.
 
 ```json
 {

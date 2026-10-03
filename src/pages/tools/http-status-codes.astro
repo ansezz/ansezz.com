@@ -1,12 +1,15 @@
 ---
 import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
-import { SITE } from "@/consts";
+import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const tool = getTool("/tools/http-status-codes/");
 
 const PAGE_TITLE = "HTTP Status Codes Reference";
 const PAGE_DESCRIPTION =
@@ -830,6 +833,7 @@ const faq = [
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  dateModified: tool.updated,
   name: PAGE_TITLE,
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Any (browser)",
@@ -887,7 +891,8 @@ const relatedLinks = [
 ---
 
 <Page
-  title={PAGE_TITLE}
+  title={tool.seoTitle}
+  dateModified={tool.updated}
   description={PAGE_DESCRIPTION}
   eyebrow="Free tool"
   heading="HTTP Status Codes."
@@ -1838,6 +1843,8 @@ const relatedLinks = [
       }
     </ul>
   </section>
+
+  <ToolMeta tool={tool} />
 
   <RelatedLinks items={relatedLinks} />
 </Page>

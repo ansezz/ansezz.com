@@ -42,7 +42,7 @@ For scaling, utilization is the baseline, but it isn't the truth. You need to lo
 
 If you want to stop fires before they start, monitor your queue depth. In vLLM or SGLang, this is the number of requests waiting for a slot in the inference engine.
 
-Queue depth is a direct predictor of latency. If you know your model can handle 16 concurrent requests before P99 latency starts to climb, set your scaling trigger at 12.
+Queue depth is a direct predictor of latency. If you know your model can handle 16 concurrent requests before P99 latency starts to climb, set your scaling trigger at 12. To get a real P99 from your own response times, paste them into my [latency percentile calculator](/tools/percentile-calculator/).
 
 Scaling on queue depth lets you provision capacity while the current hardware is still performing within SLO. It gives you that 60-second head start you need to pull a fresh container and load a 20GB model weights file into memory.
 

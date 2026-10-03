@@ -101,6 +101,7 @@ export const NAV = [
   { LABEL: "Work", HREF: "/work/" },
   { LABEL: "Services", HREF: "/services/" },
   { LABEL: "Blog", HREF: "/blog/" },
+  { LABEL: "Tools", HREF: "/tools/" },
   { LABEL: "Uses", HREF: "/uses/" },
   { LABEL: "Contact", HREF: "/contact/" },
 ];
@@ -108,7 +109,6 @@ export const NAV = [
 /** Secondary links surfaced in the footer (not the primary nav). */
 export const FOOTER_MORE = [
   { LABEL: "Now", HREF: "/now/" },
-  { LABEL: "Tools", HREF: "/tools/" },
   { LABEL: "Library", HREF: "/library/" },
   { LABEL: "Series", HREF: "/blog/series/" },
   { LABEL: "How I work", HREF: "/how-i-work/" },

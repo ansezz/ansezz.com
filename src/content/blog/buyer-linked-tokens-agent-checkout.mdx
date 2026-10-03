@@ -78,7 +78,7 @@ Token exchange (RFC 8693) at Shop's token endpoint:
 - `requested_token_type` = JWT
 - `audience` = `api.shopify.com` (Global Catalog) or the **merchant store domain** for store checkout
 
-The returned `access_token` is a **JWT authorization grant**: signed, **single-use**, about **60 seconds** to live. It is not your API bearer yet.
+The returned `access_token` is a **JWT authorization grant**: signed, **single-use**, about **60 seconds** to live. It is not your API bearer yet. To inspect its claims while you debug, paste a test token into my [JWT decoder](/tools/jwt-decoder/).
 
 ### 3. Redeem at Shopify for the buyer-linked token
 

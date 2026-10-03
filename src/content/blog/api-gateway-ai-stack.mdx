@@ -90,7 +90,7 @@ You don't need a massive team to set this up. Here is how I usually approach it 
 
 - **For startups** — use a cloud-native gateway like AWS API Gateway or Azure API Management. They are serverless, scale automatically, and integrate directly with Cognito or Entra ID for auth.
 - **For self-hosters** — Kong is the gold standard. It has a great ecosystem of plugins for rate limiting and auth. If you are comfortable with PHP, a thin Laravel app acting as a gateway works surprisingly well for custom logic.
-- **For Shopify devs** — if you are building [agentic commerce tools](/blog/agentic-commerce-shopify/), use the gateway to handle the specific Shopify HMAC validation before passing the request to your AI agents.
+- **For Shopify devs** — if you are building [agentic commerce tools](/blog/agentic-commerce-shopify/), use the gateway to handle the specific Shopify HMAC validation before passing the request to your AI agents. When a signature fails, my [Shopify webhook HMAC verifier](/tools/shopify-hmac-verifier/) helps you find the cause.
 
 ## Wrapping up
 

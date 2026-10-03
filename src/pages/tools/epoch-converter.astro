@@ -1,12 +1,15 @@
 ---
 import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
-import { SITE } from "@/consts";
+import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const tool = getTool("/tools/epoch-converter/");
 
 const PAGE_DESCRIPTION =
   "Free epoch converter. Turn a Unix timestamp into UTC, local, ISO 8601 and RFC 2822 — or a date back into epoch seconds. Auto-detects ms, runs in your browser.";
@@ -80,6 +83,7 @@ const faq = [
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  dateModified: tool.updated,
   name: "Epoch / Unix Timestamp Converter",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Any (browser)",
@@ -122,7 +126,8 @@ const relatedLinks = [
 ---
 
 <Page
-  title="Epoch / Unix Timestamp Converter"
+  title={tool.seoTitle}
+  dateModified={tool.updated}
   description={PAGE_DESCRIPTION}
   eyebrow="Free tool"
   heading="Epoch Converter."
@@ -700,6 +705,8 @@ const relatedLinks = [
       </NeoButton>
     </div>
   </section>
+
+  <ToolMeta tool={tool} />
 
   <RelatedLinks items={relatedLinks} />
 </Page>

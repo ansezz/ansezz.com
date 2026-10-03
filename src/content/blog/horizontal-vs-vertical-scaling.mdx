@@ -20,7 +20,7 @@ Vertical scaling, or "scaling up," is the process of adding more power to your e
 
 This is the path of least resistance. Since the application still lives on one machine, you do not need to change your code. There is no need for load balancers, service discovery, or complex networking. Your [Laravel](/blog/category/laravel/) application or monolith works exactly as it did before, just faster.
 
-However, vertical scaling has a hard ceiling. Every hardware generation has a limit. Eventually, you will find that the "biggest box" available is either too expensive or simply not enough. More importantly, vertical scaling does not solve the problem of redundancy. If that one big server goes down, your entire system goes down with it.
+However, vertical scaling has a hard ceiling. Every hardware generation has a limit. Eventually, you will find that the "biggest box" available is either too expensive or simply not enough. More importantly, vertical scaling does not solve the problem of redundancy. If that one big server goes down, your entire system goes down with it. Before you buy a bigger box, my [server capacity calculator](/tools/capacity-calculator/) shows how many workers your traffic really needs.
 
 ## Horizontal scaling: building the "fleet"
 

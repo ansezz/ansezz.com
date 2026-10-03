@@ -1,13 +1,16 @@
 ---
 import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
-import { SITE } from "@/consts";
+import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const tool = getTool("/tools/shopify-gid-decoder/");
 
 const PAGE_DESCRIPTION =
   "Free Shopify GID decoder. Parse gid://shopify/Product/123 into resource type and legacy numeric ID, build GIDs, and decode base64 IDs — all in your browser.";
@@ -21,6 +24,7 @@ const breadcrumbLd = breadcrumbList([
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  dateModified: tool.updated,
   name: "Shopify GID Decoder",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Any (browser)",
@@ -227,7 +231,8 @@ const relatedLinks = [
 ---
 
 <Page
-  title="Shopify GID Decoder"
+  title={tool.seoTitle}
+  dateModified={tool.updated}
   description={PAGE_DESCRIPTION}
   eyebrow="Free tool"
   heading="Shopify GID Decoder."
@@ -774,6 +779,8 @@ const relatedLinks = [
       </NeoButton>
     </div>
   </section>
+
+  <ToolMeta tool={tool} />
 
   <RelatedLinks items={relatedLinks} />
 </Page>

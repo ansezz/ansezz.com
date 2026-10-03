@@ -30,7 +30,7 @@ This "naive chunking" treats your data like raw soup. It might cut a sentence in
 
 **The fix:** use semantic or structural chunking.
 
-I always recommend chunking based on the actual structure of the document first. Use headers (H1, H2, H3), paragraphs, or even markdown delimiters to ensure related ideas stay together. If you're working with complex data, consider recursive character splitting that respects newlines and punctuation before falling back to raw token counts. Bad chunking is one of the most common reasons [your RAG fails in production](/blog/why-your-rag-is-failing/).
+I always recommend chunking based on the actual structure of the document first. Use headers (H1, H2, H3), paragraphs, or even markdown delimiters to ensure related ideas stay together. If you're working with complex data, consider recursive character splitting that respects newlines and punctuation before falling back to raw token counts. You can compare strategies on your own text with my [RAG chunk splitter](/tools/rag-chunk-splitter/). Bad chunking is one of the most common reasons [your RAG fails in production](/blog/why-your-rag-is-failing/).
 
 ![Diagram comparing structural chunking that keeps a heading with its paragraph against naive chunking that splits a sentence and table mid-row](/blog/7-rag-mistakes-production/chunking.webp)
 

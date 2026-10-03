@@ -1,12 +1,15 @@
 ---
 import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
-import { SITE } from "@/consts";
+import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const tool = getTool("/tools/base64-encoder/");
 
 const TOOL_NAME = "Base64 Encoder / Decoder";
 const TOOL_DESCRIPTION =
@@ -73,6 +76,7 @@ const faq = [
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Any (browser)",
@@ -113,7 +117,8 @@ const relatedLinks = [
 ---
 
 <Page
-  title={TOOL_NAME}
+  title={tool.seoTitle}
+  dateModified={tool.updated}
   description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="Base64 Encoder / Decoder."
@@ -571,6 +576,8 @@ const relatedLinks = [
       </li>
     </ul>
   </section>
+
+  <ToolMeta tool={tool} />
 
   <RelatedLinks items={relatedLinks} />
 </Page>

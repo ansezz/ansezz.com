@@ -28,7 +28,7 @@ Rate limiting and throttling are your tools to enforce discipline. They ensure t
 
 Rate limiting is a policy-based approach. It defines a strict contract: "You are allowed exactly X requests per Y amount of time." Once a user reaches that limit, the gate shuts.
 
-When a request exceeds the limit, the server immediately rejects it. This is typically done by returning an HTTP 429 "Too Many Requests" status code. The server does not spend any more resources on that request. It does not look up data in the database. It just says "no."
+When a request exceeds the limit, the server immediately rejects it. This is typically done by returning an HTTP [429 "Too Many Requests" status code](/tools/http-status-codes/). The server does not spend any more resources on that request. It does not look up data in the database. It just says "no."
 
 ### Why use rate limiting?
 
@@ -129,7 +129,7 @@ Managing traffic is about balance. You want to provide a fast experience for use
 
 1. **Rate limiting is for policy.** Use it to enforce subscription tiers and block brute-force attacks.
 2. **Throttling is for stability.** Use it to smooth out traffic spikes and protect your database or external API dependencies.
-3. **Return 429 codes.** Always let the client know they are being limited. Include a `Retry-After` header so they know when they can try again.
+3. **Return 429 codes.** Always let the client know they are being limited. Include a `Retry-After` header so they know when they can try again. My [HTTP headers cheat sheet](/tools/http-headers/) shows example values.
 4. **Monitor your limits.** Use dashboards to track how often users hit their limits. If 20% of your users are being limited, your limits might be too low — or your app might be inefficient.
 5. **Use Redis for state.** Both rate limiting and throttling require a fast, central store to track request counts. Redis is the industry standard for this.
 

@@ -1,12 +1,15 @@
 ---
 import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
 import RelatedLinks from "@/components/RelatedLinks.astro";
 import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
-import { SITE } from "@/consts";
+import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
+
+const tool = getTool("/tools/json-to-typescript/");
 
 const PAGE_DESCRIPTION =
   "Free JSON to TypeScript converter. Paste a JSON sample and generate typed interfaces plus a Zod v4 schema, with unions and optionals inferred, in your browser.";
@@ -20,6 +23,7 @@ const breadcrumbLd = breadcrumbList([
 const appLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
+  dateModified: tool.updated,
   name: "JSON to TypeScript & Zod",
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Any (browser)",
@@ -254,7 +258,8 @@ const relatedLinks = [
 ---
 
 <Page
-  title="JSON to TypeScript & Zod"
+  title={tool.seoTitle}
+  dateModified={tool.updated}
   description={PAGE_DESCRIPTION}
   eyebrow="Free tool"
   heading="JSON to TypeScript & Zod."
@@ -766,6 +771,8 @@ const relatedLinks = [
       }
     </ul>
   </section>
+
+  <ToolMeta tool={tool} />
 
   <RelatedLinks items={relatedLinks} />
 </Page>

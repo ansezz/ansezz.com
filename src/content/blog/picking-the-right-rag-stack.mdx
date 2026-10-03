@@ -140,7 +140,7 @@ Make sure your embedding model and your vector database are on the same page. If
 **3. Keep the metadata lean.**
 It's tempting to store the entire JSON object of a document inside your vector database. Don't. Store the vector and a simple ID. Keep the heavy data in your primary database (like Postgres). This keeps your vector index small and fast.
 
-These are the cheap wins. For the deeper traps — bad chunking, missing reranking, stale embeddings — see the [7 mistakes you're making with your production RAG stack](/blog/7-rag-mistakes-production/).
+These are the cheap wins. For the deeper traps — bad chunking, missing reranking, stale embeddings — see the [7 mistakes you're making with your production RAG stack](/blog/7-rag-mistakes-production/). To test chunk sizes on your own documents, try my [RAG chunk splitter](/tools/rag-chunk-splitter/).
 
 ## My personal rule of thumb
 
