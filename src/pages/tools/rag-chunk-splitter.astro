@@ -67,7 +67,7 @@ const faq = [
   },
   {
     q: "Is the token count in this chunk splitter accurate?",
-    a: "It is an estimate, not a tokenizer. The tool blends the ~4-characters-per-token rule with a word-count estimate, which lands within roughly 10–20% of a real BPE tokenizer on English prose. Code, JSON, non-Latin scripts, and heavy punctuation drift further. Use it to size chunks and compare strategies; use the provider's own tokenizer before you commit a number to a billing forecast.",
+    a: "Exact for OpenAI's o200k_base tokenizer. The page downloads that merge table once and counts every chunk in your browser. Until it loads, you see a quick estimate of about four characters per token. Other embedding models, including Cohere, Voyage and open-weight models, ship their own tokenizers, so their counts will differ a little. Leave 10% headroom under a hard embedding limit if you are not on an OpenAI model.",
   },
   {
     q: "What is the difference between fixed-size and semantic chunking?",
@@ -140,17 +140,18 @@ const relatedLinks = [
   description={DESCRIPTION}
   eyebrow="Free tool"
   heading="RAG Chunk Splitter."
-  intro="Paste a document, pick a strategy, and see exactly how it splits — every chunk, its token estimate, and the overlap you end up embedding twice. Nothing leaves your browser."
+  intro="Paste a document, pick a strategy, and see exactly how it splits: every chunk, its token count, and the overlap you end up embedding twice. Nothing leaves your browser."
   structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
       <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
-        ▸ Token counts are estimates
+        ▸ Exact GPT token counts
       </p>
       <p class="text-sm leading-snug font-bold">
-        This uses the ~4 chars/token heuristic, not a real BPE tokenizer. Good
-        enough to size chunks and compare strategies — not for billing.
+        Chunks are counted with OpenAI's o200k_base tokenizer, loaded in your
+        browser. Other embedding models use their own tokenizers, so leave a
+        little headroom.
       </p>
     </StickyNote>
   </section>
@@ -643,14 +644,14 @@ const relatedLinks = [
           a chunk with two topics in it is worse than a chunk that is simply small.
         </li>
         <li>
-          <strong>Token counts</strong> blend the ~4-characters-per-token rule with
-          a word-based estimate — the same heuristic as my
+          <strong>Token counts</strong> use OpenAI's o200k_base tokenizer, the same
+          one as my
           <a
             href="/tools/token-counter/"
             class="font-bold underline decoration-2 underline-offset-2"
             >token counter</a
-          >. Expect ±10–20% against a real BPE tokenizer on English, and more
-          drift on code, JSON, and non-Latin scripts.
+          >. They are exact for that tokenizer. Other embedding models count a
+          little differently, so keep some headroom under a hard limit.
         </li>
       </ul>
       <p>
@@ -759,7 +760,7 @@ const relatedLinks = [
             ▸ Tool
           </p>
           <p class="leading-snug font-bold">
-            Token Counter — the same estimate, on one blob of text
+            Token Counter: the same exact GPT count, on one blob of text
           </p>
         </NeoCard>
       </li>

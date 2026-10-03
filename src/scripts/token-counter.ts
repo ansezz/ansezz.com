@@ -1,15 +1,13 @@
-// Client-side token estimator. Heuristic: ~4 characters per token for
-// English-ish text, blended lightly with a word-based estimate.
+// Token counter. Exact GPT counts (o200k_base, lazy-loaded), with Claude and
+// Gemini estimates derived from that count. Everything stays in the browser.
 
-function estimateTokens(text: string): number {
-  if (!text) return 0;
-  const chars = text.length;
-  const words = (text.trim().match(/\S+/g) ?? []).length;
-  const byChars = chars / 4;
-  const byWords = words * 1.33;
-  // Blend, lean on chars (handles code/punctuation better).
-  return Math.round(byChars * 0.7 + byWords * 0.3);
-}
+import type { LlmTokenizer } from "@/data/llm-models";
+import {
+  heuristicTokens,
+  loadGptCounter,
+  tokensFor,
+  type GptCounter,
+} from "@/lib/tokens";
 
 function fmtUsd(n: number): string {
   if (n === 0) return "$0";
@@ -31,23 +29,56 @@ function init(): void {
     if (el) el.textContent = v;
   };
 
+  let counter: GptCounter | null = null;
+  let timer: number | undefined;
+
   function update(): void {
     const text = input!.value;
-    const tokens = estimateTokens(text);
-    setText("tok-tokens", tokens.toLocaleString("en-US"));
+    const exact = counter !== null;
+    const gpt = counter ? counter(text) : heuristicTokens(text);
+    const n = (t: LlmTokenizer) => tokensFor(t, gpt).toLocaleString("en-US");
+
+    setText("tok-tokens", gpt.toLocaleString("en-US"));
+    setText("tok-claude", n("claude"));
+    setText("tok-claude-legacy", n("claude-legacy"));
+    setText("tok-gemini", n("gemini"));
     setText("tok-chars", text.length.toLocaleString("en-US"));
     setText(
       "tok-words",
       (text.trim().match(/\S+/g) ?? []).length.toLocaleString("en-US"),
     );
+    setText(
+      "tok-status",
+      exact
+        ? "GPT count is exact (o200k_base)"
+        : "Loading exact GPT tokenizer, showing an estimate",
+    );
     root!.querySelectorAll<HTMLElement>("[data-cost]").forEach((el) => {
       const pricePerM = parseFloat(el.dataset.cost ?? "0");
-      el.textContent = fmtUsd((tokens / 1_000_000) * pricePerM);
+      const tok = (el.dataset.tok ?? "o200k") as LlmTokenizer;
+      el.textContent = fmtUsd((tokensFor(tok, gpt) / 1_000_000) * pricePerM);
     });
   }
 
-  input.addEventListener("input", update);
+  function schedule(): void {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(update, 120);
+  }
+
+  input.addEventListener("input", schedule);
   update();
+
+  loadGptCounter()
+    .then((c) => {
+      counter = c;
+      update();
+    })
+    .catch(() => {
+      setText(
+        "tok-status",
+        "Could not load the GPT tokenizer, showing an estimate",
+      );
+    });
 }
 
 init();

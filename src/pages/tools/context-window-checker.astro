@@ -8,8 +8,22 @@ import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
 import { breadcrumbList, faqPage } from "@/lib/seo";
+import {
+  LLM_MODELS,
+  LLM_DATA_VERIFIED,
+  type LlmTokenizer,
+} from "@/data/llm-models";
 
 const tool = getTool("/tools/context-window-checker/");
+
+const verifiedText = new Date(
+  `${LLM_DATA_VERIFIED}T00:00:00Z`,
+).toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+});
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -18,51 +32,64 @@ const breadcrumbLd = breadcrumbList([
 ]);
 
 const DESCRIPTION =
-  "Free context window checker. Paste a prompt, see if it fits Claude, GPT, and Gemini windows — tokens used, headroom left, output reserve — in your browser.";
+  "Free context window checker. Paste a prompt and see if it fits Claude, GPT and Gemini windows, with exact GPT token counts, headroom and output reserve. Runs in your browser.";
 
-// Windows are the advertised limits as of August 2026. They move; the page says
-// so out loud rather than pretending a hardcoded number is a contract.
-const MODELS = [
+// Named rows come from the shared model file (src/data/llm-models.ts), which
+// records when each window was checked. Models with the same provider, window
+// and tokenizer share one row. The three generic rows cover older and
+// self-hosted models and are not tied to a provider page.
+const GENERIC = [
   {
     label: "Small local / legacy",
     note: "Llama-2 class, small quantized builds",
     window: 8192,
+    tok: "o200k" as LlmTokenizer,
   },
   {
     label: "32K self-hosted / legacy",
     note: "Mistral, older GPT-4, plenty of OSS servers",
     window: 32768,
+    tok: "o200k" as LlmTokenizer,
   },
   {
-    label: "GPT-class standard",
-    note: "The 128K tier most GPT deployments run on",
+    label: "128K older models",
+    note: "GPT-4o era and many open-weight models",
     window: 128000,
+    tok: "o200k" as LlmTokenizer,
   },
-  {
-    label: "Claude Opus / Sonnet",
-    note: "The default 200K window",
-    window: 200000,
-  },
-  {
-    label: "Claude Haiku",
-    note: "Same 200K window, cheaper tokens",
-    window: 200000,
-  },
-  {
-    label: "GPT-class extended",
-    note: "Long-context tier on newer GPT models",
-    window: 400000,
-  },
-  {
-    label: "Claude 1M context",
-    note: "Sonnet / Opus long-context variants, tier-gated",
-    window: 1000000,
-  },
-  {
-    label: "Gemini-class",
-    note: "1,048,576 tokens — 2^20, Pro and Flash",
-    window: 1048576,
-  },
+];
+const named = new Map<
+  string,
+  { labels: string[]; provider: string; window: number; tok: LlmTokenizer }
+>();
+for (const m of LLM_MODELS) {
+  const key = `${m.provider}|${m.contextWindow}|${m.tokenizer}`;
+  const row = named.get(key);
+  if (row) row.labels.push(m.label);
+  else
+    named.set(key, {
+      labels: [m.label],
+      provider: m.provider,
+      window: m.contextWindow,
+      tok: m.tokenizer,
+    });
+}
+const TOK_NOTE: Record<LlmTokenizer, string> = {
+  o200k: "Exact GPT count",
+  claude: "Claude count est. at GPT x 1.3",
+  "claude-legacy": "Older Claude tokenizer, est.",
+  gemini: "Gemini count est.",
+};
+const MODELS = [
+  ...GENERIC,
+  ...[...named.values()]
+    .sort((a, b) => a.window - b.window)
+    .map((r) => ({
+      label: r.labels.join(", "),
+      note: TOK_NOTE[r.tok],
+      window: r.window,
+      tok: r.tok,
+    })),
 ];
 
 // Four slices, because a prompt is never one blob in production.
@@ -112,7 +139,7 @@ const PRESETS = [
 const faq = [
   {
     q: "How accurate is this context window checker?",
-    a: "The token count is an estimate, not a tokenizer. It blends the ~4-characters-per-token rule with a word-based count, which lands within roughly 10-20% for English prose and drifts wider on code, JSON, and non-Latin scripts. The window sizes and the fit arithmetic are exact. Treat a result within 10% of a limit as a coin flip and verify with the provider's own token counting endpoint before you ship it.",
+    a: "For GPT rows the count is exact: the page loads OpenAI's o200k_base tokenizer in your browser and counts the text you paste. Claude and Gemini tokenizers are not public in a form a page can run, so those rows use an estimate. Claude 4.7 and later rows add about 30% to the GPT count, because Anthropic says the newer tokenizer produces roughly that many more tokens. The window sizes and the fit arithmetic are exact. Treat a Claude or Gemini result within 10% of a limit as a coin flip and check it with the provider's count tokens endpoint.",
   },
   {
     q: "Does the model's answer count against the context window?",
@@ -410,7 +437,7 @@ const relatedLinks = [
             <p
               class="mono mt-2 text-[11px] tracking-widest uppercase opacity-80"
             >
-              prompt tokens (est.)
+              prompt tokens (GPT count)
             </p>
           </div>
 
@@ -511,6 +538,7 @@ const relatedLinks = [
               <tr
                 data-cw-row
                 data-cw-window={String(m.window)}
+                data-cw-tok={m.tok}
                 data-cw-label={m.label}
                 class={i % 2 ? "bg-bg-alt" : "bg-paper"}
               >
@@ -580,8 +608,9 @@ const relatedLinks = [
     </div>
     <p class={`${hintClass} mt-3`}>
       ▸ Pink is the prompt, yellow is the reserved reply. <strong>Tight</strong> fires
-      at 75% of the window or when less than 10% is left over. Window sizes checked
-      August 2026 — confirm against the model card before you architect around one.
+      at 75% of the window or when less than 10% is left over. Named model windows
+      checked {verifiedText} against each provider's model pages. Confirm against
+      the model card before you architect around one.
     </p>
   </section>
 

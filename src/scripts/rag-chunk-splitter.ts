@@ -1,8 +1,10 @@
 // RAG chunk splitter. Four strategies: a hard fixed window, and three that pack
 // whole units (sentences, paragraphs, markdown sections) up to a target size and
 // build the overlap out of complete units walked backwards from the seam.
-// Token counts use the ~4 chars/token blend from the token counter — estimates,
-// not a BPE tokenizer.
+// Token counts use the exact GPT tokenizer (o200k_base, lazy-loaded via
+// @/lib/tokens). Until it loads, a ~4 chars/token estimate stands in.
+
+import { loadGptCounter, type GptCounter } from "@/lib/tokens";
 
 type Strategy = "fixed" | "sentence" | "paragraph" | "markdown";
 type Unit = "tokens" | "chars";
@@ -86,9 +88,13 @@ Track the numbers per source, not just in aggregate. A change that improves reca
 
 /* ── token estimate ─────────────────────────────────────── */
 
-// Unrounded so it can be summed across atoms without rounding drift.
+let gptCounter: GptCounter | null = null;
+
+// Unrounded (for the estimate) so it can be summed across atoms without
+// rounding drift. Exact counts are integers already.
 function rawTokens(text: string): number {
   if (!text) return 0;
+  if (gptCounter) return gptCounter(text);
   const words = (text.trim().match(/\S+/g) ?? []).length;
   return (text.length / 4) * 0.7 + words * 1.33 * 0.3;
 }
@@ -1094,6 +1100,15 @@ function init(): void {
 
   applyUnitLabels();
   render();
+
+  loadGptCounter()
+    .then((counter) => {
+      gptCounter = counter;
+      render();
+    })
+    .catch(() => {
+      // Keep the estimate if the tokenizer cannot load.
+    });
 }
 
 init();
