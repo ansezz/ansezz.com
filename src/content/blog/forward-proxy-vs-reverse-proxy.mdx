@@ -10,17 +10,37 @@ heroImage:
   alt: "Pop-art comic-style illustration comparing forward and reverse proxy architectures"
 ---
 
-Most developers interact with proxies every single day without realizing which direction the traffic is actually flowing. The choice between a forward proxy vs reverse proxy comes down to one question: whose side is the middleman on? You set up Nginx for a Laravel app, and it works. You route outbound traffic through a corporate proxy, and it works. But when the site goes down under heavy load or your IP gets blacklisted, that distinction becomes the difference between a quick fix and hours of infrastructure debt.
+Most developers interact with proxies every single day without realizing which direction the traffic is actually flowing.
 
-In modern web architecture, a proxy is essentially a "middleman" server. It sits between two parties to facilitate communication. However, the side it represents determines its name, its function, and its security benefits. This guide breaks down the core technical differences to help you choose the right pattern for your next deployment.
+<Summary>
+- A forward proxy speaks for the client and hides its IP. It handles outbound traffic, filtering and anonymity.
+- A reverse proxy speaks for the server and hides the backend. It handles load balancing, SSL termination, WAF and caching.
+- In Docker and Laravel setups, Nginx as a reverse proxy with the right forwarded headers is the pattern you will touch most.
+</Summary>
+
+The choice between a forward proxy vs reverse proxy comes down to one question: whose side is the middleman on?
+
+You set up Nginx for a Laravel app, and it works. You route outbound traffic through a corporate proxy, and it works.
+
+But when the site goes down under heavy load or your IP gets blacklisted, that distinction becomes the difference between a quick fix and hours of infrastructure debt.
+
+In modern web architecture, a proxy is essentially a "middleman" server. It sits between two parties to facilitate communication.
+
+However, the side it represents determines its name, its function, and its security benefits. This guide breaks down the core technical differences to help you choose the right pattern for your next deployment.
 
 ## The forward proxy: protecting the client
 
-A forward proxy sits in front of one or more client machines and acts as their representative to the open internet. When a user makes a request to a website, the request first hits the forward proxy. The proxy then evaluates the request, sends it to the web server, and passes the response back to the user.
+A forward proxy sits in front of one or more client machines and acts as their representative to the open internet.
+
+When a user makes a request to a website, the request first hits the forward proxy. The proxy then evaluates the request, sends it to the web server, and passes the response back to the user.
 
 From the perspective of the internet, the forward proxy is the one making the request. The original client's IP address remains hidden behind the proxy's IP. This is a common setup in corporate environments or for users seeking anonymity.
 
-![Forward proxy diagram: client requests pass through a proxy that masks the client IP before reaching the internet](/blog/forward-proxy-vs-reverse-proxy/forward-proxy.webp)
+<Figure
+  src="/blog/forward-proxy-vs-reverse-proxy/inline-1.webp"
+  alt="Comic panel of small laptop robots sending requests through one masked proxy robot that faces the internet on their behalf"
+  caption="Forward proxy: the internet only ever sees the proxy, never the client."
+/>
 
 ### Why use a forward proxy?
 
@@ -35,9 +55,15 @@ Forward proxies are primarily used to manage and secure outbound traffic. Here a
 
 While a forward proxy represents the client, a reverse proxy represents the server. It sits at the edge of your infrastructure and intercepts all incoming requests from the internet before they reach your backend application.
 
-The client believes they are communicating directly with the origin server. In reality, they are talking to the reverse proxy. The proxy then decides which backend server should handle the request. This architecture is a cornerstone of [modern cloud infrastructure](/blog/category/devops/) and high-availability systems.
+The client believes they are communicating directly with the origin server. In reality, they are talking to the reverse proxy. The proxy then decides which backend server should handle the request.
 
-![Reverse proxy diagram: a single edge entry point receiving internet traffic and distributing it across multiple backend servers](/blog/forward-proxy-vs-reverse-proxy/reverse-proxy.webp)
+This architecture is a cornerstone of [modern cloud infrastructure](/blog/category/devops/) and high-availability systems.
+
+<Figure
+  src="/blog/forward-proxy-vs-reverse-proxy/inline-2.webp"
+  alt="Comic panel of a single gatekeeper robot at the edge taking internet traffic and handing requests to several server robots behind a wall"
+  caption="Reverse proxy: one front door, many hidden backends."
+/>
 
 ### Why use a reverse proxy?
 
@@ -46,7 +72,7 @@ Reverse proxies are essential for scaling and securing web applications. They ha
 - **Load balancing**: This is the most common use case. A reverse proxy like Nginx or HAProxy distributes incoming traffic across multiple app nodes so no single server becomes a bottleneck. The overlap here is real enough that it's worth reading [load balancer vs reverse proxy](/blog/load-balancer-vs-reverse-proxy/) to see where the two roles diverge.
 - **SSL termination**: Managing TLS certificates on every backend server is a nightmare. A reverse proxy decrypts incoming HTTPS at the edge and forwards plain HTTP across a trusted internal network. If compliance demands end-to-end encryption, you re-encrypt to the backend with `proxy_pass https://` and `proxy_ssl_verify on` instead.
 - **Security and WAF**: Reverse proxies hide the existence and characteristics of your backend servers. You can run a Web Application Firewall (WAF) at the proxy level to filter SQL injection and XSS before they ever hit your code, and absorb volumetric DDoS traffic at the edge.
-- **Caching**: By caching static assets or even entire HTML responses, a reverse proxy serves requests without touching the database or the application server. Push that cache out to the network edge and you are effectively running a [CDN — which is why high-traffic sites need both](/blog/cdn-vs-cache/).
+- **Caching**: By caching static assets or even entire HTML responses, a reverse proxy serves requests without touching the database or the application server. Push that cache out to the network edge and you are effectively running a [CDN, which is why high-traffic sites need both](/blog/cdn-vs-cache/).
 
 ## Forward proxy vs reverse proxy: visibility and flow
 
@@ -60,7 +86,9 @@ The easiest way to remember the difference is to look at who is being "hidden" f
 | **Primary goal**    | Privacy, filtering, egress control | Load balancing, security, performance |
 | **Example tool**    | Squid, Privoxy                     | Nginx, HAProxy, Cloudflare            |
 
-In a forward proxy setup, the origin server has no idea who the actual client is. In a reverse proxy setup, the client has no idea which backend server actually processed their request. Both are essential for [clean architecture](/blog/category/architecture/) but solve entirely different problems.
+<PullQuote>In a forward proxy setup, the origin server has no idea who the actual client is. In a reverse proxy setup, the client has no idea which backend server actually processed their request.</PullQuote>
+
+Both are essential for [clean architecture](/blog/category/architecture/) but solve entirely different problems.
 
 ## Engineering implementations: Nginx and Docker
 
@@ -83,26 +111,36 @@ server {
 }
 ```
 
-In this setup, Nginx acts as the reverse proxy. It receives the request from the user and forwards it to the `app_container`. It also passes along the `X-Forwarded-For` header so your application can still know the original user's IP address if needed. This is a critical pattern when building an [API gateway for an AI stack](/blog/api-gateway-ai-stack/) or managing Shopify app extensions.
+In this setup, Nginx acts as the reverse proxy. It receives the request from the user and forwards it to the `app_container`.
 
-![Architecture diagram of Nginx acting as a reverse proxy in front of a Laravel app container in a Docker environment](/blog/forward-proxy-vs-reverse-proxy/nginx-docker.webp)
+It also passes along the `X-Forwarded-For` header so your application can still know the original user's IP address if needed.
+
+This is a critical pattern when building an [API gateway for an AI stack](/blog/api-gateway-ai-stack/) or managing Shopify app extensions.
+
+<TryThis>
+Log `$request->ip()` in your Laravel app behind the proxy. If it shows the proxy's address instead of the user's, your forwarded headers or trusted proxies need fixing.
+</TryThis>
 
 ## Advanced use cases: the mesh approach
 
-In complex microservices environments, the lines blur. Service meshes like Istio and Linkerd typically deploy a "sidecar" proxy next to every service, and each sidecar acts as both a forward and a reverse proxy depending on whether the traffic is ingress (incoming) or egress (outgoing).
+In complex microservices environments, the lines blur. Service meshes like Istio and Linkerd typically deploy a "sidecar" proxy next to every service.
 
-This allows for incredibly granular control over how services talk to each other. You can implement automatic retries, circuit breaking, and mutual TLS without writing a single line of application code. While this adds complexity, it provides the level of observability and reliability required for enterprise-grade systems.
+Each sidecar acts as both a forward and a reverse proxy depending on whether the traffic is ingress (incoming) or egress (outgoing).
 
-## Takeaways
+This gives you fine-grained control over how services talk to each other. You can implement automatic retries, circuit breaking, and mutual TLS without writing a single line of application code.
 
-Understanding which direction traffic flows is the first step toward building resilient systems. The points worth keeping:
+While this adds complexity, it provides the level of observability and reliability required for enterprise-grade systems.
 
+<Takeaway>
 - **Forward proxies protect the user.** Use them when you want to control how your internal network accesses the internet or to maintain user anonymity.
 - **Reverse proxies protect the infrastructure.** Use them to scale your applications through load balancing, improve performance via caching, and secure your backend.
 - **Direction matters.** A forward proxy handles outbound requests. A reverse proxy handles inbound requests.
 - **Nginx is the industry standard.** It is the most common tool for implementing reverse proxies in [Laravel and Docker environments](/blog/category/laravel/).
 - **Security is centralized.** Both types of proxies allow you to centralize security policies rather than implementing them on every individual device or server.
+</Takeaway>
 
-If you are managing a growing web application, you should focus on your reverse proxy configuration. It is the single most powerful tool in your DevOps kit for ensuring uptime and performance.
+Understanding which direction traffic flows is the first step toward building resilient systems.
+
+If you are managing a growing web application, you should focus on your reverse proxy configuration. It is one of the most useful tools you have for uptime and performance.
 
 Have you ever found yourself troubleshooting an "IP mismatch" error caused by a misconfigured proxy header?
