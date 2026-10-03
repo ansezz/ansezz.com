@@ -23,7 +23,7 @@ Agents retry. Transports retry. Humans mash "send" when the spinner hangs. Your 
 
 If your mutation tools treat every call as a new intent, you will invent double refunds, duplicate password emails, and seat resets that fire three times for one user request.
 
-This post is the follow-on pattern. Client-supplied idempotency keys, a server short-circuit that returns the first result, keys stored on the same audit rows you already trust at 3am, and the race conditions that show up the moment you put Octane and Horizon in the path.
+This post is the follow-on pattern: client-supplied idempotency keys, a server short-circuit that returns the first result, keys stored on the same audit rows you already trust at 3am, and the race conditions that show up the moment you put Octane and Horizon in the path.
 
 ## The failure mode is boring and expensive
 
