@@ -44,7 +44,11 @@ RAG is the standard choice for applications where data changes frequently. If yo
 
 Retraining a model every time a product sells out is not practical. With RAG, you just update the vector index. You can read more about avoiding common pitfalls in our guide on [7 RAG mistakes in production](/blog/7-rag-mistakes-production/).
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/rag-vs-fine-tuning/inline-1.webp"
+  alt="Comic panel of a robot swapping a card in an index cabinet while another hauls a giant brain into a retraining machine"
+  caption="When facts change, update the index instead of retraining the model."
+/>
 
 ## Fine-tuning as internalized knowledge
 
@@ -89,7 +93,11 @@ Fine-tuning offers much lower latency at runtime. There is no external retrieval
 
 This makes fine-tuned models a good fit for real-time applications or high-volume background tasks like sentiment analysis or lead scoring.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/rag-vs-fine-tuning/inline-2.webp"
+  alt="Comic panel of a speedy robot racing past a conveyor of smiley and frowny cards"
+  caption="A small fine-tuned model is fast and cheap for one narrow job."
+/>
 
 ## Infrastructure and cost considerations
 

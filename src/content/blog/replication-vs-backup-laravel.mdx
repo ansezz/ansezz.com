@@ -72,7 +72,11 @@ For a production-grade [Coolify self-hosted SaaS](/blog/coolify-self-hosted-saas
 
 Use replication to scale your reads and handle node failures. Use automated, encrypted backups so you can roll back to a known-good state.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/replication-vs-backup-laravel/inline-1.webp"
+  alt="Comic panel of two mirrored databases next to a robot locking a database snapshot in a vault"
+  caption="A replica copies mistakes too. A backup lets you go back."
+/>
 
 ## Implementing replication in Laravel
 
@@ -132,7 +136,11 @@ If you do not have a separate backup strategy that creates daily snapshots of yo
 
 To build true resilience, store historical JSON payloads of those Shopify resources in a versioned storage system like S3. This lets you reconstruct your state even if the live sync deletes everything.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/replication-vs-backup-laravel/inline-2.webp"
+  alt="Comic panel of a robot archivist filing dated paper stacks into numbered version drawers during a storm"
+  caption="Versioned snapshots let you rebuild state even after a bad sync."
+/>
 
 ## Cloud infrastructure and the cost of availability
 

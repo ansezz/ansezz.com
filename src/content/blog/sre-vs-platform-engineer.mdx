@@ -48,7 +48,11 @@ Toil is the manual, repetitive work, like scaling clusters or rotating certifica
 
 By writing code to automate these tasks, an SRE lets the infrastructure grow without a matching increase in headcount.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/sre-vs-platform-engineer/inline-1.webp"
+  alt="Comic panel of a robot coding small helper robots that take over a pile of wrench chores"
+  caption="SREs write code so repetitive ops work goes away."
+/>
 
 <TryThis>
 Pick your most important user-facing endpoint and write one SLO for it, for example "99.9% of requests succeed in under 300ms over 30 days." Then work out how many minutes of failure that leaves you each month.
@@ -146,7 +150,11 @@ This loop reduces the SRE's operational load. They spend less time fighting fire
 
 At the same time, developers are happier because the platform keeps them from making common mistakes. This is what [mature DevOps](/blog/category/devops/) looks like.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/sre-vs-platform-engineer/inline-2.webp"
+  alt="Comic panel of robots driving go-karts on a smooth road that a platform robot is paving ahead of them"
+  caption="Platform teams pave the road so developers ship safely."
+/>
 
 <TryThis>
 Take your last three post-mortems. For each one, ask: "Could a default in our templates or pipeline have prevented this?" Every yes is a ticket for whoever owns your platform.

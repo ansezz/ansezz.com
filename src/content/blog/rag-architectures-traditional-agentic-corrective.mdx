@@ -62,7 +62,11 @@ Agentic RAG turns retrieval from a passive pipeline into an active control loop.
 
 The agent can plan its approach, decide which tools to use, and iterate until it finds a satisfactory answer.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/rag-architectures-traditional-agentic-corrective/inline-1.webp"
+  alt="Comic panel of a detective robot splitting one big question into three smaller searches"
+  caption="Agentic RAG plans the search, splits the question and loops until it has an answer."
+/>
 
 ### Splitting the question
 
@@ -88,7 +92,11 @@ Corrective RAG, or CRAG, adds a self-correction step to retrieval. Its goal is t
 
 The original [CRAG paper](https://arxiv.org/abs/2401.15884) uses a fine-tuned T5-large model as that evaluator.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/rag-architectures-traditional-agentic-corrective/inline-2.webp"
+  alt="Comic panel of a referee robot with a traffic light grading documents and binning a bad one"
+  caption="Corrective RAG grades what it retrieved before the model sees it."
+/>
 
 ### Three confidence levels
 

@@ -174,7 +174,11 @@ You can deploy your main Laravel API as a container on Cloud Run, which scales t
 
 This hybrid approach puts each workload in the environment that suits it.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/serverless-vs-containers/inline-2.webp"
+  alt="Comic panel of a robot sending big cargo boxes to shipping containers and small tasks to pop-up booths"
+  caption="Run steady work in containers and bursty jobs on serverless."
+/>
 
 <TryThis>
 List your app's background tasks and mark each one "short and bursty" or "long or steady." Move one short, bursty task (PDF generation, image resizing) to a function and leave the rest in your container.

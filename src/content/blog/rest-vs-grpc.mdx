@@ -54,7 +54,11 @@ In HTTP/1.1, a client effectively sends one request at a time over a connection,
 
 (TCP-level head-of-line blocking still exists under packet loss. That is the problem HTTP/3 and QUIC were designed to solve.) This efficiency matters for modern [API gateway architectures](/blog/api-gateway-ai-stack/) that handle thousands of concurrent requests.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/rest-vs-grpc/inline-1.webp"
+  alt="Comic panel of a tired robot carrying one giant letter beside a robot surfing a highway full of small cubes"
+  caption="HTTP/2 lets gRPC send many streams over one connection."
+/>
 
 <TryThis>
 Take one real response from your busiest internal endpoint, write the matching `.proto` message, and compare the encoded size with the JSON size. That ratio, for your data, is the number that matters.
@@ -166,7 +170,11 @@ In a modern architecture, it is common to see both living together. A RESTful AP
 
 As we move further into [AI-integrated development](/blog/ai-vs-traditional-development/), the efficiency of these data pipelines matters even more. Large language models and agentic systems need low-latency access to data, which makes gRPC a natural fit for the "inner loop" of AI infrastructure.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/rest-vs-grpc/inline-2.webp"
+  alt="Comic panel of a robot handing menus to customers at a window while robots behind the wall pass packets through tubes"
+  caption="Use REST for public clients and gRPC between your own services."
+/>
 
 <TryThis>
 Draw your current service map and mark each arrow "browser or third party" or "service to service." The first kind stays REST. The busiest arrow of the second kind is your first gRPC candidate.

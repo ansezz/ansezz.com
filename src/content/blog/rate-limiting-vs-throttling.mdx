@@ -87,7 +87,11 @@ If the traffic stays high for too long, though, the queue eventually fills up, a
   <div slot="after">Over the pace? The request waits in line. The user sees a slower response instead of an error, until the queue fills.</div>
 </BeforeAfter>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/rate-limiting-vs-throttling/inline-1.webp"
+  alt="Comic panel of a bouncer robot blocking a pile of envelopes next to a robot feeding envelopes through a funnel"
+  caption="Rate limiting rejects extra requests. Throttling slows them down."
+/>
 
 ## Key algorithms: token vs leaky bucket
 
@@ -182,7 +186,11 @@ I have found that the most resilient systems use both. This is especially import
 
 If those calls hit a paid LLM, the stakes shift from CPU to your bill. See [rate limiting and the denial-of-wallet problem](/blog/rate-limiting-ai-wallet/) for the token-cost angle.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/rate-limiting-vs-throttling/inline-2.webp"
+  alt="Comic panel of a robot losing coins from a wallet to a swarm of bots while a guard robot raises a shield"
+  caption="On paid AI endpoints, limits protect your bill as well as your servers."
+/>
 
 <TryThis>
 Check what your 429 responses send back. If there is no `Retry-After` header, add one, so well-behaved clients wait the right amount instead of retrying in a tight loop.
