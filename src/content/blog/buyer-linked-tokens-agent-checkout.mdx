@@ -11,9 +11,19 @@ heroImage:
   alt: "Comic pipeline: Shop OAuth to token exchange to JWT redeem to ~60 minute buyer-linked token"
 ---
 
-A Token-tier agent credential identifies **your app**. A **buyer-linked token** also carries the signed-in Shop customer. That is the difference between "an agent is shopping" and "this buyer is shopping through an agent."
+A Token-tier agent credential identifies **your app**. A **buyer-linked token** also carries the signed-in Shop customer.
 
-As of Sep 2026, Shopify documents a UCP delegated identity provider flow: authorize with Shop (`accounts.shop.app`), exchange the Shop access token for a short-lived JWT grant, redeem that grant at Shopify for a buyer-linked JWT. The resulting token lasts about **60 minutes** and **does not refresh**. When it expires, remint from the Shop session.
+<Summary>
+- A buyer-linked token turns "an agent is shopping" into "this buyer is shopping through an agent."
+- You get it in three server-side hops: Shop OAuth, token exchange for a JWT grant, then a redeem at Shopify.
+- The grant lives about 60 seconds. The token lives about 60 minutes and never refreshes, so plan to remint.
+</Summary>
+
+That is the difference between "an agent is shopping" and "this buyer is shopping through an agent."
+
+As of Sep 2026, Shopify documents a UCP delegated identity provider flow: authorize with Shop (`accounts.shop.app`), exchange the Shop access token for a short-lived JWT grant, redeem that grant at Shopify for a buyer-linked JWT.
+
+The resulting token lasts about **60 minutes** and **does not refresh**. When it expires, remint from the Shop session.
 
 Official reference: [Create a buyer-linked token](https://shopify.dev/docs/agents/profiles/buyer-linked-tokens). Pair with [UCP agent profiles](/blog/ucp-agent-profiles-are-the-new-oauth-app/), [auth and rate limiting](https://shopify.dev/docs/agents/profiles/auth-and-rate-limiting), and [secure agentic commerce](/blog/secure-agentic-commerce-shopify/).
 
@@ -28,11 +38,20 @@ With a buyer-linked token you can:
 
 Without it, you may still build carts anonymously or with an app-only token, but you miss buyer-aware behavior and you still need the right permission story for `complete_checkout`.
 
+<BeforeAfter beforeLabel="App-only token" afterLabel="Buyer-linked token">
+  <div slot="before">An agent is shopping. Carts work, but nothing knows who the buyer is.</div>
+  <div slot="after">This buyer is shopping through an agent, with personalized results and signed-in checkout.</div>
+</BeforeAfter>
+
 Think of it as identity linking for agentic checkout, not as a forever API key.
 
 ## The three-step chain (server-side)
 
-![Warning: never put client_secret in browser or mobile; run exchange on your server](/blog/buyer-linked-tokens-agent-checkout/server-side-5bf0995c.webp)
+<Figure
+  src="/blog/buyer-linked-tokens-agent-checkout/server-side-5bf0995c.webp"
+  alt="Comic pop-art warning panel: never put the client secret in a browser or mobile app; run the exchange on your server"
+  caption="The client secret never leaves your server."
+/>
 
 **Confidential client secret stays on a server you control.** Public clients cannot complete this flow safely. Do not ship the secret in browser or mobile binaries.
 
@@ -42,11 +61,13 @@ Discover endpoints at runtime (do not hard-code forever):
 2. Shopify UCP business profile → `dev.ucp.common.identity_linking` → Shop as delegated IdP
 3. Shop `/.well-known/oauth-authorization-server` → authorize + token endpoints
 
-Then:
+Then run the three steps below.
 
 ### 1. Authorize the customer with Shop
 
-Standard OAuth authorization code against Shop. Reuse Dev Dashboard client id/secret and redirect URI. Request every scope you plan to redeem later (include checkout manage if you will call checkout tools).
+Standard OAuth authorization code against Shop. Reuse Dev Dashboard client id/secret and redirect URI.
+
+Request every scope you plan to redeem later (include checkout manage if you will call checkout tools).
 
 You receive a Shop **access_token** (example responses show `expires_in: 3600`).
 
@@ -65,11 +86,19 @@ The returned `access_token` is a **JWT authorization grant**: signed, **single-u
 
 JWT bearer assertion (RFC 7523) at Shopify's (or the store's) token endpoint with the scopes you need. Shopify verifies the grant against Shop's keys, resolves the customer, and issues the buyer-linked JWT.
 
-For merchant checkout, discovery points at the store's authorization server; set audience to the store domain and request scopes such as `openid` and `dev.ucp.shopping.checkout:manage` as documented for signed-in checkout tools.
+For merchant checkout, discovery points at the store's authorization server. Set audience to the store domain and request scopes such as `openid` and `dev.ucp.shopping.checkout:manage` as documented for signed-in checkout tools.
+
+<TryThis>
+Write down which `audience` each of your flows needs (Global Catalog or a store domain) before you write any exchange code.
+</TryThis>
 
 ## TTL reality: 60s grant, ~60 min token, no refresh
 
-![Grant expires in 60 seconds single-use; buyer-linked token lasts about 60 minutes with no refresh](/blog/buyer-linked-tokens-agent-checkout/ttl-fee2ff0c.webp)
+<Figure
+  src="/blog/buyer-linked-tokens-agent-checkout/ttl-fee2ff0c.webp"
+  alt="Comic pop-art panel: a grant that expires in 60 seconds and is single-use, next to a buyer-linked token that lasts about 60 minutes with no refresh"
+  caption="Two clocks: a 60 second grant and a 60 minute token with no refresh."
+/>
 
 Two clocks, often confused:
 
@@ -80,7 +109,13 @@ Two clocks, often confused:
 
 Build session handling around reminting, not around `refresh_token` muscle memory from classic OAuth apps. Cache the buyer-linked JWT only within its lifetime, keyed to the buyer and resource server, on the server.
 
+<PullQuote>Build session handling around reminting, not around refresh_token muscle memory.</PullQuote>
+
 If `complete_checkout` still fails with a Token-tier client, check purchase permission and merchant/agent eligibility separately. Community threads show scope alone is not always sufficient; treat platform policy as part of the design.
+
+<TryThis>
+Add a remint step that runs a few minutes before the 60 minute mark, instead of waiting for a 401.
+</TryThis>
 
 ## Implementation checklist
 
@@ -104,13 +139,13 @@ If `complete_checkout` still fails with a Token-tier client, check purchase perm
 
 Log correlation ids and HTTP status from each hop. Do not ask the model to "retry checkout" when the token is simply dead.
 
-## Takeaways
-
-1. Buyer-linked tokens bind a Shop customer to your agent credential for personalized and signed-in commerce.
-2. Flow: Shop OAuth → token exchange (JWT grant) → Shopify JWT bearer redeem.
-3. Run exchange and redeem only on a confidential server.
-4. Grant ~60s single-use; buyer-linked token ~60 minutes with **no refresh**.
-5. Discover endpoints; set audience to global catalog or merchant store deliberately.
-6. Remint from the Shop session; design UX for re-link, not silent forever tokens.
+<Takeaway>
+- Buyer-linked tokens bind a Shop customer to your agent credential for personalized and signed-in commerce.
+- Flow: Shop OAuth, then token exchange (JWT grant), then Shopify JWT bearer redeem.
+- Run exchange and redeem only on a confidential server.
+- Grant ~60s single-use; buyer-linked token ~60 minutes with **no refresh**.
+- Discover endpoints; set audience to global catalog or merchant store deliberately.
+- Remint from the Shop session; design UX for re-link, not silent forever tokens.
+</Takeaway>
 
 When your agent's checkout fails at minute 61, is the model confused about tools, or did you forget that buyer-linked JWTs die without a refresh token?

@@ -11,13 +11,21 @@ heroImage:
   alt: "Comic split: bloated all-tools context dump vs hot tools plus ToolSearch discovery"
 ---
 
-Every tool you advertise to a model costs tokens. Names, descriptions, input schemas, output schemas. A SaaS MCP server with forty admin actions can burn a surprising slice of the context window before the user asks a single question.
+Every tool you advertise to a model costs tokens, before the user asks a single question.
+
+<Summary>
+- A fat `tools/list` taxes the context window. Keep a few hot tools and park the long tail behind `ToolSearch`.
+- Cache hints cut how often clients refetch discovery and resources. Tool calls are never cached.
+- Default to private cache scope for tenant-filtered catalogs, and keep auth and idempotency on every mutation.
+</Summary>
+
+Names, descriptions, input schemas, output schemas. A SaaS MCP server with forty admin actions can burn a surprising slice of the context window before the user asks a single question.
 
 Laravel MCP 1.0 (as of the stable release covering protocol revision `2026-07-28`) gives you two levers for that problem: **searchable tool catalogs** and **cache hints**. One shrinks what the model sees. The other reduces how often clients re-fetch discovery and resource payloads.
 
-This post is the practical split: which tools stay in the hot list, which go behind `ToolSearch`, and how to set `ttlMs` / scope without lying to shared caches. Pair it with the [MCP first](/blog/mcp-first-is-the-new-mobile-first/) framing and the [Laravel MCP safety trilogy](/blog/mcp-auth-audit-logging-laravel/) when you wire real mutations.
+This post is the practical split: which tools stay in the hot list, which go behind `ToolSearch`, and how to set `ttlMs` / scope without lying to shared caches.
 
-Official docs: [Laravel MCP](https://laravel.com/docs/mcp) (Searchable Tool Catalogs and Cache Hints sections).
+Pair it with the [MCP first](/blog/mcp-first-is-the-new-mobile-first/) framing and the [Laravel MCP safety trilogy](/blog/mcp-auth-audit-logging-laravel/) when you wire real mutations. Official docs: [Laravel MCP](https://laravel.com/docs/mcp) (Searchable Tool Catalogs and Cache Hints sections).
 
 ## The context tax of a fat tools/list
 
@@ -64,6 +72,8 @@ class OpsServer extends Server
 
 `CurrentWeatherTool`-style examples in the docs make the same point: advertise the common case; search for historical weather and alerts.
 
+### Limits and conditional registration
+
 Limits for batched execution live in config:
 
 - `mcp.tool_search.max_tool_calls`
@@ -73,9 +83,17 @@ Tune those before an agent can fan out ten heavy tools in one `execute_tools` ca
 
 **Conditional registration still applies.** If a catalog tool's `shouldRegister` returns `false`, it will not appear in search results and cannot be executed. That matters for plan-gated or tenant-gated features.
 
+<TryThis>
+Set `mcp.tool_search.max_tool_calls` and `mcp.tool_search.max_output_bytes` in config before you move any tool behind `ToolSearch`.
+</TryThis>
+
 ## When to expose vs discover
 
-![Two columns: expose always-listed tools vs discover via ToolSearch](/blog/laravel-mcp-searchable-tool-catalogs/expose-vs-discover-1fd1aafc.webp)
+<Figure
+  src="/blog/laravel-mcp-searchable-tool-catalogs/expose-vs-discover-1fd1aafc.webp"
+  alt="Comic pop-art panel in two columns: always-listed tools on one side, tools discovered through ToolSearch on the other"
+  caption="A short hot list up front, the long tail found on demand."
+/>
 
 Use this as a decision table, not a vibe:
 
@@ -92,13 +110,21 @@ Examples from a multi-tenant ops server:
 - **Expose:** `list_delayed_orders`, `get_order`, `draft_customer_message`
 - **Discover:** `issue_partial_refund` (after policy skill), `export_tax_csv`, `rotate_webhook_secret`
 
-Exposing every mutation "so the model can see it" is how you get eager refunds. Discoverability plus a skill that says *when* to search is safer. That is the same discipline as [MCP first](/blog/mcp-first-is-the-new-mobile-first/): tools without judgment burn money.
+Exposing every mutation "so the model can see it" is how you get eager refunds. Discoverability plus a skill that says *when* to search is safer.
+
+<PullQuote>Tools without judgment burn money.</PullQuote>
+
+That is the same discipline as [MCP first](/blog/mcp-first-is-the-new-mobile-first/).
 
 If your agent already struggles with wrong tool choice, searchable catalogs alone will not fix bad descriptions. Write `#[Description]` like a product brief. Ambiguous copy poisons both the hot list and search rankings.
 
 ## Cache hints: stop refetching discovery
 
-![Cache hint cards for tools/list, resources/read, non-cacheable tool calls, and ttlMs zero](/blog/laravel-mcp-searchable-tool-catalogs/cache-hints-7e868f3c.webp)
+<Figure
+  src="/blog/laravel-mcp-searchable-tool-catalogs/cache-hints-7e868f3c.webp"
+  alt="Comic pop-art panel: cache hint cards for tools/list, resources/read, non-cacheable tool calls, and ttlMs zero"
+  caption="Discovery and resource reads can be cached. Tool calls never are."
+/>
 
 Laravel MCP attaches **advisory** cache hints to responses that may be cached: server discovery, primitive listings, and resource reads. Defaults are conservative: private scope, `ttlMs` of zero (do not cache).
 
@@ -123,7 +149,9 @@ class OpsServer extends Server
 }
 ```
 
-Rules of thumb from the docs and MCP caching draft:
+### Rules of thumb
+
+From the docs and MCP caching draft:
 
 - **`CacheScope::Public`**: safe to share across users (same tool list for everyone)
 - **`CacheScope::Private`**: tied to the authorization context (filtered lists, user-specific resources)
@@ -131,9 +159,20 @@ Rules of thumb from the docs and MCP caching draft:
 - **Missing or zero `ttlMs`** means do not cache
 - **Tool calls are never cacheable** (mutations and live reads stay fresh)
 
-On the client side, Laravel's MCP client honors hints when you opt in with `withCache()`. Installing 1.0 does not enable caching by itself. That is good: accidental public caching of a private `tools/list` is a tenancy bug waiting to happen.
+On the client side, Laravel's MCP client honors hints when you opt in with `withCache()`. Installing 1.0 does not enable caching by itself.
+
+That is good: accidental public caching of a private `tools/list` is a tenancy bug waiting to happen.
+
+<BeforeAfter beforeLabel="Wrong" afterLabel="Right">
+  <div slot="before">Plan features change the tool list per shop, but `tools/list` is cached as public because the route is authenticated.</div>
+  <div slot="after">Tenant-filtered lists stay private. Public scope only when every caller sees the same primitives.</div>
+</BeforeAfter>
 
 For multi-tenant SaaS, default private unless you are sure every authenticated caller sees the same primitives. If plan features change the tool list per shop, public scope is wrong even if the HTTP route is authenticated.
+
+<TryThis>
+Call `tools/list` as two users on different plans. If the lists differ, make sure its cache scope is private.
+</TryThis>
 
 ## A practical split for a Laravel SaaS MCP
 
@@ -148,7 +187,9 @@ Here is a pattern that holds up on real products:
 
 Searchable catalogs reduce tokens. They do not replace permission checks. An agent that finds `rotate_api_key` via search still needs the same actor, tenant, and audit line as a hot tool.
 
-If you are connecting agents as MCP clients rather than only hosting servers, the Laravel AI SDK path of spreading `Client::web(...)->tools()` into an agent still benefits: fewer advertised tools means less noise in the agent loop. Cache the listed collection when it is stable, as the AI SDK docs suggest for remote OAuth servers.
+If you are connecting agents as MCP clients rather than only hosting servers, the Laravel AI SDK path of spreading `Client::web(...)->tools()` into an agent still benefits: fewer advertised tools means less noise in the agent loop.
+
+Cache the listed collection when it is stable, as the AI SDK docs suggest for remote OAuth servers.
 
 ## What this is not
 
@@ -159,13 +200,13 @@ If you are connecting agents as MCP clients rather than only hosting servers, th
 
 Protocol note: Laravel MCP 1.0 speaks `2026-07-28` (including `server/discover`) while still negotiating older `initialize` clients. Soften assumptions if your host is mid-upgrade; verify against the [Laravel MCP docs](https://laravel.com/docs/mcp) for your installed package version.
 
-## Takeaways
-
-1. Fat `tools/list` payloads tax the context window before the user speaks.
-2. Laravel MCP 1.0 `ToolSearch` keeps hot tools advertised and parks the long tail behind `search_tools` / `execute_tools`.
-3. Expose high-frequency, ambiguous, or entry-point tools; discover long-tail and heavy-schema tools.
-4. Cache hints (`ttlMs`, public/private) apply to discovery and resource reads, not tool calls.
-5. Prefer private scope for tenant-filtered catalogs; public only when every caller sees the same list.
-6. Pair catalogs with skills, auth, and idempotency. Discovery without governance is just a shorter path to the wrong mutation.
+<Takeaway>
+- Fat `tools/list` payloads tax the context window before the user speaks.
+- Laravel MCP 1.0 `ToolSearch` keeps hot tools advertised and parks the long tail behind `search_tools` / `execute_tools`.
+- Expose high-frequency, ambiguous, or entry-point tools; discover long-tail and heavy-schema tools.
+- Cache hints (`ttlMs`, public/private) apply to discovery and resource reads, not tool calls.
+- Prefer private scope for tenant-filtered catalogs; public only when every caller sees the same list.
+- Pair catalogs with skills, auth, and idempotency. Discovery without governance is just a shorter path to the wrong mutation.
+</Takeaway>
 
 If you listed every tool your admin UI exposes into MCP tomorrow, which five would earn a permanent slot in the hot list, and which ones should stay invisible until `search_tools` earns them?

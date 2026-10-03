@@ -13,9 +13,17 @@ heroImage:
 
 If your "catalog AI" is a PDF tutorial wearing a Shopify hoodie, you will ship confident answers that recommend out-of-stock, low-margin, or dead SKUs.
 
+<Summary>
+- Document RAG optimizes for passage relevance. Commerce RAG has to optimize for sellable, profitable products.
+- Retrieve with hybrid lexical plus vector search, then rank on live stock, velocity, margin and merchandising rules.
+- Keep price and inventory out of the embedding. Read them live at query time.
+</Summary>
+
 Document RAG optimizes for **passage relevance**. Commerce RAG optimizes for **sellable, profitable, in-policy products**. Same family of techniques. Different system design.
 
-This post is the cut line for Shopify Plus (and any large catalog) work: hybrid lexical + vector retrieval, then a **commerce ranking** layer that uses live stock, velocity, margin, and merchandising rules. Pair it with [why your RAG is failing](/blog/why-your-rag-is-failing/), [7 RAG mistakes in production](/blog/7-rag-mistakes-production/), and agent-facing catalog tools via [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/).
+This post is the cut line for Shopify Plus (and any large catalog) work: hybrid lexical + vector retrieval, then a **commerce ranking** layer that uses live stock, velocity, margin, and merchandising rules.
+
+Pair it with [why your RAG is failing](/blog/why-your-rag-is-failing/), [7 RAG mistakes in production](/blog/7-rag-mistakes-production/), and agent-facing catalog tools via [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/).
 
 ## Document RAG assumed a handbook
 
@@ -27,9 +35,13 @@ Classic demo loop:
 4. Stuff passages into the prompt.
 5. Generate an answer.
 
-That works when the truth is mostly static prose. Policies, runbooks, warranty text. It fails when the "document" is a **product graph** whose price, inventory, and variants change every minute.
+That works when the truth is mostly static prose. Policies, runbooks, warranty text.
 
-A product is not a paragraph. It is title, options, collections, metafields, media, and a set of **volatile facts** that should never be baked into the only retrieval score.
+It fails when the "document" is a **product graph** whose price, inventory, and variants change every minute.
+
+<PullQuote>A product is not a paragraph.</PullQuote>
+
+It is title, options, collections, metafields, media, and a set of **volatile facts** that should never be baked into the only retrieval score.
 
 ## What catalog RAG actually has to do
 
@@ -41,7 +53,9 @@ For storefront search, chat commerce, and agent tools (including UCP `search_cat
 4. **Rank** by business outcomes, not only semantic score.
 5. **Ground the agent** with live fields before it speaks price or availability.
 
-Shopify's Storefront Catalog MCP gives agents a search surface. It does not replace your ranking philosophy for a custom Plus app, Hydrogen search, or internal shopping agent. Treat MCP as a channel. Own retrieval quality behind it when you build custom.
+Shopify's Storefront Catalog MCP gives agents a search surface. It does not replace your ranking philosophy for a custom Plus app, Hydrogen search, or internal shopping agent.
+
+Treat MCP as a channel. Own retrieval quality behind it when you build custom.
 
 ## Stage 1: hybrid lexical + vector
 
@@ -49,15 +63,25 @@ Pure vector search misses exact SKUs, model numbers, and brand strings the embed
 
 **Hybrid retrieval** runs both and fuses ranks (reciprocal rank fusion or a tuned weighted blend). That is the same medicine as general production RAG ([why your RAG is failing](/blog/why-your-rag-is-failing/)), applied to product text fields: title, description, tags, option names, curated metafields.
 
+<Figure
+  src="/blog/commerce-rag-is-not-document-rag/hybrid-rank-bd01484c.webp"
+  alt="Comic pop-art pipeline strip: BM25, vector ANN, RRF fusion, then rank and filters"
+  caption="Lexical and vector search run side by side, then fuse, then rank."
+/>
+
 Practical embedding content:
 
 - Prefer stable descriptive text and attributes.
 - Keep identifiers searchable in the lexical index.
 - Re-embed on content changes (product update webhooks), not on every inventory tick.
 
-If you are on pgvector in Laravel, the hybrid pattern still holds: SQL `tsvector` / external search engine for lexical, ANN for semantic, fuse, then rank. Stack choice is secondary to the split. See [picking the right RAG stack](/blog/picking-the-right-rag-stack/) when you are still selecting stores.
+If you are on pgvector in Laravel, the hybrid pattern still holds: SQL `tsvector` / external search engine for lexical, ANN for semantic, fuse, then rank.
 
-![Pipeline strip: BM25, vector ANN, RRF fusion, then rank and filters](/blog/commerce-rag-is-not-document-rag/hybrid-rank-bd01484c.webp)
+Stack choice is secondary to the split. See [picking the right RAG stack](/blog/picking-the-right-rag-stack/) when you are still selecting stores.
+
+<TryThis>
+Search your catalog assistant for an exact SKU and for a plain-language need. If one of them fails, you need the other half of hybrid retrieval.
+</TryThis>
 
 ## Stage 2: commerce ranking is not optional
 
@@ -80,9 +104,18 @@ Do not pretend one cosine score encodes margin. It does not.
 
 ## Keep volatile fields out of the vector
 
-![Do not embed price stock margin; pull them live into rank layer](/blog/commerce-rag-is-not-document-rag/volatile-fields-9dd3a34c.webp)
+<Figure
+  src="/blog/commerce-rag-is-not-document-rag/volatile-fields-9dd3a34c.webp"
+  alt="Comic pop-art panel: a vector database vault refusing price, stock and margin tags while a robot pipes them in live at rank time"
+  caption="Price, stock and margin go in live at rank time, not into the vector."
+/>
 
 Common failure mode: concatenate `"price: $49 in stock: 3 margin: high"` into the embedding text. Overnight a sale and a sell-through change the truth; the vector still argues yesterday.
+
+<BeforeAfter beforeLabel="Baked in" afterLabel="Read live">
+  <div slot="before">Price, stock and margin are concatenated into the embedding text, and the vector still argues yesterday.</div>
+  <div slot="after">The index holds descriptive content. Price and stock come in at query time. Margin and velocity feed the ranker.</div>
+</BeforeAfter>
 
 Better split:
 
@@ -93,6 +126,10 @@ Better split:
 Inventory especially: listen to inventory webhooks (or poll InventoryLevel), keep a KV / Redis / table of live quantities, **filter or demote** after retrieval. Regenerating embeddings on every stock change is expensive and still races reality.
 
 This is the ecommerce version of "don't RAG what should be an API call." Policies and size guides can live in document RAG. "How many left in EU warehouse?" should not.
+
+<TryThis>
+Grep your embedding text builder for price, stock and margin fields, and move each one to a live read.
+</TryThis>
 
 ## Agents make the gap louder
 
@@ -119,13 +156,13 @@ Agent channels (UCP / MCP) amplify whatever retrieval quality you already have. 
 
 You do not need a research lab to start. You need the humility to stop treating SKUs like PDF chunks.
 
-## Takeaways
-
-1. Document RAG optimizes passage relevance; commerce RAG must optimize sellable outcomes.
-2. Hybrid lexical + vector retrieval catches SKUs and semantic intent; neither alone is enough at catalog scale.
-3. Ranking on stock, velocity, margin, and merchandising rules comes **after** retrieval.
-4. Keep price and inventory out of embeddings; read them live.
-5. Agents will confidently recommend bad stock unless tools and filters enforce reality.
-6. Evaluate with commerce outcomes, not only embedding similarity demos.
+<Takeaway>
+- Document RAG optimizes passage relevance; commerce RAG must optimize sellable outcomes.
+- Hybrid lexical + vector retrieval catches SKUs and semantic intent; neither alone is enough at catalog scale.
+- Ranking on stock, velocity, margin, and merchandising rules comes **after** retrieval.
+- Keep price and inventory out of embeddings; read them live.
+- Agents will confidently recommend bad stock unless tools and filters enforce reality.
+- Evaluate with commerce outcomes, not only embedding similarity demos.
+</Takeaway>
 
 If your catalog assistant still chunks product CSVs like a handbook, which false recommendation would hurt more this week: an out-of-stock hero SKU, or an in-stock low-margin substitute that crowds out the product you actually wanted to sell?

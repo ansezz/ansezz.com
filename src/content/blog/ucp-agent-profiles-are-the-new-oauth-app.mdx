@@ -11,9 +11,22 @@ heroImage:
   alt: "Comic: host a UCP profile URL that merchants fetch to negotiate cart and checkout capabilities"
 ---
 
-In the OAuth decade you registered an app, got a client id, and merchants decided whether to trust you. In agentic commerce the analogous artifact is your **UCP agent profile**: a public JSON document at a URL you control.
+In the OAuth decade you registered an app and got a client id. In agentic commerce you host a **UCP agent profile**: a public JSON document at a URL you control.
 
-Every Cart MCP and Checkout MCP call on Shopify asks for that URL in `meta.ucp-agent.profile`. The merchant fetches it, negotiates capabilities, and (for signed traffic) checks your published keys. No profile, no serious cart/checkout conversation.
+<Summary>
+- Every Shopify Cart MCP and Checkout MCP call asks for your agent profile URL.
+- Declare cart and checkout together if you want to turn a cart into a checkout.
+- Anonymous, Signed and Token trust tiers decide your rate limits and whether `complete_checkout` is possible.
+</Summary>
+
+<BeforeAfter beforeLabel="OAuth decade" afterLabel="Agentic commerce">
+  <div slot="before">Register an app, get a client id, and merchants decide whether to trust you.</div>
+  <div slot="after">Host a profile URL. Merchants fetch it, negotiate capabilities and check your keys.</div>
+</BeforeAfter>
+
+Every Cart MCP and Checkout MCP call on Shopify asks for that URL in `meta.ucp-agent.profile`. The merchant fetches it, negotiates capabilities, and (for signed traffic) checks your published keys.
+
+No profile, no serious cart/checkout conversation.
 
 This post covers what to put in the profile, why cart and checkout belong together, and how Anonymous / Signed / Token tiers change what you can do. Cross-read [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/), [secure agentic commerce](/blog/secure-agentic-commerce-shopify/), and the [Storefront MCP cart → UCP migration](/blog/migrate-storefront-mcp-cart-to-ucp/).
 
@@ -40,6 +53,8 @@ Minimal cart + checkout profile (from Shopify's published examples):
 }
 ```
 
+### Where to host it
+
 Host it somewhere stable and HTTPS:
 
 - Static host (`https://your-app.example/profiles/agent.json`)
@@ -49,19 +64,33 @@ Then send that URL on every MCP cart/checkout request. Merchants treat it like a
 
 For signed requests, the profile also carries the public key material used to verify HTTP Message Signatures (RFC 9421 / ECDSA P-256 per UCP). That is the "app credentials" half of the story without a browser consent screen on every call.
 
+<TryThis>
+Publish the minimal profile above on a stable HTTPS URL, then fetch it with `curl` from outside your network to confirm a merchant could read it.
+</TryThis>
+
 ## Why cart and checkout both matter
 
-![Capability cards for cart and checkout that must be declared together](/blog/ucp-agent-profiles-are-the-new-oauth-app/capabilities-2ce44cdc.webp)
+<Figure
+  src="/blog/ucp-agent-profiles-are-the-new-oauth-app/capabilities-2ce44cdc.webp"
+  alt="Comic pop-art panel: capability cards for cart and checkout that must be declared together"
+  caption="Cart and checkout capabilities travel as a pair when you convert carts."
+/>
 
 Passing a `cart_id` into `create_checkout` requires **both** capabilities to negotiate successfully. A cart-only profile is fine for browse-and-share (`continue_url`). It is not enough for the purchase handoff.
 
-Declare what you actually implement. Inflating capabilities you cannot fulfill is how you fail negotiation or fail later in checkout. Under-declaring is how you debug "why won't create_checkout accept my cart" for an afternoon.
+Declare what you actually implement. Inflating capabilities you cannot fulfill is how you fail negotiation or fail later in checkout.
+
+Under-declaring is how you debug "why won't create_checkout accept my cart" for an afternoon.
 
 Keep exploratory line-item work on Cart MCP; open Checkout MCP when the buyer is ready. Rate limits are stricter on checkout at every trust tier.
 
 ## Trust tiers are the new permission story
 
-![Three trust tier panels: Anonymous, Signed, Token](/blog/ucp-agent-profiles-are-the-new-oauth-app/trust-tiers-0761ea9c.webp)
+<Figure
+  src="/blog/ucp-agent-profiles-are-the-new-oauth-app/trust-tiers-0761ea9c.webp"
+  alt="Comic pop-art panel: three trust tier panels labeled Anonymous, Signed and Token"
+  caption="Three tiers, three levels of what an agent is allowed to do."
+/>
 
 Shopify classifies UCP MCP traffic by how the agent identifies itself (as of the Sep 2026 auth docs):
 
@@ -73,13 +102,17 @@ Shopify classifies UCP MCP traffic by how the agent identifies itself (as of the
 
 Order tools (`get_order`) sit on the Token tier with the right scopes, and only for orders placed through your agent.
 
-Practical reading:
+### Reading the tiers
 
 1. **Anonymous** is for demos and early browse. Expect tight throttling.
 2. **Signed** proves which agent you are without a full OAuth dance on every request. Still cannot complete checkout.
 3. **Token** is where purchase completion and stronger limits live. Buyer-linked tokens additionally carry the Shop customer identity for personalized catalog and signed-in checkout behavior.
 
 Climb tiers on purpose. Do not ask for `complete_checkout` from an anonymous client and treat the 401 as a model failure.
+
+<TryThis>
+Write down which tier your agent runs on today, and what it would take to reach the next one.
+</TryThis>
 
 ## Profile hygiene checklist
 
@@ -92,18 +125,24 @@ Climb tiers on purpose. Do not ask for `complete_checkout` from an anonymous cli
 7. Move to Token (and buyer-linked when needed) before promising one-click complete.
 8. Keep secrets off the profile document. Public keys yes; client secrets never.
 
-Think of the profile as your OAuth app listing plus capability manifest. Merchants and platforms will judge you by what it claims and what your traffic tier can actually do.
+Think of the profile as your OAuth app listing plus capability manifest.
+
+<PullQuote>Merchants and platforms will judge you by what it claims and what your traffic tier can actually do.</PullQuote>
 
 ## Relation to MCP-first product design
 
-If you also host your own MCP servers (Laravel or otherwise), you already know the pain of fat tool lists and weak auth. UCP profiles are the commerce-protocol cousin of that discipline: **advertise operable capabilities**, then back them with auth that matches risk. See [MCP first](/blog/mcp-first-is-the-new-mobile-first/) and [API vs MCP](/blog/api-vs-mcp/) for the product-side framing; this post is the Shopify UCP instantiation.
+If you also host your own MCP servers (Laravel or otherwise), you already know the pain of fat tool lists and weak auth.
 
-## Takeaways
+UCP profiles are the commerce-protocol cousin of that discipline: **advertise operable capabilities**, then back them with auth that matches risk.
 
-1. The UCP agent profile URL is how merchants negotiate who you are and what you can do.
-2. Declare `dev.ucp.shopping.cart` and `dev.ucp.shopping.checkout` together when you convert carts.
-3. Anonymous, Signed, and Token tiers gate rate limits and whether `complete_checkout` is even on the table.
-4. Signed proves agent identity via profile keys; Token is required for purchase completion permissions.
-5. Keep the profile stable, versioned, and honest. Capability theater fails in negotiation or at checkout.
+See [MCP first](/blog/mcp-first-is-the-new-mobile-first/) and [API vs MCP](/blog/api-vs-mcp/) for the product-side framing; this post is the Shopify UCP instantiation.
+
+<Takeaway>
+- The UCP agent profile URL is how merchants negotiate who you are and what you can do.
+- Declare `dev.ucp.shopping.cart` and `dev.ucp.shopping.checkout` together when you convert carts.
+- Anonymous, Signed, and Token tiers gate rate limits and whether `complete_checkout` is even on the table.
+- Signed proves agent identity via profile keys; Token is required for purchase completion permissions.
+- Keep the profile stable, versioned, and honest. Capability theater fails in negotiation or at checkout.
+</Takeaway>
 
 If you shipped a shopping agent tomorrow, would your public profile URL survive a merchant fetch right now, and which trust tier are you actually operating on when you say "we support checkout"?

@@ -11,7 +11,15 @@ heroImage:
   alt: "Comic: tool call passes through a HITL gate then verify before celebrate"
 ---
 
-Agents are optimistic. They call a tool, see a JSON blob that looks success-shaped, and tell the user "refund sent." Sometimes the refund is pending. Sometimes the tool returned a structured error the model ignored. Sometimes the write never happened.
+Agents are optimistic. They call a tool, see a JSON blob that looks success-shaped, and tell the user "refund sent."
+
+<Summary>
+- Refunds, inventory writes, spend and credential changes need a human or a policy gate.
+- Approval ids come from your system, bound to actor, tenant, action and expiry. Never from the model.
+- After every mutation, a second read proves the world moved before anyone says "done."
+</Summary>
+
+Sometimes the refund is pending. Sometimes the tool returned a structured error the model ignored. Sometimes the write never happened.
 
 **Human-in-the-loop (HITL) gates** and **post-mutation verification** are how you stop early victory. The model can propose. Policy decides. The system checks reality before anyone celebrates.
 
@@ -19,9 +27,13 @@ This is the mutation half of [MCP first](/blog/mcp-first-is-the-new-mobile-first
 
 ## Which mutations need a gate
 
-![Risk classes: refunds, inventory writes, spend, credential rotate](/blog/hitl-gates-for-agent-mutations/risk-classes-c4dae7cc.webp)
-
 Not every tool needs a human. Read-only lookups should be fast. Mutations that move money, stock, or trust should slow down.
+
+<Figure
+  src="/blog/hitl-gates-for-agent-mutations/risk-classes-c4dae7cc.webp"
+  alt="Comic pop-art panel: a robot holding a request slip in front of four doors labeled refunds, inventory writes, spend and credential rotate, under a human approval required banner"
+  caption="Four risk classes, four doors that need a human or a policy check."
+/>
 
 | Risk class | Examples | Default gate |
 | --- | --- | --- |
@@ -31,16 +43,24 @@ Not every tool needs a human. Read-only lookups should be fast. Mutations that m
 | Credentials | Rotate keys, invite admins | Always human for production |
 | Irreversible comms | Mass email, legal notices | Approve + preview |
 
-Thresholds are product decisions. A  shipping adjustment is not the same as a 00 refund. Encode ceilings in policy config, not prompt text.
+Thresholds are product decisions. A small shipping adjustment is not the same as a large refund. Encode ceilings in policy config, not prompt text.
 
-For Shopify-style claims and refunds, the same idea shows up as queue triage with human resolution ([claims pipeline](/blog/shopify-claims-pipeline-claimify/)): auto-clear the easy half; keep edge cases for people.
+For Shopify-style claims and refunds, the same idea shows up as queue triage with human resolution ([claims pipeline](/blog/shopify-claims-pipeline-claimify/)). Auto-clear the easy half; keep edge cases for people.
+
+<TryThis>
+List every mutation tool you expose and tag each one with a risk class from the table above.
+</TryThis>
 
 ## Gate shapes that work
+
+There are four shapes that hold up in production:
 
 1. **Pre-tool approval:** agent prepares a `proposed_action` payload; UI or Slack asks a human to approve; only then does `execute_refund` run with the approval id.
 2. **Two-step tools:** `draft_refund` (safe) then `commit_refund` (requires `approval_token`).
 3. **Async review queue:** mutation creates a `pending` record; worker waits for approve/deny; agent polls status.
 4. **Policy auto-approve:** small, low-risk, fully validated cases skip the human but still write audit + verification.
+
+### Bind every approval
 
 Always bind approvals to:
 
@@ -53,13 +73,24 @@ Do not let the model invent an `approval_id`. Issue it from your system after a 
 
 ## Anti early-victory: verify after tools
 
-![Model claims refund done vs system checks order.refunds and audit row](/blog/hitl-gates-for-agent-mutations/verify-4ca7aadc.webp)
-
 The failure mode is consistent across stacks:
 
 1. Tool returns something the model interprets as success.
 2. Model narrates completion to the user.
 3. Downstream system never applied the change (validation, partial write, wrong environment).
+
+<BeforeAfter beforeLabel="Early victory" afterLabel="Verified">
+  <div slot="before">The tool returns something success-shaped and the agent tells the user "refund sent."</div>
+  <div slot="after">The system reads the refund back, confirms amount and status, then the agent says "done."</div>
+</BeforeAfter>
+
+<Figure
+  src="/blog/hitl-gates-for-agent-mutations/verify-4ca7aadc.webp"
+  alt="Comic pop-art panel: a model claims a refund is done while the system checks order refunds and the audit row"
+  caption="The model says done. The system checks the ledger first."
+/>
+
+### What a second read looks like
 
 **Verification** is a second read (or event) that proves the world moved:
 
@@ -68,7 +99,9 @@ The failure mode is consistent across stacks:
 - After spend: read ledger entry or checkout status; confirm `completed` not `open`.
 - After key rotate: confirm old key rejected and new key works in a dry probe.
 
-Put verification in **code** the agent must call (or that your tool runner calls automatically), not only in a skill paragraph. Skills help sequencing; code enforces it.
+Put verification in **code** the agent must call (or that your tool runner calls automatically), not only in a skill paragraph.
+
+<PullQuote>Skills help sequencing; code enforces it.</PullQuote>
 
 Pattern for a tool runner:
 
@@ -97,13 +130,17 @@ Stateless servers ([stateless MCP](/blog/stateless-mcp-servers-laravel/)) make t
 7. Teach skills: "never claim success without verify tool result."
 8. UX: show the human the exact payload (amount, SKU, customer) before approve.
 
-## Takeaways
+<TryThis>
+Add an automatic verify step to your refund tool runner and make it fail closed on a mismatch.
+</TryThis>
 
-1. HITL gates belong on refunds, inventory writes, spend, and credential changes.
-2. Issue approval ids from your system; never trust model-invented tokens.
-3. Verify mutations with a second read before user-facing success copy.
-4. Encode ceilings and dual-control in policy config, not only prompts.
-5. Audit propose → approve → execute → verify as distinct events.
-6. Early victory is a product bug, not a charming agent quirk.
+<Takeaway>
+- HITL gates belong on refunds, inventory writes, spend, and credential changes.
+- Issue approval ids from your system; never trust model-invented tokens.
+- Verify mutations with a second read before user-facing success copy.
+- Encode ceilings and dual-control in policy config, not only prompts.
+- Audit propose, approve, execute and verify as distinct events.
+- Early victory is a product bug, not a charming agent quirk.
+</Takeaway>
 
 When your agent last said "all done," did the ledger agree within a second, or did a human discover the gap in a support ticket two days later?
