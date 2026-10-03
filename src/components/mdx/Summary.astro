@@ -1,0 +1,33 @@
+---
+// TL;DR box that sits right under a post's hook. Pass three Markdown
+// bullets as children:
+//   <Summary>
+//   - First point
+//   - Second point
+//   - Third point
+//   </Summary>
+interface Props {
+  title?: string;
+  class?: string;
+}
+
+const { title = "TL;DR", class: className = "" } = Astro.props;
+---
+
+<aside
+  class:list={[
+    "mdx-box mdx-list not-prose border-ink bg-paper text-ink shadow-neo-md my-10 overflow-hidden rounded-[4px] border-[3px]",
+    className,
+  ]}
+  aria-label={title}
+>
+  <p
+    class="border-ink bg-yellow text-on-accent mono flex items-center gap-2 border-b-[3px] px-5 py-2 text-xs font-bold tracking-widest uppercase"
+  >
+    <span aria-hidden="true">▸</span>
+    {title}
+  </p>
+  <div class="px-5 py-4 text-base leading-relaxed md:text-[1.0625rem]">
+    <slot />
+  </div>
+</aside>

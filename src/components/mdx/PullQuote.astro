@@ -1,0 +1,46 @@
+---
+// Big comic pull quote. Use a line that already exists in the post (or a
+// tight restatement of it). Not a <blockquote>: it quotes the post itself.
+interface Props {
+  cite?: string;
+  tone?: "yellow" | "pink" | "cyan";
+  class?: string;
+}
+
+const { cite, tone = "yellow", class: className = "" } = Astro.props;
+
+const toneClass: Record<NonNullable<Props["tone"]>, string> = {
+  yellow: "bg-yellow text-on-accent",
+  pink: "bg-pink text-on-accent",
+  cyan: "bg-cyan text-on-accent",
+};
+---
+
+<figure
+  class:list={[
+    "not-prose border-ink shadow-neo-lg relative my-12 -rotate-1 overflow-hidden rounded-[4px] border-[3px] px-6 py-7 md:px-9 md:py-9",
+    toneClass[tone],
+    className,
+  ]}
+>
+  <span
+    class="pointer-events-none absolute inset-0 opacity-[0.08]"
+    style="background-image: radial-gradient(#0a0a0a 1.2px, transparent 1.2px); background-size: 14px 14px;"
+    aria-hidden="true"></span>
+  <span
+    class="display pointer-events-none absolute -top-3 left-3 text-[7rem] leading-none opacity-20 select-none"
+    aria-hidden="true">“</span
+  >
+  <div
+    class="mdx-pullquote display relative text-[clamp(1.5rem,3.6vw,2.4rem)] leading-[1.05] tracking-tight"
+  >
+    <slot />
+  </div>
+  {
+    cite && (
+      <figcaption class="mono relative mt-4 text-xs font-bold tracking-widest uppercase">
+        ▸ {cite}
+      </figcaption>
+    )
+  }
+</figure>

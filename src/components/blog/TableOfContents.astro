@@ -1,18 +1,31 @@
 ---
 import type { MarkdownHeading } from "astro";
+import { Icon } from "astro-icon/components";
 
 interface Props {
   headings: MarkdownHeading[];
+  /** Deepest heading level to list. Default 2: one entry per section. */
+  maxDepth?: 2 | 3;
+  /**
+   * sidebar: the sticky desktop card (drives the scroll-spy).
+   * collapsible: a closed-by-default <details> for small screens.
+   */
+  variant?: "sidebar" | "collapsible";
   class?: string;
 }
 
-const { headings, class: className = "" } = Astro.props;
-const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const {
+  headings,
+  maxDepth = 2,
+  variant = "sidebar",
+  class: className = "",
+} = Astro.props;
+const items = headings.filter((h) => h.depth >= 2 && h.depth <= maxDepth);
 ---
 
 {
-  items.length > 0 && (
-    <aside
+  items.length > 0 && variant === "sidebar" && (
+    <nav
       class:list={[
         "border-ink bg-paper shadow-neo-md rounded-[4px] border-[3px] p-5",
         className,
@@ -22,7 +35,7 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
       <p class="mono text-accent-text mb-3 text-xs font-bold tracking-widest uppercase">
         ▸ On this page
       </p>
-      <ol class="space-y-1.5 text-sm">
+      <ol class="max-h-[50vh] space-y-1.5 overflow-y-auto text-sm">
         {items.map((h) => (
           <li class={h.depth === 3 ? "pl-4" : ""}>
             <a
@@ -36,7 +49,44 @@ const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
           </li>
         ))}
       </ol>
-    </aside>
+    </nav>
+  )
+}
+
+{
+  items.length > 2 && variant === "collapsible" && (
+    <details
+      class:list={[
+        "group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]",
+        className,
+      ]}
+    >
+      <summary class="mono text-accent-text flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-xs font-bold tracking-widest uppercase [&::-webkit-details-marker]:hidden">
+        <span>▸ On this page ({items.length})</span>
+        <Icon
+          name="lucide:chevron-down"
+          class="h-4 w-4 transition-transform group-open:rotate-180"
+          aria-hidden="true"
+        />
+      </summary>
+      <nav
+        aria-label="Table of contents"
+        class="border-ink border-t-[3px] px-4 py-3"
+      >
+        <ol class="space-y-1 text-sm">
+          {items.map((h) => (
+            <li class={h.depth === 3 ? "pl-4" : ""}>
+              <a
+                href={`#${h.slug}`}
+                class="hover:bg-yellow hover:text-ink -mx-1 block px-1 py-1 leading-snug font-bold"
+              >
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </details>
   )
 }
 

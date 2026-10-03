@@ -194,7 +194,10 @@ article.prose {
   --tw-prose-quotes: var(--color-ink);
   --tw-prose-quote-borders: var(--color-ink);
   font-size: 1.125rem;
-  line-height: 1.7;
+  line-height: 1.75;
+  /* ~70 characters per line at 18px Inter. Set after @apply so it beats
+     the typography plugin's max-w-none. */
+  max-width: 42rem;
 }
 article.prose h1,
 article.prose h2,
@@ -213,6 +216,95 @@ article.prose a {
 article.prose a:hover {
   background: var(--color-yellow);
 }
+/* h2 = new comic panel: roomy gap above, a pink offset tab as the accent */
+article.prose h2 {
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  line-height: 1.05;
+  margin-top: 3.5rem;
+  margin-bottom: 1.25rem;
+}
+article.prose h2::before {
+  content: "";
+  display: block;
+  width: 3.25rem;
+  height: 0.6rem;
+  margin-bottom: 0.85rem;
+  background: var(--color-pink);
+  border: 2.5px solid var(--color-ink);
+  box-shadow: 3px 3px 0 var(--color-ink);
+  border-radius: 2px;
+}
+article.prose > h2:first-child {
+  margin-top: 0;
+}
+article.prose h3 {
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+}
+
+/* ── article house-style components (src/components/mdx) ───
+   They opt out of typography with not-prose, so their Markdown
+   children (paragraphs, lists, code) are styled here. */
+.mdx-box p {
+  margin: 0 0 0.75em;
+}
+.mdx-box p:last-child,
+.mdx-box ul:last-child,
+.mdx-box ol:last-child {
+  margin-bottom: 0;
+}
+.mdx-list ul,
+.mdx-list ol {
+  margin: 0 0 0.75em;
+  padding: 0;
+  list-style: none;
+}
+.mdx-list li {
+  position: relative;
+  padding-left: 1.6rem;
+  margin: 0.5rem 0;
+}
+.mdx-list ul > li::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  top: 0.55em;
+  width: 0.6rem;
+  height: 0.6rem;
+  background: var(--color-pink);
+  border: 2px solid var(--color-ink);
+}
+.mdx-list ol {
+  counter-reset: mdx-step;
+}
+.mdx-list ol > li {
+  counter-increment: mdx-step;
+}
+.mdx-list ol > li::before {
+  content: counter(mdx-step);
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-accent-text);
+}
+.mdx-box strong {
+  font-weight: 800;
+}
+.mdx-box pre {
+  margin: 0.75rem 0;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  box-shadow: 4px 4px 0 var(--color-ink);
+}
+.mdx-pullquote p {
+  margin: 0;
+}
+
 /* heading anchor links (rehype-autolink-headings, append mode) */
 article.prose :is(h2, h3, h4) {
   position: relative;

@@ -1,0 +1,54 @@
+---
+// Inline post image with a caption. Root-relative `src` values under
+// /public get intrinsic width/height read at build time (no layout shift).
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { imageSize } from "image-size";
+
+interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+  class?: string;
+}
+
+const { src, alt, caption, class: className = "" } = Astro.props;
+let { width, height } = Astro.props;
+
+if ((!width || !height) && src.startsWith("/")) {
+  try {
+    const dims = imageSize(readFileSync(join(process.cwd(), "public", src)));
+    width ??= dims.width;
+    height ??= dims.height;
+  } catch {
+    // Missing file: render without intrinsic size rather than fail.
+  }
+}
+---
+
+<figure class:list={["mdx-figure not-prose my-10", className]}>
+  <img
+    src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    loading="lazy"
+    decoding="async"
+    class="border-ink shadow-neo-md !my-0 block h-auto w-full rounded-[4px] border-[3px]"
+  />
+  {
+    caption && (
+      <figcaption class="text-ink-soft mt-4 flex gap-2 text-sm leading-snug">
+        <span
+          class="border-ink bg-yellow text-on-accent mono shrink-0 self-start rounded-[3px] border-2 px-1.5 py-0.5 text-[10px] font-bold tracking-widest uppercase"
+          aria-hidden="true"
+        >
+          Fig
+        </span>
+        <span>{caption}</span>
+      </figcaption>
+    )
+  }
+</figure>
