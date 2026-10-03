@@ -10,39 +10,86 @@ heroImage:
   alt: "Modern high-tech server room in vibrant pop-art comic style with bright yellow and blue accents"
 ---
 
-Most engineering teams treat AI models as a single black box. They allocate a massive GPU budget and hope for the best. But when the application hits production, latency spikes, costs spiral out of control, and the "intelligent" features start timing out. This happens because developers fail to distinguish between the two distinct phases of an AI lifecycle: training and inference. Without a clear understanding of how these stages consume resources, your AI strategy is essentially a shot in the dark.
+Training is the expensive class you take once. Inference is the bill you pay on every single request.
+
+<Summary>
+- Training adjusts a model's weights over a huge dataset. It is compute-heavy, runs on GPU clusters and happens once or now and then.
+- Inference is a forward pass with frozen weights. It is cheaper per request, but it runs every time a user asks, so it usually becomes the bigger cost over time.
+- Size each phase on its own: throughput and big interconnects for training, latency, quantization and smaller hardware for inference, plus RAG to add new knowledge without retraining.
+</Summary>
+
+Most engineering teams treat AI models as a single black box. They allocate a massive GPU budget and hope for the best.
+
+But when the application hits production, latency spikes, costs spiral, and the "intelligent" features start timing out.
+
+This happens because developers fail to separate the two phases of an AI lifecycle: training and inference. Without a clear picture of how each stage consumes resources, your AI strategy is a shot in the dark.
 
 ## The anatomy of training: learning from data
 
-Training is the "learning" phase of a machine learning model. During this stage, you feed an algorithm a massive dataset. The model looks at the data, makes a guess, compares its guess to the actual answer, and adjusts its internal parameters (weights) to get closer to the truth next time. This process is repeated millions or even billions of times.
+Training is the "learning" phase of a machine learning model. During this stage, you feed an algorithm a massive dataset.
 
-The primary goal of training is to minimize error. Because this requires massive matrix multiplications and constant backpropagation, it is extremely compute-intensive. You are effectively asking a computer to solve a giant calculus problem over and over again. This is why training typically happens on large clusters of high-end GPUs or TPUs.
+The model looks at the data, makes a guess, compares its guess to the actual answer, and adjusts its internal parameters (weights) to get closer to the truth next time. This process is repeated millions or even billions of times.
 
-Training is usually a burst-heavy, high-upfront-cost activity. You might spend two weeks and $50,000 to train a custom model for your specific industry. Once the model reaches a satisfactory level of accuracy, the training phase ends. The model's weights are "frozen," and it is ready to be used in the real world.
+### Why it is so compute-heavy
 
-![Data processing flow showing books and files entering a brain-shaped machine in pop-art style](/blog/training-vs-inference/training-flow.webp)
+The main goal of training is to minimize error. Because this requires massive matrix multiplications and constant backpropagation, it is extremely compute-intensive.
+
+You are asking a computer to solve a giant calculus problem over and over again. This is why training usually happens on large clusters of high-end GPUs or TPUs.
+
+### A burst, then frozen
+
+Training is usually a burst-heavy, high-upfront-cost activity. You might spend two weeks and $50,000 to train a custom model for your specific industry.
+
+Once the model reaches a satisfactory level of accuracy, the training phase ends. The model's weights are "frozen," and it is ready to be used in the real world.
+
+{/* IMAGE: inline-1 */}
 
 ## The power of inference: applying knowledge
 
-Inference is the "execution" phase. This is what happens when a user interacts with your application. A customer types a query into your Shopify store's AI assistant, the model processes that query using its frozen weights, and it returns an answer. No learning happens during inference. The model is simply applying what it already knows.
+Inference is the "execution" phase. This is what happens when a user interacts with your application.
 
-In technical terms, inference is a "forward pass." You provide an input, the data flows through the layers of the model, and an output is generated. There is no backpropagation and no weight updates. This makes inference much faster and less compute-intensive than training on a per-request basis.
+A customer types a query into your Shopify store's AI assistant, the model processes that query using its frozen weights, and it returns an answer. No learning happens during inference. The model simply applies what it already knows.
 
-However, inference is where the "unbounded cost" problem lives. While training is a one-time or periodic expense, inference happens every time a user makes a request. If you have a million users making ten queries a day, you are running ten million inferences. Over the lifetime of a successful product, inference costs often dwarf training costs by a factor of 10x or more.
+### A forward pass
+
+In technical terms, inference is a "forward pass." You provide an input, the data flows through the layers of the model, and an output is generated.
+
+There is no backpropagation and no weight updates. This makes inference much faster and less compute-intensive than training on a per-request basis.
+
+### The unbounded cost
+
+However, inference is where the "unbounded cost" problem lives. Training is a one-time or periodic expense. Inference happens every time a user makes a request.
+
+If you have a million users making ten queries a day, you are running ten million inferences. Over the lifetime of a successful product, inference costs often end up far larger than training costs.
+
+<PullQuote>While training is a one-time or periodic expense, inference happens every time a user makes a request.</PullQuote>
+
+<TryThis>
+Estimate your monthly inference volume: daily active users, times queries per user, times 30. Multiply by your cost per request. Compare that with what the model cost to train or fine-tune.
+</TryThis>
 
 ## The classroom metaphor: student vs. graduate
 
-To simplify these complex technical ideas, think of a student in medical school.
+To make these ideas simpler, think of a student in medical school.
 
-**Training is the years of study.** The student reads thousands of textbooks, attends lectures, and takes practice exams. This process is slow, expensive, and requires intense focus. The "parameters" of the student's brain are being adjusted as they learn how to diagnose diseases.
+<BeforeAfter beforeLabel="Training" afterLabel="Inference">
+  <div slot="before">
 
-**Inference is the doctor in the clinic.** A patient walks in with symptoms. The doctor uses their existing knowledge to provide a diagnosis. The doctor doesn't go back to medical school for every patient. They simply apply the patterns they have already learned. The diagnosis happens in minutes, not years.
+**The years of study.** The student reads thousands of textbooks, attends lectures, and takes practice exams. This process is slow, expensive, and requires intense focus. The "parameters" of the student's brain are being adjusted as they learn how to diagnose diseases.
+
+  </div>
+  <div slot="after">
+
+**The doctor in the clinic.** A patient walks in with symptoms. The doctor uses existing knowledge to give a diagnosis and does not go back to medical school for every patient. The diagnosis happens in minutes, not years.
+
+  </div>
+</BeforeAfter>
 
 If you are building an [AI vs traditional development](/blog/ai-vs-traditional-development/) strategy, you need to decide if you are training a new doctor (custom training) or simply hiring one that already exists (using a pre-trained model via API).
 
 ## Hardware and infrastructure: GPUs vs. the rest
 
-The hardware requirements for these two phases are fundamentally different. Understanding this can save you thousands in infrastructure costs.
+The hardware requirements for these two phases are very different. Understanding this can save you thousands in infrastructure costs.
 
 | Feature             | Training                        | Inference                                        |
 | :------------------ | :------------------------------ | :----------------------------------------------- |
@@ -52,13 +99,23 @@ The hardware requirements for these two phases are fundamentally different. Unde
 | **Optimization**    | Gradient Descent / Backprop     | Quantization / Model Compression                 |
 | **Cost Type**       | CAPEX (Upfront)                 | OPEX (Recurring)                                 |
 
-For training, you need massive VRAM and high-speed interconnects (like NVLink) between GPUs. For inference, you often prioritize energy efficiency and "cost per token." In many cases, a well-optimized model can run inference on standard CPUs or specialized "edge" chips, which is much cheaper than maintaining a fleet of high-end GPUs. If you manage your own servers, you can split the workloads: put training tasks on high-perf clusters and move inference to smaller, distributed nodes closer to your users.
+### Different priorities
 
-![Pop-art comic style dashboard showing training throughput versus inference latency](/blog/training-vs-inference/hardware-dashboard.webp)
+For training, you need massive VRAM and high-speed interconnects (like NVLink) between GPUs. For inference, you often prioritize energy efficiency and "cost per token."
+
+In many cases, a well-optimized model can run inference on standard CPUs or specialized "edge" chips, which is much cheaper than keeping a fleet of high-end GPUs.
+
+If you manage your own servers, you can split the workloads: put training tasks on high-performance clusters and move inference to smaller, distributed nodes closer to your users.
+
+<TryThis>
+Try a quantized version (8-bit or 4-bit) of the model you serve on your smallest available GPU or a CPU. Measure latency and answer quality on 20 real prompts before paying for bigger hardware.
+</TryThis>
 
 ## Integrating inference into Laravel applications
 
-When building custom web solutions, you usually deal with the inference side of the equation. You aren't training a frontier model from scratch. You are calling an API or a self-hosted model to perform a task. Here is a typical pattern for handling AI inference inside a Laravel controller.
+When building custom web solutions, you usually deal with the inference side of the equation. You are not training a frontier model from scratch.
+
+You are calling an API or a self-hosted model to perform a task. Here is a typical pattern for handling AI inference inside a Laravel controller.
 
 ```php
 namespace App\Http\Controllers;
@@ -98,22 +155,38 @@ class AIInferenceController extends Controller
 }
 ```
 
-This simple setup highlights a key architectural point: the [API Gateway for your AI stack](/blog/api-gateway-ai-stack/) must be able to handle the specific latency requirements of inference. Users expect a response in milliseconds, not minutes.
+### Latency is the contract
+
+This simple setup highlights a key architectural point: the [API Gateway for your AI stack](/blog/api-gateway-ai-stack/) must handle the latency needs of inference.
+
+Users expect an answer in seconds, not minutes, and the first token well under that. A slow gateway in front of a fast model still feels slow.
+
+<TryThis>
+Log the time to first token and the total response time for every inference call, next to the model name. Those two numbers tell you whether to fix the model, the network, or the prompt size.
+</TryThis>
 
 ## The role of RAG: inference with a memory
 
-One way to bridge the gap between training and inference is retrieval-augmented generation (RAG). Instead of re-training a model every time your data changes (which is expensive and slow), you provide the model with "context" during the inference phase. That tradeoff is its own decision, covered in [RAG vs fine-tuning](/blog/rag-vs-fine-tuning/).
+One way to bridge the gap between training and inference is retrieval-augmented generation (RAG).
 
-In a RAG system, you search a vector database for relevant information and "stuff" it into the prompt. The model then uses its pre-trained reasoning capabilities to answer based on that new data. This is inference acting like it has a temporary memory. However, be careful. If you don't optimize your vector search, your inference latency will explode. You can read more about avoiding [RAG mistakes in production](/blog/7-rag-mistakes-production/) to keep your systems lean.
+Instead of re-training a model every time your data changes (which is expensive and slow), you give the model "context" during the inference phase. That tradeoff is its own decision, covered in [RAG vs fine-tuning](/blog/rag-vs-fine-tuning/).
 
-![AI model in production showing a chat bubble going into a model box and producing a lightbulb result](/blog/training-vs-inference/inference-production.webp)
+### A temporary memory
 
-## Takeaways
+In a RAG system, you search a vector database for relevant information and "stuff" it into the prompt. The model then uses its pre-trained reasoning to answer based on that new data. This is inference acting like it has a temporary memory.
 
+Be careful, though. If you don't optimize your vector search, your inference latency will explode. You can read more about avoiding [RAG mistakes in production](/blog/7-rag-mistakes-production/) to keep your systems lean.
+
+{/* IMAGE: inline-2 */}
+
+<Takeaway>
 - **Training is about learning.** It is a one-time or periodic compute-heavy process that builds the model's intelligence.
 - **Inference is about acting.** It is the real-time application of that intelligence and represents the majority of long-term costs.
 - **Hardware matters.** Don't use a massive GPU cluster for inference if a smaller, quantized model can run on a single T4 or even a CPU.
 - **Optimize for your phase.** If you are training, focus on throughput (tokens per second). If you are serving users, focus on latency (time to first token).
 - **RAG is your friend.** It allows you to give "new knowledge" to a frozen model during inference without the massive cost of re-training.
+</Takeaway>
 
-At what point in your product's growth do you anticipate inference costs will exceed your initial development budget? If you're architecting an AI stack that has to stay fast and affordable at scale, [here's how I help teams ship it](/services/).
+If you're architecting an AI stack that has to stay fast and affordable at scale, [here's how I help teams ship it](/services/).
+
+At what point in your product's growth do you expect inference costs to exceed your initial development budget?
