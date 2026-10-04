@@ -68,7 +68,11 @@ Microservices let different squads own parts of the system. One team updates the
 - **Technology diversity:** you might need a Python service for AI-driven [RAG systems](/blog/7-rag-mistakes-production/) while keeping your core business logic in Laravel.
 - **Fault isolation:** a crash in the reporting service should not stop customers from checking out.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/monolith-vs-microservices/inline-1.webp"
+  alt="Comic panel of one smiling robot carrying one big box next to six small robots with small boxes shouting at each other"
+  caption="One deployable unit, or many services that have to talk to each other."
+/>
 
 ## Monolith vs microservices: comparing the trade-offs
 
@@ -140,7 +144,11 @@ You get the deployment simplicity of a monolith while making it easy to extract 
   <div slot="after">Billing talks to Inventory through an interface or an event. One deploy, but each module can be pulled out later without a rewrite.</div>
 </BeforeAfter>
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/monolith-vs-microservices/inline-2.webp"
+  alt="Comic panel of a cutaway house with four rooms where robots slide notes through door slots instead of walking into other rooms"
+  caption="A modular monolith keeps clear walls inside one codebase."
+/>
 
 ### Defer the decision
 

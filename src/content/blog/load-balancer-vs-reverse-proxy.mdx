@@ -51,7 +51,11 @@ Instead of exposing your application server directly to the internet, the revers
 - **Request routing:** you can route by URL path. For example, send every request starting with `/api` to one service and everything else to a frontend app.
 - **Security and anonymity:** hiding your backend IP addresses makes it much harder for attackers to target your servers directly. A proxy can also act as a basic Web Application Firewall (WAF) to block malicious traffic patterns.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/load-balancer-vs-reverse-proxy/inline-1.webp"
+  alt="Comic panel of a shield-carrying guard robot holding an envelope at a castle gate while a second robot waits beside a shelf of cached copies"
+  caption="A reverse proxy stands between the internet and your servers and answers what it can from cache."
+/>
 
 <TryThis>
 Check whether your app server is reachable directly by its public IP. If it is, put Nginx (or your platform's proxy) in front and close the app port to the outside.
@@ -128,7 +132,11 @@ Use a load balancer to take in these webhooks and spread them across a fleet of 
 
 A reverse proxy at the edge can add rate limiting. That stops a single store from hogging your app's resources and keeps your [agentic commerce systems](/blog/agentic-commerce-shopify/) responsive for all merchants.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/load-balancer-vs-reverse-proxy/inline-2.webp"
+  alt="Comic panel of a crowd of robots carrying boxes toward a robot with a big stamp that pushes each box onto a conveyor to waiting worker robots"
+  caption="Acknowledge each webhook fast, then let workers process it in the background."
+/>
 
 <TryThis>
 Time your Shopify webhook handler end to end. If it does real work before returning 200, move that work to a queue job and return right away.

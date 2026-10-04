@@ -82,7 +82,11 @@ I don't have to migrate everything at once. I can migrate one endpoint at a time
 
 <PullQuote>Move one route, watch it under real traffic, and keep the old path one switch away.</PullQuote>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/monolith-to-microservices/inline-1.webp"
+  alt="Comic panel of a robot pulling a rail switch lever beside a vine-covered stone tower as a train heads toward a modern glass building"
+  caption="Move traffic one route at a time from the old system to the new one."
+/>
 
 <BeforeAfter beforeLabel="Big-bang rewrite" afterLabel="Strangler fig">
   <div slot="before">Freeze features, rebuild everything for months or years, then switch over in one risky launch.</div>
@@ -140,7 +144,11 @@ The new service doesn't care about the legacy app's messy database schema. It on
 
 When the user logic is migrated later, I update the ACL to point to the new user service. For the asynchronous side (letting services react to events instead of calling each other directly), I lean on [event-driven Pub/Sub](/blog/event-driven-pubsub/) or [a RabbitMQ-backed queue](/blog/scaling-with-rabbitmq/).
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/monolith-to-microservices/inline-2.webp"
+  alt="Comic panel of a human clerk handing a package through a service window to a smiling robot beside a boarded-up door"
+  caption="New services ask the old system for data through a clean interface."
+/>
 
 ## Cloud infrastructure and DevOps
 

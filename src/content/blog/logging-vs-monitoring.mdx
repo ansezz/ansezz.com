@@ -106,7 +106,11 @@ Including a `request_id` in every log entry lets you trace a single request acro
 
 <PullQuote>A dashboard tells you something broke. A searchable log tells you what to fix.</PullQuote>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/logging-vs-monitoring/inline-1.webp"
+  alt="Comic panel of a doctor robot pointing at a heartbeat monitor next to a detective robot with a magnifying glass pulling a card from a filing cabinet"
+  caption="Monitoring shows that something is wrong, and logs show why."
+/>
 
 <BeforeAfter beforeLabel="Unstructured" afterLabel="Structured">
   <div slot="before">`Error: something went wrong`. No user, no order, no request ID. You grep text files and hope.</div>
@@ -171,7 +175,11 @@ You should also monitor your logs. Counting how often certain log patterns appea
 
 If "Database connection lost" shows up more than five times in a minute, turn that log event into a metric that triggers a high-priority alert.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/logging-vs-monitoring/inline-2.webp"
+  alt="Comic panel of a detective robot linking photos on a corkboard with red string while an alarmed robot rings a bell over a spiking chart"
+  caption="Correlation IDs connect a metric spike to the exact log lines behind it."
+/>
 
 <TryThis>
 Pick one error message that always means trouble (for example "Database connection lost") and create a log-based metric with an alert when it appears more than five times a minute.

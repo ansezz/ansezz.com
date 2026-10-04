@@ -78,7 +78,11 @@ It gives you backpressure control. If your vector DB slows down, the "index" que
 
 <PullQuote>When one stage slows down, its queue grows. Every other stage keeps working.</PullQuote>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/message-queues-document-processing/inline-1.webp"
+  alt="Comic panel of four robots on a conveyor line unpacking papers, reading pages, cutting text into strips and turning strips into glowing blue cubes"
+  caption="Each pipeline stage works at its own pace with a queue in between."
+/>
 
 <TryThis>
 Draw your current document flow as boxes. Every arrow between two slow steps is a place to put a queue.
@@ -144,7 +148,11 @@ Tools like Docker and Coolify make this easy. I can spin up five more worker con
 
 You can read more about how I manage this infra in my [Coolify and Docker guide](/blog/coolify-docker-saas-hosting/).
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/message-queues-document-processing/inline-2.webp"
+  alt="Comic panel of a robot pointing at a pressure gauge over a tall stack of envelopes while a squad of robots charges in to help"
+  caption="When queue depth climbs, add workers."
+/>
 
 <TryThis>
 Graph queue depth per stage next to worker count. If depth keeps rising while CPU stays low, scale on depth instead of CPU.
