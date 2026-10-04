@@ -91,7 +91,6 @@ export const PAGE_OG: PageOg[] = [
     title: "No analytics. No tracking. No cookies.",
   },
 
-
   // ── SEO problem / intent pages ──
   {
     slug: "mcp-for-laravel-saas",
@@ -111,7 +110,6 @@ export const PAGE_OG: PageOg[] = [
     label: "Problem",
     title: "RAG on Laravel that survives evals.",
   },
-
 
   // ── SEO topic hubs + how I work ──
   {
@@ -145,6 +143,18 @@ export const PAGE_OG: PageOg[] = [
     path: "/tools/token-counter/",
     label: "Free tool",
     title: "Count the tokens. Then count the cost.",
+  },
+  {
+    slug: "tool-pgvector-calculator",
+    path: "/tools/pgvector-calculator/",
+    label: "Free tool",
+    title: "Size the pgvector index before you build it.",
+  },
+  {
+    slug: "tool-prompt-caching-calculator",
+    path: "/tools/prompt-caching-calculator/",
+    label: "Free tool",
+    title: "Does prompt caching pay off? Do the maths.",
   },
   {
     slug: "tool-cron-explainer",

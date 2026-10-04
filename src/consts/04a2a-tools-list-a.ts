@@ -61,6 +61,35 @@ export const TOOL_LIST_A: ToolEntry[] = [
     group: "ai",
     tags: ["rag", "vector-search", "pgvector"],
   },
+  {
+    title: "pgvector Size Calculator",
+    blurb:
+      "Rows and dimensions in, table size, HNSW or IVFFlat index size, RAM and maintenance_work_mem out. vector, halfvec and bit, with the formulas shown.",
+    href: "/tools/pgvector-calculator/",
+    seoTitle: "pgvector Size Calculator: HNSW Index and RAM",
+    updated: "2026-10-04",
+    services: ["ai", "audit"],
+    icon: "lucide:database",
+    tone: "green",
+    status: "live",
+    group: "ai",
+    tags: ["pgvector", "vector-search", "databases"],
+  },
+  {
+    title: "Prompt Caching Calculator",
+    blurb:
+      "Compare the LLM bill with and without prompt caching. Prefix tokens, hit rate, write premium and read discount in, savings and break even hit rate out.",
+    href: "/tools/prompt-caching-calculator/",
+    seoTitle: "Prompt Caching Calculator: LLM Cost Savings",
+    updated: "2026-10-04",
+    verifiedLabel: "October 4, 2026 (preset prices)",
+    services: ["ai"],
+    icon: "lucide:piggy-bank",
+    tone: "yellow",
+    status: "live",
+    group: "ai",
+    tags: ["llm", "llm-inference", "ai-engineering"],
+  },
 
   // ── Encoding & secrets ──
   {

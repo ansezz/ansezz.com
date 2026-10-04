@@ -1,0 +1,618 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import ShareLink from "@/components/tools/ShareLink.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_PATH = "/tools/prompt-caching-calculator/";
+const TOOL_NAME = "Prompt Caching Calculator";
+const tool = getTool(TOOL_PATH);
+
+const DESCRIPTION =
+  "Prompt caching calculator: compare LLM API cost with and without caching. Set prefix tokens, hit rate, write premium and read discount, and see savings and the break even hit rate.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+// Presets. Vendor rows were checked on 4 October 2026 against
+// platform.claude.com/docs/en/about-claude/pricing and
+// developers.openai.com/api/docs/pricing (standard tier, short context).
+// Every value is editable on the page; re-check before changing a number.
+const PRICES_VERIFIED = "October 4, 2026";
+const PRESETS = [
+  {
+    label: "Claude Sonnet 5.5, 5 min cache",
+    note: "Anthropic pricing page",
+    pin: "2",
+    pout: "10",
+    write: "25",
+    read: "90",
+  },
+  {
+    label: "Claude Sonnet 5.5, 1 hour cache",
+    note: "Anthropic pricing page",
+    pin: "2",
+    pout: "10",
+    write: "100",
+    read: "90",
+  },
+  {
+    label: "Claude Haiku 4.5, 5 min cache",
+    note: "Anthropic pricing page",
+    pin: "1",
+    pout: "5",
+    write: "25",
+    read: "90",
+  },
+  {
+    label: "Claude Opus 5.5, 5 min cache",
+    note: "Anthropic pricing page",
+    pin: "4",
+    pout: "20",
+    write: "25",
+    read: "95",
+  },
+  {
+    label: "GPT-6.1 Sol, short context",
+    note: "OpenAI pricing page",
+    pin: "2",
+    pout: "10",
+    write: "25",
+    read: "95",
+  },
+  {
+    label: "Generic: no write fee, half price reads",
+    note: "Example, not a vendor",
+    pin: "1",
+    pout: "4",
+    write: "0",
+    read: "50",
+  },
+];
+
+const faq = [
+  {
+    q: "How does prompt caching pricing work?",
+    a: "The provider stores the start of your prompt (the prefix) after the first request. When a later request starts with the exact same prefix, those tokens are read from the cache at a discount. Writing the prefix into the cache can cost more than normal input. So each request is either a hit, which pays the cheap read price for the prefix, or a miss, which pays the write price. Tokens after the prefix and all output tokens cost the same as without caching.",
+  },
+  {
+    q: "What hit rate do I need for prompt caching to save money?",
+    a: "Divide the write premium by the write premium plus the read discount. With a 25% write premium and a 90% read discount, that is 0.25 / 1.15, about 22%. With a 100% premium (a longer cache lifetime on some providers) it is 1 / 1.9, about 53%. If there is no write premium, any hit saves money. The calculator shows this break even number for your inputs.",
+  },
+  {
+    q: "What counts as a cache hit?",
+    a: "A request that starts with the same tokens as a recent request, within the cache lifetime. Matching is on an exact prefix, so a timestamp, a user name or a changing retrieval block placed early in the prompt breaks the match for everything after it. Put fixed parts first (system prompt, tool definitions, long documents) and the changing parts last.",
+  },
+  {
+    q: "Why is my real hit rate lower than I expected?",
+    a: "Usually traffic gaps or prompt changes. If requests for the same prefix arrive further apart than the cache lifetime, the cache expires and the next request is a miss. Each deploy that edits the system prompt or tool list also starts a new cache. Providers also have a minimum prefix length before they cache anything. Check the cached token counts your API returns in its usage data and type the real hit rate in here.",
+  },
+  {
+    q: "Are the preset prices current?",
+    a: `The vendor presets were checked against the official Anthropic and OpenAI pricing pages on ${PRICES_VERIFIED}, standard tier, short context. Prices change, and some providers charge more above a context length or for regional processing. Every field is editable, so treat the presets as a starting point and type in the numbers from your own bill or contract.`,
+  },
+  {
+    q: "Does this calculator send my numbers anywhere?",
+    a: "No. The maths runs in your browser. There is no request, no account and no logging. The share button only writes your inputs into the page address so you can copy the link.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  dateModified: tool.updated,
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const inputClass =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono font-bold focus:outline-none";
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const smallLabel = "mb-1 block text-xs font-bold";
+const hintClass = "text-xs leading-snug opacity-80";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1 break-words";
+const rowClass = "flex flex-wrap items-baseline justify-between gap-x-3";
+
+const relatedLinks = [
+  {
+    href: "/tools/llm-cost-calculator/",
+    note: "The full monthly bill per model, with caching as one line in it.",
+  },
+  {
+    href: "/tools/token-counter/",
+    note: "Count your system prompt and tool definitions to get the prefix size.",
+  },
+  {
+    href: "/blog/redis-semantic-caching-rag/",
+    note: "Prompt caching saves on input. Semantic caching skips the call entirely.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/prompt-engineering-vs-context-engineering/",
+    note: "Ordering the context so the fixed part comes first is context engineering.",
+    kind: "Post" as const,
+  },
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Prompt Caching Calculator."
+  intro="Does prompt caching save you money, and how much? Enter your prompt shape, traffic and cache prices, and compare the bill with and without caching."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Presets checked {PRICES_VERIFIED}
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Presets come from official pricing pages and are only a starting point.
+        Every price field is editable.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section
+    class="mx-auto max-w-5xl px-5 pb-14"
+    id="prompt-caching-calculator-root"
+  >
+    <div class="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_340px]">
+      <!-- Inputs -->
+      <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-5">
+        <fieldset class="space-y-3">
+          <legend class={labelClass}>Prices, editable</legend>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="min-w-0">
+              <label for="prompt-caching-calculator-pin" class={smallLabel}
+                >Input $ / 1M</label
+              >
+              <input
+                id="prompt-caching-calculator-pin"
+                type="number"
+                min="0"
+                step="any"
+                inputmode="decimal"
+                value="2"
+                class={inputClass}
+              />
+            </div>
+            <div class="min-w-0">
+              <label for="prompt-caching-calculator-pout" class={smallLabel}
+                >Output $ / 1M</label
+              >
+              <input
+                id="prompt-caching-calculator-pout"
+                type="number"
+                min="0"
+                step="any"
+                inputmode="decimal"
+                value="10"
+                class={inputClass}
+              />
+            </div>
+            <div class="min-w-0">
+              <label for="prompt-caching-calculator-write" class={smallLabel}
+                >Write premium %</label
+              >
+              <input
+                id="prompt-caching-calculator-write"
+                type="number"
+                min="0"
+                step="any"
+                inputmode="decimal"
+                value="25"
+                class={inputClass}
+              />
+            </div>
+            <div class="min-w-0">
+              <label for="prompt-caching-calculator-read" class={smallLabel}
+                >Read discount %</label
+              >
+              <input
+                id="prompt-caching-calculator-read"
+                type="number"
+                min="0"
+                max="100"
+                step="any"
+                inputmode="decimal"
+                value="90"
+                class={inputClass}
+              />
+            </div>
+          </div>
+          <p class={hintClass}>
+            Write premium: how much more a cache write costs than normal input
+            (25 means 1.25 times). Read discount: how much less a cache hit
+            costs (90 means 0.1 times).
+          </p>
+        </fieldset>
+
+        <fieldset class="border-ink space-y-3 border-t-[2.5px] pt-4">
+          <legend class={labelClass}>Tokens per request</legend>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="min-w-0">
+              <label for="prompt-caching-calculator-prefix" class={smallLabel}
+                >Cached prefix</label
+              >
+              <input
+                id="prompt-caching-calculator-prefix"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                value="10000"
+                class={inputClass}
+              />
+            </div>
+            <div class="min-w-0">
+              <label for="prompt-caching-calculator-uncached" class={smallLabel}
+                >Uncached input</label
+              >
+              <input
+                id="prompt-caching-calculator-uncached"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                value="1000"
+                class={inputClass}
+              />
+            </div>
+            <div class="min-w-0">
+              <label for="prompt-caching-calculator-output" class={smallLabel}
+                >Output</label
+              >
+              <input
+                id="prompt-caching-calculator-output"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                value="500"
+                class={inputClass}
+              />
+            </div>
+          </div>
+          <p class={hintClass}>
+            Cached prefix is the part that repeats on every request: system
+            prompt, tool definitions, a shared document. Uncached input is the
+            part that changes, like the user message.
+          </p>
+        </fieldset>
+
+        <fieldset class="border-ink space-y-3 border-t-[2.5px] pt-4">
+          <legend class={labelClass}>Traffic</legend>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="min-w-0">
+              <label for="prompt-caching-calculator-reqs" class={smallLabel}
+                >Requests / day</label
+              >
+              <input
+                id="prompt-caching-calculator-reqs"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                value="2000"
+                class={inputClass}
+              />
+            </div>
+            <div class="min-w-0">
+              <label for="prompt-caching-calculator-hit" class={smallLabel}
+                >Cache hit rate %</label
+              >
+              <input
+                id="prompt-caching-calculator-hit"
+                type="number"
+                min="0"
+                max="100"
+                step="any"
+                inputmode="decimal"
+                value="80"
+                class={inputClass}
+              />
+            </div>
+          </div>
+          <p class={hintClass}>
+            Hit rate is the share of requests that find the prefix in the cache.
+            Every miss writes it again.
+          </p>
+        </fieldset>
+      </NeoCard>
+
+      <!-- Output -->
+      <NeoCard
+        tone="cyan"
+        shadow="lg"
+        class="min-w-0 space-y-4 md:sticky md:top-24"
+      >
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Per month (30 days)
+        </p>
+        <dl class="space-y-3" aria-live="polite">
+          <div class={`border-ink border-b-[2.5px] pb-2 ${rowClass}`}>
+            <dt class="text-sm font-bold uppercase">Without caching</dt>
+            <dd id="prompt-caching-calculator-out-no" class="display text-2xl">
+              $0
+            </dd>
+          </div>
+          <div class={`border-ink border-b-[2.5px] pb-2 ${rowClass}`}>
+            <dt class="text-sm font-bold uppercase">With caching</dt>
+            <dd id="prompt-caching-calculator-out-yes" class="display text-2xl">
+              $0
+            </dd>
+          </div>
+          <div class={rowClass}>
+            <dt
+              id="prompt-caching-calculator-out-saved-label"
+              class="text-sm font-bold uppercase"
+            >
+              You save
+            </dt>
+            <dd
+              id="prompt-caching-calculator-out-saved"
+              class="display text-accent-text text-3xl"
+            >
+              $0
+            </dd>
+          </div>
+        </dl>
+        <p
+          id="prompt-caching-calculator-verdict"
+          class="text-sm leading-snug font-bold"
+        >
+        </p>
+        <dl class="border-ink space-y-1.5 border-t-[2.5px] pt-3 text-sm">
+          <div class={rowClass}>
+            <dt>Per request, no cache</dt>
+            <dd
+              id="prompt-caching-calculator-req-no"
+              class="font-mono font-bold"
+            >
+              $0
+            </dd>
+          </div>
+          <div class={rowClass}>
+            <dt>Per request, cached</dt>
+            <dd
+              id="prompt-caching-calculator-req-yes"
+              class="font-mono font-bold"
+            >
+              $0
+            </dd>
+          </div>
+          <div class={rowClass}>
+            <dt>Per day, no cache / cached</dt>
+            <dd id="prompt-caching-calculator-day" class="font-mono font-bold">
+              $0
+            </dd>
+          </div>
+          <div class={rowClass}>
+            <dt>Break even hit rate</dt>
+            <dd id="prompt-caching-calculator-be" class="font-mono font-bold">
+              0%
+            </dd>
+          </div>
+        </dl>
+        <details class="text-sm">
+          <summary class="flex min-h-10 cursor-pointer items-center font-bold">
+            Monthly breakdown, cached
+          </summary>
+          <dl class="mt-2 space-y-1">
+            <div class={rowClass}>
+              <dt>Cache reads (hits)</dt><dd
+                id="prompt-caching-calculator-br-read"
+              >
+                $0
+              </dd>
+            </div>
+            <div class={rowClass}>
+              <dt>Cache writes (misses)</dt><dd
+                id="prompt-caching-calculator-br-write"
+              >
+                $0
+              </dd>
+            </div>
+            <div class={rowClass}>
+              <dt>Uncached input</dt><dd id="prompt-caching-calculator-br-in">
+                $0
+              </dd>
+            </div>
+            <div class={rowClass}>
+              <dt>Output</dt><dd id="prompt-caching-calculator-br-out">$0</dd>
+            </div>
+          </dl>
+        </details>
+        <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+          Live as you type · runs in your browser
+        </p>
+      </NeoCard>
+    </div>
+
+    <!-- Presets -->
+    <h2 class="heading mt-10 mb-3 text-xl uppercase">Price presets.</h2>
+    <p class="mb-4 text-sm leading-snug opacity-90">
+      Checked against official pricing pages on {PRICES_VERIFIED}, standard
+      tier. Pick one to fill the price fields, then edit anything you like.
+    </p>
+    <ul class="grid gap-3 sm:grid-cols-2">
+      {
+        PRESETS.map((p) => (
+          <li class="min-w-0">
+            <div class="border-ink bg-paper shadow-neo-sm flex h-full flex-wrap items-center justify-between gap-3 rounded-[4px] border-[3px] p-3">
+              <div class="min-w-0">
+                <p class="font-bold">{p.label}</p>
+                <p class="mono mt-1 text-[10px] tracking-widest uppercase opacity-70">
+                  ${p.pin} in · ${p.pout} out · +{p.write}% write · {p.read}%
+                  off reads
+                </p>
+                <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+                  {p.note}
+                </p>
+              </div>
+              <button
+                type="button"
+                data-preset-pin={p.pin}
+                data-preset-pout={p.pout}
+                data-preset-write={p.write}
+                data-preset-read={p.read}
+                class="mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow inline-flex min-h-10 items-center rounded-full border-[2px] px-4 text-[11px] font-bold tracking-widest uppercase"
+              >
+                Use
+              </button>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="mt-6"><ShareLink /></div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">How the maths works</h2>
+      <p>
+        Call the cached prefix <strong>P</strong>, the changing input <strong
+          >U</strong
+        >, the output <strong>O</strong>, the input price <strong>in</strong>,
+        the output price <strong>out</strong>, the hit rate <strong>h</strong>,
+        the write premium <strong>w</strong> and the read discount <strong
+          >d</strong
+        >.
+      </p>
+      <ul class="space-y-2">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Without caching:</strong>
+            <code class={codeClass}>(P + U) × in + O × out</code></span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>With caching:</strong>
+            <code class={codeClass}
+              >h × P × in × (1 - d) + (1 - h) × P × in × (1 + w) + U × in + O ×
+              out</code
+            ></span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Break even:</strong> caching is cheaper when <code
+              class={codeClass}>h &gt; w / (w + d)</code
+            >.</span
+          >
+        </li>
+      </ul>
+      <p>
+        Worked example with the default inputs: 10,000 prefix tokens, 1,000
+        uncached, 500 output, $2 in and $10 out per million, +25% write, 90% off
+        reads, 80% hits, 2,000 requests a day. Without caching a request costs
+        11,000 × $0.000002 + 500 × $0.00001 = $0.027, or $1,620 a month. With
+        caching it costs $0.0016 for hits + $0.005 for misses + $0.002 + $0.005
+        = $0.0136, or $816 a month. That saves $804, about 50%. The break even
+        hit rate is 0.25 / 1.15, about 22%.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">Getting a high hit rate</h2>
+      <ul class="space-y-2">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Fixed parts first.</strong> System prompt, tool definitions and
+            long reference documents go at the start. User input, retrieved chunks
+            and timestamps go at the end.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Mind the lifetime.</strong> A cache that lives a few minutes
+            only helps if the same prefix comes back within that time. Quiet endpoints
+            miss a lot. A longer cache lifetime often costs a bigger write premium,
+            so check the break even number for both.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Do not reorder tools.</strong> Building the tool list from an
+            unordered map, or adding one tool per request, changes the prefix and
+            turns every request into a miss.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Measure it.</strong> APIs report cached and written tokens in
+            the usage data of each response. Use those numbers for the hit rate here
+            instead of a guess.</span
+          >
+        </li>
+      </ul>
+      <p>
+        This calculator leaves out a few things on purpose: per hour storage
+        fees for explicit caches on some providers, higher prices above a long
+        context threshold, batch discounts and minimum cacheable prompt lengths.
+        If they apply to you, adjust the price fields to match.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/prompt-caching-calculator";
+</script>

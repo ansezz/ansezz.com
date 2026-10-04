@@ -35,7 +35,7 @@ Content-driven static site. Three pillars:
 2. **Pages** (`src/pages/`) — file-based routing.
    - Blog: `blog/[...slug].astro`, plus `blog/category/[category].astro`, `blog/tag/[tag].astro`, `blog/page/[page].astro`, `blog/series/index.astro`, `blog/series/[series].astro`.
    - Work: `work.astro` index + `work/[...slug].astro` (generated **only** for `featured` entries).
-   - Tools: `tools/index.astro` + 23 tool pages, each pairing with a `src/scripts/<tool>.ts`.
+   - Tools: `tools/index.astro` + 25 tool pages, each pairing with a `src/scripts/<tool>.ts`.
    - Static: `about`, `services`, `uses`, `contact`, `now`, `library`, `feed`, `privacy`, `styleguide`, `404`.
    - Endpoints: `rss.xml.js`, `rss/[category].xml.js`, `feed.json.ts`, `resume.json.ts`, and generated OG cards under `og/**/*.png.ts`.
 
