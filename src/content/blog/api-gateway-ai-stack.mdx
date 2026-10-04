@@ -82,9 +82,9 @@ If your model logic is hardcoded into your frontend or a single monolithic backe
 
 ### Model aliases
 
-I use the gateway to create "model aliases." Instead of calling a specific model, the frontend calls a generic endpoint like `/v1/chat/completions`. The gateway then decides where to send the request based on:
+I use the gateway to create "model aliases." Instead of calling a specific model, the frontend calls a generic endpoint like `/chat/pro`. The gateway then decides where to send the request based on:
 
-1. **User tier.** Free users get routed to a cheaper, faster model like GPT-6 Luna or Claude Haiku 4.5. Pro users get the heavy hitters.
+1. **User tier.** Free users get routed to a cheaper, faster model like GPT-6 Luna or Claude Haiku. Pro users get the heavy hitters.
 2. **Versioning.** Run an A/B test by routing 10% of traffic to a new model version without changing a single line of client-side code.
 3. **Failover.** If OpenAI is having an outage, the gateway can reroute traffic to an Anthropic backup.
 

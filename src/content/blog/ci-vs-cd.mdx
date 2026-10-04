@@ -101,7 +101,7 @@ In 2026, the lines are blurring as tools become more integrated. Most teams trea
 
 ## Implementing CI for Laravel applications
 
-Laravel gives you a solid base for CI because of its built-in testing tools. When you set up a pipeline, aim for a "clean room" environment: use Docker so CI matches production exactly.
+Laravel gives you a solid base for CI because of its built-in testing tools. When you set up a pipeline, aim for a "clean room" environment: pin the same PHP and MySQL versions you run in production.
 
 A typical GitHub Actions workflow for Laravel might look like this:
 
@@ -145,7 +145,7 @@ Turn on branch protection for `main` and mark your CI job as a required status c
 
 ## CD best practices for Shopify storefronts
 
-Shopify development has traditionally meant editing themes in the browser. With the rise of [agentic commerce on Shopify](/blog/agentic-commerce-shopify/), the need for professional CI/CD has skyrocketed.
+Shopify development has traditionally meant editing themes in the browser. With the rise of [agentic commerce on Shopify](/blog/agentic-commerce-shopify/), the need for real CI/CD is much higher.
 
 For Shopify, CD is about managing "theme versions" rather than server binaries. With the Shopify CLI, you can automate theme deployments to different environments:
 
