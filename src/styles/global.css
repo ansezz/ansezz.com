@@ -120,6 +120,34 @@ body {
   -webkit-font-smoothing: antialiased;
   /* clip, not hidden: no scroll container, so position:sticky keeps working */
   overflow-x: clip;
+  /* long words, URLs and file names wrap instead of pushing the page wider
+     than a phone screen (clip hides the overflow, but mobile Chrome still
+     zooms the layout out to fit it) */
+  overflow-wrap: break-word;
+}
+
+/* inline code, mono spans and kbd inside running text can hold long
+   unbroken tokens (hosts, paths, env vars): let them break anywhere so
+   they never set a min width wider than the column */
+:where(p, li, dd, dt, td, th, blockquote, figcaption, summary, label)
+  :where(code, kbd, samp, .mono) {
+  overflow-wrap: anywhere;
+}
+/* block code keeps its lines and scrolls inside its own box */
+pre,
+pre code {
+  overflow-wrap: normal;
+}
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* media never wider than its column */
+img,
+video,
+iframe {
+  max-width: 100%;
 }
 
 ::selection {
@@ -181,6 +209,14 @@ body {
 }
 .tag-row-scroll > * {
   scroll-snap-align: start;
+  /* in the single-line scroll row pills keep their size and the row
+     scrolls; without this flex squeezes them until labels overlap */
+  flex-shrink: 0;
+}
+@media (min-width: 40rem) {
+  .tag-row-scroll > * {
+    flex-shrink: 1;
+  }
 }
 
 /* prose tuning for blog posts */

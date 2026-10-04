@@ -207,7 +207,7 @@ const obsessions = [
   structuredData={[aboutBreadcrumbLd, profilePageLd]}
 >
   <section
-    class="mx-auto grid max-w-5xl gap-10 px-5 pb-12 md:grid-cols-[1fr_320px] md:gap-12"
+    class="mx-auto grid max-w-5xl gap-10 px-5 pb-12 lg:grid-cols-[1fr_320px] lg:gap-12"
   >
     <div class="min-w-0 space-y-14">
       <div class="flex flex-wrap items-center gap-4">
@@ -266,7 +266,7 @@ const obsessions = [
           Three phases. No agile theater, no surprise scope creep. Boring,
           predictable, ships.
         </p>
-        <ol class="grid gap-5 md:grid-cols-3">
+        <ol class="grid gap-5 lg:grid-cols-3">
           {
             process.map((p, i) => (
               <li class="min-w-0">
@@ -459,7 +459,7 @@ const obsessions = [
       </div>
     </div>
 
-    <aside class="min-w-0 space-y-5 md:sticky md:top-24 md:self-start">
+    <aside class="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start">
       <ChecklistBox
         title="Currently obsessed with"
         items={obsessions}

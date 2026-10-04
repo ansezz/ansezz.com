@@ -6,7 +6,12 @@ import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
 import HalftoneSection from "@/components/neobrutalist/HalftoneSection.astro";
 import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
 import { Icon } from "astro-icon/components";
-import { HOW_I_WORK, SERVICES, SITE, SERVICE_LANDERS_BY_PACKAGE } from "@/consts";
+import {
+  HOW_I_WORK,
+  SERVICES,
+  SITE,
+  SERVICE_LANDERS_BY_PACKAGE,
+} from "@/consts";
 import { faqPage, breadcrumbList } from "@/lib/seo";
 
 const page = HOW_I_WORK;
@@ -113,7 +118,7 @@ const breadcrumbLd = breadcrumbList([
         <ul class="space-y-3">
           {
             page.take.map((item) => (
-              <li class="flex items-start gap-2 text-sm font-medium leading-snug md:text-base">
+              <li class="flex items-start gap-2 text-sm leading-snug font-medium md:text-base">
                 <Icon name="lucide:check" class="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{item}</span>
               </li>
@@ -132,7 +137,7 @@ const breadcrumbLd = breadcrumbList([
         <ul class="space-y-3">
           {
             page.dontTake.map((item) => (
-              <li class="flex items-start gap-2 text-sm font-medium leading-snug md:text-base">
+              <li class="flex items-start gap-2 text-sm leading-snug font-medium md:text-base">
                 <Icon name="lucide:x" class="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{item}</span>
               </li>
@@ -170,7 +175,9 @@ const breadcrumbLd = breadcrumbList([
                 href={href}
                 class="flex h-full flex-col gap-2 !p-5"
               >
-                <h3 class="heading text-lg leading-tight uppercase">{s.title}</h3>
+                <h3 class="heading text-lg leading-tight uppercase">
+                  {s.title}
+                </h3>
                 <p class="text-sm leading-snug opacity-90">{s.body}</p>
               </NeoCard>
             </li>
@@ -204,7 +211,7 @@ const breadcrumbLd = breadcrumbList([
                 class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
               />
             </summary>
-            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">
+            <p class="px-4 pb-4 text-base leading-relaxed opacity-90">
               {f.answer}
             </p>
           </details>
