@@ -1,6 +1,6 @@
 ---
 title: "Scaling SaaS with Coolify: deployment strategies"
-description: "Move past the single-server trap. Multi-node Coolify, zero-downtime rolling deploys, dedicated build servers, and GitHub Actions wiring for production."
+description: "Move past the single-server trap. Multi-node Coolify, rolling deploys with real health checks, dedicated build servers, and GitHub Actions wiring for production."
 publishDate: 2026-01-11
 category: devops
 tags: [coolify, deployment, devops, docker, self-hosting, ci-cd, scaling]
@@ -10,75 +10,110 @@ heroImage:
   alt: "Stylized illustration of a Coolify dashboard scaling across multiple servers"
 ---
 
-You've finally moved your apps off that messy manual VPS and into Coolify. It feels great. Everything is in one place. But then the traffic starts to spike. You realize that hosting your production database, three web apps, and a memory-heavy build process on a single $10 DigitalOcean droplet is a recipe for disaster.
+One server running Coolify, your database, three apps and every build is fine for an MVP. For real customers, split the control plane, the builds and the data apart.
 
-The "single server trap" is real. It's fine for a side project or a quick MVP. But when you're building for real customers, you need more than just a dashboard. You need a strategy. You're worried about what happens when that one server hits 100% CPU or when a simple deployment takes your whole site down for five minutes.
+<Summary>
+- Run Coolify on its own small server and deploy apps to separate app servers you add over SSH.
+- Rolling updates only protect users when a health check reports real readiness and the app shuts down gracefully.
+- Move builds to a dedicated build server with a registry, keep production data on a managed database, and deploy from CI with a deploy-only token.
+</Summary>
 
-I've spent the last decade scaling web applications and building custom solutions at [Ansezz](/). I've seen self-hosted setups crumble under pressure because they lacked the right architecture. The good news is that Coolify is more than capable of handling high-scale workloads. You just need to know how to pull the right levers.
+You moved your apps off a messy manual VPS and into Coolify. Everything is in one place. Then traffic spikes.
 
-In this guide, I'm going to show you how to move from a basic setup to a production-grade infrastructure using advanced Coolify strategies. We're talking multi-server nodes, zero-downtime deployments, and offloading the heavy lifting so your apps stay snappy. If you're just getting started, my walkthroughs on [Coolify and Docker for SaaS hosting](/blog/coolify-docker-saas-hosting/) and running a [fully self-hosted SaaS on Coolify](/blog/coolify-self-hosted-saas/) cover the foundations this post builds on.
+Hosting your production database, three web apps and a memory-heavy build on a single $10 DigitalOcean droplet is a recipe for trouble.
 
-## Moving beyond the single-server monolith
+### The single-server trap
 
-The biggest mistake I see engineers make is keeping everything on one node. When your build process starts, it eats up CPU and RAM. Your web app starts to lag. Your database gets starved for resources.
+It's fine for a side project. With paying customers, you need a plan for what happens when that one server hits 100% CPU, or when a deploy takes the whole site down for five minutes.
 
-The solution is to decouple your "control plane" from your "workloads."
+Coolify can handle larger workloads. You need to set it up the right way.
 
-In a professional setup, you want one small server dedicated solely to running the Coolify instance itself. This is your mission control. Then, you add separate "app servers" where your actual containers live.
+### What this guide covers
 
-![Multi-server architecture bento grid showing control plane and app nodes](/blog/scaling-with-coolify/multi-server.webp)
+Multi-server nodes, rolling deployments, dedicated build servers and CI wiring. If you're just getting started, my walkthroughs on [Coolify and Docker for SaaS hosting](/blog/coolify-docker-saas-hosting/) and running a [fully self-hosted SaaS on Coolify](/blog/coolify-self-hosted-saas/) cover the foundations.
 
-To do this in Coolify, you go to the **Servers** tab and add a new server via SSH. Once it's connected, you can choose which server a specific resource should be deployed to. This gives you [horizontal scalability](/blog/horizontal-vs-vertical-scaling/): if one server is getting full, you just spin up another one, add it to Coolify, and point your next app there.
+## Beyond the single server
 
-This separation of concerns is a core pillar of what we do when building [custom web applications](/work/). It prevents a single point of failure from taking down your entire digital presence.
+The most common mistake I see is keeping everything on one node. When a build starts, it eats CPU and RAM. The web app lags and the database gets starved.
 
-## The art of the zero-downtime deploy
+### Split control plane from workloads
 
-Nothing kills user trust faster than a ["502 Bad Gateway"](/tools/http-status-codes/) every time you push a small CSS fix. By default, many self-hosted setups just kill the old container and start the new one. There's a gap. That gap is where your users get frustrated.
+Run the Coolify instance on one small server of its own. That's mission control. Then add separate app servers where your containers live.
 
-Coolify handles this beautifully with "rolling updates," but it only works if you tell it how to check the health of your app.
+In Coolify, open **Servers**, add a server over SSH, and choose which server each resource deploys to. That gives you [horizontal scalability](/blog/horizontal-vs-vertical-scaling/): when one server fills up, add another and point the next app there.
 
-If you don't configure health checks, Traefik (the reverse proxy Coolify uses) might start sending traffic to your new container before the app inside it has even finished booting up.
+It's the same separation I use when building [custom web applications](/work/), and it keeps one machine from taking everything down.
 
-![Dashboard visualization of health check monitoring across rolling deploy](/blog/scaling-with-coolify/health-checks.webp)
+<Figure
+  src="/blog/scaling-with-coolify/inline-1.webp"
+  alt="Comic panel of a robot in a control booth sending blue signals to three server robots in a row, next to a blacksmith robot at a forge and a steel vault"
+  caption="Control plane, app servers, builds and data each get their own place."
+/>
 
-Here is the workflow I use to keep deploys seamless:
+## Rolling deploys that don't drop requests
 
-1. **Create a health endpoint.** In your Laravel, Vue, or Node app, create a simple route like `/healthz`. It should return a 200 status code only when the app is ready to serve traffic.
-2. **Configure Coolify.** In your application settings, go to the **Health Check** section. Set the path to `/healthz` and the interval to something like 5 seconds.
-3. **The rollout.** When you hit deploy, Coolify starts the new container alongside the old one. Traefik only routes traffic to a container once its health check passes, so requests keep hitting the old container until the new `/healthz` reports healthy. The old container is then drained and killed.
+Nothing hurts user trust faster than a ["502 Bad Gateway"](/tools/http-status-codes/) every time you push a small CSS fix. Many self-hosted setups kill the old container and then start the new one, and users fall into the gap.
 
-This is a non-negotiable step for any SaaS or e-commerce store where every second of downtime equals lost revenue.
+### How Coolify rolls
 
-## Offloading builds to a dedicated Coolify server
+For Nixpacks, Railpack, Static, Dockerfile and Docker Image apps, Coolify starts the replacement container while the old one keeps running. It waits for the new container's health check, then stops and removes the old one. Docker Compose apps don't get this rolling sequence.
 
-If you're building a modern app with Docker, the build process can be incredibly resource-intensive. Compiling assets, installing npm packages, and building images can spike your server usage to the moon.
+Without a health check, Coolify treats a container that started as ready, even if the app inside is still booting.
 
-If you're running that build on the same server that's trying to serve your customers, they're going to feel the slowdown.
+### The workflow I use
 
-Advanced users leverage a **dedicated build server**.
+1. **Create a readiness endpoint.** In your Laravel, Vue or Node app, add a route like `/healthz` that returns 200 only when the app can serve real requests.
+2. **Configure the check.** In the app, open **Configuration > Healthcheck**, choose HTTP, set the path to `/healthz` and an interval of about 5 seconds. The check runs inside the container, so the image needs `curl` or `wget`.
+3. **Shut down gracefully.** Under **Configuration > Advanced > Operations**, set the stop grace period (30 seconds by default) to how long the app needs to finish in-flight requests.
 
-You can designate a high-CPU server in Coolify specifically for builds. When you trigger a deployment, Coolify builds the image on that server, pushes it to a container registry, and your production app server pulls the finished image down. That registry step is mandatory: a build server only works if you've wired up a registry (Docker Hub, GitHub Container Registry, or a self-hosted one) for both servers to authenticate against. Note that a server flagged as a build server can't also run deployed apps, so this is a dedicated role.
+On the default Traefik proxy, unhealthy containers are removed from routing, so traffic stays on the old container until the new one passes.
 
-Your production server never feels the build. It just pulls a fresh, ready-to-run image.
+<BeforeAfter beforeLabel="No health check" afterLabel="Real readiness check">
+  <div slot="before">The new container starts, Coolify counts it as ready and stops the old one while Laravel is still warming up. Users see errors for a few seconds.</div>
+  <div slot="after">`/healthz` fails until the app can serve requests. Coolify keeps the old container live until the new one passes, then gives it time to finish its work.</div>
+</BeforeAfter>
+
+Coolify's own docs are clear that rolling updates don't guarantee zero downtime. Both versions run side by side for a moment, so migrations, queues and sessions have to work with old and new code.
+
+<TryThis>
+Open your app's health check settings in Coolify. If the endpoint returns 200 before the database connection is up, change it to check the database and cache first, then redeploy and watch the logs.
+</TryThis>
+
+## A dedicated build server
+
+Docker builds are heavy. Compiling assets, installing npm packages and building images can push a server's usage through the roof. If that build runs on the server serving your customers, they feel it.
+
+### How it works
+
+Mark a high-CPU server as a build server in Coolify. On deploy, Coolify builds the image there, pushes it to a container registry, and the app server pulls the finished image.
+
+### What you need
+
+- **A registry:** Docker Hub, GitHub Container Registry or a self-hosted one. Run `docker login` on the build server, and on the app server too if the registry is private.
+- **A dedicated machine:** a server marked as a build server can't be a deployment destination.
+- **Matching CPU architecture:** build on the same architecture your app servers run.
+
+Your production server never feels the build. It just pulls a ready-to-run image.
+
+<PullQuote>Keep your builds away from your traffic and your data away from your compute.</PullQuote>
 
 ### What about the database?
 
-While Coolify makes it easy to click "New Database," running your production Postgres or MySQL inside a Docker container on the same server as your app is risky.
+Coolify makes "New Database" one click, but running production Postgres or MySQL in a container on the same server as your app is risky.
 
-For production workloads, I almost always recommend using an external managed database like AWS RDS or Google Cloud SQL. It handles backups, point-in-time recovery, and scaling automatically.
+For production I usually recommend a managed database like AWS RDS or Google Cloud SQL, with backups and point-in-time recovery handled for you.
 
-In Coolify, you simply provide the connection string as an environment variable. This keeps your state (the data) separate from your compute (the app) — the same [stateless app](/blog/stateless-vs-stateful-apps/) discipline that makes horizontal scaling possible. If your app server goes up in flames, your data is safe on a managed platform.
+In Coolify you pass the connection string as an environment variable. State stays separate from compute, the same [stateless app](/blog/stateless-vs-stateful-apps/) discipline that makes horizontal scaling possible.
 
-## Automation at scale with CI/CD
+## CI/CD with deploy webhooks
 
-Manual deployments are for hobbyists. For a professional workflow, you want your code to move from GitHub to production without you touching a single button in the Coolify UI.
+For a professional workflow, code should move from GitHub to production without anyone clicking in the Coolify UI.
 
-I prefer using GitHub Actions for this. While Coolify has a great GitHub App integration, using Actions gives you more control. You can run your test suite, lint your code, and only if everything passes, trigger the Coolify deployment via a webhook.
+I prefer GitHub Actions. Coolify's GitHub App integration works well, but Actions let you run tests and linting first and trigger the deploy only when everything passes.
 
-![Pop-art illustration of a CI/CD pipeline flowing from GitHub to Coolify](/blog/scaling-with-coolify/cicd-pipeline.webp)
+### Wire the webhook
 
-Here is a snippet of how I usually structure a simple deployment step in a `.github/workflows/deploy.yml` file:
+Create an API token with only the **deploy** permission under **Keys & Tokens > API Tokens**, and store it as a CI secret. Copy the app's deploy webhook from **Configuration > Webhooks**. On a self-hosted instance, API access must be turned on in **Settings > Advanced**.
 
 ```yaml
 name: deploy to production
@@ -97,23 +132,33 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
 ```
 
-It's simple, direct, and ensures that broken code never reaches your servers. It keeps your development cycle clean and your mental health intact.
+Put your test job before this step and broken code never reaches your servers.
 
-## Advanced configuration tips
+<Figure
+  src="/blog/scaling-with-coolify/inline-2.webp"
+  alt="Comic panel of a nervous blue robot holding a relay baton while a fresh runner robot crouches at the start with a yellow light on its chest and a referee robot blows a whistle"
+  caption="The old container keeps the traffic until the new one is ready."
+/>
 
-Managing a multi-server setup requires a bit of extra care. Here are a few practical takeaways to keep in your back pocket:
+## Configuration tips
 
-- **Resource limits.** Always set CPU and RAM limits in Coolify for each application. This prevents a single "leaky" container from hogging all the resources and crashing the whole server.
-- **External backups.** If you do choose to run databases inside Coolify, use the S3-compatible backup feature. I personally use Backblaze B2 or Cloudflare R2 for this. Never rely on local backups alone.
-- **Docker pruning.** Coolify is good at cleaning up, but it's worth checking your disk space regularly. Large images can eat up your SSD fast. Set up a cron job (my [cron explainer](/tools/cron-explainer/) checks the schedule) or use Coolify's built-in cleanup settings.
-- **Monitoring.** Use a tool like Better Stack or GlitchTip to monitor your endpoints. Coolify tells you if the container is running, but an external monitor tells you if a human can actually use the site.
+- **Resource limits:** set CPU and memory limits for every app so one leaky container can't take the whole server.
+- **External backups:** if you run databases inside Coolify, use S3-compatible backups. I use Backblaze B2 or Cloudflare R2. Never rely on local backups alone.
+- **Docker cleanup:** large images fill disks fast. Use Coolify's automated Docker cleanup or a cron job (my [cron explainer](/tools/cron-explainer/) checks the schedule).
+- **External monitoring:** Coolify tells you a container is running. A tool like Better Stack or GlitchTip tells you whether a human can use the site.
 
-## Scaling is a journey
+<TryThis>
+List every resource on your busiest Coolify server: apps, databases and builds. Anything that isn't serving traffic is a candidate to move to a build server or a managed service first.
+</TryThis>
 
-Scaling isn't about having the most expensive hardware. It's about having a system that is predictable and resilient. Coolify gives us the tools to act like a giant tech company without the massive overhead of a dedicated DevOps team.
+<Takeaway>
+- **Split the control plane.** Coolify on its own small server, apps on separate nodes.
+- **Make health checks honest.** Rolling updates are only as safe as your readiness endpoint and graceful shutdown.
+- **Offload builds.** A dedicated build server plus a registry keeps builds off production.
+- **Separate data from compute.** Managed databases for production state.
+- **Deploy from CI.** A deploy-only token and a webhook after your tests pass.
+</Takeaway>
 
-By splitting your servers, mastering health checks, and automating your builds, you move from "hoping it works" to "knowing it scales."
+Scaling well means a system that behaves predictably. Whether you're building a Shopify app or a Laravel SaaS, the principles are the same. If you're moving a growing app onto Coolify, [here's how I help teams set up multi-server deploys and CI](/services/), or [drop me a line](/contact/).
 
-I've helped dozens of founders and tech leads navigate these waters. Whether you're building a Shopify app or a complex Laravel SaaS, the principles are the same. Keep your compute separate from your data, and your builds separate from your traffic.
-
-Have you ever had a deployment go sideways because a build process crashed your production server? What's your current "war story" from the world of self-hosting? [Drop me a line](/contact/).
+Have you ever had a build crash your production server in the middle of the day?

@@ -1,6 +1,6 @@
 ---
 title: "Prompt engineering vs context engineering"
-description: "The shift from instruction design to data infrastructure — how context engineering uses RAG and MCP to build robust, accurate AI systems."
+description: "The shift from instruction design to data infrastructure: how context engineering uses RAG, MCP and memory to build accurate AI systems."
 publishDate: 2026-06-10
 category: ai
 tags: [ai, rag, mcp, vector-search, laravel, devops]
@@ -10,83 +10,122 @@ heroImage:
   alt: "Pop-art comic-style scene of AI context being assembled from floating data cubes"
 ---
 
-You spent three hours tweaking a system prompt to make your LLM stop hallucinating about customer orders. It worked for ten minutes. Then a user asked a question about a return policy from 2024, and the model confidently invented a 90-day cash-back guarantee that doesn't exist. You have hit the instruction ceiling. No matter how many "You are a helpful assistant" or "Think step-by-step" phrases you add, the model cannot reason its way out of a lack of data.
+Prompt engineering is about how you ask. Context engineering is about what the model can see when you ask. Past a certain point, only the second one moves accuracy.
 
-The problem is that you are treating a data problem as a linguistic one. Prompt engineering is about the "how." Context engineering is about the "what." As we move from simple chatbots to complex agentic systems, the focus is shifting away from how we talk to models and toward how we feed them.
+<Summary>
+- Prompts hit an "instruction ceiling": no phrasing fixes a model that lacks the data, and crowded context windows lose details in the middle.
+- Context engineering builds the system around the model: retrieval (RAG), tools (MCP), memory and workflow state.
+- In practice that means a context layer in your backend that assembles the right documents, history and tools before the model sees the user's input.
+</Summary>
 
-## The instruction ceiling
+You spent three hours tweaking a system prompt so your LLM would stop inventing details about customer orders. It worked for ten minutes.
 
-Prompt engineering was the first discipline of the AI era. It involves crafting precise instructions, examples, and formatting rules to steer a Large Language Model (LLM). You might spend days testing different verb phrases or adding few-shot examples to get the output exactly right. This works well for creative writing or basic text transformation.
+Then a user asked about a return policy from 2024, and the model confidently described a 90-day cash-back guarantee that doesn't exist.
 
-However, prompt engineering is fundamentally stateless and limited. You are trying to squeeze logic, data, and constraints into a finite context window. When the window gets too crowded, the model loses track of earlier instructions. This is the "lost in the middle" phenomenon. Relying solely on prompts means you are forcing the model to rely on its training data, which is static and often outdated.
+### The instruction ceiling
 
-In a production environment, especially for [Shopify development](/blog/agentic-commerce-shopify/) or custom enterprise software, static instructions are dangerous. If your model doesn't know the real-time stock levels or the specific technical specs of a new product, no amount of clever phrasing will prevent a hallucination.
+You've hit the instruction ceiling. No amount of "You are a helpful assistant" or "Think step by step" lets a model reason its way out of missing data.
 
-## The infrastructure shift: what is context engineering?
+You're treating a data problem as a language problem. As we move from simple chatbots to agentic systems, the focus shifts from how we talk to models to how we feed them.
 
-Context engineering is the programmatic management of the entire informational environment surrounding the model. It is not just about the text you send; it is about the architecture that decides what data, tools, and memories are available to the model at any given moment.
+## Where prompts stop working
 
-If prompt engineering is writing a script for an actor, context engineering is building the entire stage, providing the props, and hiring the research team that whispers facts into the actor's earpiece.
+Prompt engineering was the first discipline of the AI era. You craft instructions, examples and formatting rules to steer a Large Language Model (LLM), and you might spend days testing phrasing or adding few-shot examples.
 
-Context engineering involves several moving parts:
+That works well for creative writing and basic text transformation.
 
-- **Retrieval pipelines**: Dynamically fetching relevant data from external sources.
-- **Tool governance**: Deciding which APIs or functions the model can call.
-- **Memory management**: Storing and retrieving past interactions to maintain continuity.
-- **State orchestration**: Tracking where the user is in a specific workflow or business process.
+### Stateless and crowded
 
-By shifting from "telling" to "showing," you reduce the cognitive load on the model. Instead of asking it to "remember all our policies," you build a system that finds the one relevant policy and places it directly in front of the model.
+Prompts are stateless and limited. You squeeze logic, data and constraints into a finite context window, and when it gets crowded the model loses track of details.
 
-![Architecture diagram showing data flowing from vector DBs and APIs into a central context manager](/blog/prompt-engineering-vs-context-engineering/context-architecture.webp)
+Researchers call this ["lost in the middle"](https://arxiv.org/abs/2307.03172): models use information at the start and end of a long context better than information buried in the middle. Relying only on prompts also means relying on training data, which is static and often outdated.
+
+### Static instructions in production
+
+In production, especially in [Shopify development](/blog/agentic-commerce-shopify/) or custom enterprise software, static instructions are dangerous. If the model doesn't know real-time stock levels or the specs of a new product, clever phrasing won't prevent a made-up answer.
+
+## What is context engineering?
+
+Context engineering is the programmatic management of everything around the model. It covers the text you send, and also the architecture that decides which data, tools and memories the model can reach at any moment.
+
+If prompt engineering is writing a script for an actor, context engineering is building the stage, supplying the props and hiring the research team that feeds facts into the actor's earpiece.
+
+### The moving parts
+
+- **Retrieval pipelines:** fetch relevant data from external sources on demand.
+- **Tool governance:** decide which APIs or functions the model can call.
+- **Memory management:** store and retrieve past interactions for continuity.
+- **State orchestration:** track where the user is in a workflow or business process.
+
+Moving from "telling" to "showing" lowers the load on the model. Instead of asking it to remember every policy, you build a system that finds the one relevant policy and puts it in front of the model.
+
+<Figure
+  src="/blog/prompt-engineering-vs-context-engineering/inline-1.webp"
+  alt="Comic panel of an actor robot reading a script in a spotlight while a crew behind the curtain holds a mask and a box of files and feeds him through an ear tube"
+  caption="The prompt is the script. Context is the whole stage crew."
+/>
 
 ## RAG: the context delivery engine
 
-Retrieval-augmented generation (RAG) is the most common implementation of context engineering. It solves the "knowledge gap" by connecting your LLM to a vector store — Postgres with the [pgvector extension](/blog/picking-the-right-rag-stack/), or a dedicated database like Pinecone, Weaviate, or Qdrant.
+Retrieval-augmented generation (RAG) is the most common form of context engineering. It closes the knowledge gap by connecting your LLM to a vector store: Postgres with the [pgvector extension](/blog/picking-the-right-rag-stack/), or a dedicated database like Pinecone, Weaviate or Qdrant.
 
-When a user asks a question, the system doesn't just pass the question to the model. First, it converts the query into an embedding (a mathematical representation of meaning). It then searches a database for the most semantically similar documents. These "context snippets" are then injected into the prompt.
+When a user asks a question, the system first converts it into an embedding (a numeric representation of meaning). It searches for the most similar documents, then injects those snippets into the prompt.
 
-The difference is subtle but massive. In prompt engineering, you might say: "Answer questions based on our manual." In context engineering, you say: "Here are the three specific paragraphs from our manual that answer the user's question. Use them." This significantly reduces the chance of the model making things up. However, even RAG has pitfalls. To avoid common errors, you need to understand the nuances of [RAG mistakes in production](/blog/7-rag-mistakes-production/).
+<BeforeAfter beforeLabel="Prompt engineering" afterLabel="Context engineering">
+  <div slot="before">"Answer questions based on our manual." The model guesses which part of the manual applies, or invents one.</div>
+  <div slot="after">"Here are the three paragraphs from our manual that answer this question. Use them." The model works from the actual source.</div>
+</BeforeAfter>
 
-## MCP: the universal data plumbing
+That change cuts the chance of the model making things up. RAG has its own pitfalls, though, and it's worth knowing the common [RAG mistakes in production](/blog/7-rag-mistakes-production/).
 
-One of the most useful developments in context engineering is the **Model Context Protocol (MCP)**. Introduced by Anthropic in November 2024 and since adopted as an open standard by OpenAI and Google, MCP serves as a standardized bridge between models and the systems where data lives.
+## MCP: the shared data plumbing
 
-Imagine you are building an AI agent that needs to check GitHub issues, look up a customer in a CRM, and then write a technical summary. In a traditional setup, you would have to write custom integration code for every single data source. With MCP, you can use "context servers" that expose these data sources in a format the model understands natively.
+The **Model Context Protocol (MCP)** is one of the most useful pieces of context engineering. Anthropic introduced it in November 2024 and donated it in December 2025 to the Agentic AI Foundation, a Linux Foundation fund co-founded by Anthropic, Block and OpenAI.
 
-MCP allows the model to "pull" context as needed. It transforms the model from a passive receiver of a prompt into an active explorer of a data ecosystem. This is a core part of building a modern [API gateway for AI stacks](/blog/api-gateway-ai-stack/). It turns context from a static block of text into a dynamic, queryable interface.
+Say you're building an agent that checks GitHub issues, looks up a customer in a CRM and writes a technical summary. Traditionally you'd write custom integration code for each source. With MCP, servers expose those sources in a standard format any MCP client can discover and call.
 
-| Feature          | Prompt Engineering               | Context Engineering             |
+### Pull, don't push
+
+MCP lets the model pull context when it needs it, so it explores your data instead of passively receiving one big prompt. It turns context from a static block of text into a queryable interface, and it's a core part of a modern [API gateway for AI stacks](/blog/api-gateway-ai-stack/).
+
+| Feature          | Prompt engineering               | Context engineering             |
 | :--------------- | :------------------------------- | :------------------------------ |
-| **Focus**        | Phrasing and Tone                | Data and Tools                  |
-| **Tooling**      | Text Editors, Prompt Playgrounds | Vector DBs, MCP, RAG Pipelines  |
-| **State**        | Mostly Stateless                 | Stateful and Persistent         |
-| **Scalability**  | Hard to maintain as docs grow    | Built for millions of documents |
-| **Primary Goal** | Better behavior                  | Better accuracy                 |
+| **Focus**        | Phrasing and tone                | Data and tools                  |
+| **Tooling**      | Text editors, prompt playgrounds | Vector DBs, MCP, RAG pipelines  |
+| **State**        | Mostly stateless                 | Stateful and persistent         |
+| **Scalability**  | Hard to maintain as docs grow    | Built for large document sets   |
+| **Primary goal** | Better behavior                  | Better accuracy                 |
 
-## Memory and state management
+<PullQuote>A model can only be as right as the context you hand it.</PullQuote>
 
-A major part of context engineering that prompt engineering ignores is the concept of long-term memory. Prompting usually focuses on the "now." Context engineering looks at the "always."
+<TryThis>
+Take your longest system prompt and highlight every fact in it (policies, prices, product details). Move each one into a retrieval source or a tool, and keep only behavior rules in the prompt.
+</TryThis>
 
-In a Laravel-based application, you might use a database or a Redis store to maintain a "memory" of user preferences or past interactions. When the user returns, the context engineering layer retrieves these fragments and summarizes them for the model.
+## Memory and state
 
-This is more than just passing the last five messages. It involves:
+Prompting focuses on the "now." Context engineering also handles the "always": long-term memory.
 
-1. **Summarization**: Condensing long histories into high-density tokens. My [token counter](/tools/token-counter/) shows how much a summary saves.
-2. **Metadata filtering**: Only pulling memories relevant to the current topic.
-3. **Hierarchy**: Deciding which memories are "core" and which are "ephemeral."
+In a Laravel application, you might keep user preferences or past interactions in a database or Redis. When the user returns, the context layer retrieves those fragments and summarizes them for the model.
 
-![Dashboard visualizing a model's context window split into different data blocks](/blog/prompt-engineering-vs-context-engineering/context-window-dashboard.webp)
+### More than the last five messages
 
-## Engineering the future: agents vs chatbots
+1. **Summarization:** condense long histories into short summaries. My [token counter](/tools/token-counter/) shows how much a summary saves.
+2. **Metadata filtering:** pull only memories relevant to the current topic.
+3. **Hierarchy:** decide which memories are "core" and which are "ephemeral."
 
-The shift to context engineering is what separates a basic chatbot from a true AI agent. A chatbot waits for a prompt and responds. An agent lives within a context. It has access to tools (via MCP), knowledge (via RAG), and history (via memory stores).
+## Agents vs chatbots
 
-When you build with a context-first mindset, your code looks different. You spend less time in the OpenAI playground and more time building robust data connectors. You focus on the **purity of your data** rather than the **cleverness of your adjectives**.
+Context is what separates a basic chatbot from an AI agent. A chatbot waits for a prompt and responds. An agent works inside a context: tools (via MCP), knowledge (via RAG) and history (via memory stores).
 
-For developers working with stacks like Laravel and Vue.js, context engineering means building a "context layer" in your middleware. This layer is responsible for gathering all the necessary "props" for the AI before it ever sees the user's input.
+With a context-first mindset, you spend less time in a prompt playground and more time building reliable data connectors. You care about the **quality of your data** more than the **cleverness of your adjectives**.
+
+### A context layer in Laravel
+
+For Laravel and Vue.js stacks, this means a context layer in your backend that gathers everything the AI needs before it sees the user's input.
 
 ```php
-// Example of a simple context orchestrator in Laravel
+// A simple context orchestrator in Laravel
 class AIContextManager
 {
     public function buildContext(User $user, string $query): array
@@ -106,16 +145,24 @@ class AIContextManager
 }
 ```
 
-![Code snippet card showing a PHP class for managing AI context](/blog/prompt-engineering-vs-context-engineering/context-manager-code.webp)
+<Figure
+  src="/blog/prompt-engineering-vs-context-engineering/inline-2.webp"
+  alt="Comic panel of a robot packing a tray with papers, a notebook, a red toolbox and a question card before it slides through a hatch to a glowing AI head"
+  caption="Assemble the context before the model sees the question."
+/>
 
-## Takeaways
+<TryThis>
+Log the full context your app sends for ten real requests. For each one, mark which pieces the answer actually used. Anything that is never used is a candidate to drop or retrieve on demand.
+</TryThis>
 
-Context engineering is the professional evolution of prompt engineering. While knowing how to talk to a model remains useful, knowing how to build the infrastructure that informs the model is what creates value.
+<Takeaway>
+- **Prompts are instructions; context is knowledge.** Stop trying to teach the model your whole business inside a system prompt.
+- **Invest in RAG early.** Postgres with pgvector gives you a scalable way to handle growing documentation.
+- **Adopt MCP for tool calling.** It standardizes how your AI reaches your APIs and databases.
+- **Manage state outside the prompt.** Let your backend (Laravel, Node or similar) handle memory and session state.
+- **Focus on data quality.** A perfect RAG system with bad data still gives bad answers. Context engineering is data engineering at heart.
+</Takeaway>
 
-1. **Prompts are instructions; context is knowledge.** Stop trying to teach the model your entire business logic inside a system prompt.
-2. **Invest in RAG early.** A vector store like Postgres with pgvector gives you a scalable way to handle growing documentation and data.
-3. **Adopt MCP for tool-calling.** Using the Model Context Protocol standardizes how your AI interacts with your existing APIs and databases.
-4. **Manage state outside the prompt.** Use your application backend (Laravel, Node, etc.) to handle memory and session state rather than relying on the LLM's limited window.
-5. **Focus on data quality.** A perfect RAG system with bad data will still produce bad results. Context engineering is, at its heart, a data engineering discipline.
+If you're building that context layer for production, [here's how I help teams design RAG, MCP and memory for their AI features](/services/).
 
-How are you balancing complex system prompts against external retrieval pipelines in your current AI implementation? If you're building that context layer for production, [here's how I help teams ship it](/services/).
+How are you balancing long system prompts against external retrieval in your current AI work?

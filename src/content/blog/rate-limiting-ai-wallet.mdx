@@ -7,62 +7,92 @@ tags: [laravel, security, multi-tenancy, redis, api-design, llm, rag]
 featured: false
 heroImage:
   url: "/blog/rate-limiting-ai-wallet/hero.webp"
-  alt: "Rate limiting an AI stack — protecting the wallet, not the CPU"
+  alt: "Rate limiting an AI stack, protecting the wallet, not the CPU"
 ---
 
-One runaway agent loop is all it takes to wake up to a $5,000 OpenAI bill.
+One runaway agent loop is all it takes to wake up to a $5,000 LLM bill. In AI apps, rate limits protect your margins as much as your servers.
 
-If you're building AI-powered SaaS or RAG systems, your biggest threat isn't a server crash. It's a "denial of wallet" attack. A buggy client, a malicious user, or even your own experimental agent can spam your API endpoints and burn through your tokens (and credits) in minutes.
+<Summary>
+- Requests per second hide cost: one request can be 50 tokens, the next 128,000. Limit tokens, not pings.
+- Use three layers of token buckets in Redis: a global provider cap, a per-tenant budget tied to the plan, and a per-user share inside each tenant.
+- Degrade gracefully when a budget runs out, and keep your own caps even with provider hard limits, because a provider cap stops every tenant at once.
+</Summary>
 
-Traditional web apps care about requests per second to keep the CPU from melting. In the world of LLMs, we care about tokens per minute to keep the bank account from draining. For a quick feel of how text turns into tokens, try my [token counter](/tools/token-counter/). Standard rate limiting isn't enough anymore. You need an architecture that understands cost, context, and the "noisy neighbor" problem before a single prompt even hits your vector DB.
+If you're building AI-powered SaaS or RAG systems, the main threat is often a "denial of wallet" attack rather than a server crash.
 
-## Why requests per second (QPS) is a lie for AI
+A buggy client, a malicious user or your own experimental agent can spam your endpoints and burn through tokens and credits in minutes.
 
-In a standard Laravel or Node app, a request is a request. Sure, some take longer than others, but they generally consume similar resources. In AI engineering, one request might be a 50-token greeting, while another is a 128,000-token context dump for a RAG pipeline.
+### Tokens, not requests
 
-If you only limit requests per second, a single user can stay within their "10 requests per minute" limit while still costing you 100× more than everyone else combined. This is where the [noisy neighbor problem](/blog/laravel-multi-tenancy/) becomes a financial crisis.
+Traditional web apps watch requests per second to keep the CPU from melting. With LLMs, you watch tokens per minute to keep the bank account from draining. For a quick feel of how text turns into tokens, try my [token counter](/tools/token-counter/).
 
-You aren't just protecting your infrastructure. You're protecting your margins. To do this effectively, we have to move from counting "pings" to counting "value."
+You need limits that understand cost, context and the "noisy neighbor" problem before a single prompt reaches your vector DB.
 
-![Token usage dashboard showing skewed cost per user](/blog/rate-limiting-ai-wallet/dashboard.webp)
+## Why requests per second lie
 
-## The anatomy of a denial of wallet (DoW) attack
+In a standard Laravel or Node app, a request is a request. Some take longer, but they use roughly similar resources.
 
-A denial of wallet attack is the AI equivalent of a DDoS. The goal isn't necessarily to take your site down. It's to exhaust your API quotas or financial budget until your service stops functioning — or you're forced to pay a massive bill.
+In AI engineering, one request might be a 50-token greeting and the next a 128,000-token context dump for a RAG pipeline.
 
-I've seen this happen in three ways:
+### The noisy neighbor bill
 
-1. **The agentic loop** — an autonomous agent gets stuck in a logic loop, calling your tool-use functions repeatedly without a "max steps" ceiling.
-2. **The scrapers** — malicious bots trying to exfiltrate your entire knowledge base by querying every possible permutation of your RAG system.
-3. **The dev mistake** — a frontend developer accidentally puts an LLM-powered "autocomplete" on a search bar that triggers on every keystroke.
+If you only limit requests, a user can stay inside "10 requests per minute" and still cost you 100x more than an average user. That's where the [noisy neighbor problem](/blog/laravel-multi-tenancy/) turns into a financial one.
 
-Without token-aware rate limiting, your provider (like OpenAI or Anthropic) will eventually hit you with a `429` error. But by that time, the damage to your wallet is already done.
+To protect margins, move from counting pings to counting cost.
 
-## Solving the noisy neighbor with hierarchical rate limiting
+## Anatomy of a denial of wallet attack
 
-To solve this, I implement a three-layer rate limiting strategy at the [API gateway](/blog/api-gateway-ai-stack/) level. This ensures that even if one tenant goes rogue, the rest of the platform stays healthy.
+A denial of wallet (DoW) attack is the AI version of a DDoS. The goal is to exhaust your quotas or budget until the service stops, or until you pay a huge bill.
+
+### Three ways it happens
+
+1. **The agent loop:** an autonomous agent gets stuck and calls your tools over and over with no "max steps" ceiling.
+2. **The scrapers:** bots try to pull your whole knowledge base by querying every permutation of your RAG system.
+3. **The dev mistake:** someone wires an LLM-powered autocomplete to a search bar that fires on every keystroke.
+
+Without token-aware limits, the provider eventually answers with `429` rate-limit errors. By then the money is already spent.
+
+<Figure
+  src="/blog/rate-limiting-ai-wallet/inline-1.webp"
+  alt="Comic panel of a dizzy robot running in a hamster wheel that shakes coins out of an attached wallet while a robot in star pajamas stares at a long bill"
+  caption="One runaway loop can drain a budget overnight."
+/>
+
+## Hierarchical rate limiting
+
+I use three layers of limits at the [API gateway](/blog/api-gateway-ai-stack/). Even if one tenant goes rogue, the rest of the platform stays healthy.
 
 ### 1. The global provider layer
 
-This is your final line of defense. If your OpenAI quota is 500,000 tokens per minute (TPM), set your internal global limit to 450,000. This leaves a safety buffer so you degrade gracefully on your own terms instead of eating a wall of provider `429`s — which means failed user requests and a Retry-After you don't control.
+This is the last line of defense. If your provider quota is 500,000 tokens per minute (TPM), set your internal global limit to 450,000.
+
+The buffer lets you degrade on your own terms instead of hitting a wall of provider `429`s, which means failed user requests and retry timing you don't control.
 
 ### 2. The tenant layer
 
-Every customer gets their own bucket. I usually tie this to their subscription tier. A "Pro" user might get 50,000 TPM, while a "Free" user is capped at 2,000. This ensures no single company can eat up your entire global quota.
+Every customer gets its own bucket, usually tied to the subscription tier. A "Pro" tenant might get 50,000 TPM while a "Free" one is capped at 2,000. No single company can eat your whole global quota.
 
-### 3. The user/session layer
+### 3. The user or session layer
 
-Inside a single tenant, you still need limits. You don't want one single employee at a customer's company hogging all the tokens allocated to that entire organization. I set these at about 20% of the total tenant capacity.
+Inside a tenant you still need limits, so one employee can't use the whole organization's allocation. I set these at about 20% of the tenant's capacity.
 
-![Hierarchical rate-limit architecture — global, tenant, user buckets](/blog/rate-limiting-ai-wallet/architecture.webp)
+| Layer      | Protects against                    | Example limit             |
+| :--------- | :---------------------------------- | :------------------------ |
+| **Global** | Hitting the provider's own limits   | 90% of provider TPM       |
+| **Tenant** | One customer draining the platform  | Pro 50,000 / Free 2,000 TPM |
+| **User**   | One person draining their company   | About 20% of tenant budget |
 
-## Implementation: the token bucket algorithm
+<PullQuote>Count what a request costs, not how many requests arrive.</PullQuote>
 
-For most of my builds, I use a **token bucket** algorithm backed by Redis. It refills tokens at a steady rate and lets a request through only if a token is available — which absorbs short bursts while capping the sustained rate. (For the difference between token bucket and leaky bucket, see [rate limiting vs throttling](/blog/rate-limiting-vs-throttling/).)
+## The token bucket algorithm
 
-Here is the logic: each user has a "bucket" of tokens. Every time they send a prompt, we estimate the total cost (input tokens + expected `max_tokens`). If the bucket has enough, they proceed and the tokens are deducted. The bucket refills at a constant rate over time.
+For most builds I use a **token bucket** backed by Redis. It refills at a steady rate and lets a request through only if enough tokens are available, which absorbs short bursts while capping the sustained rate. For how it differs from a leaky bucket, see [rate limiting vs throttling](/blog/rate-limiting-vs-throttling/).
 
-If you're building a SaaS on the LEMP stack, you can implement this efficiently in Laravel using middleware and a fast in-memory store like Redis, where atomic increment operations make per-tenant counters cheap and race-free.
+Each tenant or user has a bucket. For every prompt, you estimate the total cost (input tokens plus the requested `max_tokens`). If the bucket has enough, the request proceeds and the tokens are deducted.
+
+### In Laravel middleware
+
+On a Laravel stack, you can do this in middleware with Redis, where atomic operations keep per-tenant counters cheap and race-free.
 
 ```php
 // A simplified token-bucket check in Laravel middleware
@@ -79,40 +109,75 @@ public function handle($request, Closure $next)
 }
 ```
 
-![Laravel middleware token-bucket snippet](/blog/rate-limiting-ai-wallet/code.webp)
+<TryThis>
+Pull last week's LLM usage and group it by tenant and by user. If the top 1% of users account for more than a third of your tokens, add the tenant and user layers before your next launch.
+</TryThis>
 
-## Token-budget routing and adaptive throttling
+## Adaptive throttling
 
-What happens when a user hits their limit? Most devs just throw a `429` error. But as a senior engineer, I prefer a more graceful degradation. We call this **adaptive throttling**.
+What happens when a user hits the limit? The default is a `429`. I prefer graceful degradation, which I call **adaptive throttling**.
 
-Instead of a hard "no," you can:
+### Softer than a hard no
 
-- **Degrade the model** — switch the request from GPT-4o to a cheaper, faster model like GPT-4o-mini.
-- **Truncate the context** — if the user is over budget, strip out some of the retrieved RAG documents to lower the input token count.
-- **Queue the request** — for non-interactive tasks (like background summarization), move the request to a message queue and process it when the token bucket refills.
+- **Degrade the model:** route the request to a smaller, cheaper model in the same family.
+- **Trim the context:** drop some of the retrieved RAG documents to cut input tokens.
+- **Queue the request:** for non-interactive work like background summarization, push it to a message queue and process it when the bucket refills.
 
-This keeps the user experience intact while protecting your margins. It's about being smart, not just being a gatekeeper.
+The user experience stays intact while your margins stay protected.
 
-## The RAG context: limiting the "hidden" calls
+<BeforeAfter beforeLabel="Hard stop" afterLabel="Adaptive throttling">
+  <div slot="before">The tenant hits the budget and every request returns `429` until the bucket refills. Users see errors in the middle of their work.</div>
+  <div slot="after">Interactive requests switch to a cheaper model with less context, and background jobs wait in a queue. Users get slower or shorter answers, not failures.</div>
+</BeforeAfter>
 
-In a RAG (retrieval-augmented generation) system, one user query often triggers multiple backend actions:
+## Limiting the hidden RAG calls
+
+In a RAG system, one user query often triggers several backend actions:
 
 1. One embedding call for the query.
-2. One search query to the vector database.
-3. One (or more) LLM calls for the final answer.
+2. One search against the vector database.
+3. One or more LLM calls for the final answer.
 
-If you only rate limit the final LLM call, your vector database might still get hammered by search queries. You need to treat the entire "RAG flow" as a single unit of work with its own combined budget. There are plenty of [common RAG production mistakes](/blog/7-rag-mistakes-production/) to trip over, but rate limiting the whole flow rather than just the LLM call is one of the most overlooked.
+If you only limit the final LLM call, search queries can still hammer your vector database. Treat the whole RAG flow as one unit of work with its own combined budget.
 
-## Practical steps to protect your system today
+There are plenty of [common RAG production mistakes](/blog/7-rag-mistakes-production/), and limiting only the LLM call is one of the most overlooked.
 
-If you're launching an AI feature this week, do these three things:
+<Figure
+  src="/blog/rate-limiting-ai-wallet/inline-2.webp"
+  alt="Comic panel of three stacked buckets pouring coins into the cups of a row of small robots while a robot at a valve and pressure gauge holds an overflowing cup"
+  caption="Global, tenant and user budgets, each with its own limit."
+/>
 
-1. **Set a budget threshold — but don't trust it as a hard cap** — OpenAI's "monthly budget" is now notification-only: when you cross it you get an email and a dashboard alert, but your API keys keep working and the bill keeps climbing. Anthropic similarly relies on user/org spend limits and alerts rather than a default hard ceiling. Treat these as smoke detectors, not circuit breakers. The real cap — daily or monthly — has to be enforced by you, at the application layer.
-2. **Enforce `max_tokens`** — never let a user request an uncapped response. Always set a sane default for `max_tokens` in every API call.
-3. **Implement per-request timeout** — if an LLM call takes longer than 30 seconds, kill it. Slow calls are often the symptom of a system that is about to spiral out of control.
+## Steps to take this week
 
-Rate limiting isn't just a "security" feature. In the AI era, it's a core part of your business model. You can't scale a product that allows a single user to run up a thousand-dollar bill in their first hour.
+### 1. Set provider spend controls, then cap in your app
 
-Build for fairness. Build for cost. Build for the "noisy neighbor."
+Both major providers now offer hard spend limits. OpenAI's organization and project hard limits return a `429` (`organization_spend_limit_exceeded` or `project_spend_limit_exceeded`) once tracked spend reaches the amount. Enforcement isn't instantaneous, so spend can slightly overshoot, and plain spend alerts only notify.
 
-Have you ever seen a "denial of wallet" happen in the wild, or are you still running on a wing and a prayer with global provider limits? Drop a note via [contact](/contact/) — I love this conversation. 🤘
+On Anthropic, a spend limit you set in the Console makes requests fail with a `400` until you raise it or the period resets.
+
+Turn them on as a backstop. A provider cap stops every tenant at once, so the per-tenant caps still belong in your app.
+
+### 2. Enforce `max_tokens`
+
+Never allow an uncapped response. Set a sane default for `max_tokens` on every API call.
+
+### 3. Set a per-request timeout
+
+If an LLM call runs longer than 30 seconds, kill it. Slow calls are often the first sign of a system about to spiral.
+
+<TryThis>
+Open your provider console today and set a hard spend limit at about twice your normal monthly spend, plus alerts at 50% and 80%. Then write down what your app should do when that limit returns errors.
+</TryThis>
+
+<Takeaway>
+- **Limit tokens, not requests.** Request counts hide the 100x cost spread between prompts.
+- **Layer your buckets.** Global, tenant and user limits keep one bad actor from hurting everyone.
+- **Degrade before you deny.** Cheaper models, trimmed context and queues beat a wall of `429`s.
+- **Budget the whole RAG flow.** Embeddings and vector searches cost money too.
+- **Use provider hard limits as a backstop.** Your own caps do the fine-grained work.
+</Takeaway>
+
+Rate limiting is part of your business model in the AI era. You can't scale a product that lets one user run up a thousand-dollar bill in the first hour. If you're adding AI to a multi-tenant product, [here's how I help teams build token budgets and gateway limits](/services/), or [drop me a note](/contact/).
+
+Have you seen a "denial of wallet" happen in the wild, or are you still relying on provider limits alone?

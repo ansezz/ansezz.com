@@ -10,117 +10,164 @@ heroImage:
   alt: "Redis-backed semantic cache sitting in front of a RAG pipeline"
 ---
 
-You finally shipped your RAG pipeline. It works. The retrieval is accurate. The LLM is snappy. But then you look at your cloud bill and your P99 latency. Every single query — even "what are your shipping times?" asked for the tenth time — triggers a full chain of embedding, vector search, and an expensive LLM call.
+The cheapest LLM call is the one you never make. A two-tier Redis cache answers repeat questions in milliseconds and keeps them off your API bill.
 
-At scale, this is a disaster. You are essentially paying for the same computation over and over again. Your users are waiting two seconds for answers that should take twenty milliseconds. Your "denial of wallet" risk is through the roof.
+<Summary>
+- Put an exact-match cache first (normalized, hashed query keys) and a semantic cache second (RedisVL vector lookup with a strict distance threshold).
+- Guard against the semantic trap: version your context, partition by tenant and invalidate on data changes.
+- Measure hit rate and semantic precision, and review the borderline hits every week before you loosen the threshold.
+</Summary>
 
-The solution isn't a bigger model or a faster vector DB. It's a smarter cache. I'm talking about semantic caching with Redis. It collapses a multi-second chain into a single-digit-millisecond lookup and, at the cache hit rates a busy FAQ bot reaches, can cut your LLM API spend by roughly half.
+You shipped your RAG pipeline. Retrieval is accurate and the LLM is quick. Then you look at your cloud bill and your P99 latency.
 
-Here is how I build these systems to handle production traffic.
+Every query, even "what are your shipping times?" for the tenth time, runs the full chain: embedding, vector search and an expensive LLM call.
 
-## The two-tier cache architecture
+### Paying twice for the same answer
 
-Standard caching relies on exact matches. If a user asks "How do I reset my password?" and another asks "how do i reset my password", they might hit the same key if you normalize the string. But if the second user asks "Can you help me change my password?", a traditional cache fails.
+At scale you pay for the same computation over and over. Users wait two seconds for answers that could take twenty milliseconds, and your "denial of wallet" risk climbs.
 
-In a modern RAG stack, I use a two-tier approach.
+The fix is a smarter cache. Semantic caching with Redis turns a multi-second chain into a single-digit-millisecond lookup. At the hit rates a busy FAQ bot reaches, it can cut LLM API spend by roughly half.
 
-1. **Exact cache** — a simple key-value store in Redis. I normalize the query (lowercase, trim, strip punctuation) and hash it (my [SHA hash generator](/tools/hash-generator/) shows what those keys look like). It's your first line of defense. It costs almost nothing and has zero false positives.
-2. **Semantic cache** — if the exact cache misses, I embed the query and look for "near enough" matches in a Redis vector index. If I find a previous question close enough (roughly 0.9+ cosine similarity, i.e. a cosine distance of 0.1 or less), I serve that cached response instead of hitting the LLM.
+## The two-tier cache
 
-This architecture ensures that you never do the heavy lifting twice for the same intent.
+Standard caching relies on exact matches. "How do I reset my password?" and "how do i reset my password" can share a key if you normalize the string. "Can you help me change my password?" misses a traditional cache.
 
-![Two-tier cache architecture — exact match, semantic match, LLM fallback](/blog/redis-semantic-caching-rag/architecture.webp)
+### Tier 1: exact cache
 
-## Why Redis is the king of semantic caching
+A plain key-value entry in Redis. I normalize the query (lowercase, trim, strip punctuation) and hash it. My [SHA hash generator](/tools/hash-generator/) shows what those keys look like.
 
-Most developers think of Redis as just a key-value store. But with the [Redis Vector Library (RedisVL)](https://redis.io/blog/how-to-cache-semantic-search/), it becomes a high-performance vector database.
+It's the first line of defense: almost free, with zero false positives.
 
-Why use Redis for this instead of your main vector DB like Pinecone or Weaviate?
+### Tier 2: semantic cache
 
-Latency.
+If the exact cache misses, I embed the query and look for a close match in a Redis vector index. If a previous question is close enough (a cosine distance of 0.1 or less, about 0.9 similarity), I serve the cached answer instead of calling the LLM.
 
-Your main vector DB is likely optimized for searching through millions of document chunks. Your semantic cache is much smaller — it only stores recent queries and answers. By co-locating this cache in Redis, which likely already sits in your application tier, you reduce network hops.
+You never do the heavy lifting twice for the same intent.
 
-I typically see vector lookups in Redis finish in under 5ms. Compare that to an embedding API call that takes 100ms and an LLM generation that takes 1500ms. The math is simple.
+<Figure
+  src="/blog/redis-semantic-caching-rag/inline-1.webp"
+  alt="Comic panel of a winking robot in a red cape at a counter handing a card with a checkmark to a dark robot while a big steaming machine sleeps behind them"
+  caption="A repeat question gets a cached answer and the LLM stays idle."
+/>
+
+## Why Redis for semantic caching
+
+Most developers think of Redis as a key-value store. With the [Redis Vector Library (RedisVL)](https://redis.io/blog/how-to-cache-semantic-search/), it also works as a fast vector index.
+
+Why not use your main vector DB, like Pinecone or Weaviate? Latency.
+
+### Small index, close to the app
+
+Your main vector DB is tuned to search millions of document chunks. The semantic cache is much smaller: recent queries and their answers. Redis usually already sits next to your application, so you skip network hops.
+
+I typically see Redis vector lookups finish in under 5 ms. An embedding API call takes around 100 ms and an LLM generation around 1,500 ms.
+
+| Path                      | Typical latency | LLM cost |
+| :------------------------ | :-------------- | :------- |
+| **Exact cache hit**       | A few ms        | None     |
+| **Semantic cache hit**    | Embedding plus under 5 ms lookup | None |
+| **Full RAG pipeline**     | 1.5 to 2+ seconds | Full call |
+
+<PullQuote>Every cache hit is an LLM call you don't wait for and don't pay for.</PullQuote>
 
 ## Implementing the semantic layer
 
-The trick to a good semantic cache is the similarity threshold. Too low, and you give users wrong answers (the "semantic trap"). Too high, and you never get a cache hit.
+The key setting is the similarity threshold. Too loose and you give users wrong answers (the "semantic trap"). Too strict and you never get a hit.
 
-I usually start with a distance threshold of 0.1 for cosine distance, which translates to roughly 90 percent similarity. You can implement this quickly using the RedisVL extensions.
+I start with a distance threshold of 0.1. RedisVL measures Redis cosine distance on a 0 to 2 scale, where lower is stricter, so 0.1 is roughly 90% similarity.
 
 ```python
 from redisvl.extensions.cache.llm import SemanticCache
 
-# Initialize the cache with a conservative threshold
+# Initialize the cache with a conservative threshold and a 4-hour TTL
 llm_cache = SemanticCache(
     name="production_rag_cache",
     redis_url="redis://localhost:6379",
     distance_threshold=0.1,
+    ttl=14400,
 )
 
-# Check for a hit
-query = "how do i update my billing info?"
-hit = llm_cache.check(prompt=query)
+def answer(query: str) -> str:
+    hit = llm_cache.check(prompt=query)
+    if hit:
+        return hit[0]["response"]
 
-if hit:
-    return hit[0]["response"]
-
-# If miss, run full RAG and then store
-# response = run_rag_pipeline(query)
-# llm_cache.store(prompt=query, response=response)
+    response = run_rag_pipeline(query)
+    llm_cache.store(prompt=query, response=response)
+    return response
 ```
 
-This simple wrapper handles the embedding of the incoming query, the vector search in Redis, and the logic for returning the most relevant cached response.
+This wrapper embeds the incoming query, runs the vector search in Redis and returns the closest cached response when one is within the threshold.
 
-![Python semantic-cache snippet on a developer workstation](/blog/redis-semantic-caching-rag/code.webp)
+<TryThis>
+Export a week of user questions and count exact duplicates after normalizing them. That number is your exact-cache hit rate before you write any semantic code.
+</TryThis>
 
-## Avoid the semantic trap: context and versioning
+## Avoid the semantic trap
 
-Semantic caching is powerful but dangerous if you aren't careful. If your underlying data changes, your cache might still be serving old, incorrect information.
+Semantic caching is useful but risky if you aren't careful. When your underlying data changes, the cache can keep serving old, wrong answers.
 
-I always include a `context_version` in my cache keys or metadata. If I re-index my product catalog or update my documentation, I bump the version. The cache immediately starts missing for old entries, forcing a refresh with the new data.
+### Version your context
 
-Another trap is tenant isolation. If User A asks "what is my balance?", you absolutely cannot serve that cached response to User B. I solve this by partitioning the cache:
+I include a `context_version` in cache keys or metadata. When I re-index the product catalog or update the docs, I bump the version. Old entries stop matching and the next request rebuilds them with fresh data.
 
-- **Use namespaces** — `cache:tenant_id:query_hash`
-- **Include metadata** — add `tenant_id` to the vector index filters.
+### Isolate tenants
 
-This ensures that semantic matches only happen within the correct security boundary. For more on building secure, multi-tenant systems, check out my thoughts on [Laravel multi-tenancy](/blog/laravel-multi-tenancy/) which shares similar isolation principles.
+If User A asks "what is my balance?", you can't serve that answer to User B. I partition the cache:
 
-## Managing TTL and staleness
+- **Namespaces:** `cache:tenant_id:query_hash`
+- **Metadata filters:** add `tenant_id` as a filterable field on the vector index.
 
-In a standard cache, you just set an expiry of 3600 seconds and forget it. With a semantic cache, I prefer a tiered TTL strategy.
+Semantic matches then only happen inside the right security boundary. My post on [Laravel multi-tenancy](/blog/laravel-multi-tenancy/) uses the same isolation principles.
 
-- **Exact matches** — 1 hour TTL. If the user asks the exact same thing, they probably want the exact same answer.
-- **Semantic matches** — 4 hour TTL. These are more expensive to generate, so we want to keep them longer, but we also include a "last validated" timestamp.
-- **Proactive invalidation** — if my Shopify store updates a product price, I trigger a Redis worker to purge all cache entries related to that product ID.
+<BeforeAfter beforeLabel="Shared cache" afterLabel="Partitioned cache">
+  <div slot="before">"What is my balance?" from one tenant matches the cached answer from another tenant. Close in meaning, wrong customer.</div>
+  <div slot="after">Every lookup filters on `tenant_id` and the current `context_version`, so a hit can only come from the same tenant and the same data.</div>
+</BeforeAfter>
 
-This hybrid approach keeps the system responsive without serving stale data. I've written about similar [event-driven patterns here](/blog/event-driven-pubsub/) if you want to dive deeper into how to handle these updates at scale.
+## TTL and staleness
 
-## Measuring success: precision and recall
+In a standard cache you set a 3,600-second expiry and forget it. With a semantic cache I use tiers:
 
-Don't just turn on the cache and walk away. You need to monitor two specific metrics:
+- **Exact matches:** 1-hour TTL. Same question, same answer.
+- **Semantic matches:** 4-hour TTL, with a "last validated" timestamp. These cost more to produce, so I keep them longer.
+- **Proactive invalidation:** when a Shopify product price changes, a Redis worker purges every entry tied to that product ID.
 
-1. **Cache hit rate** — what percentage of queries are being handled by Redis? I aim for 30–50 percent for general FAQ-style bots.
-2. **Semantic precision** — are the cached answers actually correct?
+### Watch the sliding TTL
 
-I log every semantic hit along with its similarity score. Once a week, I sample hits with scores between 0.85 and 0.92 and manually review them. If I see too many "near misses" that are actually different questions, I tighten the threshold.
+RedisVL refreshes the TTL on an entry every time `check()` matches it. A popular answer can live forever on its own, which is why versioning and proactive invalidation matter more than the TTL.
 
-![Cache analytics dashboard — hit rate, latency, LLM cost, precision](/blog/redis-semantic-caching-rag/dashboard.webp)
+I've written about similar [event-driven patterns](/blog/event-driven-pubsub/) for handling these updates at scale.
 
-## Final takeaways for senior engineers
+<Figure
+  src="/blog/redis-semantic-caching-rag/inline-2.webp"
+  alt="Comic panel of three colored drawer cabinets with padlocks where one robot files a card in its own section while a nosy purple robot is stopped by a lock"
+  caption="Cached answers stay inside each tenant's boundary."
+/>
 
-Implementing Redis as a semantic layer isn't just about speed. It's about making your AI systems sustainable. If you are serious about moving from a prototype to a production-ready SaaS, caching is not optional.
+## Measuring success
 
-Here is your checklist for next week:
+Don't turn on the cache and walk away. Track two numbers:
 
-- Install `redisvl` and set up a basic vector index in your dev environment.
-- Implement a two-tier lookup (exact then semantic).
-- Set your distance threshold conservatively (start at 0.05 or 0.1).
-- Add a `tenant_id` or `context_version` to your metadata to avoid cross-talk.
-- Monitor your hit rate and watch your API bill drop.
+1. **Cache hit rate:** the share of queries Redis answers. I aim for 30 to 50% on general FAQ-style bots.
+2. **Semantic precision:** whether the cached answers are actually correct.
 
-For more technical deep dives into modern architecture, look at [7 RAG mistakes in production](/blog/7-rag-mistakes-production/) to see what else might be slowing you down, or browse the rest of the [architecture archive](/blog/category/architecture/).
+### Review the borderline hits
 
-What is the one query in your system that keeps hitting your LLM unnecessarily? Drop a note via [contact](/contact/) — let's figure out if a semantic cache would have caught it. 🤘
+I log every semantic hit with its distance. Once a week I sample the hits closest to the threshold (distance between 0.07 and 0.1) and review them by hand. If too many are different questions that only look alike, I tighten the threshold.
+
+<TryThis>
+Add the distance score to your semantic hit logs today. Next week, read 20 hits from the band just inside your threshold and mark each one right or wrong.
+</TryThis>
+
+<Takeaway>
+- **Install `redisvl`** and set up a basic vector index in your dev environment.
+- **Look up in two tiers:** exact first, then semantic.
+- **Start strict:** a distance threshold of 0.05 to 0.1.
+- **Partition and version:** add `tenant_id` and `context_version` to avoid cross-talk and stale answers.
+- **Measure:** watch hit rate, precision and your API bill.
+</Takeaway>
+
+For more on production RAG, see [7 RAG mistakes in production](/blog/7-rag-mistakes-production/) or browse the [architecture archive](/blog/category/architecture/). If you want a cache like this in front of your own pipeline, [here's how I help teams cut RAG latency and LLM spend](/services/), or [drop me a note](/contact/).
+
+Which query in your system keeps hitting the LLM when it shouldn't?
