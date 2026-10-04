@@ -1,6 +1,6 @@
 ---
 title: "Circuit breakers: stopping vector DB failures"
-description: "A slow vector DB kills SaaS faster than a dead one. The circuit-breaker pattern for AI infra — states, fallback tiers, and Laravel-friendly wiring."
+description: "A slow vector DB kills SaaS faster than a dead one. The circuit-breaker pattern for AI infra: states, fallback tiers, and Laravel-friendly wiring."
 publishDate: 2026-05-23
 category: architecture
 tags: [observability, ai, rag, vector-search, laravel, infrastructure]
@@ -10,80 +10,163 @@ heroImage:
   alt: "Circuit breakers wrapping AI service calls to prevent cascading failures"
 ---
 
-You built a beautiful RAG pipeline. It works perfectly on your machine with a few hundred vectors. Then you launch. Traffic spikes. Suddenly your managed vector database starts sweating. A single similarity search that used to take 50ms is now taking 5 seconds. Your web workers are all tied up waiting for responses that aren't coming. The database isn't technically down — but it is slow enough to kill your entire application. Your users see spinning loaders until the request finally times out. This is a classic cascading failure — the kind a circuit breaker exists to stop — and it is the fastest way to drain your "innovation budget" and your users' patience.
+A slow vector database can take your whole app down without ever going offline. A circuit breaker is the switch that stops that from happening.
 
-The problem is that we often treat external APIs and databases as if they are always healthy. We write code that assumes the vector DB will return results. When it doesn't, we wait. And while we wait, we hold onto memory and CPU cycles. The solution is an old-school electrical engineering concept applied to software: the circuit breaker.
+<Summary>
+- In production, a slow dependency is often more dangerous than a dead one, because waiting requests eat your workers, memory and connections.
+- A circuit breaker has three states (closed, open, half-open) and fails fast once a failure threshold is hit, so the struggling service can recover.
+- Pair the breaker with fallbacks (keyword search, a Redis cache, LLM-only mode) and monitor how often it trips.
+</Summary>
 
-This guide shows you how to wrap your AI infrastructure in protective logic so a slow dependency doesn't take your whole SaaS down with it.
+You built a beautiful RAG pipeline. It works perfectly on your machine with a few hundred vectors. Then you launch, traffic spikes and your managed vector database starts sweating.
+
+A similarity search that used to take 50ms now takes 5 seconds. Your web workers are all tied up waiting for responses that aren't coming.
+
+### Slow is the new down
+
+The database isn't technically down, but it is slow enough to kill your entire application. Your users see spinning loaders until the request finally times out.
+
+This is a classic cascading failure (the kind a circuit breaker exists to stop), and it is the fastest way to drain your "innovation budget" and your users' patience.
+
+### Why waiting hurts
+
+We often treat external APIs and databases as if they are always healthy. We write code that assumes the vector DB will return results. When it doesn't, we wait, and while we wait we hold onto memory and CPU cycles.
+
+The fix is an old-school electrical engineering concept applied to software: the circuit breaker. This guide shows you how to wrap your AI infrastructure in protective logic so a slow dependency doesn't take your whole SaaS down with it.
 
 ## How the circuit breaker pattern works
 
-The circuit breaker pattern is a state machine that sits between your application code and your external service. The idea comes straight out of Michael Nygard's _Release It!_ — it monitors every call you make and has three states that dictate how it handles traffic.
+The circuit breaker pattern is a state machine that sits between your application code and your external service.
 
-![State machine diagram of the circuit breaker: closed (healthy), open (fail-fast), and half-open (recovery probe) with the transitions between them](/blog/circuit-breakers-vector-db/states.webp)
+The idea comes straight out of Michael Nygard's _Release It!_. It monitors every call you make and has three states that dictate how it handles traffic.
 
-**Closed — the healthy state.**
-In the closed state, the circuit is complete. Requests flow through to your vector database or LLM provider normally. The breaker is silently watching. It keeps a count of how many requests failed or took too long. As long as the failure rate stays below your threshold, it stays closed. This is the "everything is fine" mode.
+| State     | What happens to calls                                  | Moves on when                               |
+| :-------- | :----------------------------------------------------- | :------------------------------------------ |
+| Closed    | Calls flow through while the breaker counts failures   | The failure threshold is hit, then it opens |
+| Open      | Calls fail fast or get a fallback, no network call     | The cooldown ends, then it goes half-open   |
+| Half-open | A few test calls go through                            | Tests pass (closed) or fail (open again)    |
 
-**Open — the fail-fast state.**
-Once the failure threshold is hit — let's say 50% of requests failed in the last 30 seconds — the breaker "trips" and moves to the open state. Now, every time your application tries to call the vector DB, the breaker immediately throws an error or returns a fallback response without even attempting the network call. This gives your database room to breathe and recover. It also ensures your application doesn't waste time waiting on a service that is clearly struggling.
+### Closed: the healthy state
 
-**Half-open — the recovery test.**
-After a cooldown period, the breaker moves to the half-open state. It allows a small number of "test" requests to pass through. If these test calls succeed, the breaker assumes the service is healthy again and moves back to the closed state. If they fail, it immediately goes back to open for another cooldown cycle. This is a controlled way to probe the system before fully re-engaging.
+In the closed state, the circuit is complete. Requests flow through to your vector database or LLM provider normally.
+
+The breaker is silently watching. It keeps a count of how many requests failed or took too long. As long as the failure rate stays below your threshold, it stays closed. This is the "everything is fine" mode.
+
+### Open: the fail-fast state
+
+Once the failure threshold is hit (say 50% of requests failed in the last 30 seconds), the breaker "trips" and moves to the open state.
+
+Now every call to the vector DB immediately throws an error or returns a fallback response, without even attempting the network call. This gives your database room to breathe and recover, and your application stops wasting time on a service that is clearly struggling.
+
+### Half-open: the recovery test
+
+After a cooldown period, the breaker moves to the half-open state and lets a small number of "test" requests through.
+
+If these test calls succeed, the breaker assumes the service is healthy again and moves back to closed. If they fail, it goes straight back to open for another cooldown cycle. This is a controlled way to probe the system before fully re-engaging.
+
+{/* IMAGE: inline-1 */}
 
 ## Why your RAG pipeline needs this
 
-RAG pipelines are particularly vulnerable because they usually involve multiple high-latency network hops. You have to embed the query, search the vector DB, and then call the LLM. If any of these pieces fail or slow down, the whole experience breaks.
+RAG pipelines are particularly vulnerable because they usually involve several high-latency network hops. You embed the query, search the vector DB, then call the LLM. If any of these pieces fail or slow down, the whole experience breaks.
 
-Most developers make the mistake of only handling hard errors like a `404` or a `500` status code. But in production, "slow" is often more dangerous than "down." A slow vector DB creates a bottleneck that backs up your entire request queue. By the time you realize there is a problem, your server is out of memory because it is holding open thousands of connections.
+### Hard errors are the easy part
 
-If you have read my previous post on [7 RAG mistakes in production](/blog/7-rag-mistakes-production/), you know that reliability is the difference between a demo and a product. The circuit breaker is your insurance policy against these types of outages.
+Most developers only handle hard errors like a `404` or a `500` status code. But in production, "slow" is often more dangerous than "down."
+
+A slow vector DB creates a bottleneck that backs up your entire request queue. By the time you notice, your server is out of memory because it is holding open thousands of connections.
+
+<PullQuote>A dead service fails fast. A slow one quietly holds every worker hostage.</PullQuote>
+
+If you have read my post on [7 RAG mistakes in production](/blog/7-rag-mistakes-production/), you know that reliability is the difference between a demo and a product. The circuit breaker is your insurance policy against these outages.
+
+<TryThis>
+List every external call in one RAG request (embedding API, vector DB, LLM) and write down its current timeout. Any call with no timeout, or one longer than your page budget, is your first breaker candidate.
+</TryThis>
 
 ## Implementing fallback strategies
 
-Tripping the breaker shouldn't always mean showing an error message to the user. The best AI systems use fallbacks to maintain a level of service even when parts of the stack are failing.
+Tripping the breaker shouldn't always mean showing an error message to the user. Good AI systems use fallbacks to keep some level of service even when parts of the stack are failing.
 
-![Fallback flow diagram: a tripped circuit routing from the vector DB to keyword search, a Redis cache, and an LLM-only response](/blog/circuit-breakers-vector-db/fallback-flow.webp)
+### Hot and cold tiers
 
-**Hot and cold tiers.**
-You can think of your vector DB as your "hot" knowledge tier. If it fails, you should have a "cold" fallback. Maybe you fall back to a standard keyword search in your primary Postgres or MySQL database. The results might not be as contextually relevant as a vector search, but a "decent" answer is always better than a "timed out" error.
+Think of your vector DB as your "hot" knowledge tier. If it fails, you should have a "cold" fallback, such as a standard keyword search in your primary Postgres or MySQL database.
 
-**Cached responses.**
-Another strong strategy is [semantic caching with Redis](/blog/redis-semantic-caching-rag/). If the circuit is open, you can check the cache for similar queries that were answered recently. Even if you can't generate a fresh answer, you might be able to serve a cached one. This keeps the user moving while your backend recovers.
+The results might be less relevant than a vector search, but a "decent" answer is always better than a "timed out" error.
 
-**LLM-only mode.**
-If your retrieval step is what's failing, you can still send the user's prompt to the LLM with a note that external knowledge is currently unavailable. The LLM can then answer based on its general training data. It is a degraded experience, but it is still functional. Transparency here is key — tell the user that the "live" data isn't available so they know to verify the response.
+### Cached responses
+
+Another strong strategy is [semantic caching with Redis](/blog/redis-semantic-caching-rag/). If the circuit is open, check the cache for similar queries that were answered recently.
+
+Even if you can't generate a fresh answer, you might be able to serve a cached one. This keeps the user moving while your backend recovers.
+
+### LLM-only mode
+
+If retrieval is what's failing, you can still send the user's prompt to the LLM with a note that external knowledge is currently unavailable. The LLM then answers from its general training data.
+
+It is a degraded experience, but it still works. Be open about it: tell the user that "live" data isn't available so they know to verify the response.
+
+<BeforeAfter beforeLabel="No breaker" afterLabel="With a breaker">
+  <div slot="before">Every request waits on the slow vector DB until it times out. Workers pile up, memory climbs and the whole app stalls.</div>
+  <div slot="after">After the threshold, calls fail fast to keyword search, a cached answer or LLM-only mode. The app stays up while the DB recovers.</div>
+</BeforeAfter>
+
+<TryThis>
+Pick one fallback for your RAG endpoint today, even if it is only a keyword search over the same table, and write the message the user sees when it is active.
+</TryThis>
 
 ## Building it in Laravel
 
-Since I spend a lot of time in the Laravel ecosystem, I lean on patterns that make this easy to implement. You don't need to write the state machine from scratch. A community package like `ackintosh/ganesha` (a PHP circuit breaker), or a small custom wrapper around the `illuminate/http` client with a Redis-backed failure counter, gets the job done.
+Since I spend a lot of time in the Laravel ecosystem, I lean on patterns that make this easy. You don't need to write the state machine from scratch.
 
-The goal is to wrap your API calls in a block that understands these states. Here is a simplified look at how that logic looks in practice.
+A community package like `ackintosh/ganesha` (a PHP circuit breaker), or a small custom wrapper around the `illuminate/http` client with a Redis-backed failure counter, gets the job done.
 
-![PHP code wrapping a vector DB client in a circuit breaker, catching CircuitBreakerOpenException to return fallback data](/blog/circuit-breakers-vector-db/code.webp)
+### Wrap the client, catch the open state
 
-When you call your vector DB client, you wrap it in the breaker. If the call fails multiple times, the breaker trips. In the `catch` block, you handle the `CircuitBreakerOpenException` by returning your fallback data. This keeps your controllers clean and your architecture robust.
+The goal is to wrap your API calls in a block that understands these states. When you call your vector DB client, you wrap it in the breaker. If the call fails several times, the breaker trips.
 
-You can also integrate this with your [SaaS hosting on Coolify](/blog/coolify-docker-saas-hosting/) to ensure that your containers don't get killed by health checks just because an external API is slow. The breaker prevents the resource bloat that usually triggers those health-check failures.
+In the `catch` block, you handle the `CircuitBreakerOpenException` by returning your fallback data. This keeps your controllers clean and the failure handling in one place.
+
+### Keep health checks honest
+
+You can also pair this with your [SaaS hosting on Coolify](/blog/coolify-docker-saas-hosting/) so your containers don't get killed by health checks just because an external API is slow. The breaker prevents the resource bloat that usually triggers those health-check failures.
 
 ## Live telemetry and smart routing
 
-Senior engineers don't just set a circuit breaker and walk away. They monitor it. You need live telemetry to see how often your circuits are tripping. Tools like Prometheus or even simple logs piped to a dashboard can tell you a lot.
+Don't set a circuit breaker and walk away. Monitor it. You need live telemetry to see how often your circuits trip, and tools like Prometheus (or even simple logs piped to a dashboard) can tell you a lot.
 
-If you see that your primary vector DB in `us-east-1` is constantly tripping but your secondary in `eu-west-1` is healthy, you can implement smart routing. Your circuit breaker can act as a signal to your [load balancer](/blog/gpu-aware-load-balancing/) or internal router to shift traffic to the healthy region.
+### Route around the failing region
 
-This kind of [event-driven architecture](/blog/event-driven-pubsub/) makes your system self-healing. It doesn't wait for a human to wake up at 3am to fix a database. It detects the failure, trips the breaker, uses the fallback, and tries to recover automatically.
+If your primary vector DB in `us-east-1` keeps tripping but your secondary in `eu-west-1` is healthy, you can add smart routing. The breaker can act as a signal to your [load balancer](/blog/gpu-aware-load-balancing/) or internal router to shift traffic to the healthy region.
+
+This kind of [event-driven architecture](/blog/event-driven-pubsub/) makes your system self-healing. It doesn't wait for a human to wake up at 3am. It detects the failure, trips the breaker, uses the fallback and tries to recover on its own.
+
+{/* IMAGE: inline-2 */}
+
+<TryThis>
+Add an alert that fires when any circuit stays open for more than a few minutes. That usually means a real provider outage, and it is the one alert worth waking up for.
+</TryThis>
 
 ## Practical steps to get started
 
 If you are ready to harden your AI infrastructure, start here:
 
-1. **Identify your weakest links** — list every external call in your RAG pipeline. Usually it is the embedding API and the vector DB.
-2. **Define your thresholds** — how many slow requests are you willing to tolerate? Start with a 50% failure rate over 30 seconds and a 2-second timeout.
-3. **Choose your fallbacks** — decide what happens when the breaker is open. Do you show an error, use a cache, or switch to keyword search?
-4. **Wrap your clients** — use a library to wrap your HTTP or database calls. Don't try to build the state machine logic yourself unless you have a very specific use case.
-5. **Monitor the trips** — set up an alert when a circuit stays open for more than a few minutes. This usually indicates a major provider outage that needs your attention.
+1. **Identify your weakest links.** List every external call in your RAG pipeline. Usually it is the embedding API and the vector DB.
+2. **Define your thresholds.** How many slow requests will you tolerate? Start with a 50% failure rate over 30 seconds and a 2-second timeout.
+3. **Choose your fallbacks.** Decide what happens when the breaker is open: an error, a cache or keyword search.
+4. **Wrap your clients.** Use a library to wrap your HTTP or database calls. Don't build the state machine yourself unless you have a very specific use case.
+5. **Monitor the trips.** Alert when a circuit stays open for more than a few minutes. This usually means a major provider outage that needs your attention.
 
-The goal is to fail gracefully. Every system has issues, but the ones that survive are the ones that don't let a small fire in a dependency burn down the whole house.
+The goal is to fail gracefully. Every system has issues, but the ones that survive don't let a small fire in a dependency burn down the whole house.
 
-Have you ever had a slow dependency take down your entire application, or are you still relying on long timeouts and luck? Drop a note via [contact](/contact/) — I love this conversation. 🤘
+<Takeaway>
+- Treat "slow" as a failure, not only `500` errors.
+- Closed, open, half-open: fail fast once the threshold is hit, then probe before you trust the service again.
+- Always have a fallback: keyword search, a cached answer or LLM-only mode with an honest notice.
+- Use a library such as `ackintosh/ganesha` instead of writing the state machine yourself.
+- Monitor trips and alert when a circuit stays open.
+</Takeaway>
+
+If your RAG stack stalls every time the vector database slows down, [here's how I help teams add circuit breakers and fallbacks to AI infrastructure](/services/), or reach out through [contact](/contact/).
+
+Have you ever had a slow dependency take down your entire application, or are you still relying on long timeouts and luck?

@@ -10,38 +10,76 @@ heroImage:
   alt: "Pop-art comic-style illustration comparing DevOps and MLOps with technical dashboards and pipeline diagrams"
 ---
 
-Shipping application code to production is difficult. Shipping a machine learning model that continues to perform accurately over time is significantly harder. You might have a perfectly automated pipeline that builds your Docker images and deploys them to a cluster in seconds. However, if your model starts making incorrect predictions because of a change in consumer behavior, your automated deployment of "correct" code is effectively shipping a broken product. This is the core friction between traditional software operations and the emerging world of machine learning operations.
+DevOps ships code that behaves the same every day. MLOps ships models that quietly get worse as the world changes.
 
-That gap is what the DevOps vs MLOps comparison is really about. DevOps focuses on the reliability and speed of software delivery. It treats code as the primary artifact. MLOps takes those same principles and adds two volatile new variables: data and models. While DevOps solves the problem of "it works on my machine," MLOps solves the problem of "it worked on last month's training data."
+<Summary>
+- DevOps treats code as the main artifact and relies on deterministic builds, tests and deployments.
+- MLOps adds two moving parts, data and models, so it needs a third loop: Continuous Training (CT) on top of CI and CD.
+- MLOps monitoring tracks statistical health (data drift, concept drift, accuracy) as well as system health (latency, errors).
+</Summary>
 
-Understanding the technical divide between these two disciplines is essential for any team moving beyond simple heuristic-based software and into the world of [AI engineering](/blog/category/ai/).
+Shipping application code to production is difficult. Shipping a machine learning model that keeps performing accurately over time is much harder.
+
+You might have a perfectly automated pipeline that builds your Docker images and deploys them to a cluster in seconds.
+
+### Correct code, broken product
+
+If your model starts making wrong predictions because consumer behavior changed, your automated deployment of "correct" code is shipping a broken product. That is the core friction between traditional software operations and machine learning operations.
+
+### What the comparison is really about
+
+DevOps focuses on the reliability and speed of software delivery. It treats code as the primary artifact.
+
+MLOps takes the same principles and adds two volatile new variables: data and models. DevOps solves "it works on my machine." MLOps solves "it worked on last month's training data."
+
+Understanding this divide is essential for any team moving beyond simple heuristic-based software and into [AI engineering](/blog/category/ai/).
 
 ## The core philosophy of DevOps
 
-DevOps is built on the foundation of the [continuous integration and continuous delivery (CI/CD)](/blog/ci-vs-cd/) pipeline. The primary goal is to shorten the development life cycle and ship changes continuously with high software quality. In a standard DevOps environment, like one running a [Laravel application on Docker](/blog/coolify-docker-saas-hosting/), the process is relatively deterministic.
+DevOps is built on the [continuous integration and continuous delivery (CI/CD)](/blog/ci-vs-cd/) pipeline. The goal is to shorten the development life cycle and ship changes continuously with high software quality.
 
-If the source code passes its unit tests, the integration tests succeed, and the environment configuration is correct, the application should behave predictably in production. The artifacts are static. Once a binary or a container image is built, it does not change its internal logic based on the data flowing through it.
+### A deterministic process
+
+In a standard DevOps environment, like one running a [Laravel application on Docker](/blog/coolify-docker-saas-hosting/), the process is fairly deterministic.
+
+If the source code passes its unit tests, the integration tests succeed and the environment configuration is correct, the application should behave predictably in production.
+
+### Static artifacts
+
+The artifacts are static. Once a binary or a container image is built, its internal logic does not change based on the data flowing through it.
 
 Technical teams use DevOps to manage:
 
-- **Source code:** Versioning application logic in Git.
-- **Build automation:** Compiling code and packaging it into artifacts.
-- **Infrastructure as Code (IaC):** Using tools like Terraform or Pulumi to define servers and networks.
-- **Testing:** Running automated suites to ensure no regressions in logic.
-
-![Illustrated DevOps pipeline moving left to right through code, build, test, and deploy stages](/blog/devops-vs-mlops/devops-pipeline.webp)
+- **Source code:** versioning application logic in Git.
+- **Build automation:** compiling code and packaging it into artifacts.
+- **Infrastructure as Code (IaC):** using tools like Terraform or Pulumi to define servers and networks.
+- **Testing:** running automated suites to catch regressions in logic.
 
 ## The emergence of MLOps
 
-MLOps, or Machine Learning Operations, is a set of practices that aims to deploy and maintain machine learning models in production reliably and efficiently. It is not just "DevOps for AI." While it borrows the automation mindset, the artifacts in MLOps are fundamentally different.
+MLOps, or Machine Learning Operations, is a set of practices for deploying and maintaining machine learning models in production reliably and efficiently.
 
-A machine learning system is composed of three distinct components: code, data, and the model. In DevOps, you only really care about the code. In MLOps, a change in the data can break the system even if the code remains untouched. This introduces a level of non-determinism that traditional CI/CD pipelines are not designed to handle.
+Calling it "DevOps for AI" misses the point. It borrows the automation mindset, but the artifacts in MLOps are fundamentally different.
 
-If you are building [agentic commerce solutions on Shopify](/blog/agentic-commerce-shopify/), for example, your recommendation engine might fail not because of a bug in the Python script, but because the underlying distribution of customer purchases shifted during a holiday sale. This phenomenon, known as data drift, requires a lifecycle that includes continuous monitoring and retraining.
+### Three moving parts
+
+A machine learning system has three distinct components: code, data and the model. In DevOps, you mostly care about the code.
+
+In MLOps, a change in the data can break the system even if the code is untouched. That brings a level of non-determinism traditional CI/CD pipelines are not designed to handle.
+
+### Data drift in the real world
+
+If you are building [agentic commerce solutions on Shopify](/blog/agentic-commerce-shopify/), your recommendation engine might fail without any bug in the Python script. The cause could be a shift in the distribution of customer purchases during a holiday sale.
+
+This is known as data drift, and it requires a lifecycle with continuous monitoring and retraining.
+
+<PullQuote>The code didn't change. The world did, and the model never noticed.</PullQuote>
+
+{/* IMAGE: inline-1 */}
 
 ## Key technical differences at a glance
 
-Here are the primary technical distinctions between the two methodologies.
+Here are the main technical distinctions between the two methodologies.
 
 | Feature              | DevOps                     | MLOps                                           |
 | :------------------- | :------------------------- | :---------------------------------------------- |
@@ -54,74 +92,113 @@ Here are the primary technical distinctions between the two methodologies.
 
 ## The CI/CD/CT pipeline
 
-The most significant architectural difference is the introduction of a third loop. While DevOps relies on CI (Continuous Integration) and CD (Continuous Delivery), MLOps introduces CT (Continuous Training).
+The main architectural difference is a third loop. DevOps relies on CI (Continuous Integration) and CD (Continuous Delivery). MLOps adds CT (Continuous Training).
 
 ### Continuous Integration (CI) in MLOps
 
-CI in this context is no longer just about testing code. It involves testing the data. You must validate the schema of incoming datasets and ensure that feature engineering logic is consistent between the training environment and the production environment. A mismatch here leads to training-serving skew, a common reason for model failure.
+CI here tests the data as well as the code. You must validate the schema of incoming datasets and make sure feature engineering logic is the same in the training environment and in production.
+
+A mismatch leads to training-serving skew, a common reason for model failure.
 
 ### Continuous Delivery (CD) in MLOps
 
-CD involves the automated deployment of the model service. This often means deploying a prediction API or updating a weights file in a running inference engine. Because models are large and computationally expensive, MLOps pipelines often use canary deployments or shadow testing to verify performance on live data before full rollouts.
+CD covers the automated deployment of the model service. This often means deploying a prediction API or updating a weights file in a running inference engine.
+
+Because models are large and expensive to run, MLOps pipelines often use canary deployments or shadow testing to check performance on live data before a full rollout.
 
 ### Continuous Training (CT)
 
-This is the unique signature of MLOps. A CT pipeline automatically triggers a retraining job when certain conditions are met. This might be a scheduled interval or a trigger based on performance degradation. The pipeline pulls new data, runs the training script, evaluates the new model version against a benchmark, and registers it in a model registry if it passes.
+This is the signature of MLOps. A CT pipeline triggers a retraining job when certain conditions are met, either on a schedule or when performance degrades.
 
-![Diagram of an MLOps continuous training loop cycling through data collection, retraining, model evaluation, and registry](/blog/devops-vs-mlops/mlops-retraining-loop.webp)
+The pipeline pulls new data, runs the training script, evaluates the new model version against a benchmark and registers it in a model registry if it passes.
+
+<BeforeAfter beforeLabel="DevOps pipeline" afterLabel="MLOps pipeline">
+  <div slot="before">Commit, build, test, deploy. A new release only happens when someone changes the code.</div>
+  <div slot="after">Commit, build, test, deploy, plus validate data, retrain, evaluate and register. A new model can ship because the data changed.</div>
+</BeforeAfter>
+
+<TryThis>
+Add one data check to your existing CI: validate the schema of the training or feature dataset (column names, types, null rates) and fail the build when it changes unexpectedly.
+</TryThis>
 
 ## Monitoring and the problem of drift
 
-In traditional [DevOps](/blog/category/devops/), monitoring is centered on system health. You look at memory usage, response times, and HTTP 500 errors. If the server is up and the code is executing, the system is usually considered "healthy."
+In traditional [DevOps](/blog/category/devops/), monitoring centers on system health. You watch memory usage, response times and HTTP 500 errors. If the server is up and the code runs, the system is usually considered "healthy."
 
-In MLOps, system health is only half the story. You also need to monitor statistical health. A model might be returning a "200 OK" status code with 50ms latency, but if the predictions it provides are nonsensical, the system is failing.
+### Healthy server, failing model
+
+In MLOps, system health is only half the story. You also need to monitor statistical health.
+
+A model might return a "200 OK" status code with 50ms latency, but if its predictions are nonsensical, the system is failing.
+
+### Two kinds of drift
 
 There are two main types of drift that MLOps engineers must track:
 
-1. **Data drift:** The input data distribution changes. For example, a model trained on high-end fashion data might struggle if the store expands to include budget streetwear.
-2. **Concept drift:** The relationship between input and output changes. For instance, what was considered a "normal" credit card transaction in 2019 might look very different during a global supply chain crisis in 2026.
+1. **Data drift:** the input data distribution changes. For example, a model trained on high-end fashion data might struggle if the store expands into budget streetwear.
+2. **Concept drift:** the relationship between input and output changes. For instance, what counted as a "normal" credit card transaction in 2019 might look very different during a global supply chain crisis.
 
-Detecting these requires sophisticated logging of every prediction and its eventual outcome, creating a feedback loop that informs the next training cycle. This is a critical step often missed in early-stage [AI development](/blog/ai-vs-traditional-development/).
+### Close the feedback loop
+
+Detecting drift requires careful logging of every prediction and its eventual outcome. That creates a feedback loop that informs the next training cycle, a step often missed in early-stage [AI development](/blog/ai-vs-traditional-development/).
+
+<TryThis>
+Start logging every prediction with its input features and a request ID, then join the real outcome back to it later. Without that table, you can't measure drift at all.
+</TryThis>
 
 ## Tooling and infrastructure
 
-The toolsets for these two fields are diverging. While there is overlap in the use of Docker and Kubernetes, the specialized needs of machine learning have given rise to a new stack.
+The toolsets for these two fields are moving apart. Docker and Kubernetes are shared, but the special needs of machine learning have created a new stack.
 
-Standard DevOps tools include:
+### Standard DevOps tools
 
-- **GitHub Actions / GitLab CI:** Pipeline orchestration.
-- **Docker:** Containerization.
-- **Terraform:** Infrastructure provisioning.
-- **Prometheus / Grafana:** System monitoring.
+- **GitHub Actions / GitLab CI:** pipeline orchestration.
+- **Docker:** containerization.
+- **Terraform:** infrastructure provisioning.
+- **Prometheus / Grafana:** system monitoring.
 
-MLOps expands this list with:
+### What MLOps adds
 
-- **MLflow / Weights & Biases:** Experiment tracking and model versioning.
+- **MLflow / Weights & Biases:** experiment tracking and model versioning.
 - **Kubeflow / Vertex AI:** ML-specific orchestration.
-- **Feature stores:** Centralized repositories for pre-processed data features.
-- **Evidently AI / Arize:** Statistical monitoring and drift detection.
+- **Feature stores:** central repositories for pre-processed data features.
+- **Evidently AI / Arize:** statistical monitoring and drift detection.
 
-Building a bridge between these tools is the hallmark of a mature technical organization. You need the stability of DevOps to host the infrastructure and the flexibility of MLOps to manage the intelligence layer.
+Building a bridge between these tools is the mark of a mature technical organization. You need the stability of DevOps to host the infrastructure and the flexibility of MLOps to manage the intelligence layer.
 
-![MLOps monitoring dashboard with drift charts alongside Python code for model registry and metrics tracking](/blog/devops-vs-mlops/mlops-monitoring.webp)
+{/* IMAGE: inline-2 */}
 
 ## Bridging the gap in production
 
-For teams managing complex web applications, the goal is not to choose one over the other. It is integration. A modern stack might use a Laravel backend for user management, hosted via a [Coolify-managed VPS](/blog/coolify-self-hosted-saas/), while calling an MLOps-managed [inference endpoint](/blog/training-vs-inference/) for personalized content.
+For teams running complex web applications, the goal is integration, not picking one side.
 
-One practical way to start is by implementing versioning for your datasets. Just as you would never deploy code without a commit hash, you should never train a model without knowing exactly which version of the data was used. This ensures reproducibility, which is the first step toward a functional MLOps workflow.
+A modern stack might use a Laravel backend for user management, hosted on a [Coolify-managed VPS](/blog/coolify-self-hosted-saas/), while calling an MLOps-managed [inference endpoint](/blog/training-vs-inference/) for personalized content.
 
-The same rigor applies to retrieval systems. Treat vector databases and retrieval pipelines as managed infrastructure inside your DevOps workflow rather than ad-hoc scripts. That discipline alone heads off many of the [RAG failures](/blog/7-rag-mistakes-production/) teams hit in production.
+### Version your data
 
-## Takeaways
+One practical way to start is versioning your datasets. You would never deploy code without a commit hash, so never train a model without knowing exactly which version of the data was used.
 
-Managing the technical transition from code-centric to model-centric operations requires a shift in how you view automation.
+This makes results reproducible, which is the first step toward a working MLOps workflow.
 
-- **DevOps is about code reliability:** Focus on CI/CD pipelines, automated testing, and deterministic deployments.
-- **MLOps is about model reliability:** Focus on data validation, experiment tracking, and statistical monitoring.
-- **The CT loop is essential:** Continuous training prevents your models from becoming obsolete as real-world data evolves.
-- **Monitoring must be dual-layered:** Track both system metrics (latency/errors) and model metrics (drift/accuracy).
-- **Tooling is specialized:** Use standard DevOps tools for the hosting layer and MLOps tools for the training and registry layers.
-- **Data is an artifact:** Treat your training data with the same versioning rigor you apply to your source code.
+### Treat retrieval as infrastructure
 
-How do you plan to handle the statistical monitoring of your models once they transition from a static environment to the unpredictable flow of production data? If you're standing up an MLOps practice, [here's how I help teams build it](/services/).
+The same rigor applies to retrieval systems. Treat vector databases and retrieval pipelines as managed infrastructure inside your DevOps workflow, not as ad-hoc scripts.
+
+That discipline alone heads off many of the [RAG failures](/blog/7-rag-mistakes-production/) teams hit in production.
+
+<TryThis>
+Tag your next training run with the dataset version or hash it used, and store that tag in the model registry entry. If you can't reproduce a model from its tag, fix that before adding more tooling.
+</TryThis>
+
+<Takeaway>
+- **DevOps is about code reliability:** CI/CD pipelines, automated testing and deterministic deployments.
+- **MLOps is about model reliability:** data validation, experiment tracking and statistical monitoring.
+- **The CT loop is essential:** continuous training keeps models from going stale as real-world data changes.
+- **Monitoring must cover two layers:** system metrics (latency, errors) and model metrics (drift, accuracy).
+- **Tooling is specialized:** standard DevOps tools for hosting, MLOps tools for training and the registry.
+- **Data is an artifact:** version your training data with the same rigor you apply to source code.
+</Takeaway>
+
+If you're adding models to a product that already ships with CI/CD, [here's how I help teams build MLOps pipelines with drift monitoring and retraining](/services/).
+
+How do you plan to handle the statistical monitoring of your models once they move from a static environment into the unpredictable flow of production data?
