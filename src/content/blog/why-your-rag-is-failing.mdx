@@ -10,7 +10,7 @@ heroImage:
   alt: "Pop-art illustration of a RAG pipeline breaking under production load"
 ---
 
-When a production RAG system gives wrong answers, the model is rarely the first problem. Retrieval is. Fix how you find and rank context before you blame the LLM.
+When a production RAG system gives wrong answers, check retrieval before you blame the model. Fix how you find and rank context first.
 
 <Summary>
 - Vector search finds related ideas but misses exact identifiers like SKUs, error codes and project names, so pure-vector RAG drifts in production.
@@ -60,7 +60,7 @@ Combine semantic retrieval with lexical precision. That combination is **hybrid 
 
 ### What is BM25?
 
-BM25 (Best Matching 25, from the Okapi probabilistic retrieval framework) is the standard lexical ranking method behind classic search. It doesn't try to infer meaning. It rewards exact terms by how important they are in a document and across the collection, while accounting for document length and diminishing returns from repeated terms.
+BM25 (Best Matching 25, from the Okapi probabilistic retrieval framework) is the standard lexical ranking method behind classic search. It ignores meaning and rewards exact terms by how important they are in a document and across the collection, while accounting for document length and diminishing returns from repeated terms.
 
 ### Why you need both
 

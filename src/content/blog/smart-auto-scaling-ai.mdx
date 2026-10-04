@@ -78,6 +78,8 @@ Scaling on queue depth adds capacity while the current hardware is still inside 
 | **Time to first token** | `vllm:time_to_first_token_seconds` | What users feel when they hit enter     |
 | **CPU utilization**   | (node metric)                       | Tokenization and HTTP load, rarely the bottleneck |
 
+In Prometheus, the counter shows up as `vllm:num_preemptions_total` and the TTFT histogram as `vllm:time_to_first_token_seconds_bucket`.
+
 <PullQuote>Watch the line of waiting requests. It moves before the chip looks busy.</PullQuote>
 
 <TryThis>
