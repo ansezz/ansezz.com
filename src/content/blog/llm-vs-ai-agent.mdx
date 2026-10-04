@@ -67,7 +67,11 @@ An agent sees the error, works out what went wrong and tries a different query. 
 
 <PullQuote>The model answers. The loop around it is what gets things done.</PullQuote>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/llm-vs-ai-agent/inline-1.webp"
+  alt="Comic panel of robots on a round track thinking with a lightbulb, working a machine's levers, then checking the result through binoculars"
+  caption="An agent wraps the model in a loop that acts, observes and corrects itself."
+/>
 
 ## The four pillars of agency
 
@@ -164,7 +168,11 @@ public function getTools(): array
 
 Clear tool definitions tell the agent exactly what it can do. The LLM then acts as the router, deciding which tool to trigger based on the user's intent.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/llm-vs-ai-agent/inline-2.webp"
+  alt="Comic panel of a robot dispatcher choosing the right wrench from a wall of tools for a waiting robot"
+  caption="Clear tool definitions help the agent choose the right action for each request."
+/>
 
 <TryThis>
 Rewrite the `description` of each tool your agent has so it says what the tool does, when to use it and what it returns. Vague descriptions are a common reason agents pick the wrong tool.

@@ -77,7 +77,11 @@ GPU-aware load balancing lets you treat these phases differently across your fle
 | **Prefill** | Reads the full prompt at once  | Compute           | Time to first token (TTFT) |
 | **Decode**  | Writes the answer token by token | Memory bandwidth | Inter-token latency (ITL)  |
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/gpu-aware-load-balancing/inline-1.webp"
+  alt="Comic panel of a strong robot tearing through a paper stack while a slim robot typing one letter at a time gets pushed aside"
+  caption="Prefill and decode need different things, so mixing them on one GPU makes answers stutter."
+/>
 
 ## Metrics for the real world
 
@@ -138,7 +142,11 @@ This is the same logic used in [modern DevOps with Coolify](/blog/coolify-docker
   <div slot="after">Prefill GPUs read prompts and hand off the KV state. Decode GPUs keep streaming tokens, and you scale each pool for the load it actually gets.</div>
 </BeforeAfter>
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/gpu-aware-load-balancing/inline-2.webp"
+  alt="Comic panel of a traffic robot sending big crates to heavy-lifter robots and small cubes to fast typist robots"
+  caption="Separate prefill and decode pools let you scale each for the load it actually gets."
+/>
 
 ## Implementing your first GPU-aware router
 

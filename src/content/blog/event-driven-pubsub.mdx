@@ -73,7 +73,11 @@ They process it at their own pace. If the analytics service is down for maintena
 
 <PullQuote>Checkout publishes once and moves on. Every downstream service works on its own clock.</PullQuote>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/event-driven-pubsub/inline-1.webp"
+  alt="Comic panel of a broadcaster robot sending one envelope that splits into three copies caught by three worker robots"
+  caption="One published event gives every subscription its own copy to handle at its own pace."
+/>
 
 <TryThis>
 Pick one place where a request calls two or more services in a row. Replace those calls with one published event and one subscription per service.
@@ -116,7 +120,11 @@ I always recommend a DLQ for every important subscription. It acts as a safety n
 
 You can build a small dashboard or script to inspect the failed messages, fix the underlying issue and replay them. That prevents data loss and keeps your system moving.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/event-driven-pubsub/inline-2.webp"
+  alt="Comic panel of a robot pulling a broken envelope off a conveyor into a side bin while a mechanic robot inspects it"
+  caption="A dead-letter queue moves failing messages aside so you can fix and replay them later."
+/>
 
 <TryThis>
 Attach a dead-letter topic to your busiest subscription, then write a short script that lists what lands there so you can fix and replay it.

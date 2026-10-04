@@ -70,7 +70,11 @@ If a user uploads a file to Server A, Server B must be able to access it. If you
 
 <PullQuote>A fleet only helps when any server can answer any request.</PullQuote>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/horizontal-vs-vertical-scaling/inline-1.webp"
+  alt="Comic panel of one giant robot straining under a pile of request cubes next to a line of small robots passing cubes along behind a dispatcher"
+  caption="Scaling up makes one server stronger, and scaling out adds more servers that share the work."
+/>
 
 ## Key differences at a glance
 
@@ -127,7 +131,11 @@ Tools like [Coolify](/blog/coolify-self-hosted-saas/) or Docker Swarm make manag
   <div slot="after">Sessions in Redis, files in S3-compatible storage, workers on their own instances, Nginx in front. Adding a node is a config change.</div>
 </BeforeAfter>
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/horizontal-vs-vertical-scaling/inline-2.webp"
+  alt="Comic panel of a robot moving keys into a shared vault and photos into a cloud locker while new server robots arrive"
+  caption="Once sessions and files live in shared storage, any new server can take any request."
+/>
 
 <TryThis>
 Switch your session driver from `file` to `redis` in a staging environment and log in through two app instances. If you stay logged in, step one is done.

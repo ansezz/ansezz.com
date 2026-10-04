@@ -55,7 +55,11 @@ The first request boots the framework, and later requests hit a "warm" applicati
   <div slot="after">The app boots once per worker. Each request goes straight to your code on an app that is already warm.</div>
 </BeforeAfter>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/laravel-octane-high-traffic/inline-1.webp"
+  alt="Comic panel of builder robots rebuilding a kitchen for every order next to a calm chef robot serving from a hot stove"
+  caption="Octane boots your app once and keeps it warm, so each request skips the setup."
+/>
 
 ## Choosing your application server
 
@@ -131,7 +135,11 @@ If a service provider has a static array that you append to on every request, th
 
 Laravel "resets" some core services between requests, but it can't catch everything. If you're migrating an old codebase from [monolith to microservices](/blog/monolith-to-microservices/), audit your service providers for any long-lived state.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/laravel-octane-high-traffic/inline-2.webp"
+  alt="Comic panel of a worker robot with an overstuffed backpack getting a fresh empty one from a robot with a wrench"
+  caption="Recycling workers with max-requests keeps slow leaks from eating all your memory."
+/>
 
 ### Protecting yourself with max-requests
 
