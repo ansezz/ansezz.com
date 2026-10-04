@@ -12,7 +12,7 @@ draft: true
 #   alt: "Comic pop-art panel of a robot pushing a cart of code through a row of checkpoint gates while an engineer works the control panel"
 ---
 
-I don't care if an AI writes 10,000 lines of code in a minute. I care whether those lines survive my constraints.
+An AI can write 10,000 lines of code in a minute. I don't care. I care whether those 10,000 lines survive my constraints.
 
 <Summary>
 - AI made writing code cheap, so the scarce work is deciding what is allowed to merge and ship.
@@ -114,7 +114,7 @@ Pick the tool for your stack:
 | PHP on PHPUnit | Infection | `--min-msi=70` |
 | JavaScript or TypeScript | StrykerJS | `thresholds.break` |
 
-One detail to know before you wire this up: Infection only ever supported Pest 1. From Pest 2 on, Pest runs its own mutation engine, so a Pest suite uses `pest --mutate`, and it mutates the classes your tests name with `covers()` or `mutates()`.
+One detail to know before you wire this up: Infection's Pest support covered Pest 1 only. From Pest 2 on, Pest runs its own mutation engine, so a Pest suite uses `pest --mutate`, and it mutates the classes your tests name with `covers()` or `mutates()`.
 
 On a PHPUnit suite, Infection is the usual choice. Its `--git-diff-lines` flag mutates only the lines a pull request touched, which keeps CI fast on a big codebase.
 
