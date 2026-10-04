@@ -10,88 +10,106 @@ heroImage:
   alt: "Pop-art comic illustration comparing AI-assisted development and traditional coding"
 ---
 
-Most teams frame AI vs traditional development as a binary choice. That is the wrong question.
+"AI or traditional development?" is the wrong question. The right one is how much speed, control and risk your business can afford.
 
-The real problem is not "AI or traditional?" — it is what kind of speed, control, and risk your business can actually afford.
+<Summary>
+- AI-assisted development wins on speed for known patterns: CRUD apps, admin panels, internal tools and first prototypes.
+- Traditional engineering wins on control when business rules are complex, regulated or expensive to get wrong.
+- Most teams should run a hybrid: AI drafts, humans own architecture, logic and the quality gates before merge.
+</Summary>
 
-I see this mistake a lot. Teams chase AI because it feels faster, or reject it because it feels messy. Both directions land in the same place: rushed systems with weak foundations, or polished systems that ship too late.
+Most teams frame AI vs traditional development as a binary choice. That framing is the first mistake.
 
-The better move is to understand where each approach wins, where it breaks, and where a hybrid model gives you the best return. Both work. They just solve different problems.
+I see it a lot. Teams chase AI because it feels faster, or reject it because it feels messy.
+
+Both directions land in the same place: rushed systems with weak foundations, or polished systems that ship too late.
+
+The better move is to understand where each approach wins, where it breaks and where a hybrid gives you the best return. Both work. They solve different problems.
 
 ## AI-powered development: the speed revolution
 
-AI integration changes how I build software. Instead of manually writing every repetitive piece, I can use tools that understand context, generate scaffolding, speed up testing, and remove a lot of the drag from delivery. I dig into the day-to-day of this in my post on [vibe coding](/blog/vibe-coding/), where taste and intent matter more than raw typing speed.
+AI changes how I build software. Instead of writing every repetitive piece by hand, I use tools that understand context, generate scaffolding, speed up testing and remove a lot of drag from delivery.
+
+I dig into the day-to-day of this in my post on [vibe coding](/blog/vibe-coding/), where taste and intent matter more than raw typing speed.
 
 ### The core advantage: speed
 
 This is where AI shines.
 
-For standard workflows, admin panels, CRUD-heavy systems, internal tools, and first-pass prototypes, AI can cut a serious amount of time. What used to take weeks can often be reduced to days if the scope is clear and the review process is tight.
+For standard workflows, admin panels, CRUD-heavy systems, internal tools and first-pass prototypes, AI can cut a serious amount of time. What used to take weeks can often shrink to days if the scope is clear and the review process is tight.
 
 That speed usually comes from a few places:
 
 - **Automated code generation.** Prompts turn into usable boilerplate and feature drafts.
 - **Faster testing.** AI can draft test cases and edge-case coverage quickly.
 - **Debugging support.** It helps narrow down likely failures faster.
-- **Documentation help.** It can turn rough implementation details into clean internal docs.
+- **Documentation help.** It turns rough implementation details into clean internal docs.
 
-How much of that speed you actually capture depends on where you sit on the [AI coding workflow levels](/blog/ai-coding-workflow-levels/) — copy-pasting into a chat window and orchestrating agents against your real codebase are not the same tool.
-
-![Diagram contrasting AI-assisted, traditional, and hybrid engineering workflows](/blog/ai-vs-traditional-development/workflow.webp)
+How much of that speed you capture depends on where you sit on the [AI coding workflow levels](/blog/ai-coding-workflow-levels/). Copy-pasting into a chat window and orchestrating agents against your real codebase are not the same tool.
 
 ### Who benefits most from AI development
 
-I would lean toward AI-heavy workflows when speed matters more than perfect customization on day one.
-
-That usually means:
+I lean toward AI-heavy workflows when speed matters more than perfect customization on day one. That usually means:
 
 - Startups trying to reach product-market fit before the runway gets tight.
 - Small teams that need leverage more than headcount.
-- Businesses shipping standard features that already follow familiar patterns.
-- Teams where non-technical stakeholders want to contribute to discovery and prototyping.
+- Businesses shipping standard features that follow familiar patterns.
+- Teams where non-technical stakeholders want to help with discovery and prototyping.
 
-In those cases, AI acts like a power tool. It does not replace the builder. It just makes the first cut much faster.
+In those cases, AI acts like a power tool. It does not replace the builder. It makes the first cut much faster.
 
-### The trade-offs to consider
+<TryThis>
+List the next five features on your roadmap and mark each one "known pattern" or "custom logic." Start AI-heavy work only on the first group.
+</TryThis>
 
-This is where a lot of teams get burned.
+## Where AI-first teams get burned
 
-AI is fast at common patterns. It is weaker at deep product nuance, strange business rules, and systems that need careful long-term architecture. If you skip review, you can ship something that looks finished but behaves like a prototype wearing a production costume. It also helps to know what kind of AI you are actually leaning on — the trade-offs differ between predictive models and generative ones, which I break down in [machine learning vs generative AI](/blog/ml-vs-genai/).
+AI is fast at common patterns. It is weaker at deep product nuance, strange business rules and systems that need careful long-term architecture.
 
-There is a longer-term cost too. Recent studies of AI-accelerated codebases report more duplicated code, larger pull requests, and faster technical-debt accumulation, so the upfront speed can quietly shift effort into later debugging and rework. That is the trap. The fix is treating AI output as a draft, not as truth — the same discipline I argue for in [the architectural shift to agentic workflows](/blog/agentic-workflows-vibe-coding/).
+If you skip review, you can ship something that looks finished but behaves like a prototype wearing a production costume.
+
+### Know which kind of AI you lean on
+
+The trade-offs differ between predictive models and generative ones, which I break down in [machine learning vs generative AI](/blog/ml-vs-genai/).
+
+### The debt bill arrives later
+
+Recent studies of AI-accelerated codebases report more duplicated code, larger pull requests and faster technical-debt buildup. The upfront speed can quietly shift effort into later debugging and rework.
+
+That is the trap. The fix is treating AI output as a draft, not as truth, the same discipline I argue for in [the architectural shift to agentic workflows](/blog/agentic-workflows-vibe-coding/).
+
+<PullQuote>AI output is a first draft. Review is what makes it a product.</PullQuote>
+
+{/* IMAGE: inline-1 */}
 
 ## Traditional development: the control champion
 
 Traditional development is slower, but it gives me tighter control over how the system is shaped.
 
-This is the path I trust most when the business rules are complex, the architecture matters, or the cost of failure is high. Every part of the system is designed with intent instead of inferred from a prompt.
+This is the path I trust most when the business rules are complex, the architecture matters or the cost of failure is high. Every part of the system is designed with intent instead of inferred from a prompt.
 
 ### The core advantage: control
 
-Traditional development is better when the software needs precision.
+Traditional development is better when the software needs precision. That matters for:
 
-That matters for:
-
-- **Complex enterprise systems** — lots of moving parts and layered business logic.
-- **Regulated industries** — where auditability and traceability matter.
-- **Mission-critical applications** — where downtime or bad behavior is expensive.
-- **Custom architectures** — where the product does not fit common patterns.
+- **Complex enterprise systems:** lots of moving parts and layered business logic.
+- **Regulated industries:** where auditability and traceability matter.
+- **Mission-critical applications:** where downtime or bad behavior is expensive.
+- **Custom architectures:** where the product does not fit common patterns.
 
 ### The predictability factor
 
 One underrated benefit of traditional development is predictability.
 
-Manual design, explicit code reviews, architecture decisions, and planned testing give me a clearer picture of trade-offs. It is like building with blueprints instead of assembling furniture from a photo.
+Manual design, explicit code reviews, architecture decisions and planned testing give me a clearer picture of trade-offs. It is like building with blueprints instead of assembling furniture from a photo.
 
 That slower process often saves time later because fewer assumptions make it into production.
 
 ### The time investment reality
 
-The downside is obvious.
+The downside is obvious. Manual coding, reviews, debugging, refactoring and testing take time.
 
-Manual coding, reviews, debugging, refactoring, and testing take time. You need stronger engineering talent, and you need the discipline to keep standards high when deadlines start squeezing the team.
-
-Traditional development gives more control, but you pay for it in time and cost.
+You need stronger engineering talent, and the discipline to keep standards high when deadlines start squeezing the team. You pay for control in time and cost.
 
 ## AI vs traditional development: head-to-head
 
@@ -109,55 +127,53 @@ Traditional development gives more control, but you pay for it in time and cost.
 
 ### Choose AI integration when
 
-Choose AI when your bottleneck is delivery speed and the work is close to known patterns.
-
-That usually applies when:
+Choose AI when your bottleneck is delivery speed and the work is close to known patterns. That usually applies when:
 
 - Your market window is tight.
-- You are building standard business apps like portals, dashboards, e-commerce flows, or content systems.
+- You are building standard business apps like portals, dashboards, e-commerce flows or content systems.
 - Your team wants quick prototypes before committing engineering time.
 - Your budget is better spent on iteration than on deep custom engineering from day one.
 
 ### Choose traditional development when
 
-Choose traditional development when the cost of being wrong is higher than the cost of being slower.
-
-That usually means:
+Choose traditional development when the cost of being wrong is higher than the cost of being slower. That usually means:
 
 - The app needs a unique architecture.
 - Compliance and audit trails are mandatory.
 - Reliability matters more than release velocity.
 - Your team wants direct ownership of code quality and system design.
 
-### The hybrid strategy: best of both worlds
+### The hybrid strategy
 
-This is the option I recommend most often.
+This is the option I recommend most often. The strongest teams do not treat this like a religion. They use AI where speed helps and switch to traditional engineering where judgment matters.
 
-The strongest teams do not treat this like a religion. They use AI where speed helps and switch to traditional engineering where judgment matters.
-
-A practical hybrid setup looks like this:
-
-- Generate boilerplate and first drafts with AI, then review and reshape manually.
-- Use AI for prototyping, then rebuild critical paths carefully.
-- Automate repetitive testing tasks, but keep human review for logic and architecture.
-- Use AI to accelerate docs and support material, while keeping final technical decisions human-led.
+<BeforeAfter beforeLabel="AI does it" afterLabel="Humans own it">
+  <div slot="before">Boilerplate and first drafts, prototypes, repetitive test scaffolding, first versions of docs and support material.</div>
+  <div slot="after">Reshaping drafts, rebuilding critical paths, logic and architecture review, and every final technical decision.</div>
+</BeforeAfter>
 
 The hybrid model works because it treats AI like a junior accelerator, not like an autopilot.
+
+<TryThis>
+Write a one-line rule for your repo: which folders or modules AI may draft freely, and which ones always need a senior design review first. Put it in your contributing guide.
+</TryThis>
+
+{/* IMAGE: inline-2 */}
 
 ## Implementation guidelines
 
 ### Starting with AI integration
 
-If I were introducing AI into an existing team, I would start small.
+If I were introducing AI into an existing team, I would start small:
 
 - Begin with low-risk features.
-- Define a review process for all AI-generated code — one that [scales past line-by-line reading](/blog/stop-reading-code-ai-review/).
+- Define a review process for all AI-generated code, one that [scales past line-by-line reading](/blog/stop-reading-code-ai-review/).
 - Choose tools that fit the current workflow.
-- Train the team on prompting, verification, and code quality checks.
+- Train the team on prompting, verification and code quality checks.
 
 ### Maintaining traditional excellence
 
-If the team stays mostly traditional, I would protect the basics.
+If the team stays mostly traditional, I would protect the basics:
 
 - Invest in strong senior review.
 - Keep documentation current.
@@ -166,23 +182,32 @@ If the team stays mostly traditional, I would protect the basics.
 
 ### Building hybrid capabilities
 
-If the goal is balance, then the workflow matters more than the tools.
+If the goal is balance, the workflow matters more than the tools:
 
 - Identify which tasks are repetitive and safe to automate.
 - Keep humans responsible for architecture and business logic.
-- Add quality gates before merge and deployment — [here is the gate I run on AI-authored PRs](/blog/testing-ai-generated-code/).
-- Measure outcomes, not just speed.
+- Add quality gates before merge and deployment. [Here is the gate I run on AI-authored PRs](/blog/testing-ai-generated-code/).
+- Measure outcomes, not only speed.
+
+<TryThis>
+Track two numbers for a month on AI-assisted pull requests: time to merge, and bugs found after merge. If the second number rises faster than the first falls, tighten your gates.
+</TryThis>
 
 ## The future-ready approach
 
 The teams that will win in 2026 are not the ones that blindly choose AI or reject it.
 
-They are the ones that know where speed is enough, where control is non-negotiable, and where a hybrid model gives them leverage without chaos.
-
-That is the real solution.
+They know where speed is enough, where control is non-negotiable and where a hybrid gives them leverage without chaos.
 
 Use AI to remove friction. Use traditional engineering to protect the parts that matter. Combine both when the business needs speed and reliability at the same time.
 
-![Senior developer's desk in pop-art comic style, blending AI tools and hand-written code](/blog/ai-vs-traditional-development/workspace.webp)
+<Takeaway>
+- Pick by risk, not by trend: known patterns go AI-first, high-stakes logic stays human-led.
+- AI speed comes with a debt bill if you skip review.
+- Traditional engineering buys control and predictability at the cost of time.
+- A hybrid with clear ownership and quality gates gives most teams the best return.
+</Takeaway>
 
-Your development strategy should match your business goals, not the trend cycle. If you had to choose today, which matters more for your next product: speed, control, or a hybrid path? [Here's how I help teams pick and ship the right mix](/services/), and if you'd rather just talk it through, [reach out](/contact/) — I'd love to hear which side you're leaning toward.
+Your development strategy should match your business goals, not the trend cycle. If you're deciding where AI belongs in your delivery process, [here's how I help teams pick and ship the right mix](/services/), or [reach out](/contact/) to talk it through.
+
+If you had to choose today, which matters more for your next product: speed, control or a hybrid path?
