@@ -10,79 +10,144 @@ heroImage:
   alt: "Smart auto-scaling triggers for an AI inference fleet"
 ---
 
-Your AI application is lagging, users are complaining, but your cloud dashboard says everything is fine. Your CPU usage is hovering at a comfortable 20 percent while your inference requests are timing out.
+When CPU sits at 20% and inference requests time out, your autoscaler is watching the wrong number. Scale AI workloads on queue depth, KV-cache pressure and time to first token.
 
-This is the classic scaling trap for AI engineers. Traditional auto-scaling is built for web servers where CPU and memory are the primary bottlenecks. In the world of large language models and vector databases, those metrics are practically useless.
+<Summary>
+- CPU tracks tokenization and HTTP handling; the real work happens on the GPU, so a CPU-based autoscaler stays calm while users wait.
+- Waiting requests, KV-cache usage and TTFT are leading signals, and vLLM exports all three as Prometheus metrics you can feed to KEDA.
+- Add a forecast for predictable peaks so capacity is warm before the spike, since a new replica can take a minute or more to load model weights.
+</Summary>
 
-If you wait for your CPU to hit 80 percent before spinning up a new pod, your service will be dead in the water long before the second instance even starts its boot sequence. GPU-bound workloads require a completely different playbook.
+Your AI app is lagging and users are complaining, but the cloud dashboard says everything is fine. CPU hovers at a comfortable 20% while inference requests time out.
 
-To build a resilient, cost-effective AI SaaS, you need to move beyond reactive hardware metrics. You need to scale on intent, queue pressure, and the specific physics of GPU memory.
+### The scaling trap
 
-## Why CPU-based auto-scaling lies to you
+Traditional auto-scaling was built for web servers, where CPU and memory are the bottlenecks. For LLM inference, those numbers tell you very little.
 
-Most horizontal pod autoscalers (HPA) are configured to watch CPU utilization by default. For a Laravel or Node.js API, this works great. The work is linear — more requests equal more CPU cycles.
+If you wait for CPU to hit 80% before adding a pod, the service is in trouble long before the second instance finishes booting. GPU-bound workloads need a different playbook.
 
-AI models are different. The CPU handles the "boring" stuff like tokenization, request routing, and managing HTTP headers. The heavy lifting happens on the GPU.
+### Scale on pressure
 
-I have seen production clusters where the GPU is pinned at 100 percent while the CPU sits idle. Kubernetes sees the low CPU usage and thinks the pod is healthy. It might even try to pack _more_ pods onto that node, leading to a catastrophic failure.
+To run a cost-effective AI SaaS, move past reactive hardware metrics. Scale on queue pressure, cache pressure and how fast users get their first token.
 
-![CPU usage tells you nothing about GPU saturation](/blog/smart-auto-scaling-ai/cpu-lie.webp)
+## Why CPU-based auto-scaling misleads you
 
-## GPU utilization vs occupancy: the hardware layer
+The Kubernetes Horizontal Pod Autoscaler (HPA) is most often set up to watch CPU utilization. For a Laravel or Node.js API, that works: more requests mean more CPU cycles.
 
-When you finally switch to monitoring GPUs, you encounter two confusing metrics: utilization and occupancy.
+### The work moved to the GPU
 
-GPU utilization is essentially a duty cycle. It tells you the percentage of time the GPU was active over a sample period. It is a lagging indicator. By the time it hits 90 percent, your request queue has likely been building for 30 seconds.
+AI models are different. The CPU handles tokenization, request routing and HTTP headers. The heavy lifting happens on the GPU.
 
-Occupancy is more granular. It measures how many "warps" or hardware slots are filled within the streaming multiprocessors (SM). You can have high utilization but low occupancy if your batch size is too small.
+I've seen production clusters where the GPU is pinned at 100% while the CPU sits idle. The autoscaler sees low CPU, decides the pods are fine and never adds a replica, while the queue keeps growing.
 
-For scaling, utilization is the baseline, but it isn't the truth. You need to look at what is happening before the request even hits the silicon.
+<Figure
+  src="/blog/smart-auto-scaling-ai/inline-1.webp"
+  alt="Comic panel of a robot giving a thumbs up beside a calm green gauge while a red GPU box burns and smokes behind it and a long line of small robots waits out the door"
+  caption="Low CPU can hide a GPU on fire."
+/>
+
+## GPU utilization vs occupancy
+
+When you start monitoring GPUs, you meet two confusing metrics: utilization and occupancy.
+
+### Utilization is a duty cycle
+
+GPU utilization is the percentage of time the GPU was running work during a sample period. It lags. By the time it reads 90%, your request queue may have been building for a while.
+
+### Occupancy is finer-grained
+
+Occupancy measures how many warps are active on each streaming multiprocessor (SM) compared with the maximum. You can have high utilization and low occupancy if your batch size is too small.
+
+For scaling, treat utilization as a baseline and look at what happens before a request even reaches the GPU.
 
 ## Queue depth: your best leading indicator
 
-If you want to stop fires before they start, monitor your queue depth. In vLLM or SGLang, this is the number of requests waiting for a slot in the inference engine.
+To stop fires before they start, watch queue depth. In vLLM it's the number of requests waiting for a slot in the engine, exported as `vllm:num_requests_waiting`. SGLang exposes a similar metric.
 
-Queue depth is a direct predictor of latency. If you know your model can handle 16 concurrent requests before P99 latency starts to climb, set your scaling trigger at 12. To get a real P99 from your own response times, paste them into my [latency percentile calculator](/tools/percentile-calculator/).
+### Scale before latency climbs
 
-Scaling on queue depth lets you provision capacity while the current hardware is still performing within SLO. It gives you that 60-second head start you need to pull a fresh container and load a 20GB model weights file into memory.
+Queue depth predicts latency. If your model handles 16 concurrent requests before P99 latency starts to climb, set the scaling trigger at 12. To get a real P99 from your own response times, paste them into my [latency percentile calculator](/tools/percentile-calculator/).
 
-![Queue depth predicts latency before users feel it](/blog/smart-auto-scaling-ai/queue-depth.webp)
+Scaling on queue depth adds capacity while the current hardware is still inside your SLO. That buys the head start you need to pull a fresh container and load 20 GB of model weights into GPU memory.
+
+| Signal                | vLLM metric                         | What it tells you                       |
+| :-------------------- | :---------------------------------- | :-------------------------------------- |
+| **Waiting requests**  | `vllm:num_requests_waiting`         | Work is piling up before the engine     |
+| **KV-cache usage**    | `vllm:kv_cache_usage_perc`          | How close you are to preemptions        |
+| **Preemptions**       | `vllm:num_preemptions`              | Requests are being evicted and recomputed |
+| **Time to first token** | `vllm:time_to_first_token_seconds` | What users feel when they hit enter     |
+| **CPU utilization**   | (node metric)                       | Tokenization and HTTP load, rarely the bottleneck |
+
+In Prometheus, the counter shows up as `vllm:num_preemptions_total` and the TTFT histogram as `vllm:time_to_first_token_seconds_bucket`.
+
+<PullQuote>Watch the line of waiting requests. It moves before the chip looks busy.</PullQuote>
+
+<TryThis>
+Graph `vllm:num_requests_waiting` next to your P99 latency for one busy day. Find the queue length where latency starts to climb, and set your scale-out threshold about 25% below it.
+</TryThis>
 
 ## Token velocity and the KV cache
 
-In generative AI, not all requests are created equal. A 10-token summary request is light. A 4,000-token RAG retrieval analysis is a heavyweight.
+In generative AI, requests vary a lot in size. A 10-token summary is light. A 4,000-token RAG analysis is heavy.
 
-This is where token velocity and KV-cache usage come in. The KV cache is the GPU memory that stores attention keys and values for in-flight sequences. If your KV cache is nearly full, the engine has to preempt a request to free blocks. In current vLLM (V1), the default recovery is recompute — the victim's cache is discarded and its prompt plus generated tokens are reprocessed from scratch when it resumes. Older vLLM (V0) swapped blocks out to host memory over PCIe instead. Either way you pay for it.
+### When the cache fills up
 
-Latency will skyrocket. Your P99 will look like a mountain range.
+The KV cache is the GPU memory that stores attention keys and values for in-flight sequences. When it's nearly full, the engine preempts a request to free blocks.
 
-I recommend scaling based on a combination of:
+In vLLM V1, the default preemption mode is recompute: the evicted request's cache is dropped, and its prompt plus generated tokens are processed again when it resumes. Latency jumps, and P99 starts to look like a mountain range.
 
-1. **Token velocity** — total tokens per second across all active instances.
-2. **KV-cache pressure** — the percentage of available cache blocks currently occupied.
+### Scale on two numbers
 
-When the cache is full, it doesn't matter how low your GPU utilization is. You cannot fit more work onto that chip. You must scale.
+I recommend scaling on a combination of:
+
+1. **Token velocity:** total tokens per second across all active instances.
+2. **KV-cache pressure:** the share of cache blocks in use (`vllm:kv_cache_usage_perc`).
+
+When the cache is full, low GPU utilization doesn't help. You can't fit more work on that chip, so you add replicas.
+
+<BeforeAfter beforeLabel="Scale on CPU" afterLabel="Scale on pressure">
+  <div slot="before">The HPA watches CPU at 20% and does nothing. The KV cache fills, requests get preempted and recomputed, and TTFT climbs past two seconds.</div>
+  <div slot="after">KEDA watches waiting requests and KV-cache usage. A new replica starts loading weights while the current one is still inside its TTFT target.</div>
+</BeforeAfter>
 
 ## Predictive scaling with ARIMA
 
-Reactive scaling is always playing catch-up. Even with fast boot times, there is a delay. For enterprise apps with predictable traffic patterns, I use ARIMA (Auto-Regressive Integrated Moving Average) models to forecast load.
+Reactive scaling always plays catch-up. Even with fast boots, there's a delay. For apps with predictable traffic, I use ARIMA (Auto-Regressive Integrated Moving Average) models to forecast load.
 
-If I know traffic historically spikes at 9:00 am every Monday, I don't wait for the queue to grow. I use a time-series forecast to spin up the "base load" pods at 8:55 am.
+### Warm before the spike
 
-This turns your infrastructure into a proactive system rather than a reactive one. You pay for what you use, but you ensure the capacity is there before the first user clicks "Generate."
+If traffic always spikes at 9:00 am on Mondays, I don't wait for the queue to grow. A time-series forecast brings up the base-load pods at 8:55 am.
 
-![ARIMA forecast lifting capacity before the 9am spike](/blog/smart-auto-scaling-ai/predictive.webp)
+You still pay for what you use, and the capacity is there before the first user clicks "Generate."
+
+<Figure
+  src="/blog/smart-auto-scaling-ai/inline-2.webp"
+  alt="Comic panel of a robot pushing a cart of glowing server racks past a clock showing nearly 9, holding an upward chart, while a crowd of people walks toward an office building"
+  caption="Forecast the spike and scale before it lands."
+/>
 
 ## Practical steps for your stack
 
-Implementing this doesn't have to be a nightmare. Here is how I structure it:
+Here is how I structure it:
 
-- **Use KEDA** — the Kubernetes Event-Driven Autoscaler is the gold standard. It lets you scale based on Prometheus metrics like queue depth or P99 latency instead of just CPU.
-- **Set TTFT SLOs** — measure time-to-first-token (TTFT). This is the most critical metric for user perception. If TTFT P99 exceeds 500ms, you need more replicas.
-- **Blur the lines** — don't rely on a single metric. Create a composite score of GPU utilization, queue depth, and cache pressure. Once you have multiple replicas, route across them with [GPU-aware load balancing](/blog/gpu-aware-load-balancing/) so traffic lands on the least-saturated GPU.
-- **Fix your RAG** — sometimes the scaling issue is actually a retrieval issue. If your vector search is slow, the inference engine waits longer, hogging the GPU. Check out these [common RAG mistakes](/blog/7-rag-mistakes-production/) to ensure your bottleneck isn't upstream.
-- **Optimize the frontend** — for Shopify apps or custom SaaS, ensure your [agentic workflows](/blog/agentic-workflows-vibe-coding/) handle retries gracefully when the infrastructure is scaling up.
+- **Use KEDA.** The Kubernetes Event-Driven Autoscaler can scale on Prometheus queries, like waiting requests or P99 latency, instead of CPU alone.
+- **Set TTFT SLOs.** Time to first token shapes how fast the app feels. If TTFT P99 passes 500 ms, you need more replicas.
+- **Use a composite signal.** Don't rely on one metric. Combine queue depth, cache pressure and GPU utilization. Once you have several replicas, route with [GPU-aware load balancing](/blog/gpu-aware-load-balancing/) so traffic lands on the least-loaded GPU.
+- **Check your RAG pipeline.** Sometimes the scaling issue is a retrieval issue. Slow vector search makes the engine wait and holds GPU slots. These [common RAG mistakes](/blog/7-rag-mistakes-production/) help you rule out an upstream bottleneck.
+- **Handle retries in the app.** For Shopify apps or custom SaaS, make sure your [agentic workflows](/blog/agentic-workflows-vibe-coding/) retry gracefully while capacity scales up.
 
-Scaling AI isn't about having the biggest GPUs. It is about having the smartest triggers. By moving to service-level metrics, you save money on idle compute and save your users from the dreaded "thinking..." spinner.
+<TryThis>
+Write a KEDA ScaledObject with a Prometheus trigger on `vllm:num_requests_waiting`, apply it in staging and run a load test. Compare how long it takes to add a replica against your current CPU-based HPA.
+</TryThis>
 
-Are you still scaling on CPU, or have you made the jump to queue-based triggers yet? Drop a note via [contact](/contact/) — I love this conversation. 🤘
+<Takeaway>
+- **CPU is the wrong trigger** for GPU inference. Watch the queue and the cache.
+- **Queue depth leads latency.** Scale before your SLO breaks, not after.
+- **KV-cache pressure** predicts preemptions and the latency spikes they cause.
+- **Use KEDA** to scale on vLLM's Prometheus metrics, and track TTFT as the user-facing SLO.
+- **Forecast known peaks** so replicas finish loading weights before traffic arrives.
+</Takeaway>
+
+Smarter triggers save money on idle GPUs and spare your users the "thinking..." spinner. If you're running inference on Kubernetes, [here's how I help teams scale AI workloads on the right signals](/services/), or [drop me a note](/contact/).
+
+Are you still scaling on CPU, or have you moved to queue-based triggers yet?

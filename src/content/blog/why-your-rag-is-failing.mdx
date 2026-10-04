@@ -1,6 +1,6 @@
 ---
 title: "Why your RAG implementation is failing in production"
-description: "Vector-only retrieval is the silent killer of production RAG. Hybrid search, BM25, rank fusion, re-rankers, and evals — the fixes that make it reliable."
+description: "Vector-only retrieval quietly breaks production RAG. Hybrid search, BM25, rank fusion, re-rankers and evals: the fixes that make it reliable."
 publishDate: 2026-03-08
 category: ai
 tags: [rag, ai, vector-search, production]
@@ -10,63 +10,90 @@ heroImage:
   alt: "Pop-art illustration of a RAG pipeline breaking under production load"
 ---
 
-You built a RAG (Retrieval-Augmented Generation) demo. On a local machine, with a handful of PDF files, it looked convincing. The answers felt coherent. The system appeared capable.
+When a production RAG system gives wrong answers, check retrieval before you blame the model. Fix how you find and rank context first.
+
+<Summary>
+- Vector search finds related ideas but misses exact identifiers like SKUs, error codes and project names, so pure-vector RAG drifts in production.
+- Hybrid search (vectors plus BM25), merged with Reciprocal Rank Fusion, keeps both meaning and exact matches.
+- A cross-encoder re-ranker and regular evaluation (faithfulness, response relevancy, context precision and recall) turn a good demo into a dependable system.
+</Summary>
+
+You built a RAG (Retrieval-Augmented Generation) demo. On your machine, with a handful of PDFs, it looked convincing and the answers felt coherent.
 
 Then you pushed it to production.
 
-That is usually where the illusion breaks.
+### Where the demo breaks
 
-Users start reporting that the LLM is "hallucinating" when the real issue is retrieval. Obvious answers go missing even though they exist in the documentation. Irrelevant chunks surface because they are semantically adjacent, not actually useful.
+Users report that the LLM is "hallucinating" when the real issue is retrieval. Obvious answers go missing even though they're in the docs. Irrelevant chunks surface because they're semantically close but useless.
 
-If your RAG system feels unreliable in production, you are not dealing with a model problem first. You are dealing with a retrieval design problem. Most production RAG systems fail because they rely too heavily on vector search and confuse a strong demo with a robust system. (For the broader catalogue of ways this goes wrong, see [7 mistakes you're making with your production RAG stack](/blog/7-rag-mistakes-production/).)
+### A retrieval design problem
 
-I've spent a lot of time building custom AI solutions at [Ansezz](/), and one pattern keeps showing up: **a demo proves possibility, but production demands precision.**
+If your RAG system feels unreliable, look at retrieval design first. Most production RAG systems fail because they lean too hard on vector search and mistake a strong demo for a dependable system.
+
+For the broader catalogue of ways this goes wrong, see [7 mistakes you're making with your production RAG stack](/blog/7-rag-mistakes-production/). One pattern keeps showing up in my own work: **a demo proves possibility, but production demands precision.**
 
 ## The "vector noise" trap
 
-The philosophical shift from demo RAG to production RAG is simple: in a demo, semantic resemblance often feels good enough. In production, "good enough" is where failures begin.
+In a demo, semantic resemblance often feels good enough. In production, "good enough" is where failures begin.
 
-Embeddings are useful. They let us map text into vectors and retrieve by meaning rather than exact wording. That is powerful. But semantic similarity is not the same thing as retrieval accuracy.
+Embeddings are useful. They map text into vectors so you can retrieve by meaning instead of exact wording. Semantic similarity still differs from retrieval accuracy.
 
-**The problem.** Vector search is strong at finding related concepts, but weak at handling specificity.
+### Strong on concepts, weak on specifics
 
-If a user searches for _"Project-X-99 deployment logs,"_ a vector search might return documents about "Project-A deployment" or "logging best practices" because they are semantically close. It can miss the exact identifier "X-99" because that string carries little semantic weight in a high-dimensional space.
+Vector search is good at finding related concepts and weak at specificity.
 
-**The agitation.** Once retrieval drifts, the LLM inherits the drift. The model cannot reason its way out of missing or irrelevant context. You end up paying for tokens that produce confident but unhelpful answers, and users lose trust for a reason that often sits one layer below the model itself.
+If a user searches for _"Project-X-99 deployment logs,"_ vector search might return "Project-A deployment" or "logging best practices," because they're semantically close. It can miss the exact identifier "X-99," which carries little semantic weight in a high-dimensional space.
 
-## The solution: hybrid search (vector + BM25)
+### The model inherits the drift
 
-The fix starts with one realization: meaning alone is not enough. You need semantic retrieval and lexical precision working together. This is **hybrid search**.
+Once retrieval drifts, the LLM inherits the drift. It can't reason its way out of missing or irrelevant context. You pay for tokens that produce confident but unhelpful answers, and users lose trust for a reason that sits one layer below the model.
 
-![Hybrid search workflow combining vector and BM25 retrieval](/blog/why-your-rag-is-failing/hybrid-search-workflow.webp)
+<Figure
+  src="/blog/why-your-rag-is-failing/inline-1.webp"
+  alt="Comic panel of a sweating grey robot at a desk buried in paper scraps that a grinning yellow dog-like robot shovels onto it, while a purple robot holds up a ticket and waits"
+  caption="Near-miss chunks bury the model."
+/>
+
+## The fix: hybrid search (vector plus BM25)
+
+Combine semantic retrieval with lexical precision. That combination is **hybrid search**.
 
 ### What is BM25?
 
-BM25 (Best Matching 25, from the Okapi probabilistic retrieval framework) is the standard lexical ranking method behind classic search systems. It does not try to infer meaning. It rewards exact terms based on how important they are within a document and across the collection, while accounting for document length and diminishing returns from repeated terms.
+BM25 (Best Matching 25, from the Okapi probabilistic retrieval framework) is the standard lexical ranking method behind classic search. It ignores meaning and rewards exact terms by how important they are in a document and across the collection, while accounting for document length and diminishing returns from repeated terms.
 
 ### Why you need both
 
-- **Vector search** handles synonyms, multi-lingual queries, and conceptual matching.
-- **BM25 search** handles exact matches, IDs, SKUs, product codes, and technical jargon.
+- **Vector search** handles synonyms, multilingual queries and conceptual matches.
+- **BM25** handles exact matches: IDs, SKUs, product codes and technical jargon.
 
-Production systems need both because user questions are rarely pure meaning or pure keyword. They are usually a mix of the two. If you are still deciding how to structure retrieval in the first place, [vector search vs graph search](/blog/vector-search-vs-graph-search/) is a useful companion read.
+User questions are rarely pure meaning or pure keyword. They're usually a mix. If you're still deciding how to structure retrieval in the first place, [vector search vs graph search](/blog/vector-search-vs-graph-search/) is a useful companion read.
 
-![Side-by-side comparison of vector search vs keyword search results](/blog/why-your-rag-is-failing/vector-vs-keyword.webp)
+| Query type                       | Vector search            | BM25                     | Hybrid          |
+| :------------------------------- | :----------------------- | :----------------------- | :-------------- |
+| **"How do I cancel my plan?"**   | Strong                   | Decent                   | Strong          |
+| **"Error E-4012 on checkout"**   | Often misses the code    | Strong                   | Strong          |
+| **"SKU HB-220 return policy"**   | Often misses the SKU     | Strong on the SKU        | Strong          |
+| **"Ways to speed up the store"** | Strong                   | Weak on synonyms         | Strong          |
 
-## Technical insight: reciprocal rank fusion (RRF)
+<PullQuote>Embeddings capture what a question means. Keywords catch exactly what it names.</PullQuote>
 
-When you run two different retrieval strategies, you also create a new design problem: how should they be combined?
+<TryThis>
+Pull 20 real queries from your logs that contain an ID, SKU or error code. Run them through your current retriever and count how many return the exact matching document in the top 5. That number is your case for adding BM25.
+</TryThis>
 
-A practical answer is **Reciprocal Rank Fusion (RRF)**. It is simple, reliable, and does not require you to pretend that scores from different retrieval systems are directly comparable.
+## Reciprocal Rank Fusion (RRF)
 
-![Annotated code snippet for reciprocal rank fusion logic](/blog/why-your-rag-is-failing/rrf-code-logic.webp)
+Running two retrieval strategies creates a new question: how do you combine them?
 
-**The logic breakdown:**
+A practical answer is **Reciprocal Rank Fusion (RRF)**, introduced by [Cormack, Clarke and Büttcher in 2009](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf). It's simple and reliable, and it doesn't pretend that scores from different retrievers are directly comparable.
 
-1. **Assign a score.** For every document returned by either search method, calculate a new rank-based score.
-2. **The formula.** `score = 1 / (k + rank)`, where `rank` is the item's 1-based position in each result list (so the code below adds `1` to a 0-based index). The `k` constant (often 60) prevents top-ranked items from dominating too aggressively.
-3. **Sum it up.** If a document appears in both the vector and BM25 result sets, its scores are added together.
-4. **Sort.** The documents with the highest combined scores are passed to the LLM.
+### How it works
+
+1. **Score by rank.** For every document returned by either method, compute a rank-based score.
+2. **The formula.** `score = 1 / (k + rank)`, where `rank` is the 1-based position in each result list (so the code below adds `1` to a 0-based index). The constant `k` (60 in the original paper) keeps top-ranked items from dominating too much.
+3. **Sum it up.** If a document appears in both the vector and BM25 lists, its scores add together.
+4. **Sort.** The documents with the highest combined scores go to the LLM.
 
 Here's the minimal PHP version I drop into a Laravel service:
 
@@ -87,44 +114,57 @@ function reciprocalRankFusion(array $resultSets, int $k = 60): array
 }
 ```
 
-This gives you a cleaner retrieval layer. If a document is semantically relevant _and_ lexically precise, it moves toward the top for a reason.
+A document that is semantically relevant _and_ lexically precise now rises to the top for a reason.
 
-## The "second pass": using re-rankers
+## The second pass: re-rankers
 
-Hybrid search is a strong retrieval foundation, but production RAG usually needs one more layer of judgment.
+Hybrid search is a strong foundation, but production RAG usually needs one more layer of judgment: a **re-ranker**.
 
-If you want more precise results, add a **re-ranker**.
+### Judge the pair
 
-A re-ranker such as Cohere Rerank or BGE-Reranker is a cross-encoder model that evaluates the query and the document together. That matters because relevance is relational. It is not just about what a document contains. It is about whether that document answers _this_ question.
+A re-ranker like Cohere Rerank or BGE-Reranker is a cross-encoder that reads the query and the document together. Relevance is relational: the question is whether this document answers _this_ question, beyond what it happens to contain.
 
-- **Step 1.** Retrieve the top 50 results using hybrid search.
-- **Step 2.** Pass those 50 results through a re-ranker.
-- **Step 3.** Send only the top 5 re-ranked results to your LLM.
+1. Retrieve the top 50 results with hybrid search.
+2. Pass those 50 through the re-ranker.
+3. Send only the top 5 to your LLM.
 
-This reduces context stuffing and improves the quality of what reaches the model. In practice, it is one of the clearest differences between a RAG demo and a production RAG system that behaves consistently. The extra hop does add latency, which is where a [Redis and semantic caching layer](/blog/redis-semantic-caching-rag/) earns its keep.
+This cuts context stuffing and improves what reaches the model. It's one of the clearest differences between a demo and a production system that behaves consistently. The extra hop adds latency, which is where a [Redis and semantic caching layer](/blog/redis-semantic-caching-rag/) earns its keep.
+
+<BeforeAfter beforeLabel="Demo pipeline" afterLabel="Production pipeline">
+  <div slot="before">Embed the query, take the top 5 vector matches and send them straight to the LLM. Exact codes get missed and near-miss chunks fill the context.</div>
+  <div slot="after">Run vector and BM25 search, fuse the lists with RRF, re-rank the top 50 with a cross-encoder and send the best 5. Then score the answers every week.</div>
+</BeforeAfter>
+
+<Figure
+  src="/blog/why-your-rag-is-failing/inline-2.webp"
+  alt="Comic panel of a robot with a compass and a robot with a magnifying glass pouring result cards into a pink funnel, while a judge robot in a white wig holds up the best cards"
+  caption="Fuse both lists, then let a re-ranker pick."
+/>
 
 ## Your production RAG checklist
 
-### The problem
+A RAG system can impress in a demo and still be weak in production. Once real users, messy documents and ambiguous queries arrive, weak retrieval turns the LLM into expensive guesswork.
 
-A RAG system can feel impressive in a demo and still be structurally weak in production.
-
-### The agitation
-
-Once real users, messy documents, and ambiguous queries enter the picture, weak retrieval turns the LLM into expensive guesswork. That is when confidence and correctness start drifting apart.
-
-### The solution
-
-To move from demo RAG to production RAG, I focus on a few non-negotiables:
+### The fixes I rely on
 
 - **Stop relying on vector-only search.** Add a BM25 layer.
-- **Implement RRF.** Fuse lexical and semantic retrieval without overcomplicating score calibration.
-- **Tune chunking deliberately.** If chunks are too small, they lose context. If they are too large, they add noise. I usually find 512–1024 tokens with a 10–15% overlap works well for technical documentation.
-- **Add a re-ranker.** Refine the final candidate set before anything reaches the LLM.
-- **Evaluate with RAGAS.** Measure faithfulness and relevance instead of trusting intuition.
+- **Use RRF.** Fuse lexical and semantic results without fiddly score calibration.
+- **Tune chunking on purpose.** Chunks that are too small lose context, and chunks that are too large add noise. For technical docs, 512 to 1,024 tokens with 10 to 15% overlap usually works well for me.
+- **Add a re-ranker.** Refine the final candidates before anything reaches the LLM.
+- **Evaluate with RAGAS.** Track faithfulness, response relevancy, context precision and context recall instead of trusting intuition.
 
-Building AI is easy. Building _reliable_ AI is hard. It requires a deeper understanding of retrieval, ranking, and context design, not just the ability to connect an API. If you are still choosing your foundation, [picking the right RAG stack](/blog/picking-the-right-rag-stack/) walks through the vector database trade-offs.
+<TryThis>
+Build a test set of 30 real questions with known correct source documents. Run it through RAGAS before and after you add hybrid search and a re-ranker, and keep the scores in your repo so every retrieval change gets measured.
+</TryThis>
 
-If you are looking to build a high-performance SaaS or need help modernizing your digital presence with AI that actually works, check out what I do at [Ansezz](/work/). I specialize in solving these exact types of technical problems.
+<Takeaway>
+- **Retrieval first.** Most "hallucinations" in production RAG start with bad context.
+- **Hybrid beats vector-only.** BM25 catches the IDs and codes embeddings miss.
+- **Fuse with RRF.** Rank-based fusion avoids comparing incompatible scores.
+- **Re-rank before you generate.** Fifty candidates in, five good ones out.
+- **Measure it.** RAGAS scores beat gut feel.
+</Takeaway>
 
-**Where does your own system still behave like a demo when it should be behaving like production?** [Get in touch](/contact/) — I read every war story.
+Building a RAG demo is easy. Building _reliable_ RAG takes a real understanding of retrieval, ranking and context design. If you're still choosing your foundation, [picking the right RAG stack](/blog/picking-the-right-rag-stack/) walks through the vector database trade-offs. If your production RAG keeps missing, [here's how I help teams fix retrieval, ranking and evals](/services/), or [get in touch](/contact/) with your war story.
+
+**Where does your own system still behave like a demo when it should be behaving like production?**

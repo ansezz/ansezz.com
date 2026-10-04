@@ -1,6 +1,6 @@
 ---
 title: "Shopify UCP quick-start: make your store agent-ready"
-description: "AI agents are the new buyers, and they can't see your store without a UCP manifest. A quick-start to making your Shopify store agent-ready."
+description: "AI agents are becoming buyers, and they look for a UCP profile before they can check out. A quick-start to making your Shopify store agent-ready."
 publishDate: 2026-05-28
 category: shopify
 tags: [shopify, agentic-commerce, ai, hydrogen, agentic-ai]
@@ -10,107 +10,171 @@ heroImage:
   alt: "AI shopping agent discovering a Shopify store via the UCP manifest"
 ---
 
-Your store is effectively invisible to the biggest spenders of 2026. I'm not talking about Gen Z or Alpha. I'm talking about AI agents.
+AI agents now shop for people inside ChatGPT, Google AI Mode, Gemini, Copilot and Meta. Before an agent can check out on your store, it reads one JSON file at `/.well-known/ucp`.
 
-If Google's AI Mode or the Gemini app can't find a machine-readable map of your Shopify store, it won't recommend your products. It definitely won't buy from you.
+<Summary>
+- The Universal Commerce Protocol (UCP) is an open standard, co-developed by Shopify and Google, that tells AI agents what your store sells and how to check out.
+- On Shopify, agentic storefronts are on by default for eligible stores, and Shopify publishes your UCP profile for you. Check it under Sales channels > Agentic.
+- Headless and custom stacks often break discovery by not passing `/.well-known/ucp` through, so open that URL and confirm you get JSON back.
+</Summary>
 
-Traditional SEO was built for humans with eyeballs. The Universal Commerce Protocol (UCP) is built for agents with wallets.
+Your store can be invisible to a fast-growing group of buyers: AI agents acting for shoppers.
 
-The rollout is moving fast. Until you expose that manifest, you're opting out of the agentic economy.
+If an agent can't find a machine-readable profile for your Shopify store, it can still mention your products, but it can't complete a purchase for the shopper.
 
-Here is how to fix that.
+### Built for agents with wallets
 
-## Why your legacy SEO is failing
+Traditional SEO was built for humans with eyeballs. UCP is built for agents with wallets.
 
-For ten years, we've obsessed over meta tags and JSON-LD schema. That was enough when Google was just a list of links. But we've entered the era of [agentic commerce on Shopify](/blog/agentic-commerce-shopify/).
+The rollout is moving fast, and every new AI channel that adopts UCP can sell your products without a new integration. Here is how to make sure your store is ready.
 
-Agents like Gemini don't "browse" your collections. They don't look at your hero banners. They want to know three things:
+## Why classic SEO falls short
+
+For ten years we tuned meta tags and JSON-LD schema. That was enough when Google was a list of links. We've now moved into [agentic commerce on Shopify](/blog/agentic-commerce-shopify/).
+
+### Three questions an agent asks
+
+Agents don't browse your collections or look at hero banners. They want three answers:
 
 1. What do you sell?
 2. Can I buy it right now?
-3. Which API do I call to checkout?
+3. Which API do I call to check out?
 
-If your site doesn't answer these questions in a standardized way, the agent moves to a competitor who does. Legacy schema tells an agent what a product _is_. UCP tells an agent how to _transact_.
+If your site doesn't answer these in a standard way, the agent moves on to a store that does. Product schema tells an agent what a product _is_. UCP tells it how to _transact_.
 
-![Side-by-side comparison of human-centric SEO versus agent-centric UCP](/blog/shopify-ucp-quick-start/seo-vs-ucp.webp)
+| Layer               | Classic SEO and schema         | UCP profile                                  |
+| :------------------ | :----------------------------- | :------------------------------------------- |
+| **Audience**        | Search crawlers and humans     | AI shopping agents                           |
+| **Describes**       | Pages and products             | Services, capabilities and payment handlers  |
+| **Lives at**        | Page markup                    | `/.well-known/ucp`                           |
+| **Lets the reader** | Rank and display products      | Build a cart and complete checkout           |
+
+<Figure
+  src="/blog/shopify-ucp-quick-start/inline-1.webp"
+  alt="Comic panel of a white shopping robot with a basket walking through a store door under a sign showing cart, card and checkmark icons, while a confused grey robot with a question mark stands by an empty shelf"
+  caption="Agents buy where the profile tells them how."
+/>
 
 ## What is the Universal Commerce Protocol?
 
-UCP is an open standard co-developed by Shopify and Google, with backing from a wide cast of retailers and payment providers. It creates a "handshake" between a merchant and an AI agent.
+UCP is an open standard co-developed by Shopify and Google. Shopify lists backers including Amazon, American Express, Etsy, Mastercard, Meta, Microsoft, Salesforce, Stripe, Target, Walmart and Visa.
 
-The core of this handshake is the `/.well-known/ucp` endpoint.
+It defines a handshake between a business and an AI agent, covering cart creation, checkout, payment and post-purchase.
 
-It's a simple JSON file that acts as a discovery manifest. When an agent hits your domain, it looks for this file to understand your capabilities. It's the `robots.txt` of the AI era, but for money.
+### The profile at `/.well-known/ucp`
 
-Conceptually, the manifest declares which commerce services and capabilities your store exposes and where an agent should call them. The exact schema is still evolving — check the [official UCP spec](https://ucp.dev/) for the current shape — but it looks roughly like this:
+The core of the handshake is a JSON profile at `/.well-known/ucp`. When an agent reaches your domain, it fetches this file to learn what you support, then negotiates the capabilities you have in common.
+
+The spec requires `version`, `services` and `payment_handlers` inside the `ucp` object, and `capabilities` is optional. Versions are dates; the latest stable release is 2026-08-25.
+
+Here is a trimmed version of the profile a live Shopify store serves today:
 
 ```json
 {
   "ucp": {
-    "version": "2026-04-08",
+    "version": "2026-08-25",
     "services": {
-      "dev.ucp.shopping": ["https://api.yourstore.com/ucp/shopping"]
+      "dev.ucp.shopping": [
+        {
+          "version": "2026-08-25",
+          "transport": "mcp",
+          "endpoint": "https://your-store.myshopify.com/api/ucp/mcp",
+          "schema": "https://ucp.dev/2026-08-25/services/shopping/mcp.openrpc.json"
+        }
+      ]
     },
     "capabilities": {
-      "dev.ucp.shopping.checkout": ["create_session", "complete_session"]
+      "dev.ucp.shopping.checkout": [
+        {
+          "version": "2026-08-25",
+          "schema": "https://ucp.dev/2026-08-25/schemas/shopping/checkout.json"
+        }
+      ],
+      "dev.ucp.shopping.cart": [{ "version": "2026-08-25" }],
+      "dev.ucp.shopping.catalog.search": [{ "version": "2026-08-25" }]
     },
     "payment_handlers": {
-      "com.shopify.shop_pay": ["https://api.yourstore.com/ucp/pay"]
+      "dev.shopify.shop_pay": [{ "id": "shop_pay", "version": "2026-04-08" }],
+      "com.google.pay": [{ "id": "gpay", "version": "2026-01-11" }]
     }
-  },
-  "signing_keys": [{ "kid": "store_2026", "kty": "EC", "crv": "P-256" }]
+  }
 }
 ```
 
-This manifest tells the agent exactly which capabilities you support and where to send the request. No scraping required. No "guessing" where the add-to-cart button is.
+The agent learns which capabilities you support and where to send each request. No scraping, and no guessing where the add-to-cart button is.
+
+<PullQuote>If an agent can't read your checkout, it shops somewhere else.</PullQuote>
 
 ## How to enable UCP on Shopify
 
-If you are running a standard Shopify or Shopify Plus store, the good news is you don't have to write this JSON manually. Shopify is baking this directly into the core.
+On a standard Shopify or Shopify Plus store, you don't write this JSON by hand. Shopify generates and hosts the profile, and agentic storefronts are active by default for eligible stores.
 
-Shopify auto-enabled Agentic Storefronts for eligible stores, so this is opt-out rather than opt-in — but you should verify it.
+### Check the Agentic channel
 
-To check or change it, open the **Agentic** sales channel in your Shopify admin (**Sales channels > Agentic**). By default, **Allow Shopify to manage for me** is on, which keeps your products in Shopify Catalog and enrolls you in new channels automatically. Turn that off if you want to control **Direct checkout** and catalog access per channel.
+Open **Sales channels > Agentic** in your Shopify admin. **Allow Shopify to manage for me** is on by default. It shares your products through Shopify Catalog, turns on direct checkout where it's supported and enrolls you in new AI channels automatically.
 
-With it enabled, Shopify generates and hosts the manifest under your store's `/.well-known/ucp` path.
+Turn it off if you want to control Shopify Catalog access, direct checkout and auto-enrollment yourself, channel by channel. For Google AI Mode and Gemini, products also come through the Google & YouTube channel or Google Merchant Center.
 
-If you are running a headless setup with Hydrogen or a custom frontend, you'll need to ensure your middleware correctly proxies this path back to Shopify's servers. We see a lot of developers break their agentic discovery because their Vercel or Netlify rewrites aren't handling the `.well-known` directory.
+### Headless stores
 
-![Architecture diagram of an agent reaching the UCP manifest through middleware](/blog/shopify-ucp-quick-start/architecture.webp)
+On Hydrogen or a custom frontend, your domain may not serve Shopify's profile at all. Make sure your edge or middleware passes `/.well-known/ucp` through to Shopify.
+
+I often see agentic discovery break because Vercel or Netlify rewrites, or a catch-all route, swallow the `.well-known` directory and return the homepage instead.
+
+<BeforeAfter beforeLabel="Catch-all route" afterLabel="Pass-through rule">
+  <div slot="before">The headless app's catch-all route answers every path, so `/.well-known/ucp` returns the homepage HTML with a 200. The agent gets no profile.</div>
+  <div slot="after">A rewrite sends `/.well-known/ucp` to the store's myshopify domain before the catch-all runs, and the agent receives the JSON profile.</div>
+</BeforeAfter>
+
+<TryThis>
+Open the Agentic channel in your Shopify admin and write down which AI channels are on, and whether direct checkout is active for each one. Decide on purpose whether you want "Allow Shopify to manage for me" left on.
+</TryThis>
 
 ## Why this matters now
 
-Search is shifting from links to agents. As Google's "AI Mode" reaches more shoppers and Gemini acts as a default shopping assistant, it will prioritize stores that support the UCP handshake.
+Search is shifting from links to agents. Shopify's agentic storefronts already reach ChatGPT, Google AI Mode and Gemini, Microsoft Copilot and Meta, and when a new AI platform adopts UCP, Shopify stores are ready to sell there with no extra integration.
 
-This lands alongside Shopify's rollout of [MCP context-aware agents](/blog/mcp-context-aware-agents/). These agents use the Model Context Protocol to link your store's live data directly into the LLM's reasoning loop.
+This sits next to the Model Context Protocol work covered in [MCP context-aware agents](/blog/mcp-context-aware-agents/). UCP even lists MCP as one of its transports, which is how the profile above exposes the shopping service.
 
-If your manifest is missing, your store is a black box. The agent will see your products in the search index, but it won't be able to fulfill the request "buy me the best hiking boots from a local store." It will choose the store where it can verify the checkout capability instantly.
+### The black box problem
+
+If your profile is missing, your store is a black box. An agent might see your products in a search index, but it can't fulfill "buy me the best hiking boots from a local store." It picks a store where it can confirm checkout right away.
+
+<Figure
+  src="/blog/shopify-ucp-quick-start/inline-2.webp"
+  alt="Comic panel of a frowning robot pushing against a sealed black box while a smiling cashier robot waves from the open doors of a bright shop next to it"
+  caption="A missing profile makes your store a black box."
+/>
 
 ## Auditing your implementation
 
-Don't just flip a switch and hope. You need to verify that your manifest is actually reachable by external bots.
+Don't flip a switch and hope. Confirm the profile is reachable from outside.
+
+### A two-minute check
 
 1. Open a private browser window.
 2. Go to `https://yourdomain.com/.well-known/ucp`.
-3. You should see a raw JSON object.
-4. If you see a 404 or a redirect to your homepage, your theme or app is blocking the path.
+3. You should see a raw JSON object with a `ucp` key.
+4. If you get a 404, HTML or a redirect to your homepage, your theme, app or proxy is blocking the path.
 
-Check your `robots.txt` file as well. Ensure you aren't accidentally disallowing agents from crawling the `.well-known` directory.
+Check `robots.txt` too, and make sure you aren't disallowing the `.well-known` directory.
 
-If you are using a custom Laravel backend to power your Shopify store's logic, make sure your routes file includes a specific entry for this endpoint. At ansezz, we often see custom middleware stripping out these hidden directories for "security" reasons. In 2026, that security is just costing you sales.
+### Custom backends
 
-![Shopify admin showing the Agentic storefronts toggle enabled](/blog/shopify-ucp-quick-start/admin-toggle.webp)
+If a custom Laravel backend sits in front of your store, add an explicit route or proxy rule for this path. I often see middleware strip hidden directories for "security" reasons. Here, that rule only costs you sales.
 
-## Technical takeaways
+<TryThis>
+Run `curl -s https://yourdomain.com/.well-known/ucp` from a terminal and pipe it into my [JSON formatter](/tools/json-formatter/). If the output is HTML or an error, fix the route before you touch anything else.
+</TryThis>
 
-Here is your agent-readiness checklist:
+<Takeaway>
+- **Confirm agentic storefronts** under Sales channels > Agentic in your Shopify admin.
+- **Verify `/.well-known/ucp`** returns valid JSON on your own domain, not only on myshopify.com.
+- **Check the payment handlers** in the profile (for example Shop Pay and Google Pay) match what you expect.
+- **Fix headless rewrites** so the `.well-known` path reaches Shopify.
+- **Check your proxy configs** if you host custom middleware, for example on [Coolify Docker SaaS hosting](/blog/coolify-docker-saas-hosting/), so the path isn't dropped.
+</Takeaway>
 
-- Enable **Agentic storefronts** in your Shopify admin.
-- Verify the `/.well-known/ucp` path returns valid JSON (my [JSON formatter](/tools/json-formatter/) points to the exact error if it does not).
-- Confirm your payment handlers (Shop Pay, Shopify Payments) are declared in the manifest.
-- Test your site with an agentic browser or a UCP validator tool.
-- Check your [Coolify Docker SaaS hosting](/blog/coolify-docker-saas-hosting/) configs if you're hosting custom middleware, to ensure the path isn't being dropped by your reverse proxy.
+Commerce is moving from a web built for clicks to one built for agents, and UCP is the first real step toward making your store a first-class seller there. If your store is headless or runs custom middleware, [here's how I help Shopify brands get agent-ready](/services/).
 
-The transition from a human-centric web to agent-centric commerce is happening whether we're ready or not. UCP is the first real step toward making your store a first-class citizen in the AI economy.
-
-Are you letting agents shop your store, or are you still building only for a world that clicks? If you want help getting your storefront agent-ready, [here's how I work with teams](/services/).
+Are you letting agents shop your store yet, or are you still building only for people who click?
