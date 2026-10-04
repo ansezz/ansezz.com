@@ -1,0 +1,257 @@
+---
+title: "AI writes the code. Your job is the gates."
+description: "AI made code cheap. The engineer's job is the gate stack bad code cannot pass: tests, mutation testing, PHPStan, required CI checks, monitoring and rollback."
+publishDate: 2026-10-05
+category: ai
+tags: [code-quality, ci-cd, laravel, ai-engineering]
+featured: false
+draft: true
+# IMAGE: hero (add heroImage once the art exists)
+# heroImage:
+#   url: "/blog/ai-code-quality-gates/hero.webp"
+#   alt: "Comic pop-art panel of a robot pushing a cart of code through a row of checkpoint gates while an engineer works the control panel"
+---
+
+I don't care if an AI writes 10,000 lines of code in a minute. I care whether those lines survive my constraints.
+
+<Summary>
+- AI made writing code cheap, so the scarce work is deciding what is allowed to merge and ship.
+- Stack your gates from cheap to expensive: static analysis, unit and integration tests, mutation testing, required CI checks, then monitoring with a fast rollback.
+- Keep human review for design and risk, and turn every comment you repeat into a rule the pipeline enforces.
+</Summary>
+
+Code generation stopped being the slow part of my week. An agent can scaffold a Laravel module, its migrations and its tests before my coffee cools.
+
+That speed is real, and I use it every day. It also changed the question. "Can we write this?" is cheap now. "Should this reach production?" is the expensive one.
+
+So I stopped judging my work by how much code I write. I judge the system around the code: what it refuses, how fast it refuses it, and how fast it recovers when something slips through.
+
+## Cheap code moves the job
+
+When code was slow to write, the writing itself filtered out bad ideas. You thought twice before typing 400 lines by hand.
+
+That filter is gone. Volume goes up, and every weak spot in your process gets hit more often.
+
+I covered the trade-off in [AI vs traditional development](/blog/ai-vs-traditional-development/) and the loop itself in [agentic workflows](/blog/agentic-workflows-vibe-coding/). This post is the next step: the concrete gates I put between generated code and real users.
+
+Think of them as a row of doors. Each one is cheap to run, catches one kind of failure, and says no without caring who wrote the code. An agent, a teammate, or me at 1am: same doors.
+
+<BeforeAfter beforeLabel="Engineer as typist" afterLabel="Engineer as gatekeeper">
+  <div slot="before">Writes most lines by hand. Quality depends on how careful you were that day. Review catches what it can.</div>
+  <div slot="after">Designs the checks every change must pass. Quality depends on the gates, and they run the same way on every push.</div>
+</BeforeAfter>
+
+## Gate 1: static analysis and types
+
+The cheapest gate runs before any test. PHPStan reads your code and finds whole classes of bugs without executing it. Larastan teaches it about Laravel: Eloquent models, facades and container bindings.
+
+PHPStan has levels from 0 to 10. Level 10 arrived with PHPStan 2.0 and treats every `mixed` type strictly, including the implicit ones you get from missing types.
+
+On an existing app you won't jump to level 10 on day one, and you don't need to. Generate a baseline, so old errors are recorded and new code has to meet the higher bar.
+
+```neon
+# phpstan.neon
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    paths:
+        - app/
+    level: 8
+```
+
+```bash
+vendor/bin/phpstan analyse --generate-baseline
+```
+
+Then ratchet. Every few weeks, raise the level by one and shrink the baseline. That file is a to-do list that can only get shorter.
+
+Agents are happy here. Point one at a failing PHPStan run and it will fix types all afternoon without complaint. That's exactly the work I want to hand over.
+
+<TryThis>
+Run PHPStan one level above your current setting with `--generate-baseline`, commit the baseline, and raise the level in CI. From today, new code meets the stricter rule.
+</TryThis>
+
+## Gate 2: tests that describe behavior
+
+Unit tests pin down the rules: pricing, proration, state changes, the logic that costs money when it's wrong. Integration tests (Laravel calls them feature tests) prove the pieces work together: the route, the policy, the database and the queued job.
+
+I lean on feature tests for AI-written code. An agent can make every unit test pass and still wire the controller to the wrong policy. A feature test that hits the real route as a real user catches that.
+
+Pest also gives you architecture tests, which turn "we don't do that here" into a failing build:
+
+```php
+// tests/ArchTest.php
+arch()->preset()->laravel();
+arch()->preset()->security();
+
+arch('no debug calls ship')
+    ->expect('App')
+    ->not->toUse(['dd', 'dump']);
+```
+
+When I write the spec first, I write it as tests. The agent gets a red suite and a clear finish line. If it can't turn the suite green honestly, I usually learn something about my spec.
+
+## Gate 3: mutation testing
+
+Coverage tells you a line ran. It doesn't tell you a test would notice if that line were wrong. That gap is where generated tests like to hide, with assertions like "the result is not null".
+
+Mutation testing closes it. The tool changes your code on purpose (flips a `>` to `>=`, drops a method call, returns an empty array) and reruns your tests. If the tests still pass, that mutant escaped, and you just found a test that checks nothing.
+
+{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/ai-code-quality-gates/inline-1.webp"
+  alt="Comic pop-art panel of a mischievous robot flipping a switch inside a machine while a test robot's alarm light spins red"
+  caption="Mutation testing breaks your code on purpose to see if a test notices."
+/>
+
+Pick the tool for your stack:
+
+| Stack | Tool | Fail the build with |
+| :-- | :-- | :-- |
+| PHP on Pest | Pest's built-in `--mutate` | `--min=70` |
+| PHP on PHPUnit | Infection | `--min-msi=70` |
+| JavaScript or TypeScript | StrykerJS | `thresholds.break` |
+
+One detail to know before you wire this up: Infection only ever supported Pest 1. From Pest 2 on, Pest runs its own mutation engine, so a Pest suite uses `pest --mutate`, and it mutates the classes your tests name with `covers()` or `mutates()`.
+
+On a PHPUnit suite, Infection is the usual choice. Its `--git-diff-lines` flag mutates only the lines a pull request touched, which keeps CI fast on a big codebase.
+
+For JavaScript, Stryker exits with code 1 when the score drops below `break`:
+
+```json
+{
+  "thresholds": { "high": 80, "low": 60, "break": 60 }
+}
+```
+
+The 70 and 60 in these examples are starting points. Pick the score your suite hits today, gate on it, and raise it as the tests improve. Why this matters so much for agent-written tests is in [trust is not a QA strategy](/blog/testing-ai-generated-code/).
+
+## Gate 4: CI that nobody can skip
+
+All of this is a suggestion until the merge button respects it. Here is the workflow I start with on a Laravel app that uses Pest:
+
+```yaml
+name: quality-gates
+on: [pull_request]
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+      - run: composer install --no-interaction --prefer-dist
+      - run: vendor/bin/phpstan analyse --no-progress
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+      - run: composer install --no-interaction --prefer-dist
+      - run: vendor/bin/pest --parallel
+
+  mutation:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: pcov
+      - run: composer install --no-interaction --prefer-dist
+      - run: vendor/bin/pest --mutate --parallel --min=70
+      # PHPUnit suite? The same gate with Infection:
+      # vendor/bin/infection --git-diff-lines --git-diff-base=origin/main --min-msi=70 --threads=max
+```
+
+Then open branch protection (or a ruleset) for `main` and turn on "Require status checks to pass before merging". Add all three jobs. Also tick "Require branches to be up to date before merging", so each pull request is tested against the code it will actually land on.
+
+Now nobody merges red. No agent, no teammate in a hurry, and no version of me on a deadline. The wider picture of the pipeline is in [CI vs CD](/blog/ci-vs-cd/).
+
+<TryThis>
+Open your repo settings and check which jobs are required on `main`. A quality job that isn't on that list is decoration. Add it today.
+</TryThis>
+
+## Gate 5: production is a gate too
+
+Some bugs only show up with real data and real traffic. Your tests won't catch the query that is fine with 200 rows and slow with two million. So the last gate sits after the deploy.
+
+I want three things there:
+
+- **Error tracking.** Sentry's Laravel SDK reports unhandled exceptions with their stack trace as they happen. I hear about the bug before the support ticket arrives.
+- **A smoke check.** Laravel 11 and later ship a `/up` health route that returns 200 when the app boots. Hit it right after deploy and fail the pipeline if it doesn't answer.
+- **A rollback you have practiced.** Keep the previous build ready to switch back to. If rolling back needs a meeting, it's too slow.
+
+```bash
+curl --fail --silent --max-time 10 https://app.example.com/up || ./rollback.sh
+```
+
+Monitoring is also how the gates improve. When something escapes to production, I fix it, then I ask which earlier gate should have caught it, and I add the test or the rule there. Every incident should leave the doors tighter. The difference between having logs and actually being told is in [logging vs monitoring](/blog/logging-vs-monitoring/).
+
+{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/ai-code-quality-gates/inline-2.webp"
+  alt="Comic pop-art panel of a robot pulling a big rollback lever as a cracked rocket gets winched back onto the launch pad"
+  caption="The last gate runs in production: spot the failure fast and roll back faster."
+/>
+
+## Code review, when it matters
+
+With the machines doing the mechanical checks, review changes shape. I don't read every line hunting for missing types anymore. The pipeline already did that, on every file, with the same attention.
+
+My review time goes to the questions no tool answers. Should this feature exist? Does this new queue or table fit the system? What happens to the money if this webhook arrives twice?
+
+GitHub can route that attention for you. A `CODEOWNERS` file plus "Require review from Code Owners" means risky paths wait for a human, and everything else merges on green:
+
+```text
+# .github/CODEOWNERS
+/database/migrations/  @your-org/leads
+/app/Policies/         @your-org/leads
+/app/Billing/          @your-org/leads
+```
+
+My full read list, and how I handle agent-sized diffs, is in [stop reading every line of AI-generated code](/blog/stop-reading-code-ai-review/).
+
+<PullQuote>Generating code is the easy part now. The craft is in the system that decides what ships.</PullQuote>
+
+<TryThis>
+Write a `CODEOWNERS` file with the three paths where a mistake costs real money or data, and turn on code owner review for them. Let the rest merge on green checks.
+</TryThis>
+
+## What moving up the stack looks like on a Tuesday
+
+"Moving engineers up the stack" sounds like a conference slide. Here is what it means in my actual week:
+
+- **Less boilerplate.** Agents write the CRUD, the DTOs, the form requests and the first draft of the tests. I don't miss typing them.
+- **More specs.** I write acceptance tests and invariants before the agent starts. A refund never exceeds the captured amount. A discount never drops a total below zero.
+- **More pipeline work.** I treat the CI config like product code. It gets reviewed, versioned and improved whenever an incident shows a gap.
+- **More design.** Schema choices, module boundaries, what goes on a queue. These decisions outlive any single file, and no gate can make them for you.
+- **Fewer heroics.** When the gates are good, a Friday deploy is boring. Boring is the goal.
+
+The engineers who do well with AI aren't the ones who type quickest. They're the ones who can say exactly what "correct" means, then make a machine check it on every push.
+
+<TryThis>
+Pick one feature from this sprint and write its acceptance tests before any code exists, yours or an agent's. Then compare that review with your last one.
+</TryThis>
+
+If you want an outside look at which of these gates your Laravel pipeline is missing, [my architecture audit covers the code, the CI and the deploy path](/services/architecture-audit/).
+
+<Takeaway>
+- Cheap code moves the hard work to deciding what may merge and ship.
+- Order your gates from cheap to expensive: static analysis, tests, mutation testing, required CI checks, then monitoring and rollback.
+- Use a baseline and a ratchet so standards rise without a big rewrite.
+- Spend human review on design and risk, and route it with CODEOWNERS.
+- Every bug that escapes should add a rule to an earlier gate.
+</Takeaway>
+
+Which gate is missing from your pipeline right now?
