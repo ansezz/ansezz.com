@@ -10,39 +10,96 @@ heroImage:
   alt: "Pop-art illustration of a monolith being gradually replaced by smaller services"
 ---
 
-Your monolith is a ticking time bomb and every feature you add makes the explosion more inevitable.
+A big-bang rewrite can kill the business while the engineers play with new toys. Strangle the monolith one route at a time instead.
 
-I have seen it happen a dozen times. A startup begins with a clean Laravel or Rails app. It is fast. It is easy. It is productive. Then the team grows. The code base swells. Suddenly, a simple change to the checkout logic breaks the authentication system. Deployments that used to take five minutes now take forty. You are not scaling your business anymore — you are managing technical debt.
+<Summary>
+- The real problem is coupling, and jumping straight to microservices just moves those dependencies onto the network.
+- The strangler fig pattern puts a routing layer in front, sends one endpoint at a time to a new service, and keeps the monolith as a safety net.
+- Containerize the monolith first, protect new services with an anti-corruption layer, and split only when the monolith hurts more than the complexity tax.
+</Summary>
 
-This is the point where most developers start dreaming of micro-services. They imagine a world where every service is isolated and deployments are instant. But the reality is often a nightmare. If you do it wrong, you end up with a distributed monolith. You get all the complexity of networking with none of the benefits of isolation.
+Your monolith is a ticking time bomb, and every feature you add brings the explosion closer.
 
-The solution is not a "big bang" rewrite. It is pragmatic scaling. I use the **strangler fig pattern** to move from monoliths to micro-services without losing my mind or my job. If you are still deciding whether to split at all, start with [monolith vs microservices](/blog/monolith-vs-microservices/) — this post assumes you have already made that call and want the migration playbook.
+I have seen it happen a dozen times. A startup begins with a clean Laravel or Rails app. It is fast, easy and productive. Then the team grows and the code base swells.
+
+### When it starts to hurt
+
+Suddenly, a simple change to the checkout logic breaks the authentication system. Deployments that used to take five minutes now take forty.
+
+You are no longer scaling your business. You are managing technical debt.
+
+### The distributed monolith trap
+
+This is when most developers start dreaming of microservices: every service isolated, every deployment instant. The reality is often a nightmare.
+
+Do it wrong and you end up with a distributed monolith. You get all the complexity of networking with none of the benefits of isolation.
+
+### Pragmatic scaling
+
+I skip the "big bang" rewrite and use the **strangler fig pattern** to move from monoliths to microservices without losing my mind or my job.
+
+If you are still deciding whether to split at all, start with [monolith vs microservices](/blog/monolith-vs-microservices/). This post assumes you have made that call and want the migration playbook.
 
 ## The problem with the big bang
 
-![Strangler fig pattern diagram — new services wrap the legacy monolith](/blog/monolith-to-microservices/strangler-fig.webp)
+When a monolith gets too heavy, the first reaction is to scrap it. I have seen companies spend two years on a rewrite only to ship a product with half the features of the original.
 
-When a monolith becomes too heavy, the immediate reaction is to want to scrap it. I have seen companies spend two years on a rewrite only to ship a product that has half the features of the original. The business dies while the engineers play with new toys.
+### Coupling is the enemy
 
-The monolith is not your enemy. It is just a phase. The real problem is coupling. When every part of your app knows too much about every other part, you cannot move. You are stuck in a web of dependencies. If you try to jump straight into micro-services, you will likely just port those dependencies into a network layer. Now, instead of a function call failing, you have a 500 error across a network socket.
+The monolith is a phase. The real problem is coupling.
 
-I prefer a slower, more deliberate approach. I focus on high-value extractions. I look for the parts of the app that hurt the most. Is the image processing service slowing down the web server? Is the reporting engine locking up the database? Those are your first candidates for micro-services.
+When every part of your app knows too much about every other part, you cannot move. If you jump straight into microservices, you will likely port those dependencies into a network layer. Instead of a function call failing, you get a 500 error across a network socket.
+
+### Extract what hurts most
+
+I prefer a slower, deliberate approach focused on high-value extractions. Look for the parts of the app that hurt the most.
+
+Is image processing slowing down the web server? Is the reporting engine locking up the database? Those are your first candidates for microservices.
+
+<TryThis>
+List the three parts of your app that cause the most incidents or slow deploys. Pick the one with the fewest dependencies on the rest of the code as your first extraction.
+</TryThis>
 
 ## The strangler fig pattern in practice
 
-[Martin Fowler named this approach](https://martinfowler.com/bliki/StranglerFigApplication.html) after a tree that grows around another tree. It starts as a small vine and eventually replaces the host entirely. In software, this means building new features as services while the old monolith remains.
+[Martin Fowler named this approach](https://martinfowler.com/bliki/StranglerFigApplication.html) after a tree that grows around another tree. It starts as a small vine and eventually replaces the host entirely.
 
-The process starts with an API gateway or a load balancer. I put a routing layer in front — [Nginx](https://www.nginx.com/) or a [Google Cloud](https://cloud.google.com/) HTTP(S) load balancer with [Cloud Armor](https://cloud.google.com/armor) bolted on for WAF and DDoS protection. If a request comes for `/api/v1/orders`, the URL map sends it to the new service. Everything else goes to the old monolith. (If you're unsure which box does what here, see [load balancer vs API gateway](/blog/load-balancer-vs-api-gateway/).)
+In software, you build new features as services while the old monolith keeps running.
 
-This allows me to test the new service in production with real traffic while the monolith acts as a safety net. If the new service fails, I just flip the routing back. I do not have to migrate everything at once. I can migrate one endpoint at a time.
+### Put a router in front
+
+The process starts with an API gateway or a load balancer. I put a routing layer in front: [Nginx](https://www.nginx.com/) or a [Google Cloud](https://cloud.google.com/) HTTP(S) load balancer with [Cloud Armor](https://cloud.google.com/armor) added for WAF and DDoS protection.
+
+If a request comes in for `/api/v1/orders`, the URL map sends it to the new service. Everything else goes to the old monolith. (If you're unsure which box does what here, see [load balancer vs API gateway](/blog/load-balancer-vs-api-gateway/).)
+
+### Flip back if it fails
+
+This lets me test the new service in production with real traffic while the monolith acts as a safety net. If the new service fails, I flip the routing back.
+
+I don't have to migrate everything at once. I can migrate one endpoint at a time.
+
+<PullQuote>Move one route, watch it under real traffic, and keep the old path one switch away.</PullQuote>
+
+<Figure
+  src="/blog/monolith-to-microservices/inline-1.webp"
+  alt="Comic panel of a robot pulling a rail switch lever beside a vine-covered stone tower as a train heads toward a modern glass building"
+  caption="Move traffic one route at a time from the old system to the new one."
+/>
+
+<BeforeAfter beforeLabel="Big-bang rewrite" afterLabel="Strangler fig">
+  <div slot="before">Freeze features, rebuild everything for months or years, then switch over in one risky launch.</div>
+  <div slot="after">Route one endpoint to a new service, prove it with real traffic, then move the next. The monolith shrinks while the business keeps shipping.</div>
+</BeforeAfter>
 
 ## Containerization with Docker
 
-![Annotated Dockerfile snippet for a Laravel micro-service](/blog/monolith-to-microservices/docker-snippet.webp)
+You cannot do microservices without [Docker](https://www.docker.com/). I treat every service as a black box.
 
-You cannot do micro-services without [Docker](https://www.docker.com/). I treat every service as a black box. The monolith might be running on an old version of PHP, while the new service is a lean Go binary or a modern Laravel instance. Docker makes this possible.
+The monolith might run on an old version of PHP while the new service is a lean Go binary or a modern Laravel instance. Docker makes that possible.
 
-I start by containerizing the monolith. Even if it stays as a monolith for another year, putting it in a container forces me to define its environment. It makes the infrastructure reproducible.
+### Containerize the monolith first
+
+I start by containerizing the monolith. Even if it stays a monolith for another year, the container forces me to define its environment and makes the infrastructure reproducible.
 
 ```dockerfile
 # a simplified example of a service container
@@ -59,45 +116,73 @@ EXPOSE 9000
 CMD ["php-fpm"]
 ```
 
-Once the monolith is containerized, I can deploy it to a platform like [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine). This is where the real power of micro-services comes in. I can scale the order service to fifty instances during a sale while keeping the blog service at two.
+### Scale each service on its own
+
+Once the monolith is containerized, I can deploy it to a platform like [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine).
+
+This is where microservices pay off. I can scale the order service to fifty instances during a sale while keeping the blog service at two.
+
+<TryThis>
+Write a Dockerfile for your monolith as it is today and get it running locally with the same PHP version as production. That alone removes a class of "works on my machine" bugs.
+</TryThis>
 
 ## Communication and the anti-corruption layer
 
-![Routing diagram showing API gateway dispatching between monolith and new services](/blog/monolith-to-microservices/routing-diagram.webp)
+The hardest part of microservices is the data, not the code. Your monolith has a single database, and your microservices should each have their own. So how do they talk?
 
-The hardest part of micro-services is not the code. It is the data. Your monolith has a single database. Your micro-services should each have their own. But how do they talk?
+### Don't reach into the old database
 
-I use an **anti-corruption layer (ACL)**. When I extract a service, I do not let it reach back into the monolith's database. That would be cheating. Instead, I create an interface. If the new service needs user data, it asks the monolith via a private API or a message queue like [Google Pub/Sub](https://cloud.google.com/pubsub).
+I use an **anti-corruption layer (ACL)**. When I extract a service, I don't let it reach back into the monolith's database. That would be cheating.
 
-This keeps the new service clean. It does not care about the messy database schema of the legacy app. It only cares about the data it receives through the ACL. Eventually, when the user logic is also migrated, I just update the ACL to point to the new user service. For the asynchronous side of this — letting services react to events instead of calling each other directly — I lean on [event-driven Pub/Sub](/blog/event-driven-pubsub/) or [a RabbitMQ-backed queue](/blog/scaling-with-rabbitmq/).
+Instead, I create an interface. If the new service needs user data, it asks the monolith through a private API or a message queue like [Google Pub/Sub](https://cloud.google.com/pubsub).
+
+### Keep the new service clean
+
+The new service doesn't care about the legacy app's messy database schema. It only cares about the data it gets through the ACL.
+
+When the user logic is migrated later, I update the ACL to point to the new user service. For the asynchronous side (letting services react to events instead of calling each other directly), I lean on [event-driven Pub/Sub](/blog/event-driven-pubsub/) or [a RabbitMQ-backed queue](/blog/scaling-with-rabbitmq/).
+
+<Figure
+  src="/blog/monolith-to-microservices/inline-2.webp"
+  alt="Comic panel of a human clerk handing a package through a service window to a smiling robot beside a boarded-up door"
+  caption="New services ask the old system for data through a clean interface."
+/>
 
 ## Cloud infrastructure and DevOps
 
-![Cloud infrastructure overview — GKE, Pub/Sub, managed databases](/blog/monolith-to-microservices/cloud-infrastructure.webp)
+Scaling a monolith usually means buying a bigger server. Scaling microservices means managing a fleet of small instances, so I rely on cloud-native tools to manage the complexity.
 
-Scaling a monolith usually means buying a bigger server. Scaling micro-services means managing a fleet of small instances. I rely heavily on cloud-native tools to manage the complexity.
+### Infrastructure as code
 
-I use [Terraform](https://www.terraform.io/) to manage my infrastructure as code. This ensures that my staging and production environments are identical. If I need a new database for a service, I define it in code. I do not click around in a dashboard.
+I use [Terraform](https://www.terraform.io/) to manage my infrastructure as code. That keeps staging and production identical.
 
-On the DevOps side, I use tools like [GitHub Actions](https://github.com/features/actions) or [Coolify](https://coolify.io/) for deployments. Every service has its own pipeline. If I update the checkout service, I only deploy the checkout service. I do not have to worry about the rest of the system.
+If I need a new database for a service, I define it in code instead of clicking around a dashboard.
 
-## The hidden costs of micro-services
+### One pipeline per service
 
-I would be lying if I said this was all sunshine and rainbows. Micro-services come with a "complexity tax." You now have to deal with distributed logging, service discovery, and eventual consistency.
+For deployments I use tools like [GitHub Actions](https://github.com/features/actions) or [Coolify](https://coolify.io/). Every service has its own pipeline.
 
-I tell my clients that they should only move to micro-services when the pain of the monolith is greater than the cost of the complexity tax. If your team is three people and your app is simple, stay in the monolith. You will move faster.
+If I update the checkout service, I only deploy the checkout service, without worrying about the rest of the system.
 
-But if you are hitting walls every day and your developers are afraid to touch the code, it is time to start strangling.
+## The hidden costs of microservices
 
-## Pragmatic takeaways for your next move
+I'd be lying if I said this was all sunshine and rainbows. Microservices come with a "complexity tax": distributed logging, service discovery and eventual consistency.
 
+### Only split when it hurts
+
+My advice is to move to microservices only when the pain of the monolith is greater than the complexity tax. If your team is three people and your app is simple, stay in the monolith. You will move faster.
+
+If you are hitting walls every day and your developers are afraid to touch the code, it is time to start strangling.
+
+<Takeaway>
 - **Start with an API gateway** to handle routing.
 - **Containerize your monolith first** to normalize the environment.
 - **Use the strangler fig pattern** to migrate one domain at a time.
 - **Build an anti-corruption layer** to keep new services clean.
 - **Invest in infrastructure as code** early on.
 - **Only split when the monolith starts to hurt** your productivity.
+</Takeaway>
 
-Migration is a marathon, not a sprint. I have spent months on a single extraction just to make sure it was perfect. The goal is not to have micro-services. The goal is to have a system that can grow with your business.
+Migration takes time. I have spent months on a single extraction to get it right, because the goal is a system that grows with your business, not a count of services. If you're planning that first extraction, [here's how I help teams move from a monolith to services without a rewrite](/services/), or [tell me about your migration](/contact/).
 
-Have you ever tried a "big bang" rewrite only to regret it six months later? [Tell me about it](/contact/) — I collect these stories for a reason.
+Have you ever tried a "big bang" rewrite only to regret it six months later?
