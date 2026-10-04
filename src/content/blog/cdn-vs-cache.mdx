@@ -82,7 +82,11 @@ For businesses on [Shopify](/blog/category/shopify/), the platform handles much 
 
 Even so, understanding how to manage cache headers and purge cycles remains a key skill for custom development.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/cdn-vs-cache/inline-1.webp"
+  alt="Comic panel of a nearby robot handing a package to a user while a distant robot throws one across the ocean"
+  caption="A CDN serves cached assets from the edge server closest to the user."
+/>
 
 ## Technical comparison: CDN vs cache
 
@@ -142,7 +146,11 @@ This layered approach is essential for [modern DevOps](/blog/category/devops/). 
   <div slot="after">The CDN answers most requests at the edge, Redis answers most of the rest, and only cache misses reach an indexed database.</div>
 </BeforeAfter>
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/cdn-vs-cache/inline-2.webp"
+  alt="Comic panel of three shield-holding robots absorbing a flood of requests in front of a database"
+  caption="The CDN, then Redis, then an indexed database: each layer catches what the one before missed."
+/>
 
 ## Common pitfalls to avoid
 

@@ -78,7 +78,11 @@ It demands deep confidence in your test suite and the [observability to catch re
 
 For developers using [Coolify for self-hosted SaaS](/blog/coolify-self-hosted-saas/), CD is the engine behind rapid iteration. Once CI passes, Coolify can pull the latest Docker image and update the running containers with zero downtime.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/ci-vs-cd/inline-1.webp"
+  alt="Comic panel of a robot about to press a release button beside an automatic conveyor belt shipping boxes"
+  caption="Continuous Delivery waits for a person to press release. Continuous Deployment ships every green build."
+/>
 
 ## CI vs CD: the core differences
 
@@ -159,7 +163,11 @@ A broken layout or a missing "Add to Cart" button caused by a Liquid syntax erro
 Add `shopify theme check` as a CI step on your theme repo, then do your next release by pushing to an unpublished theme and publishing it from the CLI instead of the theme editor.
 </TryThis>
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/ci-vs-cd/inline-2.webp"
+  alt="Comic panel of a robot swapping a new storefront panel in for the old one while shoppers walk by"
+  caption="Push to an unpublished theme, verify it, then publish so customers never see a half-deployed store."
+/>
 
 ## Going beyond unit tests
 

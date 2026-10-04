@@ -72,7 +72,11 @@ If your app needs state across calls, the server hands the model an explicit han
 Count the integrations you maintain today: AI clients times tools. If the number is above five or six, sketch which tools would become one MCP server each.
 </TryThis>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/api-vs-mcp/inline-1.webp"
+  alt="Comic panel of a robot tangled in cables next to a happy robot using one universal power strip"
+  caption="MCP turns M x N custom integrations into M + N standard connections."
+/>
 
 ## Structural differences: discovery and consumers
 
@@ -147,7 +151,11 @@ This separation lets your core engineering team focus on solid, well-tested APIs
 Pick one read-only endpoint, like order history, and wrap it as a single MCP tool with a clear one-sentence description. Test it from an MCP client before you expose anything that writes data.
 </TryThis>
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/api-vs-mcp/inline-2.webp"
+  alt="Comic panel of a translator robot turning a speech bubble into a sealed envelope marked with curly braces"
+  caption="An MCP server wraps your existing API so agents can discover and call it."
+/>
 
 ## Choosing the right tool for the job
 

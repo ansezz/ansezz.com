@@ -67,7 +67,11 @@ The reranker acts like a bouncer at a club. It doesn't care if a document looks 
 
 <PullQuote>Vector search finds neighbors. A reranker finds answers.</PullQuote>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/7-rag-mistakes-production/inline-1.webp"
+  alt="Comic panel of a bouncer robot letting one glowing document past a velvet rope while a crowd of documents is blocked"
+  caption="A reranker re-scores the vector search results and keeps only the ones that answer the question."
+/>
 
 ## 3. Ignoring embedding drift and versioning
 
@@ -166,7 +170,11 @@ Every time I change the architecture, I run the eval and look at three metrics:
 | **Answer relevance**  | Does it answer the user's question?              |
 | **Context precision** | Are the retrieved chunks actually useful?        |
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/7-rag-mistakes-production/inline-2.webp"
+  alt="Comic panel of a judge robot holding score cards over a stack of answer sheets"
+  caption="A golden set scored on faithfulness, relevance and context precision beats a vibe check."
+/>
 
 ## Practical rules for your stack
 

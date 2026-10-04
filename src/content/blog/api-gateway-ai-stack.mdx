@@ -66,7 +66,11 @@ No tenant ID? No query. Period.
 Send a request to your RAG endpoint with no tenant header and one with a forged tenant ID. Both should be rejected at the gateway before the orchestrator logs anything.
 </TryThis>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/api-gateway-ai-stack/inline-1.webp"
+  alt="Comic panel of a gatekeeper robot stamping a request envelope before it slides toward a vault door"
+  caption="The gateway verifies the token and passes a tenant ID so each user only sees their own data."
+/>
 
 ## Smart routing for model flexibility
 
@@ -144,7 +148,11 @@ Leave those defaults in place and your users will see `504 Gateway Timeout` erro
 Time your slowest real RAG query end to end, add a safety margin, and set that as the upstream timeout on your AI routes only. Keep the short default everywhere else.
 </TryThis>
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/api-gateway-ai-stack/inline-2.webp"
+  alt="Comic panel of a clock-headed robot holding the finish tape open for a slow runner robot"
+  caption="Raise upstream timeouts on AI routes or slow generations end in 504 errors."
+/>
 
 ## Practical steps for your stack
 
