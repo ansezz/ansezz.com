@@ -10,56 +10,102 @@ heroImage:
   alt: "Pop-art comic of a brain wired up with tools and memory, illustrating an LLM becoming an AI agent"
 ---
 
-Most developers start their AI journey by sending a prompt to an API and waiting for a text response. This workflow works for simple summaries or creative writing but fails when the task requires real-world actions. You quickly realize that a single chat completion cannot manage a multi-step refund process in a Shopify store or navigate a complex database schema to generate a report.
+An LLM gives you great answers and zero execution. An agent wraps it in tools, memory and a loop so it can actually do the work.
 
-The limitation is not the intelligence of the model. The limitation is the architecture. Relying solely on Large Language Models (LLMs) is like having a genius professor who has no hands, no memory of yesterday, and no access to a computer. You get great answers but zero execution.
+<Summary>
+- An LLM is a stateless next-token predictor: no memory between calls, a knowledge cutoff and no access to outside systems.
+- An agent runs the LLM inside a loop (think, act with a tool, observe the result) backed by memory, tools, planning and reasoning.
+- Use a plain LLM for simple, linear, low-latency text tasks, and an agent when the work needs several steps or external systems.
+</Summary>
 
-AI agents solve this by wrapping the LLM in a system of tools, memory, and planning logic. This shift from "talking to a model" to "building an autonomous system" is one of the biggest changes in how we architect software today.
+Most developers start their AI journey by sending a prompt to an API and waiting for a text response. That works for simple summaries or creative writing.
+
+It fails when the task needs real-world actions. A single chat completion cannot run a multi-step refund process in a Shopify store or navigate a complex database schema to build a report.
+
+### The architecture is the limit
+
+What holds you back is the architecture around the model.
+
+Relying only on Large Language Models (LLMs) is like hiring a genius professor who has no hands, no memory of yesterday and no computer. You get great answers but nothing gets done.
+
+### Agents add the missing parts
+
+AI agents wrap the LLM in tools, memory and planning logic. Moving from "talking to a model" to "building an autonomous system" is one of the main changes in how we architect software today.
 
 ## The LLM as a prediction engine
 
-A Large Language Model is essentially a stateless next-token predictor. When you send a prompt, the model uses its training data to calculate the most probable sequence of words to follow your input. It does not "think" in the human sense. It performs a single forward pass through a massive neural network.
+A Large Language Model is a stateless next-token predictor. When you send a prompt, the model uses its training to calculate the most probable sequence of words to follow your input.
 
-The core characteristics of a standalone LLM include:
+It does not "think" in the human sense. It runs one forward pass per generated token through a very large neural network.
 
-- **Statelessness**: The model does not remember previous interactions unless you include them in the current prompt.
-- **Knowledge cutoff**: It only knows what was in its training set up to a certain date.
-- **No external interaction**: By default, it cannot check your email, query your production database, or browse the web.
-- **Single-turn logic**: It produces one output for one input. Any multi-step reasoning must happen within that single output.
+### What a standalone LLM can't do
 
-For simple applications, this is sufficient. If you are building a basic [API gateway for AI](/blog/api-gateway-ai-stack/), you might only need a thin wrapper around a model. However, as soon as you need the system to take initiative, the LLM alone is not enough.
+The core traits of a standalone LLM:
+
+- **Statelessness:** the model does not remember previous interactions unless you include them in the current prompt.
+- **Knowledge cutoff:** it only knows what was in its training set up to a certain date.
+- **No external interaction:** by default, it cannot check your email, query your production database or browse the web.
+- **Single-turn logic:** it produces one output for one input. Any multi-step reasoning must happen inside that single output.
+
+### When that's enough
+
+For simple applications, this is fine. If you are building a basic [API gateway for AI](/blog/api-gateway-ai-stack/), a thin wrapper around a model might be all you need.
+
+As soon as you need the system to take initiative, the LLM alone falls short.
 
 ## Defining the AI agent: the reasoning loop
 
-An AI agent is an autonomous system that uses an LLM as its central reasoning engine. Unlike a standard LLM call, an agent operates within a loop. It observes the environment, thinks about what to do next, takes an action using a tool, and then observes the result of that action to decide its next step.
+An AI agent is an autonomous system that uses an LLM as its central reasoning engine. Unlike a single LLM call, an agent works inside a loop.
 
-This loop allows the agent to correct its own mistakes. If a database query fails, a standalone LLM would simply report the failure in its final response. An agent, however, sees the error, analyzes what went wrong, and tries a different query. This pattern of interleaving a reasoning step with an action and then observing the result is the ReAct (Reasoning + Acting) approach introduced by Yao et al. in 2022.
+It observes the environment, thinks about what to do next, takes an action with a tool, and then observes the result to decide its next step.
 
-![Bento grid showing the four pillars that turn an LLM into an AI agent: memory, tools, planning, and reasoning](/blog/llm-vs-ai-agent/agency-pillars.webp)
+### Agents fix their own mistakes
+
+This loop lets the agent correct itself. If a database query fails, a standalone LLM would simply report the failure in its final response.
+
+An agent sees the error, works out what went wrong and tries a different query. Interleaving a reasoning step with an action and then observing the result is the ReAct (Reasoning + Acting) approach introduced by Yao et al. in 2022.
+
+<PullQuote>The model answers. The loop around it is what gets things done.</PullQuote>
+
+<Figure
+  src="/blog/llm-vs-ai-agent/inline-1.webp"
+  alt="Comic panel of robots on a round track thinking with a lightbulb, working a machine's levers, then checking the result through binoculars"
+  caption="An agent wraps the model in a loop that acts, observes and corrects itself."
+/>
 
 ## The four pillars of agency
 
-To transform an LLM into an agent, you must provide four critical layers of infrastructure.
+To turn an LLM into an agent, you add four layers of infrastructure.
 
 ### 1. Memory
 
-While LLMs have a "context window," this is temporary and expensive. Agents use external memory systems to maintain state across sessions. This includes short-term memory for current task steps and long-term memory for user preferences or historical data. We often use vector databases like pgvector to store and retrieve these memories efficiently — the distinction between the [context window and persistent memory](/blog/context-window-vs-memory/) is what separates a toy from a production agent.
+LLMs have a "context window," but it is temporary and expensive. Agents use external memory systems to keep state across sessions.
+
+That includes short-term memory for the current task steps and long-term memory for user preferences or historical data. We often use vector databases like pgvector to store and retrieve these memories. The difference between the [context window and persistent memory](/blog/context-window-vs-memory/) is what separates a toy from a production agent.
 
 ### 2. Tools
 
-Tools are the hands of the agent. These are external functions, APIs, or scripts that the agent can choose to execute. When an agent identifies that it needs information it doesn't have, it generates a structured command (typically a JSON object that conforms to the tool's schema) to call a tool. This is what lets agents act on modern stacks like Laravel or [a Shopify store](/blog/agentic-commerce-shopify/).
+Tools are the hands of the agent: external functions, APIs or scripts the agent can choose to run.
+
+When the agent sees it needs information it doesn't have, it generates a structured command (usually a JSON object that matches the tool's schema) to call a tool. This is what lets agents act on stacks like Laravel or [a Shopify store](/blog/agentic-commerce-shopify/).
 
 ### 3. Planning
 
-Complex goals need to be broken down into smaller, manageable tasks. An agent uses the LLM to create a roadmap. This might involve task decomposition where a high-level request like "Audit our cloud spend" is split into sub-tasks like "List all AWS instances," "Query pricing API," and "Generate CSV report."
+Complex goals need to be broken into smaller tasks. An agent uses the LLM to create a roadmap.
+
+For example, a high-level request like "Audit our cloud spend" gets split into sub-tasks: "List all AWS instances," "Query pricing API" and "Generate CSV report."
 
 ### 4. Reasoning
 
-This is the logic that governs how the agent uses the other three pillars. It is the control loop that keeps the system running until the goal is achieved or a stopping condition is met.
+Reasoning governs how the agent uses the other three pillars. It is the control loop that keeps the system running until the goal is reached or a stopping condition is met.
+
+<TryThis>
+Take one task you currently handle with a single prompt and write down its steps. If it has more than one step that touches an outside system, it is a candidate for an agent loop.
+</TryThis>
 
 ## Technical comparison
 
-| Feature          | Large Language Model (LLM)   | AI Agent                          |
+| Feature          | Large Language Model (LLM)   | AI agent                          |
 | :--------------- | :--------------------------- | :-------------------------------- |
 | **Execution**    | Passive (prompt-response)    | Active (goal-oriented)            |
 | **Persistence**  | None (stateless)             | Persistent (external memory)      |
@@ -70,19 +116,34 @@ This is the logic that governs how the agent uses the other three pillars. It is
 
 ## Transitioning from RAG to agentic workflows
 
-Retrieval-Augmented Generation (RAG) was the first step toward more capable AI. In a standard RAG setup, you retrieve relevant documents from a vector store and stuff them into the LLM prompt. This is a linear process.
+Retrieval-Augmented Generation (RAG) was the first step toward more capable AI. In a standard RAG setup, you retrieve relevant documents from a vector store and stuff them into the LLM prompt. It is a linear process.
 
-Agentic RAG takes this further. Instead of a fixed retrieval step, the agent decides _when_ to search, _what_ keywords to use, and _whether_ the retrieved information was actually useful. If the first search results are poor, the agent refines its query and searches again. I cover this evolution in more depth in [traditional vs agentic vs corrective RAG](/blog/rag-architectures-traditional-agentic-corrective/).
+### Agentic RAG
 
-![Circular diagram of an AI agent's reasoning loop: think, act with a tool, then observe the result before deciding the next step](/blog/llm-vs-ai-agent/reasoning-loop.webp)
+Agentic RAG goes further. Instead of a fixed retrieval step, the agent decides _when_ to search, _what_ keywords to use and _whether_ the results were actually useful.
 
-For example, when dealing with [7 common RAG mistakes](/blog/7-rag-mistakes-production/), an agentic approach can mitigate issues like "hallucinated retrieval" by cross-referencing multiple sources or validating facts against a structured database.
+If the first search results are poor, the agent refines its query and searches again. I cover this in more depth in [traditional vs agentic vs corrective RAG](/blog/rag-architectures-traditional-agentic-corrective/).
+
+<BeforeAfter beforeLabel="Standard RAG" afterLabel="Agentic RAG">
+  <div slot="before">Retrieve once, stuff the results into the prompt, answer. Poor results go straight into the answer.</div>
+  <div slot="after">The agent decides when and what to search, checks if the results help, and searches again with a better query if they don't.</div>
+</BeforeAfter>
+
+### Fewer bad retrievals
+
+Take the [7 common RAG mistakes](/blog/7-rag-mistakes-production/). An agentic approach can reduce problems like "hallucinated retrieval" by cross-referencing multiple sources or checking facts against a structured database.
 
 ## Building agents in production
 
-Building an agentic system requires more than just an API key. You need a robust backend to manage the state and execute the tools. Frameworks like LangGraph and CrewAI are popular for Python developers. However, for those in the PHP ecosystem, you can build powerful agentic backends using Laravel and tools like [Claude MCP](/blog/claude-mcp-dev-tools/).
+Building an agentic system takes more than an API key. You need a solid backend to manage state and run the tools.
 
-The Model Context Protocol (MCP) is particularly exciting for agent development. It provides a standardized way for agents to connect to local and remote data sources. Instead of writing custom connectors for every tool, you can use MCP to give your agent immediate access to your filesystem, GitHub repos, or database schemas.
+Frameworks like LangGraph and CrewAI are popular with Python developers. In the PHP ecosystem, you can build capable agentic backends with Laravel and tools like [Claude MCP](/blog/claude-mcp-dev-tools/).
+
+### MCP for tools
+
+The Model Context Protocol (MCP) is especially useful for agent development. It gives agents a standard way to connect to local and remote data sources.
+
+Instead of writing custom connectors for every tool, you can use MCP to give your agent direct access to your filesystem, GitHub repos or database schemas.
 
 ```php
 // Example of a tool definition in a Laravel-based agent
@@ -103,31 +164,45 @@ public function getTools(): array
 }
 ```
 
-By defining tools clearly, you allow the agent to understand exactly what it can do. The LLM then acts as the router, deciding which tool to trigger based on the user's intent.
+### Clear tool definitions
+
+Clear tool definitions tell the agent exactly what it can do. The LLM then acts as the router, deciding which tool to trigger based on the user's intent.
+
+<Figure
+  src="/blog/llm-vs-ai-agent/inline-2.webp"
+  alt="Comic panel of a robot dispatcher choosing the right wrench from a wall of tools for a waiting robot"
+  caption="Clear tool definitions help the agent choose the right action for each request."
+/>
+
+<TryThis>
+Rewrite the `description` of each tool your agent has so it says what the tool does, when to use it and what it returns. Vague descriptions are a common reason agents pick the wrong tool.
+</TryThis>
 
 ## When to choose an agent over an LLM
 
-Not every feature needs to be an agent. Agents are more complex to build, harder to test, and can be more expensive due to multiple LLM calls.
+Not every feature needs to be an agent. Agents are more complex to build, harder to test and can cost more because of multiple LLM calls.
 
 **Use a standalone LLM when:**
 
 - You need immediate, low-latency text generation.
-- The task is simple and doesn't require external data.
+- The task is simple and doesn't need external data.
 - The workflow is linear and predictable.
 
 **Use an AI agent when:**
 
-- The task requires multiple steps or logic branches.
-- You need the system to interact with external APIs or databases.
-- The goal is open-ended (e.g., "Research this topic and find three competitors").
-- You need the system to learn and adapt over time using memory.
+- The task needs multiple steps or logic branches.
+- The system must interact with external APIs or databases.
+- The goal is open-ended (for example, "Research this topic and find three competitors").
+- The system needs to learn and adapt over time using memory.
 
-## Takeaways
+<Takeaway>
+- **LLMs are the engine.** They provide the reasoning but need a system around them to do real work.
+- **Agency is architectural.** You build it by adding memory, tool use and planning layers to your model.
+- **Reasoning loops are key.** Observing and correcting actions is what makes agents autonomous.
+- **Start with RAG, then move to agents.** Agentic RAG is a natural next step for teams already using vector databases.
+- **Standardize your tools.** Protocols like MCP make it easier to give agents the data they need without custom boilerplate.
+</Takeaway>
 
-- **LLMs are engines, not drivers.** They provide the reasoning power but require a system around them to perform real work.
-- **Agency is architectural.** You build agency by adding memory, tool-use, and planning layers to your model.
-- **Reasoning loops are key.** The ability to observe and correct actions is what makes agents autonomous.
-- **Start with RAG, then move to agents.** Agentic RAG is a natural evolution for teams already using vector databases.
-- **Standardize your tools.** Protocols like MCP make it easier to give agents access to the data they need without custom boilerplate.
+If you want help turning a prompt-response feature into an agent that takes action, [here's how I work with teams shipping agents with tools, memory and MCP](/services/).
 
-Is your current AI implementation stuck in a passive prompt-response loop, or are you ready to build systems that actually take action? If you want help making that jump, [here's how I work with teams shipping agents](/services/).
+Is your current AI implementation stuck in a passive prompt-response loop, or are you ready to build systems that actually take action?

@@ -1,6 +1,6 @@
 ---
 title: "Hello, world. Yes, another developer blog."
-description: "Why this developer blog exists, what I'll write about — Laravel, AI, Shopify — and why neobrutalism is the right call for an engineer's site in 2026."
+description: "Why this developer blog exists, what I'll write about (Laravel, AI, Shopify) and why every code sample here is meant to run in production."
 publishDate: 2025-11-16
 category: career
 tags: [career, laravel, ai]
@@ -10,69 +10,86 @@ heroImage:
   alt: "Comic pop-art hero: developer starting a Hello World blog with Laravel, AI, and Shopify sticky notes"
 ---
 
-import SpeechBubble from "@/components/neobrutalist/SpeechBubble.astro";
-import StickyNote from "@/components/neobrutalist/StickyNote.astro";
-import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
-import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
-import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
+Most developer blogs read like a LinkedIn post had a baby with a Medium article. This one won't.
 
-Most developer blogs read like a LinkedIn post had a baby with a Medium article.
-This one won't. I'm Anass. I ship Laravel + Shopify + AI for a living, and this is
-where I take notes out loud.
+<Summary>
+- This blog is where I take notes out loud on the Laravel, Shopify and AI work I ship.
+- Expect Laravel internals, AI engineering with Claude and MCP, Shopify Plus patterns and hard-won DevOps lessons.
+- Every code sample is meant to run in production, and you can follow along through RSS with no newsletter or popup.
+</Summary>
+
+I'm Anass. I ship Laravel + Shopify + AI for a living, and this is where I take notes out loud.
 
 ## Why now
 
-I've spent over a decade remote, mostly head-down in client codebases. The patterns I keep
-reaching for — [Laravel Octane](/blog/laravel-octane-high-traffic/) at scale, [RAG done
-right](/blog/why-your-rag-is-failing/), [agentic commerce](/blog/agentic-commerce-shopify/) — don't
-show up in tutorials. So I'm writing them down.
+The patterns I keep reaching for don't show up in tutorials. So I'm writing them down.
 
-<SpeechBubble tone="yellow" tail="bl">
-  Strong opinions, loosely held. Code that runs in production.
-</SpeechBubble>
+### The notes I wish I had
+
+Think [Laravel Octane](/blog/laravel-octane-high-traffic/) at scale, [RAG done right](/blog/why-your-rag-is-failing/) and [agentic commerce](/blog/agentic-commerce-shopify/).
+
+Each of those took real projects to get right. Writing them down helps me, and it might save you a few late nights.
+
+<PullQuote>Opinions I'll change when proven wrong, backed by code that already runs in production.</PullQuote>
+
+<Figure
+  src="/blog/hello-world/inline-1.webp"
+  alt="Comic panel of a robot writing in a big notebook at a desk while small helper robots hold up sticky notes"
+  caption="This blog is where real project lessons get written down before they're forgotten."
+/>
 
 ## What you'll find here
 
-- Laravel internals you actually use day-to-day
+- Laravel internals you actually use day to day
 - AI engineering with [Claude and MCP](/blog/claude-mcp-dev-tools/)
 - Shopify Plus app patterns
 - Architecture and DevOps lessons learned the hard way
 
-<StickyNote tone="cyan" tilt={-2}>
-  Subscribe via [RSS](/rss.xml) — no newsletter, no popup, no LinkedIn dance.
-</StickyNote>
+<TryThis>
+Subscribe via [RSS](/rss.xml). No newsletter, no popup, no LinkedIn dance.
+</TryThis>
 
 ## This blog vs the AI-slop blog
 
-<ComparisonTable
-  columns={[
-    { label: "This blog", tone: "yellow" },
-    { label: "AI-slop blog", tone: "red" },
-  ]}
-  rows={[
-    {
-      icon: "lucide:check",
-      label: "Real production code",
-      cells: [true, false],
-    },
-    { icon: "lucide:zap", label: "Opinions", cells: [true, false] },
-    { icon: "lucide:bot", label: "GPT-written filler", cells: [false, true] },
-    { icon: "lucide:smile", label: "Personality", cells: [true, false] },
-  ]}
-/>
+| What you get         | This blog | AI-slop blog |
+| :------------------- | :-------: | :----------: |
+| Real production code |    Yes    |      No      |
+| Opinions             |    Yes    |      No      |
+| GPT-written filler   |    No     |     Yes      |
+| Personality          |    Yes    |      No      |
 
 ## Code you can actually run
 
-Every post that needs code gets the syntax treatment — real, runnable, not pseudo-code:
+Every post that needs code gets the syntax treatment: real, runnable, not pseudo-code.
 
-<CodeBlock
-  code={`use Prism\\Prism\\Prism;\n\n$response = Prism::text()\n    ->using('anthropic', 'claude-sonnet-4-5')\n    ->withSystemPrompt('You are a senior Laravel engineer.')\n    ->withPrompt('Refactor this controller for clarity.')\n    ->asText();`}
-  lang="php"
-  filename="app/Actions/AskClaude.php"
+```php
+// app/Actions/AskClaude.php
+use Prism\Prism\Enums\Provider;
+use Prism\Prism\Facades\Prism;
+
+$response = Prism::text()
+    ->using(Provider::Anthropic, 'claude-sonnet-5-5')
+    ->withSystemPrompt('You are a senior Laravel engineer.')
+    ->withPrompt('Refactor this controller for clarity.')
+    ->asText();
+```
+
+<Figure
+  src="/blog/hello-world/inline-2.webp"
+  alt="Comic panel of a robot pulling a lever on a terminal machine that prints a report while a reviewer robot gives a thumbs up"
+  caption="Every code sample here is meant to run in production, not to decorate a slide."
 />
 
-<BurstBadge tone="pink" size="sm">
-  01
-</BurstBadge>
+<TryThis>
+Install Prism in a Laravel app, add `ANTHROPIC_API_KEY` to your `.env` and run the snippet above against one of your own controllers.
+</TryThis>
 
-That's it. First post live. More incoming.
+<Takeaway>
+- **Notes from real work:** Laravel, Shopify and AI patterns that tutorials skip.
+- **Code that runs:** every sample is written for production, not slides.
+- **No noise:** follow along with RSS, no newsletter or popup.
+</Takeaway>
+
+That's it. First post live. More incoming. If you want this kind of work on your own product, [here's how I help teams ship Laravel, Shopify and AI features](/services/).
+
+Which topic should I write about first: Laravel at scale, RAG, or agentic commerce?
