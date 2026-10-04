@@ -70,7 +70,11 @@ Serverless is perfect for "glue code." If you are building a [Shopify app archit
 
 They absorb the bursty, unpredictable nature of webhooks without a dedicated server sitting idle 99% of the time.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/serverless-vs-containers/inline-1.webp"
+  alt="Comic panel of a robot napping beside a switched-off server while small robots pop out of a hat to carry parcels"
+  caption="Serverless sleeps until work arrives, then scales up to meet it."
+/>
 
 <TryThis>
 Open your Lambda logs and count the `REPORT` lines that include `Init Duration`. Their share of all invocations is your real cold start rate, and it tells you whether provisioned concurrency or SnapStart is worth paying for.
