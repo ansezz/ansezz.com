@@ -1,0 +1,553 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import ShareLink from "@/components/tools/ShareLink.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+import { MCP_CLIENTS } from "@/lib/mcp-config";
+
+const TOOL_PATH = "/tools/mcp-config-generator/";
+const TOOL_NAME = "MCP Config Generator and Validator";
+const tool = getTool(TOOL_PATH);
+const VERIFIED = "October 4, 2026";
+
+const DESCRIPTION =
+  "MCP config generator and validator for Claude Desktop, Claude Code, Cursor and VS Code. Build mcp.json for stdio or remote HTTP servers, then paste a config to find mistakes.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const CLIENTS = Object.values(MCP_CLIENTS);
+const DEFAULT_ARGS =
+  "-y\n@modelcontextprotocol/server-filesystem\n/Users/you/Desktop";
+
+// Presets fill the form. Values are examples only.
+const PRESETS = [
+  {
+    label: "Filesystem server (local)",
+    note: "From the Claude Desktop guide",
+    name: "filesystem",
+    transport: "stdio",
+    command: "npx",
+    args: "-y\n@modelcontextprotocol/server-filesystem\n/Users/you/Desktop",
+    url: "",
+  },
+  {
+    label: "Node script (local)",
+    note: "Your own server file",
+    name: "my-tools",
+    transport: "stdio",
+    command: "node",
+    args: "/Users/you/code/my-mcp/build/index.js",
+    url: "",
+  },
+  {
+    label: "Remote HTTP server",
+    note: "Your Laravel app or any MCP endpoint",
+    name: "my-app",
+    transport: "http",
+    command: "",
+    args: "",
+    url: "https://app.example.com/mcp",
+  },
+];
+
+const faq = [
+  {
+    q: "Where is the MCP config file for each client?",
+    a: "Claude Desktop reads claude_desktop_config.json in ~/Library/Application Support/Claude/ on macOS and %APPDATA%\\Claude\\ on Windows. Claude Code reads .mcp.json in your project root. Cursor reads .cursor/mcp.json in the project or ~/.cursor/mcp.json for every project. VS Code reads .vscode/mcp.json in the workspace. Restart the app or reload the window after you change the file.",
+  },
+  {
+    q: "Why does VS Code use servers and not mcpServers?",
+    a: 'VS Code chose its own format. Its .vscode/mcp.json has a top-level "servers" object, plus an optional "inputs" list for prompting the user for secrets. Claude Desktop, Claude Code and Cursor all use "mcpServers". Copying a config from one to the other without changing that key is the most common reason a server does not show up.',
+  },
+  {
+    q: "What is the difference between a stdio and an HTTP MCP server?",
+    a: "A stdio server is a program on your computer. The client starts it with a command and arguments and talks to it over standard input and output. An HTTP server runs somewhere else and the client connects to its URL, often with an Authorization header. Local tools like a filesystem server use stdio. Hosted services and your own deployed app use HTTP.",
+  },
+  {
+    q: "How do I keep API keys out of the config file?",
+    a: "Reference an environment variable instead of pasting the key. Claude Code expands ${VAR} and ${VAR:-default}. Cursor expands ${env:VAR}. VS Code can prompt for a value with ${input:id} and store it securely. Claude Desktop passes values as written, so keep that file out of version control. The validator warns when a value looks like a real token.",
+  },
+  {
+    q: "Why is my MCP server not showing up?",
+    a: 'Check these in order: the JSON is valid (no trailing commas or comments), the top-level key matches the client, "command" holds only the program name with each argument in "args", paths are absolute, npx has "-y", and a remote server has the "type" its client needs. Paste the file into the validator above and it checks all of these.',
+  },
+  {
+    q: "Are these formats current, and is my config sent anywhere?",
+    a: `Each format was checked against the client's official documentation on ${VERIFIED}. Clients change their formats, so the page links to each source. Nothing is sent anywhere. The generator and validator run in your browser. The share link only stores the client, name, transport, command, args and URL, never env values or headers.`,
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  dateModified: tool.updated,
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const inputClass =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono font-bold focus:outline-none";
+const areaClass =
+  "border-ink bg-paper shadow-neo-sm w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono text-sm focus:outline-none";
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const smallLabel = "mb-1 block text-xs font-bold";
+const hintClass = "mt-1 text-xs leading-snug opacity-80";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1 break-words";
+const preClass =
+  "border-ink bg-bg-alt max-h-[28rem] overflow-auto rounded-[4px] border-[3px] p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap break-words";
+const btnClass =
+  "mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow inline-flex min-h-10 items-center rounded-full border-[2px] px-4 text-[11px] font-bold tracking-widest uppercase";
+
+const relatedLinks = [
+  {
+    href: "/tools/json-formatter/",
+    note: "Pretty print and fix any JSON file, including big MCP configs.",
+  },
+  {
+    href: "/blog/claude-mcp-dev-tools/",
+    label: "Claude MCP: connecting my dev tools to LLMs",
+    note: "The servers I actually run, and how they fit into a dev workflow.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/stateless-mcp-servers-laravel/",
+    label: "Stateless MCP servers on Laravel",
+    note: "Build the remote HTTP server that this config points at.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/mcp-oauth-pkce-multi-tenant-saas/",
+    label: "MCP OAuth PKCE for multi-tenant SaaS",
+    note: "Replace static bearer headers with real OAuth for remote servers.",
+    kind: "Post" as const,
+  },
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="MCP Config Generator."
+  intro="Build the MCP server config for Claude Desktop, Claude Code, Cursor or VS Code, or paste a config you already have and see what is wrong with it."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Formats checked {VERIFIED}
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Every client format here was checked against its official docs. Runs in
+        your browser. Env values and headers never go into the share link.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id="mcp-config-generator-root">
+    <h2 class="heading mb-4 text-xl uppercase">1. Generate a config.</h2>
+    <div
+      class="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+    >
+      <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-5">
+        <div>
+          <label for="mcp-config-generator-client" class={labelClass}
+            >Client</label
+          >
+          <select id="mcp-config-generator-client" class={inputClass}>
+            {
+              CLIENTS.map((c, i) => (
+                <option value={c.id} selected={i === 0}>
+                  {c.label}
+                </option>
+              ))
+            }
+          </select>
+        </div>
+        <div>
+          <label for="mcp-config-generator-name" class={labelClass}
+            >Server name</label
+          >
+          <input
+            id="mcp-config-generator-name"
+            type="text"
+            value="filesystem"
+            autocomplete="off"
+            spellcheck="false"
+            class={inputClass}
+          />
+          <p class={hintClass}>Letters, numbers, hyphens and underscores.</p>
+        </div>
+        <fieldset>
+          <legend class={labelClass}>Transport</legend>
+          <div class="flex flex-wrap gap-3">
+            <label
+              class="border-ink bg-paper shadow-neo-xs inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-[4px] border-[2px] px-3 font-bold"
+            >
+              <input
+                type="radio"
+                id="mcp-config-generator-t-stdio"
+                name="mcp-config-generator-transport"
+                value="stdio"
+                checked
+              />
+              Local (stdio)
+            </label>
+            <label
+              class="border-ink bg-paper shadow-neo-xs inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-[4px] border-[2px] px-3 font-bold"
+            >
+              <input
+                type="radio"
+                id="mcp-config-generator-t-http"
+                name="mcp-config-generator-transport"
+                value="http"
+              />
+              Remote (HTTP)
+            </label>
+          </div>
+        </fieldset>
+
+        <div id="mcp-config-generator-stdio-fields" class="space-y-4">
+          <div>
+            <label for="mcp-config-generator-command" class={smallLabel}
+              >Command</label
+            >
+            <input
+              id="mcp-config-generator-command"
+              type="text"
+              value="npx"
+              autocomplete="off"
+              spellcheck="false"
+              class={inputClass}
+            />
+            <p class={hintClass}>
+              Only the program, like <code class={codeClass}>npx</code>, <code
+                class={codeClass}>node</code
+              > or <code class={codeClass}>uvx</code>.
+            </p>
+          </div>
+          <div>
+            <label for="mcp-config-generator-args" class={smallLabel}
+              >Args, one per line</label
+            >
+            <textarea
+              id="mcp-config-generator-args"
+              rows="4"
+              spellcheck="false"
+              class={areaClass}
+              set:text={DEFAULT_ARGS}
+            />
+          </div>
+          <div>
+            <label for="mcp-config-generator-env" class={smallLabel}
+              >Env vars, KEY=value per line</label
+            >
+            <textarea
+              id="mcp-config-generator-env"
+              rows="3"
+              spellcheck="false"
+              placeholder="API_KEY=${API_KEY}"
+              class={areaClass}></textarea>
+            <p class={hintClass}>Not saved in the share link.</p>
+          </div>
+        </div>
+
+        <div id="mcp-config-generator-http-fields" class="hidden space-y-4">
+          <div>
+            <label for="mcp-config-generator-url" class={smallLabel}>URL</label>
+            <input
+              id="mcp-config-generator-url"
+              type="url"
+              value=""
+              placeholder="https://app.example.com/mcp"
+              autocomplete="off"
+              spellcheck="false"
+              class={inputClass}
+            />
+          </div>
+          <div>
+            <label for="mcp-config-generator-headers" class={smallLabel}
+              >Headers, Name: value per line</label
+            >
+            <textarea
+              id="mcp-config-generator-headers"
+              rows="3"
+              spellcheck="false"
+              placeholder="Authorization: Bearer ${MCP_TOKEN}"
+              class={areaClass}></textarea>
+            <p class={hintClass}>Not saved in the share link.</p>
+          </div>
+        </div>
+        <p id="mcp-config-generator-bad" class="text-sm font-bold" role="alert">
+        </p>
+      </NeoCard>
+
+      <NeoCard tone="cyan" shadow="md" class="min-w-0 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p class={labelClass + " mb-0"}>Config file</p>
+          <button
+            type="button"
+            id="mcp-config-generator-copy"
+            class={btnClass}
+            data-copy-target="mcp-config-generator-json">Copy JSON</button
+          >
+        </div>
+        <p
+          id="mcp-config-generator-file"
+          class="text-sm leading-snug font-bold"
+        >
+        </p>
+        <pre id="mcp-config-generator-json" class={preClass} aria-live="polite">
+        </pre>
+        <div id="mcp-config-generator-cli-wrap" class="hidden space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class={labelClass + " mb-0"}>Or add it with the CLI</p>
+            <button
+              type="button"
+              class={btnClass}
+              data-copy-target="mcp-config-generator-cli">Copy command</button
+            >
+          </div>
+          <pre id="mcp-config-generator-cli" class={preClass}></pre>
+        </div>
+        <ul
+          id="mcp-config-generator-notes"
+          class="space-y-2 text-sm leading-snug"
+        >
+        </ul>
+        <p class="text-xs">
+          Source: <a
+            id="mcp-config-generator-docs"
+            class="font-bold break-words underline"
+            href="https://modelcontextprotocol.io/docs/develop/connect-local-servers"
+            rel="noopener"
+            target="_blank">official docs</a
+          >
+        </p>
+      </NeoCard>
+    </div>
+
+    <h3 class="heading mt-8 mb-3 text-lg uppercase">Examples.</h3>
+    <ul class="grid gap-3 sm:grid-cols-3">
+      {
+        PRESETS.map((p) => (
+          <li class="min-w-0">
+            <div class="border-ink bg-paper shadow-neo-sm flex h-full flex-col justify-between gap-3 rounded-[4px] border-[3px] p-3">
+              <div class="min-w-0">
+                <p class="font-bold">{p.label}</p>
+                <p class="mono mt-1 text-[10px] tracking-widest uppercase opacity-70">
+                  {p.note}
+                </p>
+              </div>
+              <button
+                type="button"
+                data-preset-name={p.name}
+                data-preset-transport={p.transport}
+                data-preset-command={p.command}
+                data-preset-args={p.args}
+                data-preset-url={p.url}
+                class={btnClass + " self-start"}
+              >
+                Use
+              </button>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="mt-6">
+      <ShareLink label="Copy link (no env values or headers)" />
+    </div>
+
+    <h2 class="heading mt-12 mb-4 text-xl uppercase">2. Validate a config.</h2>
+    <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-4">
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
+        <div class="min-w-0">
+          <label for="mcp-config-generator-vclient" class={labelClass}
+            >Check it for</label
+          >
+          <select id="mcp-config-generator-vclient" class={inputClass}>
+            {
+              CLIENTS.map((c, i) => (
+                <option value={c.id} selected={i === 0}>
+                  {c.label}
+                </option>
+              ))
+            }
+          </select>
+        </div>
+        <div class="min-w-0">
+          <label for="mcp-config-generator-vtext" class={labelClass}
+            >Paste your config file</label
+          >
+          <textarea
+            id="mcp-config-generator-vtext"
+            rows="10"
+            spellcheck="false"
+            placeholder='{ "mcpServers": { ... } }'
+            class={areaClass}></textarea>
+          <p class={hintClass}>
+            Checked live in your browser. Never saved in the URL.
+          </p>
+        </div>
+      </div>
+      <p
+        id="mcp-config-generator-vsummary"
+        class="font-bold"
+        aria-live="polite"
+      >
+        Paste a config to check it.
+      </p>
+      <ul id="mcp-config-generator-vissues" class="space-y-2 text-sm"></ul>
+    </NeoCard>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">The formats, side by side</h2>
+      <p>
+        All four clients store servers as a JSON object keyed by server name.
+        The differences are small, but each one breaks a server silently.
+      </p>
+      <ul class="space-y-2">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Claude Desktop:</strong>
+            <code class={codeClass}>mcpServers</code> with <code
+              class={codeClass}>command</code
+            >, <code class={codeClass}>args</code> and <code class={codeClass}
+              >env</code
+            >. Local servers only. Use absolute paths. Add remote servers as
+            custom connectors in the app settings.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Claude Code:</strong>
+            <code class={codeClass}>mcpServers</code> in <code class={codeClass}
+              >.mcp.json</code
+            >. Remote servers need <code class={codeClass}>"type": "http"</code>
+            (or <code class={codeClass}>sse</code>, <code class={codeClass}
+              >ws</code
+            >) next to <code class={codeClass}>url</code> and <code
+              class={codeClass}>headers</code
+            >. Expands <code class={codeClass}>{"${VAR}"}</code>. You can also
+            use <code class={codeClass}>claude mcp add</code>.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Cursor:</strong>
+            <code class={codeClass}>mcpServers</code> in <code class={codeClass}
+              >.cursor/mcp.json</code
+            >. Local servers use <code class={codeClass}>"type": "stdio"</code>.
+            Remote servers use <code class={codeClass}>url</code> and <code
+              class={codeClass}>headers</code
+            >. Expands <code class={codeClass}>{"${env:VAR}"}</code>.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>VS Code:</strong>
+            <code class={codeClass}>servers</code> in <code class={codeClass}
+              >.vscode/mcp.json</code
+            >, with <code class={codeClass}>"type"</code> set to <code
+              class={codeClass}>stdio</code
+            >, <code class={codeClass}>http</code> or <code class={codeClass}
+              >sse</code
+            >. Secrets can come from <code class={codeClass}
+              >{"${input:id}"}</code
+            > prompts.</span
+          >
+        </li>
+      </ul>
+      <p>
+        Windsurf is not included yet. Its MCP docs were changing when this page
+        was checked, and I only list formats I could confirm.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">What the validator checks</h2>
+      <p>
+        JSON syntax with line and column (trailing commas, comments, single
+        quotes), the right top-level key for the client, a missing <code
+          class={codeClass}>command</code
+        > or <code class={codeClass}>url</code>, both at once, a command with
+        arguments stuck inside it, args that are not strings, relative paths in
+        Claude Desktop, npx without <code class={codeClass}>-y</code>, remote
+        servers without the <code class={codeClass}>type</code> the client needs,
+        plain <code class={codeClass}>http://</code> to a remote host, the wrong variable
+        syntax for the client, and values that look like real tokens.
+      </p>
+      <p>Sources, checked {VERIFIED}:</p>
+      <ul class="space-y-1 text-sm">
+        {
+          CLIENTS.map((c) => (
+            <li class="break-words">
+              {c.label}:{" "}
+              <a class="font-bold underline" href={c.docs} rel="noopener">
+                {c.docs.replace(/^https:\/\//, "")}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/mcp-config-generator";
+</script>

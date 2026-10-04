@@ -91,6 +91,22 @@ export const TOOL_LIST_A: ToolEntry[] = [
     tags: ["llm", "llm-inference", "ai-engineering"],
   },
 
+  {
+    title: "MCP Config Generator",
+    blurb:
+      "Build the MCP server config for Claude Desktop, Claude Code, Cursor or VS Code, stdio or remote HTTP. Paste a config to find what is wrong with it.",
+    href: "/tools/mcp-config-generator/",
+    seoTitle: "MCP Config Generator and Validator",
+    updated: "2026-10-04",
+    verifiedLabel: "October 4, 2026 (client formats)",
+    services: ["ai", "mvp"],
+    icon: "lucide:cable",
+    tone: "purple",
+    status: "live",
+    group: "ai",
+    tags: ["mcp", "claude", "ai"],
+  },
+
   // ── Encoding & secrets ──
   {
     title: "JWT Decoder",
@@ -105,6 +121,20 @@ export const TOOL_LIST_A: ToolEntry[] = [
     status: "live",
     group: "encoding",
     tags: ["security", "api-design"],
+  },
+  {
+    title: "Laravel Encrypt / Decrypt",
+    blurb:
+      "Decrypt or encrypt Laravel Crypt payloads and cookies with your APP_KEY. AES-CBC with MAC check and AES-GCM, all in your browser.",
+    href: "/tools/laravel-encrypt-decrypt/",
+    seoTitle: "Laravel Decrypt and Encrypt Online, Client-Side",
+    updated: "2026-10-04",
+    services: ["mvp"],
+    icon: "lucide:lock-keyhole",
+    tone: "pink",
+    status: "live",
+    group: "encoding",
+    tags: ["laravel", "security"],
   },
   {
     title: "Base64 Encoder / Decoder",

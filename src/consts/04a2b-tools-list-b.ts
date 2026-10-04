@@ -132,6 +132,22 @@ export const TOOL_LIST_B: ToolEntry[] = [
     tags: ["shopify", "hydrogen"],
   },
 
+  {
+    title: "Shopify Rate Limit Planner",
+    blurb:
+      "GraphQL Admin, REST or Storefront, by plan: throughput, time to sync N records, batch size and concurrency. Paste a response to use your real costs.",
+    href: "/tools/shopify-rate-limit-planner/",
+    seoTitle: "Shopify API Rate Limit Planner: GraphQL, REST",
+    updated: "2026-10-04",
+    verifiedLabel: "October 4, 2026 (plan limits)",
+    services: ["shopify"],
+    icon: "lucide:hourglass",
+    tone: "yellow",
+    status: "live",
+    group: "shopify",
+    tags: ["shopify", "performance", "scaling"],
+  },
+
   // ── Reference ──
   {
     title: "HTTP Status Codes",

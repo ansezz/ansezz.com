@@ -1,0 +1,351 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_PATH = "/tools/laravel-encrypt-decrypt/";
+const TOOL_NAME = "Laravel Encrypt and Decrypt";
+const tool = getTool(TOOL_PATH);
+
+const DESCRIPTION =
+  "Decrypt and encrypt Laravel Crypt payloads in your browser with your APP_KEY. AES-256-CBC with MAC check and AES-256-GCM. Nothing leaves the page.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const faq = [
+  {
+    q: "Is it safe to paste my APP_KEY here?",
+    a: "The page never sends your key, payload or text anywhere. Decryption runs with the Web Crypto API built into your browser, there is no analytics on the inputs, and nothing is saved in the URL or in storage. Still, treat a production APP_KEY like a password: use a local or staging key when you can, and rotate the key if it was ever exposed.",
+  },
+  {
+    q: "What does a Laravel encrypted payload look like?",
+    a: 'It is base64 of a small JSON object, so it usually starts with "eyJ". The JSON has four fields: iv (the random starting vector), value (the encrypted data), mac (an HMAC-SHA256 used by CBC ciphers) and tag (the auth tag used by GCM ciphers). Paste one into the decrypt box and the page shows these fields even before you enter a key.',
+  },
+  {
+    q: "What is the difference between encrypt and encryptString?",
+    a: 'Crypt::encrypt() runs PHP serialize() on the value first, so a string hello becomes s:5:"hello"; before it is encrypted. Crypt::encryptString() encrypts the text as it is. The decrypt box shows the raw text and, when it is a serialized PHP value, the value inside. For encrypting, tick or untick Serialize to match the PHP call you will use to read it.',
+  },
+  {
+    q: "Which ciphers does Laravel support?",
+    a: "AES-256-CBC (the default), AES-128-CBC, AES-256-GCM and AES-128-GCM, set by the cipher option in config/app.php. CBC payloads carry a MAC that Laravel checks before decrypting. GCM payloads carry a 16 byte auth tag instead and an empty mac. This tool supports all four and can detect which one a payload uses.",
+  },
+  {
+    q: "Why do I get The MAC is invalid?",
+    a: "The key does not match the one that encrypted the payload, or the payload was changed or cut short while copying. Check that you copied the whole APP_KEY including the base64: prefix, that the payload came from the same environment, and that a key rotation did not happen in between. Laravel can also try old keys listed in APP_PREVIOUS_KEYS.",
+  },
+  {
+    q: "Can I decrypt Laravel cookies with this?",
+    a: "Yes. Copy the cookie value from your browser, it may be URL encoded and the page decodes that. After decryption a Laravel cookie starts with a 40 character hash of the cookie name followed by a | sign. The page points that prefix out and shows the real value after it. With the default session drivers, the session cookie only holds a session ID and the data lives on the server.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  dateModified: tool.updated,
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript and the Web Crypto API",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const inputClass =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono font-bold focus:outline-none";
+const areaClass =
+  "border-ink bg-paper shadow-neo-sm w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono text-sm break-all focus:outline-none";
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const hintClass = "mt-1 text-xs leading-snug opacity-80";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1 break-words";
+const preClass =
+  "border-ink bg-bg-alt min-h-12 max-h-80 overflow-auto rounded-[4px] border-[3px] p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap break-all";
+const btnClass =
+  "mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow inline-flex min-h-10 items-center rounded-full border-[2px] px-4 text-[11px] font-bold tracking-widest uppercase";
+
+const relatedLinks = [
+  {
+    href: "/tools/secret-generator/",
+    note: "Generate a fresh APP_KEY or any other random secret.",
+  },
+  {
+    href: "/tools/base64-encoder/",
+    note: "Decode the outer base64 layer by hand to see the JSON envelope.",
+  },
+  {
+    href: "/blog/mcp-auth-audit-logging-laravel/",
+    label: "MCP auth and audit logging in a Laravel SaaS",
+    note: "Where encrypted tokens and audit trails fit in a Laravel app.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/laravel-multi-tenancy/",
+    label: "Laravel multi-tenancy: a scalable SaaS architecture",
+    note: "Per-tenant keys and data isolation in a real Laravel SaaS.",
+    kind: "Post" as const,
+  },
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Laravel Encrypt and Decrypt."
+  intro="Decrypt a Laravel Crypt payload or cookie with your APP_KEY, or make a payload Laravel can read. It all runs in your browser."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="pink" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Nothing leaves your browser
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Your key, payload and text stay on this page. There is no upload, no
+        logging and no share link. Prefer a local or staging key anyway.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section
+    class="mx-auto max-w-5xl px-5 pb-14"
+    id="laravel-encrypt-decrypt-root"
+  >
+    <NeoCard tone="paper" shadow="md" class="mb-6 min-w-0 space-y-4">
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
+        <div class="min-w-0">
+          <label for="laravel-encrypt-decrypt-key" class={labelClass}
+            >APP_KEY</label
+          >
+          <input
+            id="laravel-encrypt-decrypt-key"
+            type="text"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="base64:..."
+            class={inputClass}
+          />
+          <p id="laravel-encrypt-decrypt-keyinfo" class={hintClass}>
+            Paste it from .env, with the base64: prefix.
+          </p>
+        </div>
+        <div class="min-w-0">
+          <label for="laravel-encrypt-decrypt-cipher" class={labelClass}
+            >Cipher</label
+          >
+          <select id="laravel-encrypt-decrypt-cipher" class={inputClass}>
+            <option value="auto" selected>Detect</option>
+            <option value="aes-256-cbc">AES-256-CBC</option>
+            <option value="aes-128-cbc">AES-128-CBC</option>
+            <option value="aes-256-gcm">AES-256-GCM</option>
+            <option value="aes-128-gcm">AES-128-GCM</option>
+          </select>
+          <p class={hintClass}>Detect uses AES-256-CBC to encrypt.</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="button"
+          id="laravel-encrypt-decrypt-genkey"
+          class={btnClass}>New test key</button
+        >
+        <button
+          type="button"
+          id="laravel-encrypt-decrypt-sample"
+          class={btnClass}>Load an example</button
+        >
+      </div>
+    </NeoCard>
+
+    <div class="grid items-start gap-6 md:grid-cols-2">
+      <NeoCard tone="cyan" shadow="md" class="min-w-0 space-y-4">
+        <h2 class="heading text-xl uppercase">Decrypt</h2>
+        <div>
+          <label for="laravel-encrypt-decrypt-payload" class={labelClass}
+            >Encrypted payload or cookie</label
+          >
+          <textarea
+            id="laravel-encrypt-decrypt-payload"
+            rows="6"
+            spellcheck="false"
+            placeholder="eyJpdiI6..."
+            class={areaClass}></textarea>
+        </div>
+        <p
+          id="laravel-encrypt-decrypt-dstatus"
+          class="text-sm font-bold break-words"
+          aria-live="polite"
+        >
+          Paste a payload to start.
+        </p>
+        <div>
+          <p class={labelClass}>Decrypted value</p>
+          <pre id="laravel-encrypt-decrypt-plain" class={preClass}></pre>
+        </div>
+        <details class="text-sm">
+          <summary class="flex min-h-10 cursor-pointer items-center font-bold">
+            Payload fields (no key needed)
+          </summary>
+          <pre id="laravel-encrypt-decrypt-envelope" class={preClass}></pre>
+        </details>
+      </NeoCard>
+
+      <NeoCard tone="yellow" shadow="md" class="min-w-0 space-y-4">
+        <h2 class="heading text-xl uppercase">Encrypt</h2>
+        <div>
+          <label for="laravel-encrypt-decrypt-text" class={labelClass}
+            >Text to encrypt</label
+          >
+          <textarea
+            id="laravel-encrypt-decrypt-text"
+            rows="4"
+            spellcheck="false"
+            class={areaClass}></textarea>
+        </div>
+        <label
+          class="flex min-h-10 cursor-pointer items-center gap-2 font-bold"
+        >
+          <input type="checkbox" id="laravel-encrypt-decrypt-serialize" />
+          Serialize, like Crypt::encrypt()
+        </label>
+        <p class={hintClass + " mt-0"}>
+          Leave it off for Crypt::encryptString() and encrypted casts on
+          strings.
+        </p>
+        <button
+          type="button"
+          id="laravel-encrypt-decrypt-encrypt"
+          class={btnClass + " bg-paper"}>Encrypt</button
+        >
+        <p
+          id="laravel-encrypt-decrypt-estatus"
+          class="text-sm font-bold break-words"
+          aria-live="polite"
+        >
+        </p>
+        <div>
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
+            <p class={labelClass + " mb-0"}>Payload</p>
+            <button
+              type="button"
+              id="laravel-encrypt-decrypt-copy"
+              class={btnClass}>Copy</button
+            >
+          </div>
+          <pre id="laravel-encrypt-decrypt-out" class={preClass}></pre>
+        </div>
+      </NeoCard>
+    </div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">How Laravel encrypts</h2>
+      <p>
+        This follows <code class={codeClass}
+          >Illuminate\Encryption\Encrypter</code
+        > in Laravel 12. For a CBC cipher:
+      </p>
+      <ul class="space-y-2">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            >Pick a random 16 byte <strong>iv</strong>. Encrypt the text (or its <code
+              class={codeClass}>serialize()</code
+            > form) with AES and the key from APP_KEY, and base64 it into <strong
+              >value</strong
+            >.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            >Compute <strong>mac</strong> as <code class={codeClass}
+              >hash_hmac('sha256', iv . value, key)</code
+            >, using the base64 strings, and leave <strong>tag</strong> empty.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            >JSON encode <code class={codeClass}>{"{iv, value, mac, tag}"}</code
+            > and base64 the result. That string is the payload.</span
+          >
+        </li>
+      </ul>
+      <p>
+        GCM ciphers use a 12 byte iv, an empty mac and a base64 16 byte auth tag
+        in <strong>tag</strong>. On decrypt, Laravel checks the iv length, then
+        the MAC (CBC) or the tag (GCM), and only then decrypts.
+      </p>
+      <p>
+        Tested against real Laravel output: payloads made by <code
+          class={codeClass}>illuminate/encryption</code
+        > 12 with all four ciphers decrypt here, and payloads made here decrypt in
+        PHP with <code class={codeClass}>decrypt()</code> and <code
+          class={codeClass}>decryptString()</code
+        >. With a fixed iv, this page and PHP produce the exact same payload.
+      </p>
+      <p class="text-sm">
+        Source: <a
+          class="font-bold break-words underline"
+          href="https://github.com/laravel/framework/blob/12.x/src/Illuminate/Encryption/Encrypter.php"
+          rel="noopener">Encrypter.php on GitHub</a
+        > and the <a
+          class="font-bold break-words underline"
+          href="https://laravel.com/docs/12.x/encryption"
+          rel="noopener">Laravel encryption docs</a
+        >.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/laravel-encrypt-decrypt";
+</script>

@@ -1,0 +1,615 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import ShareLink from "@/components/tools/ShareLink.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+import { GRAPHQL_RATE, PLAN_LABEL, REST_RATE } from "@/lib/shopify-rate-limits";
+
+const TOOL_PATH = "/tools/shopify-rate-limit-planner/";
+const TOOL_NAME = "Shopify API Rate Limit Planner";
+const tool = getTool(TOOL_PATH);
+const VERIFIED = "October 4, 2026";
+
+const DESCRIPTION =
+  "Shopify API rate limit planner: pick GraphQL Admin, REST or Storefront and your plan, and see throughput, time to sync N records, batch size and concurrency.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const PLANS = (["standard", "advanced", "plus", "enterprise"] as const).map(
+  (id) => ({
+    id,
+    label: PLAN_LABEL[id],
+    gql: GRAPHQL_RATE[id],
+    rest: REST_RATE[id],
+  }),
+);
+
+const faq = [
+  {
+    q: "What are the Shopify GraphQL Admin API rate limits?",
+    a: "The GraphQL Admin API uses a leaky bucket of cost points per app and store. It refills at 100 points a second on Standard plans, 200 on Advanced, 1,000 on Shopify Plus and 2,000 on Enterprise (Commerce Components). One query can never ask for more than 1,000 points, whatever the plan. Limits are per app and store, so two apps on one store do not share a bucket.",
+  },
+  {
+    q: "What is the difference between requested and actual cost?",
+    a: "Requested cost is what Shopify works out from your query before it runs, mostly from the first or last size of each connection. The bucket must hold that much before the query starts. Actual cost is what the query really used, often lower because a page came back with fewer items. Shopify refunds the difference afterwards. Both numbers are in extensions.cost on every response.",
+  },
+  {
+    q: "How big is the GraphQL bucket?",
+    a: "Shopify lists the refill rate per plan, not the bucket size. Your real bucket size is throttleStatus.maximumAvailable in the response. The planner starts at 20 times the refill rate, the same ratio as the example response in Shopify's docs, and you can paste a response to fill in your real numbers.",
+  },
+  {
+    q: "What are the REST Admin API limits?",
+    a: "The REST Admin API counts requests, not points: 2 a second on Standard, 4 on Advanced, 20 on Plus and 40 on Enterprise, with a bucket of 40 requests (400 on Plus). The X-Shopify-Shop-Api-Call-Limit header shows how full the bucket is. REST is legacy since October 1, 2024, so new apps should use GraphQL.",
+  },
+  {
+    q: "Does the Storefront API have a rate limit?",
+    a: "Not for normal buyer traffic. Shopify scales the Storefront API with real shoppers, so there is no fixed points or requests limit to plan around. Bots are limited, checkout creation is throttled per minute, and requests without a token have a query complexity limit of 1,000. If you need to move lots of data, use the Admin API instead.",
+  },
+  {
+    q: "When should I use bulk operations instead?",
+    a: "When you read more than about 25,000 objects, since Shopify pagination stops there, or when the plan above says the sync takes long. Bulk operations run on Shopify's side, have no cost or rate limits, and give you a JSONL file at the end. The planner warns you when your record count passes that line. Nothing you enter here is sent anywhere.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  dateModified: tool.updated,
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const inputClass =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono font-bold focus:outline-none";
+const areaClass =
+  "border-ink bg-paper shadow-neo-sm w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono text-sm focus:outline-none";
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const smallLabel = "mb-1 block text-xs font-bold";
+const hintClass = "mt-1 text-xs leading-snug opacity-80";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1 break-words";
+const rowClass = "flex flex-wrap items-baseline justify-between gap-x-3";
+const radioClass =
+  "border-ink bg-paper shadow-neo-xs inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-[4px] border-[2px] px-3 font-bold";
+
+const relatedLinks = [
+  {
+    href: "/tools/shopify-gid-decoder/",
+    note: "Turn the gid:// IDs from GraphQL into numeric IDs and back.",
+  },
+  {
+    href: "/tools/shopify-hmac-verifier/",
+    note: "Check webhook signatures for the sync jobs this plan feeds.",
+  },
+  {
+    href: "/blog/rate-limiting-vs-throttling/",
+    label: "Rate limiting vs throttling",
+    note: "The leaky bucket idea behind these limits, in plain words.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/agentic-commerce-shopify/",
+    label: "How agentic commerce changes building on Shopify",
+    note: "Why API budgets matter more when agents call your store.",
+    kind: "Post" as const,
+  },
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Shopify Rate Limit Planner."
+  intro="How fast can your app sync products, orders or customers? Pick the API and plan, enter the cost of one request, and see the time, the bottleneck and a safe batch size and concurrency."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Limits checked {VERIFIED}
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Plan limits come from shopify.dev. The GraphQL bucket size is an
+        estimate until you paste a real response.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section
+    class="mx-auto max-w-5xl px-5 pb-14"
+    id="shopify-rate-limit-planner-root"
+  >
+    <div class="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_340px]">
+      <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-5">
+        <fieldset>
+          <legend class={labelClass}>API</legend>
+          <div class="flex flex-wrap gap-3">
+            <label class={radioClass}>
+              <input
+                type="radio"
+                id="shopify-rate-limit-planner-api-graphql"
+                name="shopify-rate-limit-planner-api"
+                value="graphql"
+                checked
+              />
+              GraphQL Admin
+            </label>
+            <label class={radioClass}>
+              <input
+                type="radio"
+                id="shopify-rate-limit-planner-api-rest"
+                name="shopify-rate-limit-planner-api"
+                value="rest"
+              />
+              REST Admin
+            </label>
+            <label class={radioClass}>
+              <input
+                type="radio"
+                id="shopify-rate-limit-planner-api-storefront"
+                name="shopify-rate-limit-planner-api"
+                value="storefront"
+              />
+              Storefront
+            </label>
+          </div>
+        </fieldset>
+
+        <div>
+          <label for="shopify-rate-limit-planner-plan" class={labelClass}
+            >Store plan</label
+          >
+          <select id="shopify-rate-limit-planner-plan" class={inputClass}>
+            {
+              PLANS.map((p, i) => (
+                <option value={p.id} selected={i === 0}>
+                  {p.label}
+                </option>
+              ))
+            }
+          </select>
+          <p class={hintClass}>
+            Picking a plan fills in the rate and bucket below.
+          </p>
+        </div>
+
+        <div id="shopify-rate-limit-planner-admin" class="space-y-5">
+          <fieldset class="space-y-3">
+            <legend class={labelClass}>Limits, editable</legend>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="min-w-0">
+                <label
+                  for="shopify-rate-limit-planner-rate"
+                  class={smallLabel}
+                  id="shopify-rate-limit-planner-rate-label"
+                  >Restore rate, points/s</label
+                >
+                <input
+                  id="shopify-rate-limit-planner-rate"
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputmode="decimal"
+                  value="100"
+                  class={inputClass}
+                />
+              </div>
+              <div class="min-w-0">
+                <label
+                  for="shopify-rate-limit-planner-bucket"
+                  class={smallLabel}
+                  id="shopify-rate-limit-planner-bucket-label"
+                  >Bucket size, points</label
+                >
+                <input
+                  id="shopify-rate-limit-planner-bucket"
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputmode="decimal"
+                  value="2000"
+                  class={inputClass}
+                />
+              </div>
+            </div>
+            <p id="shopify-rate-limit-planner-bucket-note" class={hintClass}>
+            </p>
+          </fieldset>
+
+          <fieldset class="space-y-3">
+            <legend class={labelClass}>Your sync</legend>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="min-w-0">
+                <label
+                  for="shopify-rate-limit-planner-records"
+                  class={smallLabel}>Records to sync</label
+                >
+                <input
+                  id="shopify-rate-limit-planner-records"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+                  value="10000"
+                  class={inputClass}
+                />
+              </div>
+              <div class="min-w-0">
+                <label
+                  for="shopify-rate-limit-planner-perreq"
+                  class={smallLabel}>Records per request</label
+                >
+                <input
+                  id="shopify-rate-limit-planner-perreq"
+                  type="number"
+                  min="1"
+                  max="250"
+                  step="1"
+                  inputmode="numeric"
+                  value="50"
+                  class={inputClass}
+                />
+              </div>
+              <div class="min-w-0" data-graphql-only>
+                <label
+                  for="shopify-rate-limit-planner-reqcost"
+                  class={smallLabel}>Requested cost</label
+                >
+                <input
+                  id="shopify-rate-limit-planner-reqcost"
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputmode="decimal"
+                  value="52"
+                  class={inputClass}
+                />
+              </div>
+              <div class="min-w-0" data-graphql-only>
+                <label
+                  for="shopify-rate-limit-planner-actcost"
+                  class={smallLabel}>Actual cost</label
+                >
+                <input
+                  id="shopify-rate-limit-planner-actcost"
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputmode="decimal"
+                  value="52"
+                  class={inputClass}
+                />
+              </div>
+              <div class="min-w-0">
+                <label
+                  for="shopify-rate-limit-planner-latency"
+                  class={smallLabel}>Response time, s</label
+                >
+                <input
+                  id="shopify-rate-limit-planner-latency"
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputmode="decimal"
+                  value="0.4"
+                  class={inputClass}
+                />
+              </div>
+              <div class="min-w-0">
+                <label for="shopify-rate-limit-planner-conc" class={smallLabel}
+                  >Concurrent requests</label
+                >
+                <input
+                  id="shopify-rate-limit-planner-conc"
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputmode="numeric"
+                  value="2"
+                  class={inputClass}
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          <div data-graphql-only>
+            <label for="shopify-rate-limit-planner-paste" class={labelClass}
+              >Optional: paste a response</label
+            >
+            <textarea
+              id="shopify-rate-limit-planner-paste"
+              rows="4"
+              spellcheck="false"
+              placeholder='{ "extensions": { "cost": { "requestedQueryCost": 52, ... } } }'
+              class={areaClass}></textarea>
+            <p id="shopify-rate-limit-planner-paste-msg" class={hintClass}>
+              Fills in cost, restore rate and bucket from extensions.cost. Not
+              saved in the share link.
+            </p>
+          </div>
+        </div>
+      </NeoCard>
+
+      <NeoCard
+        tone="cyan"
+        shadow="md"
+        class="min-w-0 space-y-4 md:sticky md:top-24"
+      >
+        <div id="shopify-rate-limit-planner-result" class="space-y-4">
+          <div>
+            <p class="mono text-[11px] font-bold tracking-widest uppercase">
+              Time to sync
+            </p>
+            <p
+              id="shopify-rate-limit-planner-time"
+              class="display text-4xl leading-none break-words"
+              aria-live="polite"
+            >
+              0 s
+            </p>
+            <p
+              id="shopify-rate-limit-planner-verdict"
+              class="mt-2 text-sm leading-snug font-bold"
+            >
+            </p>
+          </div>
+          <dl class="space-y-2 text-sm">
+            <div class={rowClass}>
+              <dt>Requests</dt><dd
+                id="shopify-rate-limit-planner-requests"
+                class="font-mono font-bold"
+              >
+                0
+              </dd>
+            </div>
+            <div class={rowClass}>
+              <dt>Requests / s</dt><dd
+                id="shopify-rate-limit-planner-rps"
+                class="font-mono font-bold"
+              >
+                0
+              </dd>
+            </div>
+            <div class={rowClass}>
+              <dt>Records / s</dt><dd
+                id="shopify-rate-limit-planner-recps"
+                class="font-mono font-bold"
+              >
+                0
+              </dd>
+            </div>
+            <div class={rowClass}>
+              <dt>Run at once from a full bucket</dt><dd
+                id="shopify-rate-limit-planner-burst"
+                class="font-mono font-bold"
+              >
+                0
+              </dd>
+            </div>
+            <div class={rowClass}>
+              <dt>Suggested concurrency</dt><dd
+                id="shopify-rate-limit-planner-sconc"
+                class="font-mono font-bold"
+              >
+                1
+              </dd>
+            </div>
+            <div class={rowClass} data-graphql-only>
+              <dt>Largest batch under 1,000 points</dt><dd
+                id="shopify-rate-limit-planner-sbatch"
+                class="font-mono font-bold"
+              >
+                250
+              </dd>
+            </div>
+          </dl>
+          <ul
+            id="shopify-rate-limit-planner-msgs"
+            class="space-y-2 text-sm leading-snug"
+          >
+          </ul>
+        </div>
+        <div
+          id="shopify-rate-limit-planner-sf"
+          class="hidden space-y-3 text-sm leading-snug"
+        >
+          <p class="display text-2xl leading-none">No fixed limit</p>
+          <p>
+            The Storefront API has no points or requests limit for real buyer
+            traffic. Shopify scales it with your shoppers.
+          </p>
+          <ul class="space-y-2">
+            <li>▸ Bots are rate limited. Verified bots can get more.</li>
+            <li>
+              ▸ Checkout creation is throttled per minute and can answer
+              "Throttled".
+            </li>
+            <li>
+              ▸ Tokenless requests have a query complexity limit of 1,000.
+            </li>
+            <li>
+              ▸ Do not use it to sync data. Use the Admin API or bulk
+              operations.
+            </li>
+          </ul>
+        </div>
+        <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+          Live as you type · runs in your browser
+        </p>
+      </NeoCard>
+    </div>
+
+    <h2 class="heading mt-10 mb-3 text-xl uppercase">Plan limits.</h2>
+    <p class="mb-4 text-sm leading-snug opacity-90">
+      From shopify.dev, checked {VERIFIED}. Picking a plan above fills in these
+      numbers for the API you chose.
+    </p>
+    <div class="overflow-x-auto">
+      <table
+        class="border-ink bg-paper w-full min-w-[320px] border-[3px] text-sm"
+      >
+        <thead class="bg-bg-alt">
+          <tr>
+            <th class="p-2 text-left">Plan</th>
+            <th class="p-2 text-right">GraphQL points/s</th>
+            <th class="p-2 text-right">REST req/s</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            PLANS.map((p) => (
+              <tr class="border-ink border-t-[2px]">
+                <td class="p-2 font-bold">{p.label}</td>
+                <td class="p-2 text-right font-mono">
+                  {p.gql.toLocaleString("en-US")}
+                </td>
+                <td class="p-2 text-right font-mono">{p.rest}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-6"><ShareLink label="Copy link (no pasted response)" /></div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">How the planner works</h2>
+      <p>
+        Call the restore rate <strong>R</strong>, the bucket <strong>B</strong>,
+        the requested and actual cost of one request <strong>q</strong> and <strong
+          >a</strong
+        >, the response time <strong>L</strong>, the number of requests in
+        flight <strong>C</strong> and the number of requests <strong>n</strong>.
+      </p>
+      <ul class="space-y-2">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Rate limit:</strong> at most <code class={codeClass}
+              >R / a</code
+            > requests a second once the bucket is empty.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Your client:</strong> at most <code class={codeClass}
+              >C / L</code
+            > requests a second.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Time:</strong> the larger of <code class={codeClass}
+              >(n × a - (B - q)) / R</code
+            > and <code class={codeClass}>ceil(n / C) × L</code>. The first part
+            lets a full bucket absorb the start.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Suggested concurrency:</strong>
+            <code class={codeClass}>ceil(R / a × L)</code>, just enough to keep
+            the bucket busy. More only gets you throttled.</span
+          >
+        </li>
+      </ul>
+      <p>
+        Worked example: Shopify Plus, 1,000 points a second, a bucket of 20,000,
+        100,000 products at 250 per request, each request costing 252 points,
+        0.5 s response time and 4 requests at once. That is 400 requests and
+        100,800 points. A full bucket covers 19,748 of them, so the rest takes
+        81,052 / 1,000 = 81 s. Four requests at 0.5 s each could do it in 50 s,
+        so the rate limit is the bottleneck, and 2 requests at once would be
+        enough. 100,000 is over the 25,000 pagination cap, so a bulk operation
+        is the better choice here.
+      </p>
+      <p>
+        REST works the same way with requests instead of points: every request
+        costs 1, and the bucket is counted in requests. This is a steady state
+        estimate. Real costs change from page to page, so measure a few
+        requests, use their average actual cost and leave some headroom. Back
+        off for 1 second when you get throttled, as Shopify recommends.
+      </p>
+      <p class="text-sm">
+        Sources, checked {VERIFIED}:{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://shopify.dev/docs/apps/build/apis/graphql-admin/rate-limits"
+          rel="noopener">GraphQL Admin rate limits</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://shopify.dev/docs/api/admin-rest/usage/rate-limits"
+          rel="noopener">REST Admin rate limits</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://shopify.dev/docs/api/storefront#rate-limits"
+          rel="noopener">Storefront API</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://shopify.dev/docs/api/usage/limits"
+          rel="noopener">API limits</a
+        >.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/shopify-rate-limit-planner";
+</script>
