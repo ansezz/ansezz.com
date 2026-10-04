@@ -46,7 +46,9 @@ const primaryPath = hub.paths.find((p) => p.primary) ?? hub.paths[0];
       <div class="space-y-3">
         {
           hub.editorial.map((para) => (
-            <p class="text-sm leading-relaxed opacity-90 md:text-base">{para}</p>
+            <p class="text-sm leading-relaxed opacity-90 md:text-base">
+              {para}
+            </p>
           ))
         }
       </div>

@@ -45,7 +45,9 @@ const contactHref = `/contact/?package=${page.packageId}`;
       <div class="space-y-3">
         {
           page.problem.map((para) => (
-            <p class="text-sm leading-relaxed opacity-90 md:text-base">{para}</p>
+            <p class="text-sm leading-relaxed opacity-90 md:text-base">
+              {para}
+            </p>
           ))
         }
       </div>
@@ -65,7 +67,7 @@ const contactHref = `/contact/?package=${page.packageId}`;
         <ul class="space-y-3">
           {
             page.whoFor.map((item) => (
-              <li class="flex items-start gap-2 text-sm font-medium leading-snug md:text-base">
+              <li class="flex items-start gap-2 text-sm leading-snug font-medium md:text-base">
                 <Icon
                   name="lucide:arrow-right"
                   class="mt-0.5 h-4 w-4 shrink-0"
@@ -92,7 +94,7 @@ const contactHref = `/contact/?package=${page.packageId}`;
         <ul class="space-y-3">
           {
             page.whatYouGet.map((item) => (
-              <li class="flex items-start gap-2 text-sm font-medium leading-snug md:text-base">
+              <li class="flex items-start gap-2 text-sm leading-snug font-medium md:text-base">
                 <Icon name="lucide:check" class="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{item}</span>
               </li>
