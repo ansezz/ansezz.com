@@ -157,6 +157,24 @@ export const PAGE_OG: PageOg[] = [
     title: "Does prompt caching pay off? Do the maths.",
   },
   {
+    slug: "tool-mcp-config-generator",
+    path: "/tools/mcp-config-generator/",
+    label: "Free tool",
+    title: "MCP config for every client, checked.",
+  },
+  {
+    slug: "tool-shopify-rate-limit-planner",
+    path: "/tools/shopify-rate-limit-planner/",
+    label: "Free tool",
+    title: "How fast can your Shopify sync run?",
+  },
+  {
+    slug: "tool-laravel-encrypt-decrypt",
+    path: "/tools/laravel-encrypt-decrypt/",
+    label: "Free tool",
+    title: "Decrypt Laravel payloads in your browser.",
+  },
+  {
     slug: "tool-cron-explainer",
     path: "/tools/cron-explainer/",
     label: "Free tool",
