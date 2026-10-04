@@ -40,7 +40,11 @@ AI models are different. The CPU handles tokenization, request routing and HTTP 
 
 I've seen production clusters where the GPU is pinned at 100% while the CPU sits idle. The autoscaler sees low CPU, decides the pods are fine and never adds a replica, while the queue keeps growing.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/smart-auto-scaling-ai/inline-1.webp"
+  alt="Comic panel of a robot giving a thumbs up beside a calm green gauge while a red GPU box burns and smokes behind it and a long line of small robots waits out the door"
+  caption="Low CPU can hide a GPU on fire."
+/>
 
 ## GPU utilization vs occupancy
 
@@ -114,7 +118,11 @@ If traffic always spikes at 9:00 am on Mondays, I don't wait for the queue to gr
 
 You still pay for what you use, and the capacity is there before the first user clicks "Generate."
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/smart-auto-scaling-ai/inline-2.webp"
+  alt="Comic panel of a robot pushing a cart of glowing server racks past a clock showing nearly 9, holding an upward chart, while a crowd of people walks toward an office building"
+  caption="Forecast the spike and scale before it lands."
+/>
 
 ## Practical steps for your stack
 

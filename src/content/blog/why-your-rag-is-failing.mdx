@@ -48,7 +48,11 @@ If a user searches for _"Project-X-99 deployment logs,"_ vector search might ret
 
 Once retrieval drifts, the LLM inherits the drift. It can't reason its way out of missing or irrelevant context. You pay for tokens that produce confident but unhelpful answers, and users lose trust for a reason that sits one layer below the model.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/why-your-rag-is-failing/inline-1.webp"
+  alt="Comic panel of a sweating grey robot at a desk buried in paper scraps that a grinning yellow dog-like robot shovels onto it, while a purple robot holds up a ticket and waits"
+  caption="Near-miss chunks bury the model."
+/>
 
 ## The fix: hybrid search (vector plus BM25)
 
@@ -131,7 +135,11 @@ This cuts context stuffing and improves what reaches the model. It's one of the 
   <div slot="after">Run vector and BM25 search, fuse the lists with RRF, re-rank the top 50 with a cross-encoder and send the best 5. Then score the answers every week.</div>
 </BeforeAfter>
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/why-your-rag-is-failing/inline-2.webp"
+  alt="Comic panel of a robot with a compass and a robot with a magnifying glass pouring result cards into a pink funnel, while a judge robot in a white wig holds up the best cards"
+  caption="Fuse both lists, then let a re-ranker pick."
+/>
 
 ## Your production RAG checklist
 
