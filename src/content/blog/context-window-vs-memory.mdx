@@ -175,7 +175,7 @@ Advanced AI systems do not choose one over the other. They use a tiered memory s
 1. **Short-term context.** The last 5 to 10 messages of the conversation for immediate flow.
 2. **Episodic memory.** RAG-based retrieval of previous conversations with this specific user.
 3. **Semantic knowledge.** RAG-based retrieval of the general knowledge base (manuals, docs, catalogs).
-4. **Tool-based memory.** Using [circuit breakers and vector DBs](/blog/circuit-breakers-vector-db/) so the system doesn't spiral when a tool fails.
+4. **Tool-based memory.** Tools (often via MCP) that fetch live data on demand, wrapped in [circuit breakers](/blog/circuit-breakers-vector-db/) so a slow tool doesn't stall the agent.
 
 This layered approach gives the model what it needs to solve a problem without the bloat of an oversized prompt.
 

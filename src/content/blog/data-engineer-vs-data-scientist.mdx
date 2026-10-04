@@ -113,11 +113,11 @@ The tools and skill sets overlap, but how they use them differs. Here is how the
 
 ### Same SQL, different job
 
-A data scientist might use SQL to pull a specific cohort of users for analysis. A data engineer uses SQL to optimize a transformation job that processes millions of rows per second.
+A data scientist might use SQL to pull a specific cohort of users for analysis. A data engineer uses SQL to optimize a transformation job that processes millions of rows.
 
 ## The synergy in modern AI stacks
 
-With LLMs and generative AI, the lines between these roles are blurring, yet the need for specialists is higher than ever. A similar boundary is being redrawn between the [ML engineer and the AI engineer](/blog/ml-engineer-vs-ai-engineer/). Consider a Retrieval-Augmented Generation (RAG) system.
+With LLMs and generative AI, the lines between these roles are blurring, but you still need both specialists. A similar boundary is being redrawn between the [ML engineer and the AI engineer](/blog/ml-engineer-vs-ai-engineer/). Consider a Retrieval-Augmented Generation (RAG) system.
 
 ### The engineer's half of RAG
 
@@ -130,13 +130,13 @@ They make sure the [API gateway](/blog/api-gateway-ai-stack/) is secure and that
 The data scientist then evaluates how well the RAG system performs. They experiment with different embedding models, adjust the "top-k" retrieval parameters and fine-tune the prompts so the AI gives the most accurate and helpful responses.
 
 <BeforeAfter beforeLabel="Only an engineer" afterLabel="Only a scientist">
-  <div slot="before">A fast, reliable pipeline that delivers technically correct but practically useless results, because nobody measures answer quality.</div>
+  <div slot="before">A fast, reliable pipeline whose answers nobody checks, so bad results go unnoticed.</div>
   <div slot="after">Good evaluation ideas and no fresh, clean data to run them on, because nobody owns ingestion.</div>
 </BeforeAfter>
 
 ### Why you need both
 
-Without the engineer, the scientist has no data to query. Without the scientist, the engineer has a very expensive pipeline that delivers technically correct but practically useless results.
+Without the engineer, the scientist has no data to query. Without the scientist, nobody knows if the answers are any good.
 
 Both are essential for moving beyond basic chatbots and into [agentic commerce](/blog/agentic-commerce-shopify/) solutions.
 

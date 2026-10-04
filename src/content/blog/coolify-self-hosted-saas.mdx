@@ -10,7 +10,7 @@ heroImage:
   alt: "A self-hosted SaaS stack running on Coolify and a cheap ARM VPS instead of expensive managed cloud providers"
 ---
 
-Most SaaS founders are quietly getting robbed by their own cloud provider. The "cloud tax" eats your margins before you even find product-market fit.
+Most SaaS founders overpay their cloud provider without noticing. The "cloud tax" eats your margins before you even find product-market fit.
 
 <Summary>
 - Managed cloud starts cheap with credits, then bills you for idle databases, NAT gateways and complexity you don't need yet.
@@ -32,7 +32,7 @@ Then the credits run out.
 
 ### The bill after the credits
 
-Suddenly you are paying $200 a month for a database that is 99% idle. You are paying for NAT gateways, provisioned IOPS and "management fees" for services that could easily run on a $5 VPS.
+Suddenly you are paying $200 a month for a database that is 99% idle. You are paying for NAT gateways, provisioned IOPS and "management fees" for services that could easily run on a cheap VPS.
 
 You are stuck in a web of proprietary APIs and IAM roles that need a full-time DevOps engineer just to update an environment variable.
 
@@ -77,7 +77,7 @@ Once you have self-hosting in place, ARM is the multiplier that takes the bill f
 
 ### What AWS says about Graviton
 
-AWS pegs its Graviton instances at up to 20% lower cost and up to 40% better price-performance than comparable x86 instances.
+AWS says its Graviton instances cost up to 20% less than comparable x86 instances.
 
 ### Oracle's Always Free tier
 
@@ -111,7 +111,7 @@ Let's look at the numbers for a standard Laravel or Node.js app with a database 
 
 | Line item         | Managed path (Vercel + Supabase + AWS S3) | Coolify path (Hetzner VPS)              |
 | :---------------- | :---------------------------------------- | :-------------------------------------- |
-| Hosting           | Vercel Pro: $20/month per user            | 4 vCPU ARM / 8GB RAM (CAX21): ~$12.50/month |
+| Hosting           | Vercel Pro: $20/month per developer seat            | 4 vCPU ARM / 8GB RAM (CAX21): ~$12.50/month |
 | Database          | Supabase Pro: $25/month                   | Included (container on the VPS)         |
 | Storage / backups | AWS S3 + bandwidth: $15/month             | Backups to S3-compatible storage: $1/month |
 | Platform          | Included                                  | Coolify: $0 (open source)               |
