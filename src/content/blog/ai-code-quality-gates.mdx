@@ -6,10 +6,9 @@ category: ai
 tags: [code-quality, ci-cd, laravel, ai-engineering]
 featured: false
 draft: true
-# IMAGE: hero (add heroImage once the art exists)
-# heroImage:
-#   url: "/blog/ai-code-quality-gates/hero.webp"
-#   alt: "Comic pop-art panel of a robot pushing a cart of code through a row of checkpoint gates while an engineer works the control panel"
+heroImage:
+  url: "/blog/ai-code-quality-gates/hero-7845791c.webp"
+  alt: "Comic pop-art panel of a code cannon firing crates down a conveyor through checkpoint gates while a robot at a control panel bins a cracked crate"
 ---
 
 An AI can write 10,000 lines of code in a minute. I don't care. I care whether those 10,000 lines survive my constraints.
@@ -99,10 +98,9 @@ Coverage tells you a line ran. It doesn't tell you a test would notice if that l
 
 Mutation testing closes it. The tool changes your code on purpose (flips a `>` to `>=`, drops a method call, returns an empty array) and reruns your tests. If the tests still pass, that mutant escaped, and you just found a test that checks nothing.
 
-{/* IMAGE: inline-1 */}
 <Figure
   src="/blog/ai-code-quality-gates/inline-1.webp"
-  alt="Comic pop-art panel of a mischievous robot flipping a switch inside a machine while a test robot's alarm light spins red"
+  alt="Comic pop-art panel of a sneaky robot tampering with a lever inside a machine while a test robot with a red siren points and catches it"
   caption="Mutation testing breaks your code on purpose to see if a test notices."
 />
 
@@ -198,7 +196,6 @@ curl --fail --silent --max-time 10 https://app.example.com/up || ./rollback.sh
 
 Monitoring is also how the gates improve. When something escapes to production, I fix it, then I ask which earlier gate should have caught it, and I add the test or the rule there. Every incident should leave the doors tighter. The difference between having logs and actually being told is in [logging vs monitoring](/blog/logging-vs-monitoring/).
 
-{/* IMAGE: inline-2 */}
 <Figure
   src="/blog/ai-code-quality-gates/inline-2.webp"
   alt="Comic pop-art panel of a robot pulling a big rollback lever as a cracked rocket gets winched back onto the launch pad"
