@@ -79,7 +79,7 @@ Swoole is a C extension for PHP. It's a fast networking engine that lets PHP han
 RoadRunner is written in Go. It acts as a load balancer and process manager that talks to your PHP workers over a fast binary protocol (Goridge).
 
 - **Pros:** no extensions required. It's a single binary you drop into your project. It's much easier to set up in a [Docker container](/blog/coolify-docker-saas-hosting/) and feels more "cloud-native."
-- **Cons:** it's slightly slower than Swoole because of the communication overhead between the Go binary and the PHP processes, though for 99% of apps this difference is negligible.
+- **Cons:** it's slightly slower than Swoole because of the communication overhead between the Go binary and the PHP processes, though for most web apps, where time goes to the database and other I/O, you won't notice the difference.
 
 ### Which one to pick
 

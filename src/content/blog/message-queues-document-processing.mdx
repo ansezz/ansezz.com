@@ -10,79 +10,154 @@ heroImage:
   alt: "Document processing pipeline fed by a message queue with multiple worker stages"
 ---
 
-If you are running your document embeddings inside your request-response cycle instead of behind a message queue, you are playing with fire. I have seen too many junior devs build a beautiful RAG application that falls over the second a user uploads a 50MB PDF. The browser spins, the proxy timeout hits, and the database locks up while your worker tries to chunk 500 pages of legal jargon in real time.
+If your embeddings run inside the request cycle, the first 50MB PDF will take your app down. Put that work behind a queue.
 
-This is the classic "heavy lifting" problem in AI engineering. Document processing — OCR, text extraction, semantic chunking, and embedding — is slow, unpredictable, and resource-heavy. Trying to force it into a synchronous web request is a recipe for a bad user experience and a fragile system.
+<Summary>
+- Document processing (OCR, extraction, chunking, embedding) is slow and unpredictable, so it belongs in background workers, not web requests.
+- Split the pipeline into queued stages with explicit retries, exponential backoff and a dead-letter queue for files that can never succeed.
+- Batch embedding calls, keep messages small and idempotent, and scale workers on queue depth instead of CPU.
+</Summary>
 
-The solution is decoupling. I'm talking about message queues. In this guide, I'll walk you through why async work belongs in a queue and how to build a production-grade ingestion pipeline that doesn't melt your server. If you want the broker-level foundations first, I cover them in [scaling with RabbitMQ](/blog/scaling-with-rabbitmq/).
+If you run document embeddings inside your request-response cycle instead of behind a message queue, you are playing with fire.
+
+I have seen many developers build a beautiful RAG application that falls over the second a user uploads a 50MB PDF. The browser spins, the proxy timeout hits and the database locks up while your worker tries to chunk 500 pages of legal jargon in real time.
+
+### The heavy lifting problem
+
+This is the classic "heavy lifting" problem in AI engineering. Document processing (OCR, text extraction, semantic chunking and embedding) is slow, unpredictable and resource-heavy.
+
+Forcing it into a synchronous web request gives you a bad user experience and a fragile system.
+
+### Decouple it
+
+The fix is decoupling with message queues. Here is why async work belongs in a queue and how to build an ingestion pipeline that doesn't melt your server.
+
+If you want the broker-level foundations first, I cover them in [scaling with RabbitMQ](/blog/scaling-with-rabbitmq/).
 
 ## The synchronous trap
 
-Imagine a user uploads a document to your SaaS. Your code receives the file, sends it to an extraction API, waits for the response, loops through the text to create chunks, sends each chunk to an embedding model, and finally saves it to pgvector.
+Imagine a user uploads a document to your SaaS. Your code receives the file, sends it to an extraction API and waits.
 
-If the whole chain runs long, you hit a timeout somewhere — a proxy gateway timeout (Nginx defaults to 60s), a PHP `max_execution_time`, or a platform request cap — and the connection drops. If the embedding API has a momentary blip, the whole process fails, and the user has to start over. Worse, while your server is busy doing this heavy work, it's not responding to other users.
+Then it loops through the text to create chunks, sends each chunk to an embedding model and finally saves it all to pgvector.
 
-This is where we apply the first rule of senior engineering: if it takes more than 100ms, consider making it async. By moving this work to a message queue, you give your users immediate feedback ("we're processing your file!") while the heavy lifting happens safely in the background.
+### Where it breaks
+
+If the whole chain runs long, you hit a timeout somewhere: a proxy gateway timeout (Nginx defaults to 60s), a PHP `max_execution_time` or a platform request cap. The connection drops.
+
+If the embedding API has a momentary blip, the whole process fails and the user has to start over. While your server is busy with this heavy work, it isn't responding to other users.
+
+### The 100ms rule
+
+A good rule of thumb: if it takes more than 100ms, consider making it async.
+
+Moving this work to a message queue gives your users immediate feedback ("we're processing your file!") while the heavy lifting happens safely in the background.
+
+<BeforeAfter beforeLabel="In the request" afterLabel="Behind a queue">
+  <div slot="before">Upload, extract, chunk, embed and save in one request. A timeout or API blip throws away all the work, and other users wait.</div>
+  <div slot="after">Upload, save to S3, push a small message and return right away. Workers handle each stage, retry failures and report progress.</div>
+</BeforeAfter>
 
 ## The anatomy of a document pipeline
 
-A robust RAG pipeline isn't just one big function. It's a series of decoupled stages. I like to break it down into modular steps, each triggered by a message in a queue. This lets you scale different parts of the system independently.
+A solid RAG pipeline is a series of decoupled stages, not one big function. I break it into modular steps, each triggered by a message in a queue, so you can scale each part on its own.
 
-![Pipeline stages — ingestion, parsing, chunking, embedding](/blog/message-queues-document-processing/pipeline-stages.webp)
+### Four stages
 
 Here is how I usually structure it:
 
-1. **Ingestion & discovery** — a user uploads a file. You save it to S3 and push a small message to the queue containing the `file_path` and `tenant_id`.
-2. **Parsing & normalization** — a worker picks up the message, downloads the file, and runs it through a parser like pdfplumber or an OCR service. It emits the raw text to the next queue.
-3. **Chunking** — this worker takes the text and splits it into semantic sections. Doing this in its own stage means you can easily swap chunking strategies (e.g., recursive character vs semantic) without re-running the heavy parsing step.
-4. **Embedding & indexing** — the final stage batches the chunks, hits your embedding API (like OpenAI or a local model), and pushes the vectors into your vector DB.
+1. **Ingestion and discovery:** a user uploads a file. You save it to S3 and push a small message to the queue with the `file_path` and `tenant_id`.
+2. **Parsing and normalization:** a worker picks up the message, downloads the file and runs it through a parser like pdfplumber or an OCR service. It sends the raw text to the next queue.
+3. **Chunking:** this worker splits the text into semantic sections. Keeping it in its own stage means you can swap chunking strategies (for example recursive character vs semantic) without re-running the heavy parsing step.
+4. **Embedding and indexing:** the final stage batches the chunks, calls your embedding API (like OpenAI or a local model) and pushes the vectors into your vector DB.
 
-This stage-based approach is exactly what I discuss in my post on [7 RAG mistakes to avoid in production](/blog/7-rag-mistakes-production/). It provides backpressure control — if your vector DB slows down, the "index" queue grows, but the "parsing" workers keep humming along.
+### Backpressure for free
 
-## Retries and the beauty of dead letters
+This stage-based approach is what I discuss in my post on [7 RAG mistakes to avoid in production](/blog/7-rag-mistakes-production/).
+
+It gives you backpressure control. If your vector DB slows down, the "index" queue grows, but the "parsing" workers keep going.
+
+<PullQuote>When one stage slows down, its queue grows. Every other stage keeps working.</PullQuote>
+
+{/* IMAGE: inline-1 */}
+
+<TryThis>
+Draw your current document flow as boxes. Every arrow between two slow steps is a place to put a queue.
+</TryThis>
+
+## Retries and dead letters
 
 In the real world, things break. APIs time out. PDFs are malformed. Workers crash.
 
-A message queue like Redis (with BullMQ or Laravel Queues) or SQS gives you retries with almost no code — though you do have to opt in. BullMQ defaults to a single attempt, so set `attempts` and a `backoff` strategy explicitly; Laravel queues take `--tries` and `backoff`; SQS retries up to `maxReceiveCount`. When a worker fails, the message goes back onto the queue to be tried again after a delay. Exponential backoff is your best friend here — don't hammer a failing API every 5 seconds. Wait 10, then 60, then 300.
+### Opt in to retries
 
-![Retry strategy and dead-letter quarantine flow](/blog/message-queues-document-processing/dlq-retries.webp)
+A message queue like Redis (with BullMQ or Laravel Queues) or SQS gives you retries with almost no code, but you do have to opt in:
 
-But what happens when a document simply _cannot_ be processed? Maybe it's a password-protected PDF or a corrupted file. You don't want it retrying forever and clogging up your workers.
+- **BullMQ** defaults to a single attempt, so set `attempts` and a `backoff` strategy explicitly.
+- **Laravel queues** take `--tries` and `backoff`.
+- **SQS** retries up to `maxReceiveCount`.
 
-This is where a **dead-letter queue (DLQ)** comes in. After a certain number of failed attempts, the message is moved to the DLQ — a "quarantine" zone. SQS gives you this natively via the queue's redrive policy; with BullMQ or Laravel you route exhausted jobs there yourself (listen for the `failed` event in BullMQ, or use `failed_jobs` plus a handler in Laravel). I can then inspect these failed jobs, fix the underlying issue, and re-queue them. It's a safety net that keeps your main production line moving.
+When a worker fails, the message goes back onto the queue to be tried again after a delay. Use exponential backoff instead of hammering a failing API every 5 seconds: wait 10, then 60, then 300.
+
+### Quarantine what can't succeed
+
+Some documents simply _cannot_ be processed. Maybe it's a password-protected PDF or a corrupted file, and you don't want it retrying forever and clogging your workers.
+
+This is where a **dead-letter queue (DLQ)** comes in. After a set number of failed attempts, the message moves to the DLQ, a "quarantine" zone.
+
+SQS gives you this natively through the queue's redrive policy. With BullMQ or Laravel, you route exhausted jobs there yourself (listen for the `failed` event in BullMQ, or use `failed_jobs` plus a handler in Laravel). You can then inspect the failed jobs, fix the issue and re-queue them.
+
+<TryThis>
+Set explicit attempts and an exponential backoff on your embedding job today, and add a failed-job handler that records the `doc_id` and error so you can replay it.
+</TryThis>
 
 ## Batching for efficiency
 
-If you are processing 10,000 chunks, you do not want to make 10,000 individual API calls to your embedding provider. That's slow and expensive.
+If you process 10,000 chunks, you don't want 10,000 separate API calls to your embedding provider. That is slow and expensive.
 
-Most embedding APIs and vector databases perform much better with batches. A good worker pattern involves pulling multiple messages from the queue (or aggregating them in memory) and sending them as a single bulk request.
+Most embedding APIs and vector databases work much better with batches. A good worker pulls several messages from the queue (or gathers them in memory) and sends them as one bulk request.
 
-In a Laravel environment, I often use job batching to track the progress of a large document. I can see exactly when 95% of a PDF is processed and update a progress bar for the user. If you're interested in how this fits into a larger architecture, check out my thoughts on [event-driven pub/sub systems](/blog/event-driven-pubsub/).
+### Show progress
+
+In Laravel, I often use job batching to track the progress of a large document. I can see exactly when 95% of a PDF is processed and update a progress bar for the user.
+
+For how this fits a larger architecture, see my thoughts on [event-driven pub/sub systems](/blog/event-driven-pubsub/).
 
 ## Event-driven prefetching
 
-Here is a "senior" tip — queues aren't just for ingestion. You can use them for **prefetching**.
+Queues help beyond ingestion. You can also use them for **prefetching**.
 
-If a user is chatting with an AI agent and the conversation is heading toward a specific topic, you can fire off a background job to fetch related documents and warm up the cache before the user even asks the next question. This makes your AI feel lightning fast because the context is already "ready" when the retrieval step hits.
+If a user is chatting with an AI agent and the conversation is heading toward a topic, you can fire a background job to fetch related documents and warm the cache before they ask the next question. The AI feels very fast because the context is already "ready" when retrieval runs.
 
-By using an event bus, you can decouple the chat interface from these optimization tasks. The chat app just emits a `user_asked_question` event, and a background worker decides whether it should pre-fetch more data or update the semantic cache.
+### Keep the chat app simple
+
+An event bus decouples the chat interface from these optimization tasks. The chat app just emits a `user_asked_question` event, and a background worker decides whether to prefetch more data or update the semantic cache.
 
 ## Monitoring your message queue
 
-Once you move to a queue-based system, your most important metric is no longer just "request latency." You need to watch your **queue depth**.
+Once you move to a queue-based system, request latency stops being the only number that matters. You need to watch your **queue depth**.
 
-![Queue-depth dashboard with worker autoscaler](/blog/message-queues-document-processing/monitoring.webp)
+If the queue grows faster than your workers can clear it, you have a bottleneck.
 
-If the queue depth is growing faster than your workers can clear it, you have a bottleneck. This is where tools like Docker and Coolify make life easy — I can spin up five more worker containers to handle a sudden surge in document uploads. You can read more about how I manage this infra in my [Coolify and Docker guide](/blog/coolify-docker-saas-hosting/).
+### Add workers when it grows
 
-## Practical takeaways for your pipeline
+Tools like Docker and Coolify make this easy. I can spin up five more worker containers to handle a sudden surge in uploads.
 
-- **Never store large files in the queue** — only pass references (like an S3 key). Keep messages small for better performance.
-- **Make tasks idempotent** — assume a message might be processed twice. Use `upsert` instead of `insert` in your vector DB to avoid duplicates.
-- **Use structured logging** — every worker log should include the `doc_id` and `tenant_id`. Searching for "why did this file fail?" is impossible without it.
-- **Scale on queue depth** — set up your autoscaler to add workers based on how many messages are waiting, not just CPU usage.
-- **Separate worker pools** — have one set of workers for "fast" tasks (like metadata updates) and another for "slow" tasks (like OCR/embedding). Don't let a huge PDF upload block a simple name change.
+You can read more about how I manage this infra in my [Coolify and Docker guide](/blog/coolify-docker-saas-hosting/).
 
-Building a document pipeline is about respecting the time it takes to process data. Move that work into a queue and you get a system that is resilient, scalable, and smooth for your users — instead of one that buckles on the first big upload.
+{/* IMAGE: inline-2 */}
 
-How are you currently handling long-running AI tasks? Are you still fighting with request timeouts, or have you embraced the queue? Drop a note via [contact](/contact/) — I love this conversation. 🤘
+<TryThis>
+Graph queue depth per stage next to worker count. If depth keeps rising while CPU stays low, scale on depth instead of CPU.
+</TryThis>
+
+<Takeaway>
+- **Never store large files in the queue.** Pass references (like an S3 key) and keep messages small.
+- **Make tasks idempotent.** Assume a message might be processed twice, and use `upsert` instead of `insert` in your vector DB.
+- **Use structured logging.** Every worker log should include the `doc_id` and `tenant_id`, or "why did this file fail?" has no answer.
+- **Scale on queue depth.** Add workers based on how many messages are waiting, not CPU alone.
+- **Separate worker pools.** Keep "fast" tasks (like metadata updates) apart from "slow" ones (like OCR and embedding), so a huge PDF never blocks a simple name change.
+</Takeaway>
+
+A document pipeline is about respecting the time it takes to process data. If big uploads are timing out your RAG app, [here's how I help teams build queue-based ingestion pipelines with retries and autoscaling](/services/), or drop a note via [contact](/contact/).
+
+How are you handling long-running AI tasks today: still fighting request timeouts, or already using a queue?
