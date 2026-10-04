@@ -10,95 +10,175 @@ heroImage:
   alt: "AI agents querying a Shopify storefront's structured product data instead of browsing the visual theme"
 ---
 
-Your beautiful Shopify theme is about to become invisible.
+Your beautiful Shopify theme is about to become invisible. The next shopper has no eyes, never clicks a button and only reads your data.
 
-For a decade, we have obsessed over conversion rate optimization, pixel-perfect layouts, and fast-loading Liquid templates. We built for human eyes. But a new type of shopper is arriving at the digital storefront. They don't have eyes, they don't click buttons, and they certainly don't care about your hero slider.
+<Summary>
+- AI agents now do the discovery, comparison and checkout for a growing share of buyers, so a store that agents can't read drops out of the transaction.
+- Shopify's answer is three layers: the Universal Commerce Protocol (UCP), the Catalog API and Agentic Storefronts, with MCP as the tool binding underneath.
+- The developer job moves from pixels to protocols: native variants, rich Metaobjects, GraphQL, MCP servers and clean product data.
+</Summary>
+
+For a decade, we have obsessed over conversion rate optimization, pixel-perfect layouts and fast-loading Liquid templates. We built for human eyes.
+
+But a new type of shopper is arriving at the digital storefront. They don't have eyes, they don't click buttons, and they don't care about your hero slider.
 
 They are autonomous AI agents.
 
-The shift from human-centric browsing to agentic commerce is the biggest architectural pivot Shopify has ever seen. If you are still just "the theme guy" or "the Liquid expert," your skillset is about to hit a massive wall. I have been building on the web for over ten years, and I can tell you that the era of building for agents is here. It is time to move from designing pixels to designing protocols.
+The shift from human browsing to agentic commerce is a big architectural shift for Shopify. If you are still "the theme guy" or "the Liquid expert," your skill set is about to hit a wall.
 
-## The problem: the end of the traditional funnel
+I have been building on the web for over ten years, and the era of building for agents is here. It is time to move from designing pixels to designing protocols.
 
-Most developers are still stuck in the old way of thinking. We build a site, drive traffic to a landing page, and hope the user navigates to the checkout. This is a manual, high-friction process.
+## The end of the traditional funnel
 
-Today, buyers are increasingly using tools like ChatGPT, Gemini, or Microsoft Copilot to do the "work" of shopping. They ask for a waterproof hiking boot under $150 with specific shipping requirements. The AI doesn't visit your store to browse. It queries data. If your store isn't built to be "read" by an agent, you simply don't exist in that transaction.
+Most developers still think the old way. We build a site, drive traffic to a landing page and hope the user finds the checkout. This is a manual, high-friction process.
 
-![Bento grid showing how an AI agent queries product data to handle discovery, comparison, and checkout](/blog/agentic-commerce-shopify/shopping-flows.webp)
+Today, buyers increasingly use tools like ChatGPT, Gemini or Microsoft Copilot to do the "work" of shopping. They ask for a waterproof hiking boot under $150 with specific shipping requirements.
 
-## The agitation: why your current apps aren't enough
+The AI doesn't visit your store to browse. It queries data.
 
-We have spent years building "utility" apps that handle simple automations. But Shopify is moving fast to pull those features into the core. With tools like Shopify Magic and Sidekick, the basic stuff — copywriting, image editing, simple workflows — is being commoditized.
+If your store isn't built to be "read" by an agent, you simply don't exist in that transaction.
 
-The real value is moving deeper into the stack. Agents need more than just a product description. They need structured data, real-time inventory logic, and a way to execute a checkout without a browser window. If you are relying on "fake" variants or messy metafields, you are breaking the agent's ability to reason about your store.
+<TryThis>
+Ask ChatGPT, Gemini and Copilot for one of your best-selling products the way a real buyer would phrase it. Note whether your store shows up, and whether the price and stock it quotes are correct.
+</TryThis>
 
-When an agent fails to understand your product structure, the buyer gets a "no results found" or a hallucinated alternative. That is a lost sale for your client and a failed project for you.
+## Why your current apps aren't enough
 
-## The solution: welcome to agentic commerce
+We have spent years building "utility" apps that handle simple automations. But Shopify is moving fast to pull those features into the core.
 
-Agentic commerce is a system where AI agents take over the discovery, comparison, and execution phases of shopping. Shopify is already laying the groundwork for this with three major pillars:
+With tools like Shopify Magic and Sidekick, the basic stuff (copywriting, image editing, simple workflows) is being commoditized.
 
-1. **Universal Commerce Protocol (UCP)** — the open standard Shopify co-developed with Google for how agents discover, negotiate, and transact with any merchant. It is composable: it defines the conversation, then plugs into MCP for tool access and AP2 for payment authorization. (For a hands-on walkthrough, see my [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/).)
-2. **Catalog API** — UCP's discovery layer. It standardizes products into a universal taxonomy, verifies pricing and inventory in real time, and syndicates that structured data to connected AI surfaces.
-3. **Agentic Storefronts** — the management layer where you configure product data once in the Shopify admin, then distribute and sell across every AI channel (ChatGPT, Microsoft Copilot, Google's AI Mode, the Gemini app).
+The real value is moving deeper into the stack. Agents need structured data, real-time inventory logic and a way to run a checkout without a browser window. A product description alone won't do.
 
-As developers, our job is shifting. We are no longer just building visual storefronts. We are building "agent-ready" infrastructure.
+### Messy data breaks agent reasoning
 
-![Side-by-side comparison of a human-facing Shopify theme and the structured data an agent consumes](/blog/agentic-commerce-shopify/ui-comparison.webp)
+If you rely on "fake" variants or messy metafields, you break the agent's ability to reason about your store.
+
+When an agent fails to understand your product structure, the buyer gets "no results found" or a hallucinated alternative. That is a lost sale for your client and a failed project for you.
+
+## Welcome to agentic commerce
+
+Agentic commerce is a system where AI agents take over the discovery, comparison and execution phases of shopping. Shopify is laying the groundwork with three pillars.
+
+### 1. Universal Commerce Protocol (UCP)
+
+The open standard Shopify co-developed with Google for how agents discover, negotiate and transact with any merchant.
+
+It is composable: it defines the conversation, then plugs into MCP for tool access and AP2 for payment authorization. For a hands-on walkthrough, see my [Shopify UCP quick-start](/blog/shopify-ucp-quick-start/).
+
+### 2. Catalog API
+
+UCP's discovery layer. It standardizes products into a universal taxonomy, verifies pricing and inventory in real time, and syndicates that structured data to connected AI surfaces.
+
+### 3. Agentic Storefronts
+
+The management layer. You configure product data once in the Shopify admin, then distribute and sell across AI channels (ChatGPT, Microsoft Copilot, Google's AI Mode, the Gemini app).
+
+As developers, our job is shifting from visual storefronts to "agent-ready" infrastructure.
+
+<BeforeAfter beforeLabel="Built for humans" afterLabel="Built for agents">
+  <div slot="before">Hero sliders, hover effects, split products for each color and specs hidden in a description blob. Success is a click-through rate.</div>
+  <div slot="after">Native variants, Metaobjects for specs and compatibility, clean GraphQL access and real-time stock. Success is an agent that quotes you correctly.</div>
+</BeforeAfter>
+
+<Figure
+  src="/blog/agentic-commerce-shopify/inline-1.webp"
+  alt="Comic panel of a shopping robot scanning product data cards and stock boxes"
+  caption="Agents skip your layout and read your variants, Metaobjects and stock."
+/>
 
 ## Why schema is the new CSS
 
-In the agentic era, your structured data is your most important asset. A perfectly optimized JSON-LD schema or a clean set of Shopify Metaobjects is now more valuable than a fancy hover effect.
+In the agentic era, your structured data is your most important asset. A well-built JSON-LD schema or a clean set of Shopify Metaobjects is now worth more than a fancy hover effect.
 
-Agents rely on clarity. They need to know if a product is compatible with another, what the specific material breakdown is, and exactly when it will arrive. If you want to see how I've helped businesses modernize their digital presence through better architecture, check out some of my [previous work](/work/).
+Agents rely on clarity. They need to know if a product works with another one, what the material breakdown is, and exactly when it will arrive.
 
-The focus for developers must move toward:
+If you want to see how I've helped businesses modernize through better architecture, check out some of my [previous work](/work/).
 
-- **Native variants only** — stop using "split products" or custom Liquid hacks to show variants. Agents need standard `ProductVariant` records to function.
-- **Rich Metaobjects** — use these to build knowledge bases that agents can query. Think compatibility tables, brand story, and detailed technical specs.
-- **GraphQL mastery** — the Shopify Admin and Storefront APIs are the primary languages of agents. If you aren't comfortable with complex GraphQL queries, you are already behind.
+### Where to focus
+
+- **Native variants only.** Stop using "split products" or custom Liquid hacks to show variants. Agents need standard `ProductVariant` records to function.
+- **Rich Metaobjects.** Use them to build knowledge bases that agents can query: compatibility tables, brand story and detailed technical specs.
+- **GraphQL mastery.** The Shopify Admin and Storefront APIs are the primary languages of agents. If you aren't comfortable with complex GraphQL queries, you are already behind.
+
+<PullQuote>An agent can't admire your layout. It can only read your data.</PullQuote>
+
+<TryThis>
+Export your catalog and count products that fake variants as separate products or hide specs in the description HTML. That count is the scope of your first "agent-readiness" cleanup.
+</TryThis>
 
 ## Building custom agents with MCP and Shopify
 
-The [Model Context Protocol (MCP)](/blog/mcp-context-aware-agents/) lets us connect AI models to external data sources like the Shopify API — and it's the same binding UCP uses to expose commerce tools to agents.
+The [Model Context Protocol (MCP)](/blog/mcp-context-aware-agents/) lets us connect AI models to external data sources like the Shopify API. It is the same binding UCP uses to expose commerce tools to agents.
 
-Imagine building an "inventory agent" for a merchant that doesn't just alert them when stock is low. Instead, it queries recent sales trends via the Admin API, checks lead times from a supplier, and suggests a restock amount — all through a chat interface.
+Picture an "inventory agent" for a merchant. A plain alert fires when stock is low. This agent goes further: it queries recent sales trends via the Admin API, checks supplier lead times and suggests a restock amount, all through a chat interface.
 
-This is where tools like Laravel and Docker come in handy. We can build custom middleware that acts as an MCP server, exposing specific Shopify "tools" to an AI agent. This is the type of deep technical work that differentiates a senior engineer from a freelancer who just installs themes.
+### Where Laravel and Docker fit
 
-![Architecture diagram of an MCP server exposing Shopify Admin API tools to an AI agent](/blog/agentic-commerce-shopify/mcp-architecture.webp)
+With Laravel and Docker, we can build custom middleware that acts as an MCP server and exposes specific Shopify "tools" to an AI agent.
+
+This deep technical work is what separates a senior engineer from a freelancer who only installs themes.
 
 ## The Shopify developer's new roadmap
 
-To thrive in the next five years, I recommend focusing on these specific technical areas.
+To thrive in the next five years, I recommend focusing on four technical areas.
 
-**1. Data hygiene as a service**
-Start offering "agent-readiness" audits. Clean up product data, normalize attributes, and ensure all metadata is machine-readable. This is the new SEO.
+### 1. Data hygiene as a service
 
-**2. Headless and API-first builds**
-While Liquid isn't dead, headless architectures using Hydrogen and Oxygen are much more aligned with the agentic future. They force you to think in terms of data and APIs rather than just templates. If you're weighing the trade-offs, I broke them down in [Shopify Liquid vs. headless](/blog/shopify-liquid-vs-headless/).
+Start offering "agent-readiness" audits. Clean up product data, normalize attributes and make sure all metadata is machine-readable. This is the new SEO.
 
-**3. RAG and vector databases**
-Learn how to use RAG (retrieval-augmented generation) and tools like pgvector. This lets you build agents that can search through thousands of product reviews or support docs to give "expert" advice to shoppers. If you're new to this, start with [picking the right RAG stack](/blog/picking-the-right-rag-stack/).
+### 2. Headless and API-first builds
 
-**4. Understand agent trust tiers and the Agentic plan**
-Agentic Storefronts gate access by agent trust tier — higher tiers unlock broader capabilities, up to completing checkout directly. There is also a dedicated Agentic plan that lets brands on any platform list products in Shopify Catalog and sell through agentic storefronts. Know where direct checkout is enabled and how to configure it.
+Liquid isn't dead, but headless architectures using Hydrogen and Oxygen fit the agentic future better. They force you to think in data and APIs rather than templates.
 
-![Shopper completing a purchase through an AI shopping agent inside a chat interface](/blog/agentic-commerce-shopify/shopping-agent.webp)
+If you're weighing the trade-offs, I broke them down in [Shopify Liquid vs. headless](/blog/shopify-liquid-vs-headless/).
 
-## Final takeaways for the agentic shift
+### 3. RAG and vector databases
 
-The change is happening faster than most of us realize. Shopify reports that in Q1 2026, AI-driven traffic to its stores grew roughly 8x year over year, orders from AI-powered searches climbed nearly 13x, and new buyers are ordering through AI channels at close to twice the rate of other channels.
+Learn how to use RAG (retrieval-augmented generation) and tools like pgvector. You can build agents that search thousands of product reviews or support docs to give "expert" advice to shoppers.
 
-If you want to stay relevant, here is your checklist:
+If you're new to this, start with [picking the right RAG stack](/blog/picking-the-right-rag-stack/).
 
+### 4. Agent trust tiers and the Agentic plan
+
+Shopify classifies agent traffic into three trust tiers: Anonymous, Signed and Token. All three can search the catalog and build carts and checkouts. Only a Token-tier agent whose token has been granted purchase permission can call `complete_checkout` and finish the order.
+
+Direct checkout also depends on the channel. Copilot, Google's AI Mode and the Gemini app offer native checkout powered by UCP (Google's is still rolling out to more brands). In ChatGPT, the buyer completes the purchase on the merchant's online store inside an in-app browser.
+
+There is also a dedicated Agentic plan for brands on any platform. They list products in Shopify Catalog and sell through agentic storefronts with no monthly fee, paying card rates (from 2.9% + 30¢ USD online) when a product sells.
+
+For the identity side, see [UCP agent profiles](/blog/ucp-agent-profiles-are-the-new-oauth-app/) and [buyer-linked tokens for agent checkout](/blog/buyer-linked-tokens-agent-checkout/).
+
+<Figure
+  src="/blog/agentic-commerce-shopify/inline-2.webp"
+  alt="Comic panel of three cart-pushing robots at a checkout gate where only the one with a token badge reaches the pay terminal"
+  caption="Every tier can build a cart, but only an approved Token-tier agent can complete checkout."
+/>
+
+## The numbers behind the shift
+
+The change is happening faster than most of us realize. Shopify reports that in Q1 2026:
+
+| Signal                          | Q1 2026, year over year                        |
+| :------------------------------ | :--------------------------------------------- |
+| AI-driven traffic to its stores | Grew roughly 8x                                |
+| Orders from AI-powered searches | Climbed nearly 13x                             |
+| New buyers via AI channels      | Ordering at close to 2x the rate of other channels |
+
+<TryThis>
+Pick one client store and write a one-page "agent-readiness" report: variant structure, Metaobject coverage, stock accuracy and which AI channels are switched on in Agentic Storefronts. That page is the start of a new service line.
+</TryThis>
+
+<Takeaway>
 - Move your product logic into native Shopify structures.
 - Double down on GraphQL and API integration.
 - Start experimenting with MCP servers and local LLMs for internal store operations.
+- Learn the trust tiers: only an approved Token-tier agent can complete checkout.
 - Remember that the agent is your new "user." Optimize for its understanding first.
+</Takeaway>
 
-We are moving into a world where commerce is autonomous and frictionless. It is an incredible time to be a developer if you are willing to learn the new protocols. If you want to learn more about my background in high-quality web applications, you can read more [about me](/about/).
+More and more of commerce will run through agents. It is a great time to be a developer if you are willing to learn the new protocols. You can read more [about me](/about/) and my background in web applications.
 
-The question is — are you building a store that only humans can see, or are you building a store that the whole world can buy from?
+If you want your Shopify catalog and checkout ready for AI agents, [here's how I help merchants and teams get agent-ready](/services/), or drop a note via [contact](/contact/).
 
-Are you ready to start building your first AI-native Shopify tool, or are you still holding onto your CSS hacks? Drop a note via [contact](/contact/) — I love this conversation. 🤘
+Are you building a store that only humans can see, or one that the whole world can buy from?

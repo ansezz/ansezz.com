@@ -10,57 +10,112 @@ heroImage:
   alt: "Pop-art illustration of an engineer orchestrating agentic AI workflows across connected dev tools"
 ---
 
-I've spent the last decade building Laravel applications, managing Docker clusters, and fine-tuning Shopify stores. For most of that time, "coding" meant one thing: translating a business requirement into a specific syntax that a machine could execute. It was a manual, linear process of writing line by line, debugging stack traces, and managing state.
+Coding used to mean translating intent into syntax, line by line. Agentic workflows flip that: you state the intent, and a loop of tools does the typing.
 
-But recently, the ground has shifted. We're moving away from the era of "writing code" and into the era of "orchestrating intent."
+<Summary>
+- Chat-style AI assistants left you as the manual bridge between the model and your system: copy, paste, test, repeat.
+- Agentic loops (intent, reasoning, action, observation, correction) let the model reach your tools directly, mostly through MCP.
+- The human job becomes architecture and review: small scoped MCP servers, stateful agent tools and a sign-off gate before any action runs.
+</Summary>
 
-This transition — often playfully called **vibe coding** — is more than just a meme. It represents a fundamental architectural shift in how we build software: moving from sequential instruction to **agentic workflows** powered by protocols like **MCP** (Model Context Protocol). If you are new to the idea, my [intro to vibe coding](/blog/vibe-coding/) covers the philosophy and developer-experience side before this post dives into the architecture.
+I've spent the last decade building Laravel applications, managing Docker clusters and fine-tuning Shopify stores.
 
-## The friction of the manual syntax
+For most of that time, "coding" meant one thing: translating a business requirement into syntax a machine could execute. It was a manual, linear process of writing line by line, debugging stack traces and managing state.
 
-The traditional development lifecycle is riddled with invisible friction. You have an idea (the "vibe"), you break it down into tasks, and then you spend 80% of your time fighting with syntax, configuration, and boilerplate.
+Recently, the ground has shifted. We're moving away from "writing code" and into "orchestrating intent."
 
-In a standard **Laravel** environment, even a simple feature — say, an automated reporting tool — requires you to set up routes, controllers, service classes, and database migrations. You are the compiler. You are the architect. You are the labor.
+This transition is often playfully called **vibe coding**. The meme hides a real architectural change: a move from sequential instructions to **agentic workflows** powered by protocols like **MCP** (Model Context Protocol).
 
-The problem is that our cognitive load gets consumed by the "how" rather than the "what." We get stuck in the weeds of **PHP** version compatibility or **Docker** networking issues, losing sight of the actual user value. This manual micromanagement doesn't scale with the demands of modern business.
+If you are new to the idea, my [intro to vibe coding](/blog/vibe-coding/) covers the philosophy and developer-experience side before this post dives into the architecture.
 
-## The agitation of the "black box" assistant
+## The friction of manual syntax
 
-When AI first entered the scene with basic autocomplete, it felt like a shortcut. But it wasn't a solution. We ended up with what I call "the Copilot paradox": the AI suggests code, but you still have to copy-paste it, test it, find the error, and feed it back to the AI.
+The traditional development lifecycle is full of invisible friction. You have an idea (the "vibe"), you break it into tasks, and then you spend 80% of your time fighting syntax, configuration and boilerplate.
 
-It's a broken feedback loop. The AI is a "black box" that doesn't actually know your system. It doesn't know your database schema, your **MCP** servers, or your deployment status on **Coolify**. You are still the manual bridge between the AI's logic and your local environment.
+In a standard **Laravel** environment, even a simple feature like an automated reporting tool needs routes, controllers, service classes and database migrations.
 
-This creates a new kind of fatigue. Instead of writing code, you're now a high-speed code reviewer, constantly context-switching between your editor and a chat interface. This isn't "vibe coding" — it's just accelerated manual labor.
+You are the compiler. You are the architect. You are the labor.
 
-![Diagram of the broken feedback loop where a developer manually bridges an AI assistant and their tools](/blog/agentic-workflows-vibe-coding/architecture-diagram.webp)
+### The "how" eats the "what"
 
-## The solution: agentic workflows and MCP
+Our cognitive load gets consumed by the "how" rather than the "what." We get stuck on **PHP** version compatibility or **Docker** networking issues and lose sight of the actual user value.
 
-True **vibe coding** isn't about being lazy; it's about shifting your role to that of a high-level system architect. This becomes possible through **agentic workflows** — systems that don't just complete text but execute tasks in loops. That jump from a static model to an autonomous actor is exactly the [LLM vs AI agent](/blog/llm-vs-ai-agent/) distinction.
+This manual micromanagement doesn't scale with the demands of modern business.
 
-The breakthrough here is the **Model Context Protocol (MCP)** by Anthropic. MCP acts as the "USB-C port" for AI applications. Instead of you manually giving the AI context, the AI uses an MCP client to talk directly to your tools — your **PostgreSQL** database, your **Slack** channels, or your **GitHub** repositories.
+## The "black box" assistant problem
 
-### The shift from chains to loops
+When AI first arrived as basic autocomplete, it felt like a shortcut. It wasn't a solution.
+
+We ended up with what I call "the Copilot paradox": the AI suggests code, but you still copy-paste it, test it, find the error and feed it back.
+
+### A broken feedback loop
+
+The AI is a "black box" that doesn't know your system. It doesn't know your database schema, your **MCP** servers or your deployment status on **Coolify**.
+
+You are still the manual bridge between the AI's logic and your local environment.
+
+### Accelerated manual labor
+
+This creates a new kind of fatigue. Instead of writing code, you become a high-speed code reviewer, constantly switching between your editor and a chat window.
+
+That isn't "vibe coding." It's accelerated manual labor.
+
+<TryThis>
+For one day, count how many times you copy code out of a chat window and paste an error back in. Each round trip is a step an agent with tool access could do on its own.
+</TryThis>
+
+## The fix: agentic workflows and MCP
+
+True **vibe coding** shifts your role to high-level system architect.
+
+That becomes possible through **agentic workflows**: systems that execute tasks in loops instead of only completing text. That jump from a static model to an autonomous actor is exactly the [LLM vs AI agent](/blog/llm-vs-ai-agent/) distinction.
+
+### MCP is the connector
+
+The breakthrough here is the **Model Context Protocol (MCP)**, created by Anthropic and donated in December 2025 to the Agentic AI Foundation, a Linux Foundation fund, so it is now vendor-neutral.
+
+MCP acts as the "USB-C port" for AI applications. Instead of you handing the AI context, the AI uses an MCP client to talk directly to your tools: your **PostgreSQL** database, your **Slack** channels or your **GitHub** repositories.
+
+<BeforeAfter beforeLabel="Chat assistant" afterLabel="Agentic loop">
+  <div slot="before">You paste context in, copy code out, run it, paste the error back. You are the bridge between the model and your system.</div>
+  <div slot="after">The agent reads the schema, runs the migration, reads the error and fixes it through MCP tools. You approve the plan.</div>
+</BeforeAfter>
+
+<Figure
+  src="/blog/agentic-workflows-vibe-coding/inline-1.webp"
+  alt="Comic panel of a robot plugging a cable into a database while another robot drops a pile of copy-paste papers"
+  caption="With MCP, the agent reaches your tools directly instead of you copying context back and forth."
+/>
+
+## From chains to loops
 
 In a traditional chain, you give a prompt and get a result. In an agentic loop, the architecture looks like this:
 
 1. **Intent.** You describe the outcome ("build a Laravel dashboard for my Shopify sales").
-2. **Reasoning.** The AI (like **Claude**) determines it needs to see the schema.
+2. **Reasoning.** The AI (like **Claude**) works out that it needs to see the schema.
 3. **Action.** It uses an **MCP** tool to query the database.
 4. **Observation.** It sees a missing table and decides to create a migration.
 5. **Correction.** If the migration fails, it reads the error and fixes it itself.
 
-I call this "intent-based engineering." You aren't writing the migration — you are approving the architectural decision. Nobody lands here on day one, though: the jump from chat prompts to loops is a progression I broke into [levels of an AI coding workflow](/blog/ai-coding-workflow-levels/), and MCP sits near the top of it.
+### Intent-based engineering
 
-![Bento grid of the five-stage agentic loop: intent, reasoning, action, observation, and self-correction](/blog/agentic-workflows-vibe-coding/agentic-loop.webp)
+I call this "intent-based engineering." You aren't writing the migration. You are approving the architectural decision.
+
+Nobody lands here on day one. The jump from chat prompts to loops is a progression I broke into [levels of an AI coding workflow](/blog/ai-coding-workflow-levels/), and MCP sits near the top of it.
+
+<PullQuote>Stop typing the migration. Start approving the decision behind it.</PullQuote>
 
 ## Implementing the agentic stack
 
-As an engineer who values quality, I don't just let the "vibe" take over without guardrails. The loop only stays safe if something verifies what comes out of it — that is the whole argument in [trust is not a QA strategy](/blog/testing-ai-generated-code/). Here is how I'm currently structuring my agentic stack using **Laravel** and **AI**.
+As an engineer who values quality, I don't let the "vibe" take over without guardrails.
+
+The loop only stays safe if something verifies what comes out of it. That is the whole argument in [trust is not a QA strategy](/blog/testing-ai-generated-code/). Here is how I structure my agentic stack using **Laravel** and **AI** today.
 
 ### 1. Defined MCP servers
 
-I build small, dedicated **MCP** servers that expose only the necessary tools to the AI. This keeps the context window clean and the security tight. I go deeper on this in [Claude MCP dev tools](/blog/claude-mcp-dev-tools/) and on designing [context-aware agents with MCP](/blog/mcp-context-aware-agents/).
+I build small, dedicated **MCP** servers that expose only the tools the AI needs. This keeps the context window clean and the security tight.
+
+I go deeper on this in [Claude MCP dev tools](/blog/claude-mcp-dev-tools/) and on designing [context-aware agents with MCP](/blog/mcp-context-aware-agents/).
 
 ```php
 // Conceptual MCP tool definition in a PHP environment
@@ -79,24 +134,52 @@ public function defineTools(): array
 }
 ```
 
+<TryThis>
+Write down the three tools your agent actually needs for one task (for example: read schema, run tests, run one artisan command). Expose only those in your MCP server and leave everything else out.
+</TryThis>
+
 ### 2. Stateful loops
 
-Instead of one-off chats, I use tools like **Cursor**, **Claude Code**, or **Windsurf** that maintain a stateful connection to my local file system. This allows the agent to "see" the impact of its changes in real-time, just like a human developer would.
+Instead of one-off chats, I use tools like **Cursor**, **Claude Code** or **Devin Desktop** (the IDE formerly called **Windsurf**) that keep a stateful connection to my local file system.
+
+The agent can "see" the impact of its changes in real time, just like a human developer would.
 
 ### 3. The human-in-the-loop (HITL)
 
-The most important part of the architecture is the review gate. Even with agentic loops, the human architect must sign off on the "plan" before the "action" phase. This ensures the **PHP** logic follows clean architecture principles rather than just "making it work." What that gate should actually check is a separate question — I argue for [dropping line-by-line reading](/blog/stop-reading-code-ai-review/) in favor of specs and automated verification.
+The most important part of the architecture is the review gate. Even with agentic loops, the human architect must sign off on the "plan" before the "action" phase.
 
-## The takeaway for the modern founder
+This keeps the **PHP** logic on clean architecture principles rather than just "making it work."
 
-If you're a founder or a CTO, the takeaway is simple: stop hiring for syntax and start hiring for system design. The technical barrier is collapsing, but the architectural stakes are higher than ever.
+What that gate should actually check is a separate question. I argue for [dropping line-by-line reading](/blog/stop-reading-code-ai-review/) in favor of specs and automated verification, and I cover approval gates for writes in [HITL gates for agent mutations](/blog/hitl-gates-for-agent-mutations/).
+
+<Figure
+  src="/blog/agentic-workflows-vibe-coding/inline-2.webp"
+  alt="Comic panel of an architect robot stamping a blueprint while worker robots wait behind a gate"
+  caption="The human signs off on the plan before the agent takes any action."
+/>
+
+## What this means for founders
+
+If you're a founder or a CTO, the lesson is simple: stop hiring for syntax and start hiring for system design. The technical barrier is collapsing, but the architectural stakes are higher than ever.
 
 - **Embrace the vibe.** Focus on the intent and the user experience.
-- **Invest in infrastructure.** Build the **MCP** connections and the data pipelines that allow AI to be effective.
-- **Think in loops.** Design your internal processes so that AI can iterate autonomously, reducing your bottleneck role.
+- **Invest in infrastructure.** Build the **MCP** connections and data pipelines that let AI be effective.
+- **Think in loops.** Design internal processes so AI can iterate on its own, which removes you as the bottleneck.
 
-At [Ansezz](/), I'm not just building apps anymore — I'm building agent-ready ecosystems. Whether it's a complex **Shopify** integration or a custom **SaaS**, I ensure the architecture is ready for the agentic future.
+I now build agent-ready systems, whether it's a complex **Shopify** integration or a custom **SaaS**, so the architecture is ready for agents from day one.
 
-The code might be generated, but the vision is entirely yours.
+<TryThis>
+Pick one recurring engineering chore (a weekly report, a dependency bump) and write it as an intent plus a done condition. If you can't state the done condition, an agent can't close the loop either.
+</TryThis>
 
-**Are you ready to stop writing code and start orchestrating your intent?** [Get in touch](/contact/) — let's design your agent stack together.
+<Takeaway>
+- Chat assistants keep you as the copy-paste bridge. Agentic loops remove that step.
+- MCP is the standard connector between agents and your tools.
+- Keep MCP servers small and scoped to the task.
+- Put a human sign-off between the plan and the action.
+- The code might be generated, but the vision is still yours.
+</Takeaway>
+
+If you want to move your team from chat prompts to scoped agent loops on Laravel and MCP, [here's how I help teams design and ship that stack](/services/), or [get in touch](/contact/) directly.
+
+Are you ready to stop writing code and start orchestrating your intent?
