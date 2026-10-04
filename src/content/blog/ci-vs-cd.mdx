@@ -10,38 +10,79 @@ heroImage:
   alt: "Pop-art dashboard contrasting a CI build-and-test panel with a CD release panel in a bento grid"
 ---
 
-Shipping a broken build to production is an expensive way to realize your local environment isn't a mirror of reality. For developers working on Laravel backends or Shopify storefronts, the gap between "it works on my machine" and a stable production release is often filled with manual steps that invite human error. Manual FTP uploads, SSHing into servers to run migrations, or manually publishing Shopify themes are risks that modern engineering cannot afford.
+CI proves your code works. CD gets that working code to users without a human copying files at midnight.
 
-Continuous Integration (CI) and Continuous Delivery (CD) are the two pillars that eliminate this uncertainty. By automating the path from a code commit to a live environment, teams can ship faster while actually increasing the stability of their applications. This guide breaks down the core differences between CI and CD and how to apply them to modern software stacks.
+<Summary>
+- Continuous Integration builds and tests every push, so integration bugs show up in minutes instead of at release time.
+- Continuous Delivery keeps every passing build ready to ship behind a manual button. Continuous Deployment removes the button.
+- For Laravel, that means a clean-room test pipeline. For Shopify, it means theme checks and deploying to an unpublished theme before you swap it live.
+</Summary>
+
+Shipping a broken build to production is an expensive way to learn your local environment isn't a mirror of reality.
+
+For developers on Laravel backends or Shopify storefronts, the gap between "it works on my machine" and a stable release is often filled with manual steps that invite human error.
+
+Manual FTP uploads, SSHing into servers to run migrations, or publishing Shopify themes by hand are risks modern engineering cannot afford.
+
+### Two pillars
+
+Continuous Integration (CI) and Continuous Delivery (CD) remove this uncertainty. By automating the path from a commit to a live environment, teams ship faster while making their applications more stable.
+
+This guide breaks down the core differences between CI and CD and how to apply them to modern stacks.
 
 ## Defining Continuous Integration (CI)
 
-Continuous Integration is the practice of merging all developer working copies to a shared mainline several times a day. In a Laravel or Vue.js environment, this means that every time you push code to a branch, an automated system builds the application and runs a suite of tests.
+Continuous Integration is the practice of merging every developer's working copy into a shared mainline several times a day.
 
-The goal of CI is to identify "integration hell" before it happens. Instead of waiting for a weekly release to find out that two developers changed the same core service, the CI pipeline flags the conflict within minutes. A standard CI pipeline for a Laravel application typically includes several automated steps.
+In a Laravel or Vue.js environment, every push to a branch makes an automated system build the application and run a suite of tests.
 
-- **Dependency management:** Installing Composer and NPM packages to ensure the environment is fresh.
-- **Static analysis:** Running tools like PHPStan or Laravel Pint to enforce code quality and style.
-- **Automated testing:** Executing unit and feature tests using PHPUnit or Pest.
-- **Security audits:** Scanning for known vulnerabilities in third-party dependencies.
+### Catching integration hell early
 
-By the time a pull request is ready for review, the CI system has already provided a "green light" confirming that the code is syntactically correct and doesn't break any behavior your tests cover.
+The goal of CI is to catch "integration hell" before it happens. Instead of finding out at a weekly release that two developers changed the same core service, the pipeline flags the conflict within minutes.
 
-![Pop-art bento grid showing the build, test, and deploy stages of a CI/CD pipeline flowing left to right](/blog/ci-vs-cd/pipeline-stages.webp)
+A standard CI pipeline for a Laravel application includes:
+
+- **Dependency management:** installing Composer and NPM packages so the environment is fresh.
+- **Static analysis:** running tools like PHPStan or Laravel Pint to enforce code quality and style.
+- **Automated testing:** running unit and feature tests with PHPUnit or Pest.
+- **Security audits:** scanning third-party dependencies for known vulnerabilities.
+
+By the time a pull request is ready for review, CI has already given a "green light" that the code is syntactically correct and doesn't break any behavior your tests cover.
+
+<TryThis>
+Open your last five merged pull requests and check which of the four steps above actually ran on each. Any missing step is the next job to add to your pipeline.
+</TryThis>
 
 ## Defining Continuous Delivery and Deployment (CD)
 
-While CI focuses on the quality of the code, Continuous Delivery (CD) focuses on the delivery of that code. There are two distinct flavors of CD that are often confused: Continuous Delivery and Continuous Deployment.
+CI focuses on the quality of the code. CD focuses on the delivery of that code. Two flavors of CD often get confused.
 
-**Continuous Delivery** ensures that every build that passes the CI pipeline is ready to be deployed to production. However, the actual release to the live environment requires a manual trigger. This is common in regulated industries or for high-stakes storefronts where a marketing manager might want to time a release.
+### Continuous Delivery
 
-**Continuous Deployment** takes this a step further by removing the manual trigger. Every change that passes the pipeline is automatically pushed to the production environment. This demands deep confidence in your test suite and the [observability to catch regressions fast](/blog/logging-vs-monitoring/) — without it, a bad commit reaches users before anyone notices.
+Every build that passes the CI pipeline is ready to deploy to production, but the actual release needs a manual trigger.
 
-For developers using [Coolify for self-hosted SaaS](/blog/coolify-self-hosted-saas/), CD becomes the engine that powers rapid iteration. Once the CI passes, Coolify can automatically pull the latest Docker image and update the running containers with zero downtime.
+This is common in regulated industries, or for high-stakes storefronts where a marketing manager wants to time a release.
+
+### Continuous Deployment
+
+This removes the manual trigger. Every change that passes the pipeline goes to production automatically.
+
+It demands deep confidence in your test suite and the [observability to catch regressions fast](/blog/logging-vs-monitoring/). Without it, a bad commit reaches users before anyone notices.
+
+<BeforeAfter beforeLabel="Continuous Delivery" afterLabel="Continuous Deployment">
+  <div slot="before">Every green build is packaged and ready. A person presses the release button when the timing is right.</div>
+  <div slot="after">Every green build goes live on its own. Tests and monitoring are the only gate.</div>
+</BeforeAfter>
+
+### Self-hosted CD with Coolify
+
+For developers using [Coolify for self-hosted SaaS](/blog/coolify-self-hosted-saas/), CD is the engine behind rapid iteration. Once CI passes, Coolify can pull the latest Docker image and update the running containers with zero downtime.
+
+{/* IMAGE: inline-1 */}
 
 ## CI vs CD: the core differences
 
-The primary difference lies in the scope and the ultimate goal. CI is about the developer's experience and code integrity. CD is about the user's experience and the release process.
+The main difference is scope and goal. CI is about the developer's experience and code integrity. CD is about the user's experience and the release process.
 
 | Feature          | Continuous Integration (CI)               | Continuous Delivery (CD)                                    |
 | :--------------- | :---------------------------------------- | :---------------------------------------------------------- |
@@ -50,11 +91,13 @@ The primary difference lies in the scope and the ultimate goal. CI is about the 
 | **Key output**   | A validated code base and test reports.   | A deployable artifact (Docker image, ZIP, etc.).            |
 | **Manual step**  | Fully automated process.                  | Manual approval (Delivery) or fully automated (Deployment). |
 
-In 2026, the lines are blurring as tools become more integrated. Most teams treat them as a single, fluid pipeline where code flows from a developer's IDE directly into a staging or production environment.
+In 2026, the lines are blurring as tools become more integrated. Most teams treat CI and CD as one pipeline where code flows from a developer's IDE into staging or production.
+
+<PullQuote>CI asks "is this code good?" CD asks "can users have it now?"</PullQuote>
 
 ## Implementing CI for Laravel applications
 
-Laravel provides a robust foundation for CI because of its built-in testing capabilities. When setting up a pipeline, you should aim for a "clean room" environment. This means using Docker to ensure the CI environment exactly matches your production environment.
+Laravel gives you a solid base for CI because of its built-in testing tools. When you set up a pipeline, aim for a "clean room" environment: use Docker so CI matches production exactly.
 
 A typical GitHub Actions workflow for Laravel might look like this:
 
@@ -68,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:8.4
         env:
           MYSQL_DATABASE: testing
           MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
@@ -79,50 +122,68 @@ jobs:
           --health-interval=10s --health-timeout=5s --health-retries=5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "8.5"
       - name: Install Dependencies
         run: composer install --prefer-dist --no-interaction
       - name: Execute Tests
         run: vendor/bin/phpunit
 ```
 
-This simple script ensures that no code can be merged into the main branch unless it passes every test case. It creates a safety net that allows the team to innovate without the fear of breaking the core application logic.
+With branch protection requiring this check, no code merges into main unless it passes every test case. That safety net lets the team move fast without fear of breaking core application logic.
 
-![Pop-art code editor displaying a GitHub Actions workflow YAML file for a Laravel CI job](/blog/ci-vs-cd/github-actions-yaml.webp)
+<TryThis>
+Turn on branch protection for `main` and mark your CI job as a required status check. Until you do, a red build is only a suggestion.
+</TryThis>
 
 ## CD best practices for Shopify storefronts
 
-Shopify development has traditionally been a manual process of editing themes in the browser. However, with the rise of [agentic commerce on Shopify](/blog/agentic-commerce-shopify/), the need for professional CI/CD has skyrocketed.
+Shopify development has traditionally meant editing themes in the browser. With the rise of [agentic commerce on Shopify](/blog/agentic-commerce-shopify/), the need for professional CI/CD has skyrocketed.
 
-For Shopify, CD is about managing "theme versions" rather than server binaries. Using the Shopify CLI, you can automate the deployment of theme changes to different environments.
+For Shopify, CD is about managing "theme versions" rather than server binaries. With the Shopify CLI, you can automate theme deployments to different environments:
 
-1. **Staging stores:** Always deploy to a development or staging store first.
-2. **Theme checks:** Use `shopify theme check` in your CI pipeline to catch Liquid errors before they go live.
-3. **Atomic deploys:** Push your code to a new, unpublished theme ID. Once verified, use the CLI to publish it as the live theme. The cutover is instant, so customers never see a half-deployed storefront — a blue-green flavor of deployment for e-commerce.
+1. **Staging stores.** Always deploy to a development or staging store first.
+2. **Theme checks.** Run `shopify theme check` in your CI pipeline to catch Liquid errors before they go live.
+3. **Atomic deploys.** Push your code to a new, unpublished theme ID. Once verified, use the CLI to publish it as the live theme.
+
+### Why the atomic swap matters
+
+The cutover is instant, so customers never see a half-deployed storefront. It is a blue-green style of deployment for e-commerce.
 
 A broken layout or a missing "Add to Cart" button caused by a Liquid syntax error never reaches the live store.
 
-![Pop-art scene of a Shopify theme deployment dashboard on a tablet showing a published theme swap](/blog/ci-vs-cd/shopify-deploy.webp)
+<TryThis>
+Add `shopify theme check` as a CI step on your theme repo, then do your next release by pushing to an unpublished theme and publishing it from the CLI instead of the theme editor.
+</TryThis>
 
-## The bridge: automation and quality
+{/* IMAGE: inline-2 */}
 
-The real power of CI/CD is realized when you move beyond simple tests and start incorporating advanced checks. Modern pipelines in 2026 often include visual regression testing, where the system takes screenshots of the UI and compares them to the previous version to detect unintended layout shifts.
+## Going beyond unit tests
 
-For teams building [API gateways for the AI stack](/blog/api-gateway-ai-stack/), CI/CD is non-negotiable. When your application relies on LLMs or external APIs, the pipeline must include integration tests that verify these connections are still active and behaving as expected.
+CI/CD pays off most when you move past simple tests and add more advanced checks.
 
-## Takeaways
+Modern pipelines in 2026 often include visual regression testing. The system takes screenshots of the UI and compares them to the previous version to catch unintended layout shifts.
 
-- **CI is for quality:** Use Continuous Integration to run tests, lint code, and check for security vulnerabilities on every push.
-- **CD is for delivery:** Use Continuous Delivery to automate the packaging and deployment of your app to staging or production.
-- **Speed is a feature:** Keep your pipelines fast. A CI pipeline that takes 30 minutes to run is a pipeline that developers will try to bypass.
-- **Immutable artifacts:** Build your application once (e.g., a Docker image) and promote that same artifact through staging and production.
-- **Zero downtime:** Use strategies like blue-green deployments or symlink swaps to ensure users aren't interrupted during a release.
-- **Shift left:** Move security and quality checks as early in the process as possible to reduce the cost of fixing bugs.
+### Pipelines for AI-backed apps
 
-If your deployment process still involves a "deployment checklist" that a human has to follow, you aren't doing CD. Automation is the only way to scale a modern software business without scaling the frequency of production outages.
+For teams building [API gateways for the AI stack](/blog/api-gateway-ai-stack/), CI/CD is non-negotiable.
 
-How much time does your team spend manually verifying releases before they go live? If you want a pipeline that does it for you, [here's how I help teams automate delivery](/services/).
+When your application relies on LLMs or external APIs, the pipeline must include integration tests that confirm those connections still work and behave as expected. If agents write part of your code, see the [gate I run on AI-authored PRs](/blog/testing-ai-generated-code/).
+
+<Takeaway>
+- **CI is for quality.** Run tests, lint code and check for security vulnerabilities on every push.
+- **CD is for delivery.** Automate packaging and deployment to staging or production.
+- **Speed is a feature.** A CI pipeline that takes 30 minutes is a pipeline developers will try to bypass.
+- **Immutable artifacts.** Build once (e.g., a Docker image) and promote that same artifact through staging and production.
+- **Zero downtime.** Use blue-green deployments or symlink swaps so users aren't interrupted during a release.
+- **Shift left.** Move security and quality checks as early as possible to cut the cost of fixing bugs.
+</Takeaway>
+
+If your deployment process still involves a checklist a human has to follow, you aren't doing CD. Automation is the only way to scale a software business without scaling production outages.
+
+If you want your Laravel or Shopify releases to go from commit to production without the manual checklist, [here's how I help teams automate delivery](/services/).
+
+How much time does your team spend manually verifying releases before they go live?
