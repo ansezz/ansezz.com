@@ -3,6 +3,7 @@
 // uses `URLSearchParams`, encoding uses the four global encode/decode
 // functions. No network, no dependencies. Every throw site is guarded.
 
+import { bindUrlState } from "@/lib/url-state";
 const PART_KEYS = [
   "href",
   "origin",
@@ -417,5 +418,6 @@ function init(): void {
 
 init();
 document.addEventListener("astro:after-swap", init);
+bindUrlState("url-parser-root");
 
 export {};

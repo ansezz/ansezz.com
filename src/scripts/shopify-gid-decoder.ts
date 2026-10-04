@@ -5,6 +5,7 @@
 // out of Shopify admin URLs, and converts newline-separated lists in bulk.
 // Pure string work in the browser — no network calls, no dependencies.
 
+import { bindUrlState } from "@/lib/url-state";
 type Source = "gid" | "base64" | "admin-url" | "numeric";
 
 interface GidParam {
@@ -799,5 +800,6 @@ function init(): void {
 
 init();
 document.addEventListener("astro:after-swap", init);
+bindUrlState("shopify-gid-root");
 
 export {};

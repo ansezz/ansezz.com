@@ -1,8 +1,14 @@
-// Shopify webhook signature check. HMAC-SHA256 over the raw body bytes, keyed
-// with the app's client secret via crypto.subtle.importKey + crypto.subtle.sign,
-// base64-encoded, then compared to the X-Shopify-Hmac-Sha256 header with a
-// constant-time loop. The secret is read from the field and handed straight to
-// Web Crypto — it is never stored, logged, or transmitted.
+// Shopify signature check, three schemes, all HMAC-SHA256 keyed with the app's
+// client secret via crypto.subtle.importKey + crypto.subtle.sign:
+//   - webhook: over the raw body bytes, base64, in X-Shopify-Hmac-Sha256.
+//   - app proxy: over the sorted query params joined with no separator
+//     (multi-values joined by ","), hex, in the `signature` param.
+//   - OAuth / install / admin link: over the sorted query params, form
+//     encoded and joined with "&", hex, in the `hmac` param.
+// Compared with a constant-time loop. The secret is read from the field and
+// handed straight to Web Crypto. It is never stored, logged, or transmitted.
+
+type Mode = "webhook" | "proxy" | "oauth";
 
 type Verdict = "idle" | "info" | "pass" | "fail" | "error";
 type SignalLevel = "ok" | "warn";
@@ -91,6 +97,56 @@ function firstDifference(a: string, b: string): number {
     if (a[i] !== b[i]) return i;
   }
   return a.length === b.length ? -1 : shared;
+}
+
+function toHex(bytes: Uint8Array): string {
+  let out = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    out += bytes[i].toString(16).padStart(2, "0");
+  }
+  return out;
+}
+
+interface QueryParse {
+  supplied: string;
+  message: string;
+  keys: string[];
+}
+
+/** Turns a full URL, "?a=b" or "a=b" into the message Shopify signed. */
+function parseQuery(raw: string, mode: "proxy" | "oauth"): QueryParse {
+  let query = raw.trim();
+  const q = query.indexOf("?");
+  if (q !== -1) query = query.slice(q + 1);
+  const hash = query.indexOf("#");
+  if (hash !== -1) query = query.slice(0, hash);
+
+  const params = new URLSearchParams(query);
+  const sigKey = mode === "proxy" ? "signature" : "hmac";
+  const supplied = (params.get(sigKey) ?? "").trim();
+
+  const grouped = new Map<string, string[]>();
+  for (const [k, v] of params) {
+    if (k === sigKey || (mode === "oauth" && k === "signature")) continue;
+    const list = grouped.get(k);
+    if (list) list.push(v);
+    else grouped.set(k, [v]);
+  }
+  const keys = [...grouped.keys()].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+
+  let message: string;
+  if (mode === "proxy") {
+    message = keys
+      .map((k) => `${k}=${(grouped.get(k) ?? []).join(",")}`)
+      .join("");
+  } else {
+    const out = new URLSearchParams();
+    for (const k of keys) {
+      for (const v of grouped.get(k) ?? []) out.append(k, v);
+    }
+    message = out.toString();
+  }
+  return { supplied, message, keys };
 }
 
 function messageOf(err: unknown): string {
@@ -243,6 +299,13 @@ function init(): void {
   const clearBtn = document.getElementById("shmac-clear");
   const toggleBtn = document.getElementById("shmac-secret-toggle");
   const toggleLabel = document.getElementById("shmac-secret-toggle-label");
+  const bodyLabel = document.getElementById("shmac-body-label");
+  const headerGroup = document.getElementById("shmac-header-group");
+  const schemeEl = document.getElementById("shmac-scheme");
+  const suppliedLabel = document.getElementById("shmac-supplied-label");
+  const modeButtons =
+    root.querySelectorAll<HTMLButtonElement>("[data-shmac-mode]");
+  let mode: Mode = "webhook";
   const icons: Record<IconKey, HTMLElement | null> = {
     idle: document.getElementById("shmac-icon-idle"),
     pass: document.getElementById("shmac-icon-pass"),
@@ -318,7 +381,7 @@ function init(): void {
 
   const webcrypto = subtle;
 
-  async function computeDigest(secret: string, body: string): Promise<string> {
+  async function sign(secret: string, message: string): Promise<Uint8Array> {
     const key = await webcrypto.importKey(
       "raw",
       ENCODER.encode(secret),
@@ -326,8 +389,188 @@ function init(): void {
       false, // Not extractable. The key material never comes back out.
       ["sign"],
     );
-    const signature = await webcrypto.sign("HMAC", key, ENCODER.encode(body));
-    return toBase64(new Uint8Array(signature));
+    const signature = await webcrypto.sign(
+      "HMAC",
+      key,
+      ENCODER.encode(message),
+    );
+    return new Uint8Array(signature);
+  }
+
+  async function computeDigest(secret: string, body: string): Promise<string> {
+    return toBase64(await sign(secret, body));
+  }
+
+  const MODE_COPY: Record<
+    Mode,
+    { label: string; placeholder: string; scheme: string; supplied: string }
+  > = {
+    webhook: {
+      label: "Raw request body",
+      placeholder:
+        "Paste the body exactly as it arrived, no reformatting, no trailing newline",
+      scheme: "HMAC-SHA256 · base64 · recomputed as you type",
+      supplied: "From the header",
+    },
+    proxy: {
+      label: "App proxy request URL or query string",
+      placeholder:
+        "https://shop.example.com/apps/proxy/path?shop=...&timestamp=...&signature=...",
+      scheme: "HMAC-SHA256 · hex · sorted params, no separator",
+      supplied: "From the signature param",
+    },
+    oauth: {
+      label: "OAuth, install or admin link URL or query string",
+      placeholder:
+        "https://your-app.example.com/auth/callback?code=...&hmac=...&shop=...&timestamp=...",
+      scheme: "HMAC-SHA256 · hex · sorted params joined with &",
+      supplied: "From the hmac param",
+    },
+  };
+
+  function applyMode(next: Mode): void {
+    mode = next;
+    const copy = MODE_COPY[next];
+    if (bodyLabel) bodyLabel.textContent = copy.label;
+    bodyInput.placeholder = copy.placeholder;
+    bodyInput.rows = next === "webhook" ? 7 : 4;
+    if (headerGroup) headerGroup.hidden = next !== "webhook";
+    if (schemeEl) schemeEl.textContent = copy.scheme;
+    if (suppliedLabel) suppliedLabel.textContent = copy.supplied;
+    modeButtons.forEach((btn) => {
+      const on = btn.dataset.shmacMode === next;
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+      btn.classList.toggle("bg-ink", on);
+      btn.classList.toggle("text-bg", on);
+      btn.classList.toggle("bg-bg-alt", !on);
+    });
+    root!
+      .querySelectorAll<HTMLElement>("[data-shmac-example]")
+      .forEach((el) => {
+        el.hidden = el.dataset.shmacExample !== next;
+      });
+  }
+
+  async function runQuery(mine: number, scheme: "proxy" | "oauth") {
+    const raw = bodyInput.value;
+    const secret = secretInput.value;
+    const parsed = parseQuery(raw, scheme);
+    const sigName = scheme === "proxy" ? "signature" : "hmac";
+    if (suppliedEl) suppliedEl.textContent = parsed.supplied || "—";
+
+    const signals: Signal[] = [];
+    if (raw.trim() === "") {
+      signals.length = 0;
+    } else {
+      signals.push({
+        level: parsed.keys.length ? "ok" : "warn",
+        text: parsed.keys.length
+          ? `Signed message (${parsed.keys.length} params, sorted): ${parsed.message}`
+          : "No query parameters found. Paste the full URL or everything after the ?.",
+      });
+      if (!parsed.supplied) {
+        signals.push({
+          level: "warn",
+          text: `No ${sigName} parameter in the query, so there is nothing to compare against.`,
+        });
+      } else if (!HEX_DIGEST.test(parsed.supplied)) {
+        signals.push({
+          level: "warn",
+          text: `The ${sigName} value is not 64 hex characters, so it is not an HMAC-SHA256 hex digest.`,
+        });
+      }
+      if (scheme === "proxy" && parsed.keys.includes("hmac")) {
+        signals.push({
+          level: "warn",
+          text: "This query has an hmac param. That looks like an OAuth or admin link, so try the OAuth mode.",
+        });
+      }
+      if (
+        scheme === "oauth" &&
+        raw.includes("signature=") &&
+        !raw.includes("hmac=")
+      ) {
+        signals.push({
+          level: "warn",
+          text: "This query has a signature param and no hmac. That looks like an app proxy request, so try the app proxy mode.",
+        });
+      }
+      const ts = Number(
+        new URLSearchParams(raw.slice(raw.indexOf("?") + 1)).get("timestamp"),
+      );
+      if (Number.isFinite(ts) && ts > 0) {
+        const age = Math.round(Date.now() / 1000 - ts);
+        if (Math.abs(age) > 300) {
+          signals.push({
+            level: "warn",
+            text: `The timestamp is ${Math.round(Math.abs(age) / 60)} minutes ${age > 0 ? "old" : "in the future"}. The signature can still be valid, but your server should reject stale requests to stop replays.`,
+          });
+        }
+      }
+    }
+
+    if (secret === "") {
+      if (computedEl) computedEl.textContent = "—";
+      setError(null);
+      setStatus("Waiting for a secret");
+      setVerdict(
+        "idle",
+        "Awaiting input",
+        "Add the app client secret. It is the HMAC key, so nothing can be computed without it.",
+      );
+      renderSignals(signals);
+      return;
+    }
+
+    let digest: string;
+    try {
+      digest = toHex(await sign(secret, parsed.message));
+    } catch (err) {
+      if (mine !== token) return;
+      setStatus("Failed");
+      setVerdict(
+        "error",
+        "Cannot compute",
+        "Web Crypto refused to sign with this input.",
+      );
+      setError(`HMAC computation failed: ${messageOf(err)}.`);
+      renderSignals([]);
+      return;
+    }
+    if (mine !== token) return;
+    setError(null);
+    if (computedEl) computedEl.textContent = digest;
+
+    if (!parsed.supplied) {
+      setStatus("Digest computed");
+      setVerdict(
+        "info",
+        "Digest computed",
+        `There is no ${sigName} param to compare against yet. Paste the full URL as it arrived.`,
+      );
+      renderSignals(signals);
+      return;
+    }
+
+    const supplied = parsed.supplied.toLowerCase();
+    if (constantTimeEqual(ENCODER.encode(digest), ENCODER.encode(supplied))) {
+      setStatus("Verified");
+      setVerdict(
+        "pass",
+        "Signature valid",
+        `The computed digest matches the ${sigName} param. Shopify signed these exact parameters with this secret.`,
+      );
+      renderSignals(signals);
+      return;
+    }
+
+    setStatus("Mismatch");
+    setVerdict(
+      "fail",
+      "Signature mismatch",
+      `The digest computed from these parameters and this secret is not the ${sigName} value. Check the secret, and paste the URL exactly as it arrived.`,
+    );
+    renderSignals(signals);
   }
 
   let token = 0;
@@ -335,6 +578,10 @@ function init(): void {
 
   async function run(): Promise<void> {
     const mine = ++token;
+    if (mode !== "webhook") {
+      await runQuery(mine, mode);
+      return;
+    }
     const body = bodyInput.value;
     const rawHeader = headerInput.value;
     const header = rawHeader.trim();
@@ -439,6 +686,19 @@ function init(): void {
   headerInput.addEventListener("input", schedule);
   secretInput.addEventListener("input", schedule);
 
+  modeButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const next = btn.dataset.shmacMode;
+      if (next !== "webhook" && next !== "proxy" && next !== "oauth") return;
+      if (next === mode) return;
+      applyMode(next);
+      bodyInput.value = "";
+      headerInput.value = "";
+      window.clearTimeout(debounceId);
+      void run();
+    });
+  });
+
   root.querySelectorAll<HTMLElement>("[data-shmac-body]").forEach((btn) => {
     btn.addEventListener("click", () => {
       bodyInput.value = btn.dataset.shmacBody ?? "";
@@ -488,6 +748,7 @@ function init(): void {
     }
   });
 
+  applyMode("webhook");
   void run();
 }
 

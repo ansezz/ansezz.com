@@ -3,6 +3,7 @@
 // rate from a fixed worker count. The queueing table is exact Erlang C for the
 // M/M/c model (Erlang B recursion), which is a model, not a promise.
 
+import { bindUrlState } from "@/lib/url-state";
 type Mode = "fleet" | "load";
 type RateUnit = "sec" | "min";
 
@@ -619,5 +620,6 @@ function init(): void {
 
 init();
 document.addEventListener("astro:after-swap", init);
+bindUrlState("capacity-calculator-root");
 
 export {};

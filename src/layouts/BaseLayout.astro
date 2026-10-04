@@ -242,7 +242,11 @@ const ldList = structuredData
       Skip to content
     </a>
     <Header />
-    <main id="main" class="flex-1">
+    <main
+      id="main"
+      class="flex-1"
+      data-tools={Astro.url.pathname.startsWith("/tools/") ? "" : undefined}
+    >
       <slot />
     </main>
     <Footer />

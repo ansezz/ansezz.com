@@ -94,10 +94,10 @@ export const TOOL_LIST_A: ToolEntry[] = [
   {
     title: "SHA Hash Generator",
     blurb:
-      "SHA-1, SHA-256, SHA-384 and SHA-512 for text or a file, in hex or base64. Web Crypto, in your browser. No MD5 — on purpose.",
+      "SHA-1, SHA-256, SHA-384 and SHA-512 for text or a file, plus HMAC with your own key. Hex or base64, Web Crypto, in your browser. No MD5, on purpose.",
     href: "/tools/hash-generator/",
-    seoTitle: "SHA-256 Hash Generator Online (SHA-1, SHA-512)",
-    updated: "2026-08-10",
+    seoTitle: "SHA-256 and HMAC Generator Online (SHA-1, SHA-512)",
+    updated: "2026-10-03",
     services: ["mvp", "shopify"],
     icon: "lucide:shield-check",
     tone: "green",
@@ -108,10 +108,10 @@ export const TOOL_LIST_A: ToolEntry[] = [
   {
     title: "Secret & API Key Generator",
     blurb:
-      "Keys, hex secrets and passphrases from crypto.getRandomValues — never Math.random. Unbiased sampling, entropy readout, nothing logged.",
+      "Keys, hex secrets, passphrases and Laravel APP_KEY values from crypto.getRandomValues, never Math.random. Unbiased sampling, entropy readout, nothing logged.",
     href: "/tools/secret-generator/",
-    seoTitle: "Secret Key and API Key Generator, Client-Side",
-    updated: "2026-08-12",
+    seoTitle: "Secret Key Generator: API Keys, Laravel APP_KEY",
+    updated: "2026-10-03",
     services: ["mvp"],
     icon: "lucide:key-square",
     tone: "pink",
@@ -122,10 +122,10 @@ export const TOOL_LIST_A: ToolEntry[] = [
   {
     title: "UUID Generator",
     blurb:
-      "Generate v4 UUIDs in bulk, copy with one click. Crypto-random, instant, offline. Handy for seeds, fixtures, and quick IDs.",
+      "Generate v4 or time-ordered v7 UUIDs in bulk, and paste any UUID to read its version and timestamp. Crypto-random, instant, offline.",
     href: "/tools/uuid-generator/",
-    seoTitle: "UUID Generator: Bulk v4 UUIDs Online, Free",
-    updated: "2026-08-10",
+    seoTitle: "UUID Generator: Bulk v4 and v7, Plus Inspector",
+    updated: "2026-10-03",
     services: ["mvp"],
     icon: "lucide:fingerprint",
     tone: "green",
@@ -141,7 +141,7 @@ export const TOOL_LIST_A: ToolEntry[] = [
       "Break a URL into every part, edit query params and watch it rebuild. Plus the four encode/decode functions people keep mixing up.",
     href: "/tools/url-parser/",
     seoTitle: "URL Parser and Encoder: Edit Query Strings",
-    updated: "2026-08-10",
+    updated: "2026-10-03",
     services: ["mvp"],
     icon: "lucide:link",
     tone: "yellow",

@@ -1,0 +1,17 @@
+---
+interface Props {
+  label?: string;
+}
+const { label = "Copy link to this result" } = Astro.props;
+---
+
+<div class="flex flex-wrap items-center gap-3">
+  <button
+    type="button"
+    data-share-link
+    class="border-ink bg-bg-alt mono shadow-neo-xs hover:bg-yellow inline-flex min-h-10 items-center rounded-full border-[2px] px-4 py-1 text-[11px] font-bold tracking-widest uppercase"
+  >
+    {label}
+  </button>
+  <p data-share-status class="mono text-xs" aria-live="polite"></p>
+</div>

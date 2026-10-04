@@ -29,6 +29,7 @@ const presets = [
   { label: "Mon 9am", expr: "0 9 * * 1" },
   { label: "1st of month", expr: "0 0 1 * *" },
   { label: "Weekdays noon", expr: "0 12 * * 1-5" },
+  { label: "@daily", expr: "@daily" },
 ];
 
 const dialectColumns = [
@@ -92,7 +93,15 @@ const faq = [
   },
   {
     q: "Does this cron explainer support @daily, seconds, or Quartz syntax?",
-    a: "No — it parses the standard five-field crontab format only: *, single values, ranges, comma lists and steps. Shortcuts like @daily and @reboot, six-field seconds-first expressions, and Quartz tokens such as ? L W and # are rejected with an 'expected 5 fields' message rather than guessed at. Everything is parsed in your browser as you type; the expression is never sent anywhere.",
+    a: "It reads the standard five-field crontab format: *, single values, ranges, comma lists, steps, and month and weekday names like JAN and MON. The Vixie shortcuts @yearly, @annually, @monthly, @weekly, @daily, @midnight and @hourly are expanded to their five-field form, and @reboot is explained but has no next run time. Six-field seconds-first expressions and Quartz tokens such as ? L W and # are rejected rather than guessed at. Everything is parsed in your browser as you type, and the expression is never sent anywhere.",
+  },
+  {
+    q: "How do I write this cron schedule in the Laravel scheduler?",
+    a: "The Laravel box under the next run times turns the expression into the closest fluent method, such as ->dailyAt('2:00'), ->everyFifteenMinutes() or ->weeklyOn(Schedule::MONDAY, '9:00'), and falls back to ->cron('...') when no helper fits. Put the line in routes/console.php, swap in your own command name, and keep a single system cron entry that runs php artisan schedule:run every minute. Laravel uses the app timezone unless you add ->timezone().",
+  },
+  {
+    q: "How are the next run times worked out?",
+    a: "The page walks forward minute by minute from now and lists the first five matches, in your browser's time zone or in UTC. It follows Vixie rules, so when both day fields are restricted a day matches if either one does. Times that do not exist because of a daylight saving jump are skipped, the same way most cron daemons skip them.",
   },
 ];
 
@@ -200,7 +209,7 @@ const relatedLinks = [
   description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="Cron Explainer."
-  intro="Paste a 5-field cron expression — get a plain-English description of exactly when it fires. Built it for my own schedulers."
+  intro="Paste a 5-field cron expression and get a plain-English description, the next five run times and the Laravel scheduler line. I built it for my own schedulers."
   structuredData={[breadcrumbLd, appLd, faqLd, howToLd]}
 >
   <section class="mx-auto max-w-3xl px-5 pb-6">
@@ -211,9 +220,8 @@ const relatedLinks = [
       <p class="text-sm leading-snug font-bold">
         Standard 5 fields: minute hour day-of-month month day-of-week. Supports <code
           >*</code
-        >, <code>*/n</code>, ranges <code>a-b</code>, and lists <code
-          >a,b,c</code
-        >.
+        >, <code>*/n</code>, ranges <code>a-b</code>, lists <code>a,b,c</code>,
+        names like <code>MON</code> and shortcuts like <code>@daily</code>.
       </p>
     </StickyNote>
   </section>
@@ -240,7 +248,7 @@ const relatedLinks = [
             <button
               type="button"
               data-cron-preset={p.expr}
-              class="border-ink bg-bg-alt mono shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+              class="border-ink bg-bg-alt mono shadow-neo-xs hover:bg-yellow hover:shadow-neo-sm inline-flex min-h-10 items-center rounded-full border-[2px] px-3 py-1 text-[10px] font-bold tracking-widest uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
             >
               {p.label}
             </button>
@@ -262,6 +270,50 @@ const relatedLinks = [
       >
       </ul>
     </NeoCard>
+
+    <NeoCard tone="paper" shadow="md" class="mt-6 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Next 5 runs
+        </p>
+        <label class="mono flex items-center gap-2 text-[11px] font-bold">
+          <span class="sr-only">Time zone</span>
+          <select
+            id="cron-tz"
+            class="border-ink bg-paper min-h-10 max-w-full min-w-0 rounded-[4px] border-[2px] px-2 py-1"
+          >
+            <option value="local">Your time zone</option>
+            <option value="utc">UTC</option>
+          </select>
+        </label>
+      </div>
+      <ul id="cron-runs" class="mono space-y-1 text-sm"></ul>
+    </NeoCard>
+
+    <NeoCard tone="yellow" shadow="md" class="mt-6 space-y-3">
+      <p class="mono text-[11px] font-bold tracking-widest uppercase">
+        ▸ Laravel scheduler
+      </p>
+      <pre
+        class="border-ink bg-paper overflow-x-auto rounded-[4px] border-[2px] p-3 text-sm"><code id="cron-laravel" class="mono">-</code></pre>
+      <p class="text-xs leading-snug opacity-80">
+        Goes in <code class="mono">routes/console.php</code>. Laravel runs it
+        from one system cron entry: <code class="mono [overflow-wrap:anywhere]"
+          >* * * * * php artisan schedule:run</code
+        >.
+      </p>
+    </NeoCard>
+
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <button
+        id="cron-share"
+        type="button"
+        class="border-ink bg-bg-alt mono shadow-neo-xs hover:bg-yellow inline-flex min-h-10 items-center rounded-full border-[2px] px-4 py-1 text-[11px] font-bold tracking-widest uppercase"
+      >
+        Copy link to this schedule
+      </button>
+      <p id="cron-share-status" class="mono text-xs" aria-live="polite"></p>
+    </div>
   </section>
 
   <!-- EXPLAINER -->
