@@ -46,7 +46,11 @@ If you're still deciding whether RAG is the right tool at all, versus baking kno
 2. **Hybrid search:** can it search by meaning (vectors) and by exact keywords (full-text)?
 3. **Developer experience:** how much time will you spend on DevOps?
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/picking-the-right-rag-stack/inline-1.webp"
+  alt="Comic panel of a librarian robot at a desk with three dials showing a stopwatch, a magnifying glass and a wrench while another robot catches a book sliding down a chute"
+  caption="Speed, hybrid search and ops effort decide the pick."
+/>
 
 ## The contenders
 
@@ -155,7 +159,11 @@ Don't store the whole JSON document inside the vector store. Store the vector an
 
 These are the cheap wins. For the deeper traps (bad chunking, missing reranking, stale embeddings), see the [7 mistakes you're making with your production RAG stack](/blog/7-rag-mistakes-production/). To test chunk sizes on your own documents, try my [RAG chunk splitter](/tools/rag-chunk-splitter/).
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/picking-the-right-rag-stack/inline-2.webp"
+  alt="Comic panel of a sweating robot staggering under a backpack stuffed with papers next to a smiling robot jogging past a blue filing cabinet tied to a small tag"
+  caption="Store the vector and an ID, keep the rest in Postgres."
+/>
 
 <TryThis>
 Pick your ten most common user questions and run them against your current setup with and without a keyword filter. If the keyword version wins on half of them, you need hybrid search.

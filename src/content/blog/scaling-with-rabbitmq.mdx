@@ -42,7 +42,11 @@ Picture a coffee shop where the person taking your order also grinds the beans, 
 
 To scale, the cashier writes the order on a slip and hands it off, and is free for the next customer. That slip is your message. The counter where the slips go is your message broker.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/scaling-with-rabbitmq/inline-1.webp"
+  alt="Comic panel of a cashier robot clipping pink order slips to a rail while barista robots grind beans and pull espresso behind it and a line of customer robots waits"
+  caption="The cashier takes the order and the baristas do the work."
+/>
 
 ## How RabbitMQ routes work
 
@@ -113,7 +117,11 @@ The system also gets easier to observe and debug. The RabbitMQ management UI sho
 
 Already on GCP? The same patterns apply with [Google Pub/Sub](/blog/event-driven-pubsub/). Pick the broker that matches your hosting stack, not the trend cycle.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/scaling-with-rabbitmq/inline-2.webp"
+  alt="Comic panel of a post office with a giant rabbit head where a human clerk hands envelopes onto a conveyor and a robot in a suit waves more worker robots to the belt"
+  caption="When the queue grows, add more workers."
+/>
 
 <TryThis>
 Pick one job and run it twice with the same payload in a test. If it sends two emails or charges twice, add an idempotency key (like the order ID) and check it before doing the work.

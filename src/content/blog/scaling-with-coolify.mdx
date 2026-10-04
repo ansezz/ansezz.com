@@ -44,7 +44,11 @@ In Coolify, open **Servers**, add a server over SSH, and choose which server eac
 
 It's the same separation I use when building [custom web applications](/work/), and it keeps one machine from taking everything down.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/scaling-with-coolify/inline-1.webp"
+  alt="Comic panel of a robot in a control booth sending blue signals to three server robots in a row, next to a blacksmith robot at a forge and a steel vault"
+  caption="Control plane, app servers, builds and data each get their own place."
+/>
 
 ## Rolling deploys that don't drop requests
 
@@ -130,7 +134,11 @@ jobs:
 
 Put your test job before this step and broken code never reaches your servers.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/scaling-with-coolify/inline-2.webp"
+  alt="Comic panel of a nervous blue robot holding a relay baton while a fresh runner robot crouches at the start with a yellow light on its chest and a referee robot blows a whistle"
+  caption="The old container keeps the traffic until the new one is ready."
+/>
 
 ## Configuration tips
 

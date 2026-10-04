@@ -59,7 +59,11 @@ If prompt engineering is writing a script for an actor, context engineering is b
 
 Moving from "telling" to "showing" lowers the load on the model. Instead of asking it to remember every policy, you build a system that finds the one relevant policy and puts it in front of the model.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/prompt-engineering-vs-context-engineering/inline-1.webp"
+  alt="Comic panel of an actor robot reading a script in a spotlight while a crew behind the curtain holds a mask and a box of files and feeds him through an ear tube"
+  caption="The prompt is the script. Context is the whole stage crew."
+/>
 
 ## RAG: the context delivery engine
 
@@ -141,7 +145,11 @@ class AIContextManager
 }
 ```
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/prompt-engineering-vs-context-engineering/inline-2.webp"
+  alt="Comic panel of a robot packing a tray with papers, a notebook, a red toolbox and a question card before it slides through a hatch to a glowing AI head"
+  caption="Assemble the context before the model sees the question."
+/>
 
 <TryThis>
 Log the full context your app sends for ten real requests. For each one, mark which pieces the answer actually used. Anything that is never used is a candidate to drop or retrieve on demand.

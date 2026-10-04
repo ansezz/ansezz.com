@@ -44,7 +44,11 @@ The problem shows up when business needs outgrow theme constraints. Maybe the st
 
 That's usually when headless becomes a serious conversation.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/shopify-liquid-vs-headless/inline-1.webp"
+  alt="Comic panel of a robot loading boxes into a smiling pink delivery van next to a half-built silver spaceship surrounded by scaffolding and welding robots"
+  caption="Most stores need a reliable van, not a spaceship."
+/>
 
 ## Performance is the main driver
 
@@ -123,7 +127,11 @@ I reduce this decision to four practical questions.
 
 The simplest stack that fixes the real bottleneck is usually the best one. Building a spaceship to cross the street is still a bad decision. You can see how this plays out across [real Shopify builds I've shipped](/work/).
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/shopify-liquid-vs-headless/inline-2.webp"
+  alt="Comic panel of a robot pulling a smoking tangle of wires and plugs out of an open cabinet into a trash can while a flying stopwatch speeds by"
+  caption="Clear out app and script bloat before you plan a rebuild."
+/>
 
 <TryThis>
 Run PageSpeed Insights on your three highest-traffic templates (home, collection, product) and note the LCP. Then disable your heaviest app script on a duplicate theme and run it again before you decide anything.

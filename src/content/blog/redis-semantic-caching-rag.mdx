@@ -44,7 +44,11 @@ If the exact cache misses, I embed the query and look for a close match in a Red
 
 You never do the heavy lifting twice for the same intent.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/redis-semantic-caching-rag/inline-1.webp"
+  alt="Comic panel of a winking robot in a red cape at a counter handing a card with a checkmark to a dark robot while a big steaming machine sleeps behind them"
+  caption="A repeat question gets a cached answer and the LLM stays idle."
+/>
 
 ## Why Redis for semantic caching
 
@@ -135,7 +139,11 @@ RedisVL refreshes the TTL on an entry every time `check()` matches it. A popular
 
 I've written about similar [event-driven patterns](/blog/event-driven-pubsub/) for handling these updates at scale.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/redis-semantic-caching-rag/inline-2.webp"
+  alt="Comic panel of three colored drawer cabinets with padlocks where one robot files a card in its own section while a nosy purple robot is stopped by a lock"
+  caption="Cached answers stay inside each tenant's boundary."
+/>
 
 ## Measuring success
 

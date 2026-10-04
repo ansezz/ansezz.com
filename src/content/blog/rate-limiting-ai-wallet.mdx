@@ -52,7 +52,11 @@ A denial of wallet (DoW) attack is the AI version of a DDoS. The goal isn't alwa
 
 Without token-aware limits, the provider eventually answers with `429` rate-limit errors. By then the money is already spent.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/rate-limiting-ai-wallet/inline-1.webp"
+  alt="Comic panel of a dizzy robot running in a hamster wheel that shakes coins out of an attached wallet while a robot in star pajamas stares at a long bill"
+  caption="One runaway loop can drain a budget overnight."
+/>
 
 ## Hierarchical rate limiting
 
@@ -138,7 +142,11 @@ If you only limit the final LLM call, search queries can still hammer your vecto
 
 There are plenty of [common RAG production mistakes](/blog/7-rag-mistakes-production/), and limiting only the LLM call is one of the most overlooked.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/rate-limiting-ai-wallet/inline-2.webp"
+  alt="Comic panel of three stacked buckets pouring coins into the cups of a row of small robots while a robot at a valve and pressure gauge holds an overflowing cup"
+  caption="Global, tenant and user budgets, each with its own limit."
+/>
 
 ## Steps to take this week
 
