@@ -26,7 +26,7 @@ Every query, even "what are your shipping times?" for the tenth time, runs the f
 
 At scale you pay for the same computation over and over. Users wait two seconds for answers that could take twenty milliseconds, and your "denial of wallet" risk climbs.
 
-The fix isn't a bigger model or a faster vector DB. It's a smarter cache. Semantic caching with Redis turns a multi-second chain into a single-digit-millisecond lookup. At the hit rates a busy FAQ bot reaches, it can cut LLM API spend by roughly half.
+The fix is a smarter cache. Semantic caching with Redis turns a multi-second chain into a single-digit-millisecond lookup. At the hit rates a busy FAQ bot reaches, it can cut LLM API spend by roughly half.
 
 ## The two-tier cache
 

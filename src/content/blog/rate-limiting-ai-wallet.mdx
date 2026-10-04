@@ -18,7 +18,7 @@ One runaway agent loop is all it takes to wake up to a $5,000 LLM bill. In AI ap
 - Degrade gracefully when a budget runs out, and keep your own caps even with provider hard limits, because a provider cap stops every tenant at once.
 </Summary>
 
-If you're building AI-powered SaaS or RAG systems, the main threat often isn't a server crash. It's a "denial of wallet" attack.
+If you're building AI-powered SaaS or RAG systems, the main threat is often a "denial of wallet" attack rather than a server crash.
 
 A buggy client, a malicious user or your own experimental agent can spam your endpoints and burn through tokens and credits in minutes.
 
@@ -36,13 +36,13 @@ In AI engineering, one request might be a 50-token greeting and the next a 128,0
 
 ### The noisy neighbor bill
 
-If you only limit requests, a user can stay inside "10 requests per minute" and still cost you 100x more than everyone else combined. That's where the [noisy neighbor problem](/blog/laravel-multi-tenancy/) turns into a financial one.
+If you only limit requests, a user can stay inside "10 requests per minute" and still cost you 100x more than an average user. That's where the [noisy neighbor problem](/blog/laravel-multi-tenancy/) turns into a financial one.
 
 To protect margins, move from counting pings to counting cost.
 
 ## Anatomy of a denial of wallet attack
 
-A denial of wallet (DoW) attack is the AI version of a DDoS. The goal isn't always to take your site down. It's to exhaust your quotas or budget until the service stops, or until you pay a huge bill.
+A denial of wallet (DoW) attack is the AI version of a DDoS. The goal is to exhaust your quotas or budget until the service stops, or until you pay a huge bill.
 
 ### Three ways it happens
 

@@ -64,7 +64,7 @@ Without a health check, Coolify treats a container that started as ready, even i
 
 1. **Create a readiness endpoint.** In your Laravel, Vue or Node app, add a route like `/healthz` that returns 200 only when the app can serve real requests.
 2. **Configure the check.** In the app, open **Configuration > Healthcheck**, choose HTTP, set the path to `/healthz` and an interval of about 5 seconds. The check runs inside the container, so the image needs `curl` or `wget`.
-3. **Shut down gracefully.** Under **Configuration > Advanced**, set the stop grace period (30 seconds by default) to how long the app needs to finish in-flight requests.
+3. **Shut down gracefully.** Under **Configuration > Advanced > Operations**, set the stop grace period (30 seconds by default) to how long the app needs to finish in-flight requests.
 
 On the default Traefik proxy, unhealthy containers are removed from routing, so traffic stays on the old container until the new one passes.
 
@@ -159,6 +159,6 @@ List every resource on your busiest Coolify server: apps, databases and builds. 
 - **Deploy from CI.** A deploy-only token and a webhook after your tests pass.
 </Takeaway>
 
-Scaling isn't about the most expensive hardware. It's about a system that behaves predictably. Whether you're building a Shopify app or a Laravel SaaS, the principles are the same. If you're moving a growing app onto Coolify, [here's how I help teams set up multi-server deploys and CI](/services/), or [drop me a line](/contact/).
+Scaling well means a system that behaves predictably. Whether you're building a Shopify app or a Laravel SaaS, the principles are the same. If you're moving a growing app onto Coolify, [here's how I help teams set up multi-server deploys and CI](/services/), or [drop me a line](/contact/).
 
 Have you ever had a build crash your production server in the middle of the day?

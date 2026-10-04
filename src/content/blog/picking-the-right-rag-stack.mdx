@@ -10,7 +10,7 @@ heroImage:
   alt: "Illustration of a librarian robot picking the right book, a vector database as RAG memory"
 ---
 
-You don't need the best vector database. You need the one that fits your scale, your team and the database you already run.
+Pick the vector database that fits your scale, your team and the database you already run.
 
 <Summary>
 - Default to pgvector if you already run Postgres: no new infrastructure, and your embeddings sit next to your relational data.
@@ -30,13 +30,13 @@ Choosing the wrong vector store early leads to high latency, rising cloud costs 
 
 ### Pick for your scale
 
-I've seen teams freeze in front of the number of options in the AI ecosystem. You don't need a perfect database. You need the right tool for your scale and your team.
+I've seen teams freeze in front of the number of options in the AI ecosystem. Pick the right tool for your scale and your team.
 
 Here is the 2026 landscape, so you can stop scrolling and start shipping.
 
 ## Why the database matters in RAG
 
-An LLM like Claude or GPT-5 knows a lot but remembers nothing about your data. RAG gives it that memory, and your vector database is the librarian. If the librarian is slow or loses books, the model can't do its job.
+An LLM like Claude or GPT knows a lot but remembers nothing about your data. RAG gives it that memory, and your vector database is the librarian. If the librarian is slow or loses books, the model can't do its job.
 
 If you're still deciding whether RAG is the right tool at all, versus baking knowledge into the model, start with my breakdown of [RAG vs fine-tuning](/blog/rag-vs-fine-tuning/).
 
@@ -56,7 +56,7 @@ If you're still deciding whether RAG is the right tool at all, versus baking kno
 
 ### pgvector: "I already have a database"
 
-If you already run [Postgres for your web applications](/), pgvector is usually the first stop. It isn't a new database. It's an extension that adds vector types and indexes to the database you already trust.
+If you already run [Postgres for your web applications](/), pgvector is usually the first stop. pgvector is an extension that adds vector types and indexes to the database you already trust.
 
 It fits well under about 10 million vectors. You keep ACID guarantees and simple backups, and your relational data stays next to your embeddings. No new infra, no new security review.
 
@@ -92,7 +92,7 @@ Weaviate does hybrid search out of the box. Qdrant, written in Rust, is fast and
 
 ## How to choose: the engineering trade-offs
 
-Picking a database isn't about finding the "best" one. It's about matching the tool to your constraints.
+Pick the database that matches your constraints.
 
 ### Factor 1: the "billions" problem
 
