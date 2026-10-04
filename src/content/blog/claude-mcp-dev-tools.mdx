@@ -10,89 +10,171 @@ heroImage:
   alt: "Pop-art illustration of developer tools plugged into a Claude LLM through an MCP connector"
 ---
 
-Every time I have to build a custom integration for a new tool, a little piece of my developer soul dies. It is a maintenance nightmare that never ends. We have reached a point where building the actual product is often faster than setting up the pipes to make it work with our data — which is exactly the problem Claude's MCP (Model Context Protocol) was built to kill.
+Custom integrations for every tool are a maintenance tax that never ends. The Model Context Protocol (MCP) replaces them with one plug.
 
-If you have spent any time building [agentic workflows and vibe coding](/blog/agentic-workflows-vibe-coding/), you know exactly what I am talking about. You have an LLM like Claude that is incredibly smart but essentially locked in a room with no windows. To give it context, you have to manually copy-paste code, export CSV files, or spend three days writing a brittle wrapper for a third-party API just so your assistant can "see" your work.
+<Summary>
+- Without a standard, M AI apps and N data sources need M x N custom integrations. MCP turns that into one server per tool that any compatible host can use.
+- An MCP setup has three parts: the host the user works in, the client that speaks the protocol, and the server that exposes resources, tools and prompts.
+- Local servers talk over `stdio` and remote servers use OAuth 2.1 with PKCE, so you can give each tool only the access it needs.
+</Summary>
 
-This fragmentation is the biggest bottleneck in modern software development. We have powerful models, but they are isolated from our local files, our databases, and our production logs. It is like having a world-class architect who isn't allowed to visit the construction site. They are just guessing based on the photos you decide to send them.
+Every time I build a custom integration for a new tool, I add one more thing to maintain forever. We have reached a point where building the product is often faster than setting up the pipes to connect it to our data.
 
-Enter the Model Context Protocol — or, in Anthropic's own framing, a USB-C port for AI applications.
+That is the exact problem Claude's MCP (Model Context Protocol) was built to kill.
 
-## The fragmentation tax is killing your productivity
+### A smart model in a room with no windows
 
-The problem is simple but massive. Every AI application — whether it is Claude Desktop, a custom agent, or an IDE extension — wants to talk to your data. On the other side, every data source — your GitHub repos, your Postgres databases, your Slack channels — has its own specific API and authentication flow.
+If you have spent any time building [agentic workflows and vibe coding](/blog/agentic-workflows-vibe-coding/), you know the feeling. You have a very capable LLM like Claude, but it is locked in a room with no windows.
 
-Without a standard, we are stuck in an M×N problem. If you have 5 AI apps and 10 data sources, you need 50 different integrations. (If you are weighing whether to expose a plain REST endpoint or an MCP server here, I broke that down in [API vs MCP](/blog/api-vs-mcp/).) This is why most "AI-powered" tools feel shallow. They only support a few basic integrations, and if you want to use your internal company data, you are back to writing custom glue code.
+To give it context, you copy-paste code, export CSV files, or spend three days writing a brittle wrapper for a third-party API just so your assistant can "see" your work.
+
+### The architect who can't visit the site
+
+This fragmentation is a major bottleneck in modern software development. Our models are capable, but they are cut off from our local files, our databases and our production logs.
+
+It is like having a world-class architect who isn't allowed to visit the construction site. They are guessing based on the photos you decide to send them. Enter the Model Context Protocol, or in Anthropic's own framing, a USB-C port for AI applications.
+
+## The fragmentation tax on your productivity
+
+The problem is simple. Every AI application (Claude Desktop, a custom agent, an IDE extension) wants to talk to your data. On the other side, every data source (your GitHub repos, your Postgres databases, your Slack channels) has its own API and authentication flow.
+
+### The M x N problem
+
+Without a standard, we are stuck in an M×N problem. If you have 5 AI apps and 10 data sources, you need 50 different integrations.
+
+(If you are weighing whether to expose a plain REST endpoint or an MCP server here, I broke that down in [API vs MCP](/blog/api-vs-mcp/).)
+
+This is why most "AI-powered" tools feel shallow. They support a few basic integrations, and if you want to use your internal company data, you are back to writing custom glue code.
+
+### What it costs you
 
 The cost is real. We waste hours rebuilding the same connectors, every new integration is another potential leak, and the "magic" of AI evaporates the moment we hit a data silo.
 
-## The solution: MCP as a universal standard
+<TryThis>
+Write down every AI tool your team uses and every data source it needs. Multiply the two numbers. That is how many integrations you would maintain without a shared protocol.
+</TryThis>
 
-![MCP sitting between data sources and AI hosts as a universal translator](/blog/claude-mcp-dev-tools/architecture.webp)
+## MCP as a universal standard
 
-Claude MCP (Model Context Protocol) is the first serious attempt to standardize how AI applications discover and interact with data and tools. Instead of building a specific connector for every model and every tool, you build an MCP server.
+Claude MCP (Model Context Protocol) is a serious, open attempt to standardize how AI applications discover and use data and tools. Instead of building a connector for every model and every tool, you build an MCP server.
 
-This server acts as a translator. It sits between your data and the AI, exposing a consistent interface that any MCP-compliant host (like Claude Desktop) can understand. It is exactly like the USB standard. It doesn't matter if you are plugging in a mouse, a keyboard, or an external drive. The protocol is the same, so it just works.
+### The server as a translator
 
-This shifts the entire paradigm of [context-aware agents](/blog/mcp-context-aware-agents/). Instead of hard-coding logic into the agent, you simply "plug in" the servers you need.
+This server sits between your data and the AI and exposes a consistent interface that any MCP-compliant host (like Claude Desktop) can understand.
 
-### How the architecture actually works
+It works like the USB standard. It doesn't matter if you plug in a mouse, a keyboard or an external drive. The protocol is the same, so it just works.
+
+This changes how you build [context-aware agents](/blog/mcp-context-aware-agents/). Instead of hard-coding logic into the agent, you "plug in" the servers you need.
+
+<BeforeAfter beforeLabel="Custom integrations" afterLabel="MCP servers">
+  <div slot="before">Each AI app gets its own connector for each data source. Five apps and ten sources means fifty integrations to build and secure.</div>
+  <div slot="after">Each data source gets one MCP server. Any MCP host can discover and use it, so you add a tool once.</div>
+</BeforeAfter>
+
+<Figure
+  src="/blog/claude-mcp-dev-tools/inline-1.webp"
+  alt="Comic panel of a robot plugging a database, a git block and a folder into one glowing plug hub while tangled custom adapters sit in the trash"
+  caption="MCP swaps one-off integrations for a single shared protocol."
+/>
+
+### How the architecture works
 
 There are three main players in the MCP ecosystem:
 
-1. **The host** — this is the environment the user interacts with. It could be Claude Desktop, a terminal, or an IDE like Cursor. The host is responsible for managing the lifecycle of the connection.
-2. **The client** — this is the part of the host that speaks the protocol. It does the "handshake" with the server to find out what it can do.
-3. **The server** — this is a lightweight program that provides context (resources), actions (tools), and prompt templates.
+1. **The host.** This is the environment the user works in: Claude Desktop, a terminal or an IDE like Cursor. The host manages the lifecycle of the connection.
+2. **The client.** This is the part of the host that speaks the protocol. It asks the server what it can do. Since the `2026-07-28` spec there is no up-front handshake: each request carries its own protocol version and capabilities.
+3. **The server.** This is a lightweight program that provides context (resources), actions (tools) and prompt templates.
 
-For example, if I want Claude to have access to my local project files, I run a local MCP server that exposes those files as "resources." The host (Claude Desktop) asks the server: "what do you have?" The server replies: "I have these 10 files and a tool to run grep searches."
+### A local example
 
-The model can then decide to call the "grep" tool whenever it needs to find a specific function definition. I didn't have to write a single line of logic inside Claude to make that happen. I just connected the server.
+Say I want Claude to read my local project files. I run a local MCP server that exposes those files as "resources."
+
+The host (Claude Desktop) asks the server: "what do you have?" The server replies: "I have these 10 files and a tool to run grep searches."
+
+The model can then call the "grep" tool whenever it needs to find a function definition. I didn't write a single line of logic inside Claude to make that happen. I connected the server.
 
 ## Modularity and the MCP server ecosystem
 
-![Grid of plug-in MCP servers for Postgres, GitHub, and Google Drive feeding context to an LLM](/blog/claude-mcp-dev-tools/servers.webp)
+Once a server is built, anyone can use it. The community has already built servers for almost everything. Here are a few I use in my daily workflow:
 
-The beauty of this modularity is that once a server is built, anyone can use it. The community has already started building servers for everything you can imagine. I have been using a few in my daily workflow that have completely changed how I code:
+- **A Postgres server.** I point Claude at a local or remote database so it can inspect schemas and run read-only queries to help me debug data issues without leaving the chat. Anthropic's original reference Postgres server is now archived, so I lean on a maintained community build.
+- **GitHub's official MCP server.** It lets the model search my repositories, list issues and open pull requests. It is like having a junior dev who knows where the code is. GitHub now ships and hosts this itself, with a remote option you authenticate via OAuth.
+- **A Google Drive server.** Handy when I need to cross-reference technical docs stored in Drive with the implementation in my IDE. The reference server is archived too, so I treat it as a starting point rather than something to trust blindly.
 
-- **A Postgres server** — I point Claude at a local or remote database so it can inspect schemas and run read-only queries to help me debug data issues without leaving the chat. Anthropic's original reference Postgres server is now archived, so I lean on a maintained community build.
-- **GitHub's official MCP server** — this lets the model search my repositories, list issues, and open pull requests. It is like having a junior dev who actually knows where the code is. GitHub now ships and hosts this itself, with a remote option you authenticate via OAuth.
-- **A Google Drive server** — handy when I need to cross-reference technical docs stored in Drive with the actual implementation in my IDE. The reference server is archived too, so I treat it as a starting point rather than something to trust blindly.
+### From chatting to delegating
 
-Wiring these up is the step that separates chatting with a model from delegating to one — the point where a workflow crosses into [the agentic levels](/blog/ai-coding-workflow-levels/) instead of staying a faster autocomplete.
+Wiring these up is the step that separates chatting with a model from delegating to one. It is the point where a workflow crosses into [the agentic levels](/blog/ai-coding-workflow-levels/) instead of staying a faster autocomplete.
 
-This also solves a massive pain point in [agentic commerce for Shopify](/blog/agentic-commerce-shopify/). Imagine an agent that can talk directly to your Shopify store via MCP to check inventory levels or update product descriptions in real-time, all while maintaining a secure, standardized connection.
+It also helps with [agentic commerce for Shopify](/blog/agentic-commerce-shopify/). Imagine an agent that talks to your Shopify store via MCP to check inventory levels or update product descriptions in real time, over a secure, standard connection.
+
+<PullQuote>Build the connector once. Every host that speaks MCP gets it for free.</PullQuote>
+
+<TryThis>
+Before you write a server, search the [MCP Registry](https://registry.modelcontextprotocol.io/) for the tool you need and check whether the vendor maintains an official one.
+</TryThis>
 
 ## Security first: the sandbox model
 
-![Sandboxed MCP server communicating through a narrow pipe to the host](/blog/claude-mcp-dev-tools/security.webp)
+The first question I get when I talk about connecting dev tools to an LLM is: "is it safe?"
 
-The biggest question I get when I talk about connecting dev tools to an LLM is: "is it safe?"
+Security is a first-class concern in MCP's design. The server runs as a separate process that only exposes the tools and resources you grant it.
 
-Security is a first-class concern in MCP's design. The server runs as a separate process that only exposes the specific tools and resources you grant it. (Note: a local stdio server still runs with your normal user privileges — it's process isolation, not a hardened sandbox — so only run servers you trust.)
+(Note: a local stdio server still runs with your normal user privileges. It is process isolation, not a hardened sandbox, so only run servers you trust.)
 
-For local servers, the protocol typically uses `stdio` (stdin/stdout). This means the server can only talk to the host through a very narrow pipe. It doesn't have open network ports listening for connections. It only exists as long as the host is running it.
+### Local servers: a narrow pipe
 
-For remote servers, MCP standardizes on OAuth 2.1 (with PKCE) for authorization. This allows for fine-grained, scope-based permissions. You can authorize a GitHub MCP server to only read public repositories, or a database server to only access specific tables.
+For local servers, the protocol typically uses `stdio` (stdin/stdout). The server can only talk to the host through that narrow pipe. It has no open network ports listening for connections, and it only exists while the host is running it.
 
-This is a huge improvement over the "give me your master API key" approach that we have seen in the past. We can now treat AI tools with the same "least privilege" mindset we use for any other service in our stack. This is especially important when you are trying to avoid [RAG mistakes in production](/blog/7-rag-mistakes-production/), where data leakage is a top-tier risk.
+### Remote servers: scoped OAuth
+
+For remote servers, MCP standardizes on OAuth 2.1 (with PKCE) for authorization. That allows fine-grained, scope-based permissions. You can authorize a GitHub MCP server to read only public repositories, or a database server to access only specific tables.
+
+### Least privilege for AI tools
+
+This is a big step up from the "give me your master API key" approach we have seen in the past. You can treat AI tools with the same least-privilege mindset you use for any other service in your stack.
+
+That matters when you are trying to avoid [RAG mistakes in production](/blog/7-rag-mistakes-production/), where data leakage is a top-tier risk.
+
+<Figure
+  src="/blog/claude-mcp-dev-tools/inline-2.webp"
+  alt="Comic panel of an AI robot in a sandbox receiving data through a narrow pipe controlled by a guard robot"
+  caption="Give each MCP server only the access it needs, and nothing more."
+/>
 
 ## Why I am betting on MCP
 
-I have been a developer for over a decade, and I have seen plenty of "standards" come and go. What makes MCP different is its simplicity and its backers. Anthropic has made this open source because they realize that the more context a model has, the more valuable it becomes.
+I have seen plenty of "standards" come and go. What makes MCP different is its simplicity and its backing.
 
-We are moving toward a world of "agentic" software development. In this world, we don't just use AI to write snippets of code. We use AI as an orchestrator that can reach into our cloud infrastructure on GCP, check our Docker logs, and suggest fixes for a failing Laravel app.
+Anthropic made it open source, and in December 2025 donated it to the Agentic AI Foundation, a Linux Foundation fund, so no single vendor controls it.
 
-Without a protocol like MCP, that vision is impossible to scale. It would be too expensive and too risky to build. But with MCP, we are building a world where tools are plug-and-play.
+### Where this is heading
 
-### Practical takeaways for senior engineers
+We are moving toward "agentic" software development. In this world, AI does more than write snippets of code. It acts as an orchestrator that can reach into your cloud infrastructure on GCP, check your Docker logs and suggest fixes for a failing Laravel app.
 
-If you are ready to start experimenting with this, here is what I recommend:
+Without a protocol like MCP, that vision is too expensive and too risky to build at scale. With MCP, tools become plug-and-play.
 
-- **Install the Claude Desktop app** — it is one of the most mature MCP hosts, and a low-friction place to start.
-- **Try the filesystem server** — this is the easiest way to feel the power. Give Claude access to a specific folder and watch it navigate your codebase.
-- **Don't build, search first** — browse the official MCP Registry before writing anything. The reference repo now keeps only a handful of maintained servers (filesystem, fetch, git, memory, and a few others), and most of the well-known integrations are either archived or maintained by the vendor directly — like GitHub's own server.
-- **Think in tools, not just prompts** — start thinking about what "tools" your internal systems could expose. If you have a custom admin panel, could it be an MCP server?
+### How to start
 
-Connecting your dev tools to an LLM isn't just about speed. It is about reducing the cognitive load of switching between tabs, terminals, and documentation. It allows you to stay in the "flow" longer.
+If you are ready to experiment, here is what I recommend:
 
-Are you ready to stop copy-pasting your code into a chat box and start connecting your tools directly to the brain? What is the one internal tool you wish you could "plug in" to Claude right now? Drop a note via [contact](/contact/) — let's figure it out. 🤘
+- **Install the Claude Desktop app.** It is one of the most mature MCP hosts, and an easy place to start.
+- **Try the filesystem server.** This is the easiest way to see it work. Give Claude access to a specific folder and watch it navigate your codebase.
+- **Don't build, search first.** Browse the official MCP Registry before writing anything. The reference repo now keeps only a handful of maintained servers (filesystem, fetch, git, memory and a few others), and most well-known integrations are either archived or maintained by the vendor directly, like GitHub's own server.
+- **Think in tools as well as prompts.** Ask what "tools" your internal systems could expose. If you have a custom admin panel, could it be an MCP server?
+
+<TryThis>
+Connect the filesystem server to one project folder in Claude Desktop and ask it to find where a specific function is defined. Note how many copy-paste steps that saved you.
+</TryThis>
+
+<Takeaway>
+- MCP replaces M x N custom integrations with one server per tool.
+- Host, client and server each have one job, and the server decides what it exposes.
+- Local servers use `stdio`; remote servers use OAuth 2.1 with PKCE and scoped permissions.
+- Only run servers you trust: a local server runs with your user privileges.
+- Search the MCP Registry before you build, and prefer vendor-maintained servers.
+- Connecting your tools cuts the switching between tabs, terminals and docs, so you stay in flow longer.
+</Takeaway>
+
+If you want your internal tools and dev stack exposed to Claude through scoped MCP servers, [here's how I help teams build and secure them](/services/), or [get in touch](/contact/) directly.
+
+What is the one internal tool you wish you could "plug in" to Claude right now?
