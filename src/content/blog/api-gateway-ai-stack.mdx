@@ -10,61 +10,114 @@ heroImage:
   alt: "A senior developer facing a glowing API gateway portal ringed by lock, router, and timer icons"
 ---
 
-Stop exposing your models to the wild.
+Stop exposing your models to the wild. Put a gateway between your users and every LLM call.
 
-If you are building a production AI app, sending requests directly from your frontend to a RAG orchestrator or — god forbid — straight to an LLM provider is a liability. It is slow. It is insecure. And it is the fastest way to wake up to a five-figure bill you didn't plan for.
+<Summary>
+- Calling a RAG orchestrator or an LLM provider straight from the frontend is slow, insecure and the fastest route to a surprise five-figure bill.
+- An API gateway centralizes auth, tenant isolation, model routing and per-user rate limits before any token is spent.
+- AI traffic needs two special settings: no response buffering for streaming, and upstream timeouts long enough for slow generations.
+</Summary>
 
-I have spent over a decade building software, and if there is one thing I have learned, it is that engineering for "it works" is not the same as engineering for "it scales." In the world of AI, scale isn't just about traffic. It is about cost, latency, and data safety.
+If you are building a production AI app, sending requests directly from your frontend to a RAG orchestrator (or, god forbid, straight to an LLM provider) is a liability.
 
-Imagine a "denial of wallet" attack where a malicious script spams your completions endpoint. Without a gatekeeper, your API keys are just sitting ducks. Or worse, imagine a multi-tenant app where one user's prompt accidentally retrieves another user's private data from your vector DB.
+It is slow. It is insecure. And it is the fastest way to wake up to a five-figure bill you didn't plan for.
 
-This is where the API gateway comes in. It is the first line of defense and the brain of your infrastructure. It handles the boring but critical stuff so your RAG logic can stay focused on actually being smart.
+I have spent over a decade building software. Engineering for "it works" is not the same as engineering for "it scales."
+
+In AI, scale means cost, latency and data safety as much as traffic.
+
+## What can go wrong without a gateway
+
+Imagine a "denial of wallet" attack where a malicious script spams your completions endpoint. Without a gatekeeper, your API keys are sitting ducks.
+
+Or worse, imagine a multi-tenant app where one user's prompt accidentally retrieves another user's private data from your vector DB.
+
+This is where the API gateway comes in. It is the first line of defense and the brain of your infrastructure. It handles the boring but critical work so your RAG logic can stay focused on being smart.
 
 ## The gatekeeper pattern
 
-At its core, an API gateway is a reverse proxy that sits between your users and your backend services. But for an AI stack, it does more than just forward traffic. It acts as a centralized brain for auth, routing, and rate limiting. (If the distinction blurs for you, I break it down in [load balancer vs API gateway](/blog/load-balancer-vs-api-gateway/).)
+At its core, an API gateway is a reverse proxy that sits between your users and your backend services.
 
-When a request hits your gateway, it goes through a gauntlet of checks before it ever touches a model. This "gatekeeper" ensures that every millisecond of GPU time or every cent of token cost is intentional.
+For an AI stack, forwarding traffic is the smallest part of its job. It is the central point for auth, routing and rate limiting. (If the distinction blurs for you, I break it down in [load balancer vs API gateway](/blog/load-balancer-vs-api-gateway/).)
 
-![Three API gateway responsibilities shown as cards: a key for auth, a route map for routing, and a gauge for rate limits](/blog/api-gateway-ai-stack/gateway-stack.webp)
+When a request hits your gateway, it runs a gauntlet of checks before it ever touches a model. This "gatekeeper" makes sure every millisecond of GPU time and every cent of token cost is intentional.
+
+<PullQuote>Every token you pay for should pass a checkpoint first.</PullQuote>
 
 ## Authentication and tenant isolation
 
 In a typical SaaS, authentication is about knowing who the user is. In an AI-powered SaaS, it is about data sovereignty.
 
-If you are building a RAG system, your biggest risk is cross-tenant data leakage. If you want to avoid [common RAG mistakes](/blog/7-rag-mistakes-production/), you must handle identity at the very edge.
+If you are building a RAG system, your biggest risk is cross-tenant data leakage. To avoid [common RAG mistakes](/blog/7-rag-mistakes-production/), handle identity at the very edge.
 
-I prefer using JWTs (JSON Web Tokens) with custom claims. When a request hits the gateway, I validate the token and extract the `tenant_id`. That ID is then injected into the headers of the request before it is passed to the RAG orchestrator.
+### JWT claims to tenant header
 
-This means the orchestrator doesn't have to "guess" who the user is. It receives a verified `x-tenant-id` header and uses it to apply metadata filters on the vector database. The user only "sees" data they are allowed to see. No tenant ID? No query. Period.
+I prefer JWTs (JSON Web Tokens) with custom claims. When a request hits the gateway, I validate the token and extract the `tenant_id`.
+
+That ID is injected into the request headers before it is passed to the RAG orchestrator.
+
+### The orchestrator never guesses
+
+The orchestrator receives a verified `x-tenant-id` header and uses it to apply metadata filters on the vector database. The user only "sees" data they are allowed to see.
+
+No tenant ID? No query. Period.
+
+<TryThis>
+Send a request to your RAG endpoint with no tenant header and one with a forged tenant ID. Both should be rejected at the gateway before the orchestrator logs anything.
+</TryThis>
+
+<Figure
+  src="/blog/api-gateway-ai-stack/inline-1.webp"
+  alt="Comic panel of a gatekeeper robot stamping a request envelope before it slides toward a vault door"
+  caption="The gateway verifies the token and passes a tenant ID so each user only sees their own data."
+/>
 
 ## Smart routing for model flexibility
 
-The AI world moves fast. Today you are using GPT-5. Tomorrow, Claude Sonnet 4.6 might be the better play. Next week, you might want to test a fine-tuned Llama 4 model running on your own infrastructure via [Docker and Coolify](/blog/coolify-docker-saas-hosting/).
+The AI world moves fast. Today you are using GPT-6 Astra. Tomorrow, Claude Opus 5.5 might be the better play.
+
+Next week, you might want to test a fine-tuned open-weights model, like Meta's Muse Glimmer, running on your own infrastructure via [Docker and Coolify](/blog/coolify-docker-saas-hosting/).
 
 If your model logic is hardcoded into your frontend or a single monolithic backend, switching models is a nightmare. An API gateway solves this with smart routing.
 
-![Diagram of a user message passing through a shielded API gateway that routes it to one of three LLM backends](/blog/api-gateway-ai-stack/routing-flow.webp)
+### Model aliases
 
-I use the gateway to create "model aliases." Instead of the frontend calling a specific model, it calls a generic endpoint like `/v1/chat/completions`. The gateway then decides where to send that request based on:
+I use the gateway to create "model aliases." Instead of calling a specific model, the frontend calls a generic endpoint like `/chat/pro`. The gateway then decides where to send the request based on:
 
-1. **User tier** — free users get routed to a cheaper, faster model like GPT-5 mini or Claude Haiku 4.5. Pro users get the heavy hitters.
-2. **Versioning** — run an A/B test by routing 10% of traffic to a new model version without changing a single line of client-side code.
-3. **Failover** — if OpenAI is having an outage, the gateway can automatically reroute traffic to an Anthropic backup.
+1. **User tier.** Free users get routed to a cheaper, faster model like GPT-6 Luna or Claude Haiku. Pro users get the heavy hitters.
+2. **Versioning.** Run an A/B test by routing 10% of traffic to a new model version without changing a single line of client-side code.
+3. **Failover.** If OpenAI is having an outage, the gateway can reroute traffic to an Anthropic backup.
 
 This level of abstraction is what separates a weekend project from a resilient SaaS product.
 
+<BeforeAfter beforeLabel="Hardcoded model" afterLabel="Model alias">
+  <div slot="before">The frontend calls one provider's model by name. A model swap, an A/B test or an outage means a client release.</div>
+  <div slot="after">The frontend calls `/chat/pro`. The gateway picks the model by tier, test bucket or provider health, and you change it in config.</div>
+</BeforeAfter>
+
 ## Rate limiting: protecting the wallet
 
-We used to rate limit to protect our CPUs. Now, we rate limit to protect our bank accounts.
+We used to rate limit to protect our CPUs. Now we rate limit to protect our bank accounts.
 
 AI requests are asymmetric. A user sends a 50-word prompt, and the model might generate a 1,000-word response. The cost difference is massive.
 
-A good API gateway implementation allows for tiered rate limiting. Set global limits to prevent your entire system from being overwhelmed, but also set per-tenant or per-user limits.
+### Global and per-tenant limits
 
-I usually implement this using Redis. The gateway checks the user's quota in real time. If they have exceeded their daily token limit or their requests-per-minute (RPM) cap, the gateway returns a `429 Too Many Requests` immediately. I go deeper on the token-budget angle in [rate limiting to protect your AI wallet](/blog/rate-limiting-ai-wallet/).
+A good gateway setup allows tiered rate limiting. Set global limits so the whole system can't be overwhelmed, and set per-tenant or per-user limits too.
 
-This saves your backend from doing expensive work that you won't get paid for. It also stops "noisy neighbors" — one user scripting an automated tool that hogs all your capacity and makes the app slow for everyone else.
+I usually implement this with Redis. The gateway checks the user's quota in real time.
+
+If they have exceeded their daily token limit or their requests-per-minute (RPM) cap, the gateway returns `429 Too Many Requests` immediately. I go deeper on the token-budget angle in [rate limiting to protect your AI wallet](/blog/rate-limiting-ai-wallet/).
+
+### Why it pays off
+
+This saves your backend from doing expensive work you won't get paid for.
+
+It also stops "noisy neighbors": one user scripting an automated tool that hogs your capacity and makes the app slow for everyone else.
+
+<TryThis>
+Pick your most expensive AI route and set two limits on it today: a per-user daily token cap and a global requests-per-minute ceiling. Return a clear 429 message so the frontend can explain it.
+</TryThis>
 
 ## Handling the AI-specific quirks
 
@@ -72,43 +125,65 @@ Gateways for AI need to handle two things differently than traditional web apps:
 
 ### Streaming support
 
-Most modern AI apps use Server-Sent Events (SSE) to stream responses word by word. Some older gateways or load balancers try to "buffer" the entire response before sending it to the client. This kills the user experience.
+Most modern AI apps use Server-Sent Events (SSE) to stream responses word by word. Some older gateways or load balancers "buffer" the entire response before sending it to the client. This kills the user experience.
 
-Make sure your gateway (whether you are using [Kong](https://konghq.com/), [Tyk](https://tyk.io/), or a custom [Laravel solution](/blog/laravel-multi-tenancy/)) is configured to disable buffering for AI routes. The data should flow through the gateway like water through a pipe, not like a bucket that needs to be filled.
+Make sure your gateway (whether you use [Kong](https://konghq.com/), [Tyk](https://tyk.io/) or a custom [Laravel solution](/blog/laravel-multi-tenancy/)) disables buffering for AI routes.
+
+The data should flow through the gateway like water through a pipe, not like a bucket that needs to fill first.
 
 ### Extended timeouts
 
-Traditional APIs expect a response in 1–2 seconds. A complex RAG query involving multiple vector searches and a large model generation might take 30 seconds or more.
+Traditional APIs expect a response in 1 to 2 seconds. A complex RAG query with multiple vector searches and a large model generation might take 30 seconds or more.
 
-You need to adjust your gateway's "upstream timeout" settings. Kong defaults to a 60-second upstream timeout, but managed gateways are far stricter — AWS API Gateway integrations default to a 29-second cap, and you can only raise it beyond that on Regional or private REST APIs by requesting a service quota increase (which may cost you some account throttle headroom). Leave those defaults in place and your users will see `504 Gateway Timeout` errors even when your models are working perfectly.
+You need to adjust your gateway's "upstream timeout" settings:
 
-![A monitor showing a Kubernetes Gateway API YAML manifest next to a 'keep it clean' sticky note and a coffee mug](/blog/api-gateway-ai-stack/clean-code.webp)
+| Gateway                        | Default upstream timeout | Can you raise it?                                                                        |
+| :----------------------------- | :----------------------- | :--------------------------------------------------------------------------------------- |
+| Kong                           | 60 seconds               | Yes, per service                                                                         |
+| AWS API Gateway (REST)         | 29 seconds               | Only on Regional or private REST APIs, via a service quota increase that may cost throttle headroom |
+
+Leave those defaults in place and your users will see `504 Gateway Timeout` errors even when your models are working perfectly.
+
+<TryThis>
+Time your slowest real RAG query end to end, add a safety margin, and set that as the upstream timeout on your AI routes only. Keep the short default everywhere else.
+</TryThis>
+
+<Figure
+  src="/blog/api-gateway-ai-stack/inline-2.webp"
+  alt="Comic panel of a clock-headed robot holding the finish tape open for a slow runner robot"
+  caption="Raise upstream timeouts on AI routes or slow generations end in 504 errors."
+/>
 
 ## Practical steps for your stack
 
-You don't need a massive team to set this up. Here is how I usually approach it depending on the project size:
+You don't need a massive team to set this up. Here is how I usually approach it depending on the project size.
 
-- **For startups** — use a cloud-native gateway like AWS API Gateway or Azure API Management. They are serverless, scale automatically, and integrate directly with Cognito or Entra ID for auth.
-- **For self-hosters** — Kong is the gold standard. It has a great ecosystem of plugins for rate limiting and auth. If you are comfortable with PHP, a thin Laravel app acting as a gateway works surprisingly well for custom logic.
-- **For Shopify devs** — if you are building [agentic commerce tools](/blog/agentic-commerce-shopify/), use the gateway to handle the specific Shopify HMAC validation before passing the request to your AI agents. When a signature fails, my [Shopify webhook HMAC verifier](/tools/shopify-hmac-verifier/) helps you find the cause.
+### For startups
 
-## Wrapping up
+Use a cloud-native gateway like AWS API Gateway or Azure API Management. They are serverless, scale automatically and integrate directly with Cognito or Entra ID for auth.
 
-The API gateway isn't just a piece of infrastructure. It is a design philosophy. It says that your AI logic is too valuable — and too expensive — to be left unprotected.
+### For self-hosters
 
-By centralizing auth, routing, and rate limiting, you make your system more modular. You can swap models, change pricing tiers, and update security policies without touching the core code that makes your AI "smart."
+Kong is the gold standard, with a great ecosystem of plugins for rate limiting and auth. If you are comfortable with PHP, a thin Laravel app acting as a gateway works surprisingly well for custom logic.
+
+### For Shopify devs
+
+If you are building [agentic commerce tools](/blog/agentic-commerce-shopify/), use the gateway to handle Shopify HMAC validation before passing the request to your AI agents. When a signature fails, my [Shopify webhook HMAC verifier](/tools/shopify-hmac-verifier/) helps you find the cause.
+
+## Why the gateway is a design choice
+
+The API gateway is infrastructure, but it is also a statement: your AI logic is too valuable (and too expensive) to leave unprotected.
+
+By centralizing auth, routing and rate limiting, you make your system more modular. You can swap models, change pricing tiers and update security policies without touching the core code that makes your AI "smart."
+
+<Takeaway>
+- **Centralize auth.** Never let your RAG orchestrator handle raw user authentication. Do it at the gateway.
+- **Inject tenant context.** Verify the user at the gateway and inject a `tenant_id` header to enforce data isolation.
+- **Set global and per-user limits.** Protect your wallet from both malicious attacks and accidental bugs.
+- **Configure for streaming.** Make sure your gateway doesn't buffer responses, or your "typing" effect will break.
+- **Use model aliases.** Route to `/chat/pro` instead of a specific model name to keep your stack flexible.
+</Takeaway>
+
+If you're putting an LLM-backed product in front of real users and want auth, routing and cost limits done right, [here's how I help teams build the gateway layer](/services/).
 
 Are you still letting your frontend talk directly to your LLM providers? If so, what is the one thing stopping you from putting a gateway in front of it?
-
-Stay sharp.
-— a senior dev
-
----
-
-### Actionable takeaways
-
-1. **Centralize auth** — never let your RAG orchestrator handle raw user authentication. Do it at the gateway.
-2. **Inject tenant context** — use the gateway to verify the user and inject a `tenant_id` header to enforce data isolation.
-3. **Implement global + per-user limits** — protect your wallet from both malicious attacks and accidental bugs.
-4. **Configure for streaming** — ensure your gateway doesn't buffer responses, or your "typing" effect will break.
-5. **Use model aliases** — route to `/chat/pro` instead of a specific model name to keep your stack flexible.
