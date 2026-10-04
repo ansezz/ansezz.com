@@ -1,6 +1,6 @@
 ---
 title: "API vs MCP: connecting AI systems"
-description: "The core differences between traditional APIs and the Model Context Protocol (MCP) — and when to use each to build scalable, agentic AI systems."
+description: "The core differences between traditional APIs and the Model Context Protocol (MCP), and when to use each to build scalable, agentic AI systems."
 publishDate: 2026-06-01
 category: architecture
 tags: [mcp, api-design, ai, llm, agentic-ai, architecture]
@@ -10,93 +10,178 @@ heroImage:
   alt: "Pop-art style bridge connecting a server rack with a glowing AI brain core"
 ---
 
-Your AI agents are currently trapped in a silo of brittle, custom-coded API integrations that break the moment you update a schema. You spend weeks writing boilerplate glue code just to give a Large Language Model (LLM) access to a single database or a CRM. This manual mapping of endpoints to prompts is the hidden tax of modern AI engineering. It creates a maintenance nightmare where every new tool requires a fresh round of documentation reading and prompt tuning.
+APIs connect software to software. MCP connects AI agents to software. Mix them up and you spend weeks writing glue code that breaks on the next schema change.
 
-The friction is real. While APIs have powered the internet for decades, they were never designed for the non-deterministic, reasoning-heavy nature of AI agents. We are moving from a world of hard-coded connections to a world of dynamic capability discovery. This is where the Model Context Protocol (MCP) enters the chat.
+<Summary>
+- Traditional APIs are rigid contracts built for developers who read docs. MCP is a standard, self-describing layer built for models that discover tools at runtime.
+- MCP turns the M x N integration problem (every AI client times every tool) into M + N.
+- MCP does not replace your APIs. It usually wraps them, so your business logic and security stay in your core services.
+</Summary>
+
+Your AI agents are trapped in a silo of brittle, custom-coded API integrations that break the moment you update a schema.
+
+You spend weeks writing boilerplate glue code just to give a Large Language Model (LLM) access to a single database or a CRM.
+
+This manual mapping of endpoints to prompts is the hidden tax of modern AI engineering. Every new tool needs a fresh round of documentation reading and prompt tuning.
+
+### Why APIs alone struggle with agents
+
+APIs have powered the internet for decades, but they were never designed for the non-deterministic, reasoning-heavy nature of AI agents.
+
+We are moving from hard-coded connections to dynamic capability discovery. This is where the Model Context Protocol (MCP) comes in.
 
 ## The API era: the power grid of the web
 
-Traditional APIs (Application Programming Interfaces) are the foundation of modern software. Whether it is a RESTful endpoint, a GraphQL query, or a gRPC stream, the core concept is the same. It is a defined contract for software-to-software communication. You know exactly what input to send, and you get a predictable output in return.
+Traditional APIs (Application Programming Interfaces) are the foundation of modern software. Whether it is a RESTful endpoint, a GraphQL query or a gRPC stream, the core idea is the same.
 
-In the context of AI development, APIs are like the power grid. They provide the raw energy and data your application needs to function. If you are building a [Shopify application](/blog/agentic-commerce-shopify/), you use the Shopify Admin API to fetch orders or update inventory. The logic is rigid, the schemas are fixed, and the developer is responsible for knowing exactly which endpoint to call at which time.
+It is a defined contract for software-to-software communication. You know exactly what input to send, and you get a predictable output back.
 
-The problem arises when you want an LLM to use these tools. You have to write "tool definitions" or "function schemas" that describe the API to the model. You are essentially translating the API documentation into a format the model can understand. This works for one or two tools, but it does not scale to an entire ecosystem of internal data sources and external services.
+### Rigid by design
+
+In AI development, APIs are like the power grid. They provide the raw energy and data your application needs.
+
+If you are building a [Shopify application](/blog/agentic-commerce-shopify/), you use the Shopify Admin API to fetch orders or update inventory. The logic is rigid, the schemas are fixed, and the developer must know exactly which endpoint to call and when.
+
+### The translation tax
+
+The problem starts when you want an LLM to use these tools. You have to write "tool definitions" or "function schemas" that describe the API to the model.
+
+You are translating the API documentation into a format the model can understand. This works for one or two tools. It does not scale to an entire ecosystem of internal data sources and external services.
 
 ## What is Model Context Protocol?
 
-The Model Context Protocol (MCP) is an open standard introduced by Anthropic to solve the "M x N" integration problem. In a traditional setup, if you have M different AI clients (like Claude, ChatGPT, and an internal agent) and N different tools (like GitHub, Slack, and your internal DB), you have to build M x N individual integrations.
+The Model Context Protocol (MCP) is an open standard introduced by Anthropic to solve the "M x N" integration problem. Anthropic donated it to the Agentic AI Foundation, a Linux Foundation fund, in December 2025.
 
-![A bento grid comparison showing REST, GraphQL, and MCP as different technical modules](/blog/api-vs-mcp/rest-graphql-mcp.webp)
+In a traditional setup, if you have M AI clients (like Claude, ChatGPT and an internal agent) and N tools (like GitHub, Slack and your internal DB), you build M x N individual integrations.
 
-MCP changes this to an M + N problem. By creating a standardized "universal plug," any MCP-compatible AI client can connect to any MCP-compliant server. Think of it as the USB-C of the AI world. Instead of writing custom code to explain how to search your database, you host an MCP server that describes its own capabilities. When the AI agent connects, it "discovers" what the server can do without you having to hard-code the instructions.
+### From M x N to M + N
 
-This protocol uses JSON-RPC 2.0 under the hood. It allows for bidirectional communication, meaning the server can provide tools, resources (like files or data), and even prompt templates to the model. This is a massive shift from the stateless, request-response nature of most web APIs.
+MCP changes this to an M + N problem. With a standard "universal plug," any MCP-compatible AI client can connect to any MCP-compliant server. Think of it as the USB-C of the AI world.
+
+Instead of writing custom code to explain how to search your database, you host an MCP server that describes its own capabilities. When the agent connects, it "discovers" what the server can do without you hard-coding the instructions.
+
+### What runs under the hood
+
+MCP uses JSON-RPC 2.0. A server can offer tools, resources (like files or data) and prompt templates to the model.
+
+Since the `2026-07-28` spec, the protocol core is stateless request and response. The connection handshake and session IDs are gone, and each request carries its own protocol version and client capabilities.
+
+If your app needs state across calls, the server hands the model an explicit handle to pass back. I cover what that means in practice in [stateless MCP servers on Laravel](/blog/stateless-mcp-servers-laravel/).
+
+<TryThis>
+Count the integrations you maintain today: AI clients times tools. If the number is above five or six, sketch which tools would become one MCP server each.
+</TryThis>
+
+{/* IMAGE: inline-1 */}
 
 ## Structural differences: discovery and consumers
 
-The fundamental difference between API and MCP lies in who consumes the interface and how they find what they need.
+The core difference between API and MCP lies in who consumes the interface and how they find what they need.
 
-| Feature              | Traditional API              | Model Context Protocol (MCP) |
-| :------------------- | :--------------------------- | :--------------------------- |
-| **Primary Consumer** | Human Developers             | AI Agents & LLMs             |
-| **Discovery**        | Manual (Reading Docs)        | Automatic (Self-describing)  |
-| **Interface**        | Heterogeneous (REST/GraphQL) | Standardized (JSON-RPC)      |
-| **State**            | Mostly Stateless             | Stateful Sessions            |
-| **Flexibility**      | Rigid / Pre-scripted         | Dynamic / Reasoning-based    |
+| Feature              | Traditional API              | Model Context Protocol (MCP)                         |
+| :------------------- | :--------------------------- | :--------------------------------------------------- |
+| **Primary Consumer** | Human Developers             | AI Agents & LLMs                                     |
+| **Discovery**        | Manual (Reading Docs)        | Automatic (Self-describing)                          |
+| **Interface**        | Heterogeneous (REST/GraphQL) | Standardized (JSON-RPC)                              |
+| **State**            | Mostly Stateless             | Stateless core since `2026-07-28`; explicit handles for app state |
+| **Flexibility**      | Rigid / Pre-scripted         | Dynamic / Reasoning-based                            |
 
-APIs are built for humans to read and implement. You look at a Swagger UI, understand the authentication, and write a fetch request. MCP is built for models to navigate. An MCP server provides a list of tools and resources along with natural language descriptions. The model uses its reasoning capabilities to decide which tool to call based on the user's intent.
+### Docs for humans, descriptions for models
 
-If you are [comparing AI vs traditional development](/blog/ai-vs-traditional-development/), this is a prime example of the shift. Traditional development is about building the pipes. AI engineering with MCP is about building the connectors that allow the model to choose its own pipes.
+APIs are built for humans to read and implement. You look at a Swagger UI, understand the authentication and write a fetch request.
+
+MCP is built for models to navigate. An MCP server lists its tools and resources along with natural language descriptions. The model reasons about which tool to call based on the user's intent.
+
+If you are [comparing AI vs traditional development](/blog/ai-vs-traditional-development/), this is a prime example of the shift. Traditional development builds the pipes. AI engineering with MCP builds the connectors that let the model choose its own pipes.
+
+<PullQuote>Developers read API docs. Models read MCP descriptions.</PullQuote>
 
 ## Why AI agents need MCP for scale
 
-Agentic systems require a level of autonomy that traditional APIs struggle to provide efficiently. When an agent is tasked with "researching a company and drafting a proposal," it might need to hit a search tool, a CRM, a file system, and a PDF generator.
+Agentic systems need a level of autonomy that traditional APIs struggle to provide efficiently.
 
-Using standard APIs, you would need to feed the descriptions of all those endpoints into the model's context window. This eats up tokens and increases the risk of the model getting confused. With MCP, the client negotiates capabilities at connection time and the agent calls tools on demand, so you can surface only the tools relevant to the task instead of pre-loading every schema. The result is less wasted context and fewer irrelevant choices for the model to wade through.
+An agent asked to "research a company and draft a proposal" might need a search tool, a CRM, a file system and a PDF generator.
 
-![An AI agent dashboard dynamically selecting tools from an MCP server](/blog/api-vs-mcp/agent-tool-selection.webp)
+### Less context, fewer wrong choices
 
-Furthermore, MCP defines a "resource" primitive. Unlike an API endpoint that just returns data on request, an MCP resource can be subscribed to, so the server pushes a notification when the underlying file or record changes. For lightweight retrieval-augmented generation (RAG) cases, an MCP server can expose your local files or database directly to the model in a standardized way, sparing you a custom ingestion layer for every experiment. It does not replace a vector store for large-scale semantic search, though — get that wrong and you hit the usual [production RAG mistakes](/blog/7-rag-mistakes-production/).
+With standard APIs, you feed the descriptions of all those endpoints into the model's context window. This eats tokens and raises the risk of the model getting confused.
+
+With MCP, the client asks the server what it offers (and can cache that list), and the agent calls tools on demand. You can surface only the tools relevant to the task instead of pre-loading every schema.
+
+The result is less wasted context and fewer irrelevant choices for the model to wade through.
+
+### Resources that can notify you
+
+MCP also defines a "resource" primitive. An API endpoint returns data on request. An MCP resource can be subscribed to, so the server sends a notification when the underlying file or record changes.
+
+### Lightweight RAG, not a vector store
+
+For lightweight retrieval-augmented generation (RAG) cases, an MCP server can expose your local files or database to the model in a standard way. That spares you a custom ingestion layer for every experiment.
+
+It does not replace a vector store for large-scale semantic search. Get that wrong and you hit the usual [production RAG mistakes](/blog/7-rag-mistakes-production/).
 
 ## Implementation: how they work together
 
-It is important to realize that MCP does not replace APIs. In fact, MCP usually wraps existing APIs. Your business logic, security constraints, and data persistence still live in your core services.
+MCP does not replace APIs. In fact, MCP usually wraps existing APIs. Your business logic, security constraints and data persistence still live in your core services.
 
-Consider a scenario where you have a Laravel backend. You have a set of REST endpoints for managing customer orders. To make these accessible to an AI agent, you would build a small MCP server (perhaps using Node.js or Python) that sits between the agent and your Laravel API.
+### A Laravel example
 
-The MCP server handles the "translation" layer. It describes the `get_order_history` tool in a way that an LLM understands. When the LLM calls that tool through the MCP protocol, the MCP server executes the actual REST call to your Laravel backend, receives the JSON, and passes the relevant context back to the model.
+Say you have a Laravel backend with REST endpoints for managing customer orders.
 
-This separation of concerns allows your core engineering team to focus on building robust APIs while your AI team focuses on creating the MCP wrappers that enable agentic behavior.
+To make them accessible to an AI agent, you build a small MCP server (perhaps in Node.js or Python) that sits between the agent and your Laravel API.
+
+### The translation layer
+
+The MCP server describes the `get_order_history` tool in a way an LLM understands.
+
+When the LLM calls that tool through MCP, the server makes the actual REST call to your Laravel backend, receives the JSON and passes the relevant context back to the model.
+
+This separation lets your core engineering team focus on solid, well-tested APIs while your AI team builds the MCP wrappers that enable agentic behavior.
+
+<BeforeAfter beforeLabel="Direct API wiring" afterLabel="MCP wrapper">
+  <div slot="before">Each AI client gets hand-written function schemas for each endpoint. Change the API and you update every client's prompt.</div>
+  <div slot="after">One MCP server describes the tools and calls your REST API. Every MCP client discovers the change on its next list call.</div>
+</BeforeAfter>
+
+<TryThis>
+Pick one read-only endpoint, like order history, and wrap it as a single MCP tool with a clear one-sentence description. Test it from an MCP client before you expose anything that writes data.
+</TryThis>
+
+{/* IMAGE: inline-2 */}
 
 ## Choosing the right tool for the job
 
-When should you stick to direct API calls, and when should you implement MCP? The answer depends on the complexity of your integrations and the role of the LLM.
+When should you stick to direct API calls, and when should you implement MCP? It depends on the complexity of your integrations and the role of the LLM.
 
-**Use direct APIs when:**
+### Use direct APIs when
 
 1. You have a simple request-response flow with no AI reasoning involved.
 2. You need absolute minimum latency for high-throughput systems.
 3. You are performing deterministic tasks like processing payments or bulk data migrations.
 4. You only have one or two integrations that rarely change.
 
-**Use MCP when:**
+### Use MCP when
 
-1. You are building complex agents that need to use three or more tools.
+1. You are building complex agents that need three or more tools.
 2. Your tools and data sources change frequently.
-3. You want your tools to be reusable across different AI clients (e.g., [Claude Desktop and custom IDE tools](/blog/claude-mcp-dev-tools/)).
+3. You want your tools reusable across different AI clients (e.g., [Claude Desktop and custom IDE tools](/blog/claude-mcp-dev-tools/)).
 4. You need to expose local data or specialized resources to an LLM without building a custom backend for every experiment.
 
-One boundary worth drawing early: MCP covers the agent-to-tool axis only. The moment two agents need to delegate work to each other, you are in a different protocol's territory — see [MCP vs A2A vs ACP](/blog/mcp-vs-a2a-vs-acp/) for how the two layers stack.
+### Where MCP stops
 
-![Side-by-side code comparison of a REST endpoint call and an MCP tool definition](/blog/api-vs-mcp/rest-vs-mcp-code.webp)
+One boundary worth drawing early: MCP covers the agent-to-tool axis only. The moment two agents need to delegate work to each other, you are in a different protocol's territory.
 
-## Takeaways
+See [MCP vs A2A vs ACP](/blog/mcp-vs-a2a-vs-acp/) for how the two layers stack.
 
+<Takeaway>
 - APIs are the "what" (the data and logic), while MCP is the "how" (how the AI interacts with that data).
-- MCP eliminates the M x N integration problem by providing a universal protocol for AI tool discovery.
-- Traditional APIs are designed for deterministic software-to-software paths; MCP is designed for non-deterministic AI-to-tool reasoning.
-- Implementing MCP often involves wrapping existing REST or GraphQL APIs to make them self-describing for LLMs.
-- Using MCP reduces token waste and prompt complexity by standardizing how context is shared with the model.
-- For modern AI engineering, MCP is becoming the standard layer for building scalable agentic workflows.
+- MCP removes the M x N integration problem with a universal protocol for AI tool discovery.
+- Traditional APIs suit deterministic software-to-software paths; MCP suits non-deterministic AI-to-tool reasoning.
+- Implementing MCP often means wrapping existing REST or GraphQL APIs to make them self-describing for LLMs.
+- MCP cuts token waste and prompt complexity by standardizing how context is shared with the model.
+- For modern AI engineering, MCP is becoming the standard layer for building agentic workflows that scale.
+</Takeaway>
 
-What is the biggest friction point you face when giving your AI agents access to your internal production databases? If you're wiring MCP into a real product, [here's how I help teams ship it](/services/).
+If you're wrapping your existing APIs in MCP so agents can use them safely, [here's how I help teams ship it](/services/).
+
+What is the biggest friction point you face when giving your AI agents access to your internal production databases?
