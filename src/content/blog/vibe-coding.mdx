@@ -1,93 +1,136 @@
 ---
-title: "Vibe coding: why projects need more than just logic"
-description: "Taste, intent, and feel are the new senior-engineer superpowers in the Cursor and Claude era — and how to keep the codebase from becoming a ball of mud."
+title: "Vibe coding: why projects need more than logic"
+description: "Taste, intent and feel matter more in the Cursor and Claude era, and here is how to keep the codebase from becoming a ball of mud while you vibe."
 publishDate: 2025-11-30
 category: ai
 tags: [vibe-coding, ai, claude, laravel]
 featured: false
 heroImage:
   url: "/blog/vibe-coding/hero-3ef8694d.webp"
-  alt: "Developer at a glowing terminal — code as vibes, not just syntax"
+  alt: "Developer at a glowing terminal, code as vibes as well as syntax"
 ---
 
-Most developers are obsessed with logic. We spend years mastering syntax, optimizing database queries, and debating architectural patterns. We build systems that are technically perfect but somehow feel hollow. They work, but they don't sing — and that gap is exactly what vibe coding is meant to close.
+Users judge software by how it behaves. With AI writing more of the implementation, your taste and your intent decide whether a product feels right.
 
-The problem is that your users don't care about your clean code or your clever recursive functions. They care about how the software feels. They care about the "vibe."
+<Summary>
+- "Vibe coding" (Andrej Karpathy, February 2025) means describing what you want and letting AI write the code; for professional work, he now prefers the term "agentic engineering."
+- Your value moves toward taste: noticing when a screen feels off and steering the model with feedback on the feel as well as the function.
+- Vibe the surface and harden the core: keep a solid, tested foundation (Laravel, Docker) under an exploratory UI layer so the codebase doesn't turn into a ball of mud.
+</Summary>
 
-If you keep building purely for the machine, you are going to lose. The next generation of successful products won't be the ones with the most features or the tightest algorithms. They will be the ones that master the art of vibe coding.
+Most developers are obsessed with logic. We spend years on syntax, query optimization and architecture debates, and we build systems that are technically correct but feel hollow.
+
+They work, but they don't sing. That gap is what vibe coding tries to close.
+
+### Users feel the product
+
+Your users don't care about clever recursion. They care about how the software feels: whether a button responds, whether a layout makes sense, whether the flow is calm or stressful.
+
+Products that win will master that feel, and AI tools make it cheaper to iterate on it than ever.
 
 ## The logic trap
 
-I've spent over a decade in the trenches of software development. I've built custom web applications for startups and managed complex cloud infrastructure on Google Cloud and AWS. For a long time, I thought my job was to be a logic machine. I thought that if I followed every best practice and wrote the most efficient Laravel code possible, the project would be a success.
+For a long time I thought my job was to be a logic machine. If I followed every best practice and wrote the most efficient Laravel code possible, the project would succeed.
 
 I was wrong.
 
-Logic is just the foundation. It is the skeleton that keeps the building from falling down. But nobody wants to live in a skeleton. People want a home with character, warmth, and a specific feeling. In software, that character comes from the vibe.
+### The skeleton and the home
 
-When we focus purely on logic, we end up with "boring" software. It is the kind of software that does what it says on the tin but leaves the user feeling nothing. Or worse, it feels frustrating because the developer didn't think about the emotional friction of a slow-loading button or a confusing layout.
+Logic is the foundation, the skeleton that keeps the building standing. Nobody wants to live in a skeleton. People want a home with character and warmth, and in software that character comes from the vibe.
 
-![Side-by-side illustration of cold logic vs warm vibe coding](/blog/vibe-coding/logic-vs-vibe.webp)
+When we focus only on logic, we get software that does what it says on the tin and leaves users feeling nothing. Or worse, it frustrates them, because nobody thought about the friction of a slow button or a confusing layout.
 
-## Entering the era of vibe coding
+{/* IMAGE: inline-1 */}
 
-Andrej Karpathy coined "vibe coding" in a February 2025 post — "fully give in to the vibes, embrace exponentials, and forget that the code even exists." He framed it as a throwaway, weekend-project mode and has since distanced the term from production work (he now prefers "agentic engineering" for serious builds). I'm using the broader sense the industry latched onto: a shift from being a writer of code to being a curator of intent in the age of AI tools like Cursor and Claude.
+## Where "vibe coding" comes from
 
-Vibe coding is about letting go of the need to micro-manage every semicolon. It is about using natural language to describe the _feel_ and _behavior_ you want, and then letting AI handle the heavy lifting of the implementation.
+Andrej Karpathy coined "vibe coding" in a February 2025 post: "fully give in to the vibes, embrace exponentials, and forget that the code even exists." He framed it as a mode for throwaway weekend projects.
 
-In this world, your value as an engineer isn't in how fast you can type. It's in your taste. It's in your ability to recognize when a user interface feels "off" and knowing how to steer the AI to fix it. It is about prioritizing the outcome over the output — which is really a question of [prompt engineering versus context engineering](/blog/prompt-engineering-vs-context-engineering/): giving the model enough of the right context to make good calls on its own.
+In a February 2026 retrospective, he wrote that programming through LLM agents is becoming a default workflow for professionals, "except with more oversight and scrutiny," and named "agentic engineering" as his favorite term for that serious version.
 
-I've seen this shift firsthand in my own work at [Ansezz](/). When I'm working on a Shopify store development project, the technical logic of the checkout is important. But the _vibe_ of the checkout — the smooth transitions, the reassuring feedback, the perfect typography — is what actually drives conversions for the business.
+### The sense I mean
 
-## Tools that fuel the flow
+I use the broader sense the industry picked up: moving from writing code to curating intent with tools like Cursor and Claude. You describe the _feel_ and _behavior_ you want in natural language, and the AI does the heavy lifting on implementation.
 
-To embrace vibe coding, you need tools that don't get in your way. You need tools that allow you to stay in a state of flow where the distance between your idea and the execution is as small as possible.
+### Taste is the job
 
-Tools like Cursor have changed the game for me. Instead of spending twenty minutes setting up boilerplate for a new Vue component, I can describe the "vibe" of the component in the chat. I can say, "build me a dashboard widget that feels airy and modern, uses a bento grid layout, and gives the user a sense of calm control over their data."
+Your value as an engineer shifts from typing speed to taste: recognizing when an interface feels "off" and knowing how to steer the AI to fix it.
 
-![AI-powered IDE pairing with a developer](/blog/vibe-coding/ai-ide.webp)
+That is really a question of [prompt engineering versus context engineering](/blog/prompt-engineering-vs-context-engineering/): giving the model enough of the right context to make good calls on its own.
 
-The AI generates the code. I review it. If the vibe isn't right, I don't fix the code line-by-line. I talk to the model again. I give it feedback on the _feeling_. "This feels too cramped. Give it more white space and make the shadows softer."
+On a Shopify store build, the checkout logic matters. The _feel_ of the checkout (smooth transitions, reassuring feedback, clean typography) is what moves conversions.
 
-This is the essence of vibe coding. It's a high-level conversation about intent.
+<PullQuote>When code gets cheap to write, taste becomes the scarce skill.</PullQuote>
 
-## The senior developer guardrails
+## Tools that keep you in flow
 
-Now, I know what some of you are thinking. "This sounds like a recipe for a messy, unmaintainable codebase."
+To work this way you need tools that stay out of your way, so the gap between an idea and a working screen stays small.
 
-You are right to be worried. If you just "vibe" your way through a project without any discipline, you will end up with a "ball of mud." This is where the senior engineer perspective becomes more critical than ever.
+### Describe the feel
 
-Vibe coding isn't about being lazy. It's about shifting your focus. You use your senior-level expertise to build the "robust core" that allows the "vibe layer" to exist.
+Cursor changed how I work. Instead of spending twenty minutes on boilerplate for a new Vue component, I describe it in the chat: "Build me a dashboard widget that feels airy and modern, uses a bento grid layout and gives the user a sense of calm control over their data."
 
-For me, that core is often built with Laravel and Docker. I use Laravel because it is built for "developer happiness." The framework itself has a vibe of elegance and simplicity. It provides the solid, logical foundation — the authentication, the database migrations, the API structures — that I can trust.
+### Give feedback on the feeling
 
-Once that robust core is in place, I can afford to be more exploratory with the frontend and the user experience. I can "vibe code" the top layer because I know the foundation is solid.
+The AI generates the code and I review it. If the feel is wrong, I don't fix it line by line. I talk to the model again: "This feels too cramped. Give it more white space and make the shadows softer."
 
-![Architecture diagram — robust core under the vibe layer](/blog/vibe-coding/architecture.webp)
+That's the heart of vibe coding: a high-level conversation about intent.
 
-## Why Shopify and vibe coding are a perfect match
+<BeforeAfter beforeLabel="Line-by-line fixes" afterLabel="Feedback on the feel">
+  <div slot="before">You open the generated component and start tweaking padding values and shadow numbers by hand until it looks less cramped.</div>
+  <div slot="after">You tell the model "this feels cramped, give it more white space and softer shadows," review the diff, and keep the version that feels right.</div>
+</BeforeAfter>
 
-If you work in e-commerce, vibe coding is your secret weapon. Shopify is a platform that already understands the importance of the feel. They have spent years perfecting the checkout flow and the admin experience.
+<TryThis>
+Pick one screen in your app that feels off. Write three sentences about how it should feel (not what it should contain), give them to your AI editor and compare the result with what you would have changed by hand.
+</TryThis>
 
-When I do [Shopify customization](/work/), I'm not just writing Liquid code. I'm trying to match the brand's vibe. A luxury jewelry brand needs a completely different "vibe" than a high-energy fitness store.
+## Guardrails for vibe coding
 
-One should feel slow, deliberate, and expensive. The other should feel fast, punchy, and motivating. You can't achieve that through logic alone. You achieve it by obsessing over the details that the logic-only dev ignores.
+Some of you are thinking: "This sounds like a recipe for a messy, unmaintainable codebase."
+
+You're right to worry. If you vibe through a project without discipline, you end up with a ball of mud. Experience matters more here, because someone has to decide what the AI may touch.
+
+### A solid core under the vibe layer
+
+Vibe coding works when you shift your focus to where it pays off. Use your experience to build a solid core, so the vibe layer has something safe to sit on.
+
+For me that core is usually Laravel and Docker. Laravel is built for developer happiness, and it gives me a foundation I trust: authentication, database migrations and API structure.
+
+With that core in place and covered by tests, I can be exploratory with the frontend and the user experience. I vibe code the top layer because I trust the layer beneath it.
+
+## Shopify and vibe coding
+
+In e-commerce, this approach fits well. Shopify has spent years refining how checkout and the admin feel.
+
+### Matching the brand
+
+When I do [Shopify customization](/work/), I write Liquid code and I also try to match the brand's feel. A luxury jewelry brand needs a very different experience from a high-energy fitness store.
+
+One should feel slow, deliberate and expensive. The other should feel fast, punchy and motivating. You get there by obsessing over the details a logic-only developer skips.
+
+{/* IMAGE: inline-2 */}
 
 ## How to start vibe coding today
 
-If you want to move beyond being a logic-only developer, here are some practical steps you can take:
+1. **Train your taste.** Look at software as an experience. Which apps do you love using, and why: speed, animation, the way buttons respond? Keep a swipe file of great examples.
+2. **Treat AI as a partner.** Use Claude or Cursor to brainstorm whole concepts, beyond autocomplete. Wiring your editor into the rest of your stack with [MCP to give the model real context](/blog/claude-mcp-dev-tools/) makes this practical. Next comes real [agentic workflows with MCP and agentic loops](/blog/agentic-workflows-vibe-coding/), and I mapped the whole path [level by level, from gateway prompts to multi-agent orchestration](/blog/ai-coding-workflow-levels/).
+3. **Build a solid core.** Don't let the vibe turn into chaos. Laravel and Docker keep your infrastructure predictable, and the more you trust the foundation, the more you can play with the surface.
+4. **Iterate on the feeling.** Get the feel right first with a messy prototype, then use your technical skills to refactor and harden it.
+5. **Practice user empathy.** For every piece of logic, ask: "How will this make the user feel?" If the answer is "nothing," there's more work to do.
 
-1. **Prioritize your taste.** Start looking at software not just as a tool, but as an experience. What apps do you love using? Why? Is it the speed? The animations? The way the buttons click? Start building a "swipe file" of great vibes.
-2. **Embrace AI as a partner, not a tool.** Stop using Copilot just for autocompletion. Start using tools like Claude or Cursor to brainstorm high-level concepts. Describe the "feel" you want and see what it gives you. Wiring your editor into the rest of your stack with [MCP to give the model real context](/blog/claude-mcp-dev-tools/) is what makes this practical. Once you are comfortable here, the natural next step is real [agentic workflows with MCP and agentic loops](/blog/agentic-workflows-vibe-coding/). If you want the whole progression laid out, I mapped it [level by level, from gateway prompts to multi-agent orchestration](/blog/ai-coding-workflow-levels/).
-3. **Build a solid core.** Don't let the vibe turn into chaos. Use frameworks like Laravel or tools like Docker to keep your infrastructure predictable and clean. The more you trust your foundation, the more you can play with the surface.
-4. **Iterate on the feeling.** Instead of trying to get the code perfect the first time, get the "vibe" right first. Build a messy prototype that feels great, and then use your technical skills to refactor and harden it.
-5. **Focus on user empathy.** Every time you write a piece of logic, ask yourself: "how will this make the user feel?" If the answer is "nothing," you have more work to do.
+<TryThis>
+Before your next vibe-coding session, write down the folders the AI may change freely and the ones it may only touch with tests passing. Put that list in your editor's rules file so every session starts with it.
+</TryThis>
 
-## The future is felt, not just calculated
+<Takeaway>
+- **Feel is part of the spec.** Users judge software by how it behaves and responds.
+- **Taste is the skill to build.** Steering the AI well matters more than typing fast.
+- **Vibe the surface and harden the core.** A tested Laravel and Docker foundation keeps the mess out.
+- **Iterate on feel, then refactor.** Prototype fast, then make it production-grade.
+- **For production, think agentic engineering:** the same speed, with oversight and review.
+</Takeaway>
 
-We are entering a time where "coding" as we knew it is becoming a commodity. Anyone can generate a function to sort an array. But not everyone can create an experience that moves people.
+Generating a function to sort an array is now a commodity. Building an experience that moves people is still rare, and the engineers who bridge the machine and the human side will shape what comes next. If you want to bring AI-assisted building into your team without losing code quality, [here's how I help teams set up AI coding workflows with guardrails](/services/).
 
-The future of software development belongs to the engineers who can bridge the gap between the machine and the human heart. It belongs to the people who understand that the best code is the code you don't even notice because you're too busy enjoying the vibe.
-
-I've seen the results of this approach in my own projects and for the clients I work with. When you stop fighting the logic and start leaning into the flow, the work gets more fun and the results land harder.
-
-What is the one app you use that just "feels" right — and what can you steal from its vibe for your next project?
+What's the one app you use that just "feels" right, and what could you borrow from it for your next project?
