@@ -1,0 +1,463 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import ShareLink from "@/components/tools/ShareLink.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+
+const TOOL_PATH = "/tools/pgvector-calculator/";
+const TOOL_NAME = "pgvector Size Calculator";
+const tool = getTool(TOOL_PATH);
+
+const DESCRIPTION =
+  "pgvector size calculator: estimate table size, HNSW or IVFFlat index size, RAM and maintenance_work_mem for your embeddings. vector, halfvec and bit. Runs in your browser.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const DIM_PRESETS = [384, 768, 1024, 1536, 3072];
+
+const faq = [
+  {
+    q: "How much disk space do 1 million embeddings take in pgvector?",
+    a: "It depends on the dimensions and the type. A vector(1536) value is 4 x 1536 + 8 = 6,152 bytes, so 1 million rows hold about 6 GB of raw vectors. In Postgres that lands at about 7.8 GB for the table, because each vector is moved to the TOAST table in 2 KB chunks, plus another 7 to 8 GB for an HNSW index with the default m of 16. Switch to halfvec and both numbers roughly halve.",
+  },
+  {
+    q: "How much RAM does a pgvector HNSW index need?",
+    a: "For fast queries, enough to keep the whole index in memory: shared_buffers plus the operating system page cache should be at least the index size shown above. HNSW search jumps around the graph, so an index that does not fit in RAM turns into random disk reads and latency goes up sharply. Building the index needs memory too. If maintenance_work_mem is smaller than the graph, pgvector warns that the graph no longer fits and the build gets much slower.",
+  },
+  {
+    q: "What should I set maintenance_work_mem to for an HNSW build?",
+    a: "Set it to at least the build memory number this calculator shows, for the session that runs CREATE INDEX, for example SET maintenance_work_mem = '8GB'. Do not set it higher than the RAM the server can spare. With parallel builds (max_parallel_maintenance_workers), the graph lives in shared memory and is a bit smaller, but the same rule applies.",
+  },
+  {
+    q: "Should I use vector or halfvec?",
+    a: "halfvec stores each dimension in 2 bytes instead of 4, so the table and the index are about half the size, and you can index up to 4,000 dimensions instead of 2,000. For most text embeddings the recall loss is very small. A common setup is to keep the full vector column and build the index on a halfvec expression, which halves the index without changing the stored data.",
+  },
+  {
+    q: "Why is my real index bigger than this estimate?",
+    a: "This is the size right after a clean build. Rows inserted after the build, updates and deletes leave the graph less tightly packed, and VACUUM does not shrink the file. Different Postgres or pgvector versions also move the numbers a little. Treat the result as a planning number, then check the real size with SELECT pg_size_pretty(pg_relation_size('your_index')).",
+  },
+  {
+    q: "Does this calculator send my numbers anywhere?",
+    a: "No. All the maths runs in JavaScript in your tab. There is no request, no login and no logging. The share button only puts your inputs in the page address so you can send the link to someone.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  dateModified: tool.updated,
+  name: TOOL_NAME,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  browserRequirements: "Requires JavaScript",
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const inputClass =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono font-bold focus:outline-none";
+const selectClass =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-bold focus:outline-none";
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const hintClass = "mt-2 text-xs leading-snug opacity-80";
+const chipClass =
+  "mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow inline-flex min-h-10 items-center rounded-full border-[2px] px-3 text-[11px] font-bold tracking-widest uppercase";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1 break-words";
+const rowClass = "flex flex-wrap items-baseline justify-between gap-x-3";
+
+const relatedLinks = [
+  {
+    href: "/tools/rag-chunk-splitter/",
+    note: "Your chunk size sets the row count. Split first, then size the index.",
+  },
+  {
+    href: "/tools/prompt-caching-calculator/",
+    note: "Retrieval fills the prompt. See what caching the fixed part saves.",
+  },
+  {
+    href: "/blog/picking-the-right-rag-stack/",
+    note: "When Postgres and pgvector are enough, and when they are not.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/vector-search-vs-graph-search/",
+    note: "What a vector index is good at, and what it cannot answer.",
+    kind: "Post" as const,
+  },
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="pgvector Size Calculator."
+  intro="How big will the table be, how big is the HNSW or IVFFlat index, and how much RAM do you need? Enter rows and dimensions and get the numbers before you run CREATE INDEX."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Estimate, not a promise
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Sizes follow the pgvector source and the Postgres page layout, for a
+        fresh build. Check the real thing with pg_relation_size.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id="pgvector-calculator-root">
+    <div class="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_340px]">
+      <!-- Inputs -->
+      <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-5">
+        <div>
+          <label for="pgvector-calculator-rows" class={labelClass}>Rows</label>
+          <input
+            id="pgvector-calculator-rows"
+            type="number"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            value="1000000"
+            autocomplete="off"
+            class={inputClass}
+          />
+          <p class={hintClass}>
+            One row per chunk you embed, not per document.
+          </p>
+        </div>
+
+        <div>
+          <label for="pgvector-calculator-dims" class={labelClass}
+            >Embedding dimensions</label
+          >
+          <input
+            id="pgvector-calculator-dims"
+            type="number"
+            min="1"
+            max="16000"
+            step="1"
+            inputmode="numeric"
+            value="1536"
+            autocomplete="off"
+            class={inputClass}
+          />
+          <div class="mt-3 flex flex-wrap gap-2">
+            {
+              DIM_PRESETS.map((d) => (
+                <button type="button" data-dims={d} class={chipClass}>
+                  {d}
+                </button>
+              ))
+            }
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="min-w-0">
+            <label for="pgvector-calculator-type" class={labelClass}
+              >Vector type</label
+            >
+            <select id="pgvector-calculator-type" class={selectClass}>
+              <option value="vector" selected>vector (4 bytes per dim)</option>
+              <option value="halfvec">halfvec (2 bytes per dim)</option>
+              <option value="bit">bit (1 bit per dim)</option>
+            </select>
+          </div>
+          <div class="min-w-0">
+            <label for="pgvector-calculator-index" class={labelClass}
+              >Index type</label
+            >
+            <select id="pgvector-calculator-index" class={selectClass}>
+              <option value="hnsw" selected>HNSW</option>
+              <option value="ivfflat">IVFFlat</option>
+              <option value="none">No vector index</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="pgvector-calculator-hnsw-opts">
+          <label for="pgvector-calculator-m" class={labelClass}
+            >HNSW m (links per node)</label
+          >
+          <input
+            id="pgvector-calculator-m"
+            type="number"
+            min="2"
+            max="100"
+            step="1"
+            inputmode="numeric"
+            value="16"
+            autocomplete="off"
+            class={inputClass}
+          />
+          <p class={hintClass}>
+            pgvector default is 16. ef_construction changes build time and
+            recall, not size, so it is not an input here.
+          </p>
+        </div>
+
+        <div id="pgvector-calculator-ivf-opts" hidden>
+          <label for="pgvector-calculator-lists" class={labelClass}
+            >IVFFlat lists</label
+          >
+          <input
+            id="pgvector-calculator-lists"
+            type="number"
+            min="1"
+            max="32768"
+            step="1"
+            inputmode="numeric"
+            value="1000"
+            autocomplete="off"
+            class={inputClass}
+          />
+          <div class="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              id="pgvector-calculator-suggest"
+              class={chipClass}
+            >
+              Use suggested
+            </button>
+            <p id="pgvector-calculator-suggest-text" class="text-xs font-bold">
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label for="pgvector-calculator-extra" class={labelClass}
+            >Other columns, bytes per row</label
+          >
+          <input
+            id="pgvector-calculator-extra"
+            type="number"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            value="0"
+            autocomplete="off"
+            class={inputClass}
+          />
+          <p class={hintClass}>
+            Average size of everything besides the id and the vector. A bigint
+            foreign key is 8, a timestamptz is 8, a short text is its length
+            plus 1. Large text that Postgres moves to TOAST on its own is not
+            counted.
+          </p>
+        </div>
+      </NeoCard>
+
+      <!-- Output -->
+      <NeoCard
+        tone="cyan"
+        shadow="lg"
+        class="min-w-0 space-y-4 md:sticky md:top-24"
+      >
+        <p class="mono text-[11px] font-bold tracking-widest uppercase">
+          ▸ Estimated size
+        </p>
+        <dl class="space-y-3" aria-live="polite">
+          <div class={`border-ink border-b-[2.5px] pb-2 ${rowClass}`}>
+            <dt class="text-sm font-bold uppercase">Table</dt>
+            <dd id="pgvector-calculator-out-table" class="display text-2xl">
+              0
+            </dd>
+          </div>
+          <div class={`border-ink border-b-[2.5px] pb-2 ${rowClass}`}>
+            <dt class="text-sm font-bold uppercase">Vector index</dt>
+            <dd id="pgvector-calculator-out-index" class="display text-2xl">
+              0
+            </dd>
+          </div>
+          <div class={`border-ink border-b-[2.5px] pb-2 ${rowClass}`}>
+            <dt class="text-sm font-bold uppercase">Total on disk</dt>
+            <dd id="pgvector-calculator-out-total" class="display text-2xl">
+              0
+            </dd>
+          </div>
+          <div class={rowClass}>
+            <dt class="text-sm font-bold uppercase">RAM to keep index hot</dt>
+            <dd
+              id="pgvector-calculator-out-ram"
+              class="display text-accent-text text-3xl"
+            >
+              0
+            </dd>
+          </div>
+          <div class={rowClass}>
+            <dt class="text-xs font-bold uppercase">
+              maintenance_work_mem to build
+            </dt>
+            <dd
+              id="pgvector-calculator-out-build"
+              class="font-mono text-sm font-bold"
+            >
+              0
+            </dd>
+          </div>
+        </dl>
+
+        <div
+          id="pgvector-calculator-warn"
+          role="status"
+          hidden
+          class="border-ink bg-yellow text-on-accent rounded-[4px] border-[3px] px-3 py-2.5 text-sm leading-snug font-bold"
+        >
+        </div>
+
+        <details class="text-sm">
+          <summary class="flex min-h-10 cursor-pointer items-center font-bold">
+            How it adds up
+          </summary>
+          <dl id="pgvector-calculator-details" class="mt-2 space-y-1.5"></dl>
+        </details>
+
+        <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+          Sizes in 1024 steps, like pg_size_pretty · runs in your browser
+        </p>
+      </NeoCard>
+    </div>
+    <div class="mt-6"><ShareLink /></div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">The formulas, briefly</h2>
+      <p>
+        <strong>One vector.</strong> From the pgvector README: a <code
+          class={codeClass}>vector</code
+        > value takes <code class={codeClass}>4 × dims + 8</code> bytes, a <code
+          class={codeClass}>halfvec</code
+        > takes <code class={codeClass}>2 × dims + 8</code>, and a <code
+          class={codeClass}>bit</code
+        > value takes <code class={codeClass}>dims / 8 + 8</code>. So
+        vector(1536) is 6,152 bytes and halfvec(1536) is 3,080.
+      </p>
+      <p>
+        <strong>The table.</strong> Postgres stores rows on 8 KB pages. Each row has
+        a 24 byte header, a 4 byte pointer on the page, then the columns. The tool
+        assumes an <code class={codeClass}>id bigint</code> primary key, your other
+        columns, and the vector. If the row is bigger than about 2 KB, Postgres moves
+        the vector to the TOAST table in chunks of up to 1,996 bytes, and only an
+        18 byte pointer stays in the row. That is why a table of 1536 dim vectors
+        is mostly TOAST. Table size here means heap, TOAST, the TOAST index and the
+        primary key index together.
+      </p>
+      <p>
+        <strong>HNSW.</strong> Each row becomes an element tuple of <code
+          class={codeClass}>72 + vector size</code
+        > bytes plus a neighbor tuple of <code class={codeClass}
+          >4 + 6 × (level + 2) × m</code
+        > bytes. Most rows sit only on level 0, where they keep 2 × m links. A few
+        rows climb higher levels, with a chance of 1 in m per level. The tool packs
+        these tuples onto 8 KB pages the way pgvector does. With large vectors that
+        means about one row per page, so 1 million rows of vector(1536) is close to
+        1 million pages, or 7.6 GB.
+      </p>
+      <p>
+        <strong>IVFFlat.</strong> The index holds one center per list, then every
+        row again as an index tuple of about <code class={codeClass}
+          >8 + vector size</code
+        > bytes, grouped by list on 8 KB pages. It is a little smaller than HNSW,
+        but recall depends on how many lists you probe. The build runs k-means on
+        a sample of max(50 × lists, 10,000) rows, which sets its memory.
+      </p>
+      <p>
+        <strong>RAM.</strong> HNSW search reads graph pages all over the index, so
+        for steady low latency the whole index should be in shared_buffers or the
+        OS page cache. That is the RAM number. The build number is what the in-memory
+        graph needs during <code class={codeClass}>CREATE INDEX</code>, so set <code
+          class={codeClass}>maintenance_work_mem</code
+        > at least that high for the build session.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">Ways to make it smaller</h2>
+      <ul class="space-y-2">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Index a halfvec expression.</strong> Keep the full vector column
+            and create the index on <code class={codeClass}
+              >(embedding::halfvec(1536)) halfvec_cosine_ops</code
+            >. The index roughly halves. Queries must use the same cast.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Use fewer dimensions.</strong> Many embedding models can return
+            shorter vectors. Going from 3072 to 1024 cuts storage by two thirds, and
+            3072 dim vectors cannot be indexed as plain vector anyway (the limit is
+            2,000).</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Lower m.</strong> m of 8 instead of 16 shrinks the neighbor tuples,
+            but with big vectors the vector itself dominates, so the saving is small
+            and recall drops. Test before you change it.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Partition or filter.</strong> Many smaller indexes (per tenant,
+            per language) each need less RAM than one big one, and only the busy ones
+            stay hot.</span
+          >
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/pgvector-calculator";
+</script>
