@@ -64,7 +64,11 @@ After a cooldown period, the breaker moves to the half-open state and lets a sma
 
 If these test calls succeed, the breaker assumes the service is healthy again and moves back to closed. If they fail, it goes straight back to open for another cooldown cycle. This is a controlled way to probe the system before fully re-engaging.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/circuit-breakers-vector-db/inline-1.webp"
+  alt="Comic panel of a robot electrician letting one test request through a half-open circuit breaker to a slow database robot"
+  caption="In the half-open state, a few trial requests decide if the breaker closes again."
+/>
 
 ## Why your RAG pipeline needs this
 
@@ -141,7 +145,11 @@ If your primary vector DB in `us-east-1` keeps tripping but your secondary in `e
 
 This kind of [event-driven architecture](/blog/event-driven-pubsub/) makes your system self-healing. It doesn't wait for a human to wake up at 3am. It detects the failure, trips the breaker, uses the fallback and tries to recover on its own.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/circuit-breakers-vector-db/inline-2.webp"
+  alt="Comic panel of a traffic robot with a gauge dashboard steering requests away from an overheated database robot toward a backup lane"
+  caption="Telemetry lets the router send traffic to a healthy path before users feel the slowdown."
+/>
 
 <TryThis>
 Add an alert that fires when any circuit stays open for more than a few minutes. That usually means a real provider outage, and it is the one alert worth waking up for.

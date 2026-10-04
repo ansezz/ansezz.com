@@ -71,7 +71,11 @@ This changes how you build [context-aware agents](/blog/mcp-context-aware-agents
   <div slot="after">Each data source gets one MCP server. Any MCP host can discover and use it, so you add a tool once.</div>
 </BeforeAfter>
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/claude-mcp-dev-tools/inline-1.webp"
+  alt="Comic panel of a robot plugging a database, a git block and a folder into one glowing plug hub while tangled custom adapters sit in the trash"
+  caption="MCP swaps one-off integrations for a single shared protocol."
+/>
 
 ### How the architecture works
 
@@ -131,7 +135,11 @@ This is a big step up from the "give me your master API key" approach we have se
 
 That matters when you are trying to avoid [RAG mistakes in production](/blog/7-rag-mistakes-production/), where data leakage is a top-tier risk.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/claude-mcp-dev-tools/inline-2.webp"
+  alt="Comic panel of an AI robot in a sandbox receiving data through a narrow pipe controlled by a guard robot"
+  caption="Give each MCP server only the access it needs, and nothing more."
+/>
 
 ## Why I am betting on MCP
 

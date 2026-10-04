@@ -65,7 +65,11 @@ I recently wrote about how [Coolify and Docker are changing SaaS hosting](/blog/
 - **Database management.** You can spin up Postgres, MySQL, Redis or MongoDB in one click. They run as containers on your server, so you pay $0 in additional managed service fees.
 - **Pull request deployments.** It creates temporary environments for every PR, like Vercel, but without the "team seat" tax.
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/coolify-self-hosted-saas/inline-1.webp"
+  alt="Comic panel of a robot butler pressing deploy, lock, backup and database buttons while server robots salute"
+  caption="Coolify gives you the platform experience on servers you own."
+/>
 
 ## The magic of ARM (Graviton and OCI)
 
@@ -133,7 +137,11 @@ If you are tired of the cloud tax, here is my recommended path to freedom:
 4. **Dockerize your app.** If you are using Laravel, it is as simple as adding a `Dockerfile`. For Vite or Next.js, Coolify has built-in builders that don't even need a `Dockerfile`.
 5. **Move your DB.** Export your managed DB and import it into a Coolify-managed container. Set up S3 backups immediately.
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/coolify-self-hosted-saas/inline-2.webp"
+  alt="Comic panel of a robot carrying moving boxes from a glass skyscraper to a small cabin full of servers"
+  caption="Moving to an ARM VPS can cut monthly costs while keeping the same workflow."
+/>
 
 <TryThis>
 Do step 1 to 3 on a spare ARM instance this week with one small side project. Moving a real app is much easier once you have shipped a throwaway one.

@@ -90,7 +90,11 @@ I use Docker on every build I ship. It makes handoffs easy: whoever runs the app
 
 Coolify deliberately stays at the single-host Docker layer rather than orchestrating clusters. If you're weighing that trade-off, see [Docker vs Kubernetes: containers vs orchestration](/blog/docker-vs-kubernetes/).
 
-{/* IMAGE: inline-1 */}
+<Figure
+  src="/blog/coolify-docker-saas-hosting/inline-1.webp"
+  alt="Comic panel of dock robots loading three sealed shipping containers onto one cargo ship"
+  caption="Docker keeps each service sealed, so handoffs between dev and prod stop breaking."
+/>
 
 ## Setting up your control plane
 
@@ -178,7 +182,11 @@ Coolify lets you define a health check endpoint. If the check fails, the old con
   <div slot="after">Traffic only moves when the health endpoint answers. A failed check leaves the old container serving users.</div>
 </BeforeAfter>
 
-{/* IMAGE: inline-2 */}
+<Figure
+  src="/blog/coolify-docker-saas-hosting/inline-2.webp"
+  alt="Comic panel of a nurse robot checking a new container's health before a gatekeeper switches traffic to it"
+  caption="Health checks let Coolify switch traffic only after the new version is ready."
+/>
 
 ## Is self-hosting right for you?
 
