@@ -24,7 +24,7 @@ It fails when the task needs real-world actions. A single chat completion cannot
 
 ### The architecture is the limit
 
-The model's intelligence is not what holds you back. The architecture is.
+What holds you back is the architecture around the model.
 
 Relying only on Large Language Models (LLMs) is like hiring a genius professor who has no hands, no memory of yesterday and no computer. You get great answers but nothing gets done.
 
@@ -36,7 +36,7 @@ AI agents wrap the LLM in tools, memory and planning logic. Moving from "talking
 
 A Large Language Model is a stateless next-token predictor. When you send a prompt, the model uses its training to calculate the most probable sequence of words to follow your input.
 
-It does not "think" in the human sense. It runs a single forward pass through a very large neural network.
+It does not "think" in the human sense. It runs one forward pass per generated token through a very large neural network.
 
 ### What a standalone LLM can't do
 
@@ -196,7 +196,7 @@ Not every feature needs to be an agent. Agents are more complex to build, harder
 - The system needs to learn and adapt over time using memory.
 
 <Takeaway>
-- **LLMs are engines, not drivers.** They provide the reasoning but need a system around them to do real work.
+- **LLMs are the engine.** They provide the reasoning but need a system around them to do real work.
 - **Agency is architectural.** You build it by adding memory, tool use and planning layers to your model.
 - **Reasoning loops are key.** Observing and correcting actions is what makes agents autonomous.
 - **Start with RAG, then move to agents.** Agentic RAG is a natural next step for teams already using vector databases.

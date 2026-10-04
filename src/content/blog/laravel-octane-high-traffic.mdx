@@ -113,7 +113,7 @@ php artisan octane:start --server=swoole --workers=16
 
 Don't forget **task workers** if you're using Swoole. Sized separately with the `--task-workers` flag, they run in their own processes.
 
-They're a good fit for offloading slow work like sending emails or fanning out concurrent queries without blocking the main request cycle.
+They're a good fit for fanning out concurrent queries without blocking the main request cycle.
 
 <TryThis>
 Check whether your app is CPU-bound or I/O-bound under load, then start Octane with workers equal to your cores (CPU-bound) or 2x your cores (I/O-bound) and compare P95 latency.

@@ -129,7 +129,7 @@ As you scale, stop treating every GPU as a generalist. Build **disaggregated inf
 I like to split my GPUs into two pools:
 
 - **The prefill pool:** compute-heavy GPUs (like H100s or B200s) tuned to chew through large prompts fast. These nodes process the initial context, then hand off the KV state.
-- **The decode pool:** GPUs sized for memory bandwidth and capacity rather than raw FLOPs (think A100s, or cheaper L40S cards) that focus on producing tokens for existing requests.
+- **The decode pool:** GPUs sized for memory bandwidth and capacity rather than raw FLOPs (think A100s or H200s) that focus on producing tokens for existing requests.
 
 ### Scale the pool your users stress
 

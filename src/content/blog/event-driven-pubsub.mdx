@@ -165,11 +165,11 @@ $topic->publish([
 
 Attributes let you filter messages at the subscription level. A subscriber can choose to only receive messages where `event_type` is `UserSignedUp`.
 
-That saves compute and money, because your worker never sees the messages it doesn't care about.
+That saves compute and outbound traffic, because your worker never sees the messages it doesn't care about.
 
 ## Monitoring and cost management
 
-Monitoring is a requirement, not an afterthought. Google Cloud integrates Cloud Monitoring with Google Pub/Sub.
+Set up monitoring from day one. Google Cloud integrates Cloud Monitoring with Google Pub/Sub.
 
 Keep a close eye on your "unacked message count." If this number keeps climbing, your subscribers can't keep up with the producers.
 

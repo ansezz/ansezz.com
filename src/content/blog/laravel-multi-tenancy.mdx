@@ -69,7 +69,7 @@ This gives the strongest isolation and makes per-tenant [backups and replication
 
 I often use the `stancl/tenancy` package for Laravel. It is a very flexible tool and lets you switch between these strategies as your business grows.
 
-You can see more of how I handle complex technical problems on the [Ansezz work page](/work/).
+Some of this work is on my [work page](/work/).
 
 <Figure
   src="/blog/laravel-multi-tenancy/inline-1.webp"
@@ -89,7 +89,7 @@ A global scope automatically adds a filter to every query on a model. It makes s
 
 I create a `BelongsToTenant` trait and apply it to every model that needs isolation. It handles the filtering and sets the `tenant_id` when a new record is created.
 
-It is a simple solution that prevents 99 percent of data leaks. Here's what that trait looks like in practice:
+It is a simple solution that prevents most accidental data leaks. Here's what that trait looks like in practice:
 
 ```php
 <?php
@@ -148,8 +148,6 @@ I use managed database services like Google Cloud SQL. They handle the heavy lif
 
 For multi-database setups, automated scripts provision a new database whenever a customer signs up. With this "infrastructure as code" approach, adding a tenant is a button click away.
 
-If you want a scalable cloud setup for your own product, you can see my full range of services at [ansezz.com](/).
-
 <BeforeAfter beforeLabel="Manual onboarding" afterLabel="Automated onboarding">
   <div slot="before">A new customer signs up, and someone creates the database, runs migrations and sets up storage by hand.</div>
   <div slot="after">Signup triggers a script that provisions the database, runs tenant migrations and sets the storage prefix. The customer is live in minutes.</div>
@@ -176,7 +174,7 @@ I cache the tenant configuration in the frontend to avoid needless API calls. Th
 If you are starting a new project today, here are the steps I recommend:
 
 1. **Choose your package early.** I prefer `stancl/tenancy` because of its flexibility. It handles subdomain routing and database switching out of the box.
-2. **Add global scopes right away.** Don't wait until you have ten models. Add the trait to your base model and make it a standard part of your workflow.
+2. **Add global scopes right away.** Don't wait until you have ten models. Add the trait to every tenant-scoped model and make it a standard part of your workflow.
 3. **Automate your deployment.** Use Docker from day one so local development matches production. That avoids the "it works on my machine" bugs that plague SaaS launches.
 4. **Plan for data migration.** As your schema changes, you need a way to run migrations across hundreds of databases. Tools like `stancl/tenancy` have built-in commands for this.
 5. **Keep it simple.** Don't build a multi-database setup if you only have five users. Start small and scale as revenue grows.

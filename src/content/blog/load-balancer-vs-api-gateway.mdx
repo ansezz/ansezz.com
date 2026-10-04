@@ -91,7 +91,7 @@ The rule of thumb: reach for a **load balancer** when you need raw distribution 
 
 ## The layered architecture: using them together
 
-In production, it is common to see both components working together. This is not redundant. It is a layered defense and distribution strategy.
+In production, it is common to see both components working together. Each layer does a different job: one spreads the traffic, the other decides what gets through.
 
 ### A typical request flow
 
@@ -127,7 +127,7 @@ If you use Traefik as an API gateway in a Docker Compose file, you can define yo
 ```yaml
 services:
   laravel-api:
-    image: ansezz/laravel-app:latest
+    image: your-org/laravel-app:latest
     labels:
       - "traefik.http.routers.api.rule=Host(`api.example.com`)"
       - "traefik.http.middlewares.api-auth.forwardauth.address=http://auth-service"
