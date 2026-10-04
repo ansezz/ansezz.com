@@ -20,7 +20,7 @@ Replication copies your data everywhere in milliseconds, including the mistake t
 
 You deploy a breaking database migration that drops a critical column. Your production database replicates in real time to three nodes across two regions.
 
-Within milliseconds, that destructive change reaches every one of your "safety" copies. You have zero downtime, but you have no data left.
+Within milliseconds, that destructive change reaches every one of your "safety" copies. You have zero downtime, and that column is gone from every copy.
 
 <PullQuote>This is the moment you realize that replication is not a backup.</PullQuote>
 
@@ -51,7 +51,7 @@ If a bug corrupts your inventory levels at 2:00 PM, a backup from 1:00 PM is you
 | **Recovery Speed** | Seconds to Minutes             | Minutes to Hours                  |
 
 <TryThis>
-Write down two numbers for your main database: how long you can be down (RTO) and how much data you can lose (how old your newest backup is allowed to be). Replication covers the first. Only backups cover the second.
+Write down two numbers for your main database: how long you can be down (RTO) and how much data you can lose to a bad write (RPO: how old your newest restorable backup can be). Replication covers the first. Only backups cover the second.
 </TryThis>
 
 ## Why replication faithfully mirrors your mistakes
