@@ -167,7 +167,7 @@ When an alert fires in your monitoring tool, it should link straight to the logs
 
 This is often done with "Correlation IDs." When a request enters your system, you give it a unique ID.
 
-That ID is attached to every metric collected and every log entry written during the request. You can then jump from a metric spike straight to the events that caused it.
+That ID is attached to every log entry and trace written during the request. When a metric spikes, you filter the logs for that time window and follow the IDs to the requests that caused it.
 
 ### Monitor your logs
 
@@ -178,7 +178,7 @@ If "Database connection lost" shows up more than five times in a minute, turn th
 <Figure
   src="/blog/logging-vs-monitoring/inline-2.webp"
   alt="Comic panel of a detective robot linking photos on a corkboard with red string while an alarmed robot rings a bell over a spiking chart"
-  caption="Correlation IDs connect a metric spike to the exact log lines behind it."
+  caption="Correlation IDs tie every log line to the request that wrote it."
 />
 
 <TryThis>

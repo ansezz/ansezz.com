@@ -38,7 +38,7 @@ A monolithic architecture is a unified software model where all components are i
 
 In Laravel, your routes, controllers, models and background jobs live in one repository. It is a single deployable unit: when you push code, the whole application is built and shipped to your server or container.
 
-### Not legacy, just simple
+### Why simple wins
 
 Monoliths are often unfairly called "legacy." In reality, they offer big advantages for rapid development.
 
@@ -60,7 +60,7 @@ They are often containerized with Docker and managed by orchestrators like Kuber
 
 The main drivers are scalability and team autonomy. When your team grows beyond 15 or 20 developers, a monolith can become a bottleneck.
 
-Microservices let different squads own parts of the system. One team updates the billing service in Go while another updates the Shopify sync engine in PHP, and a bug in one module can't take down the whole application.
+Microservices let different squads own parts of the system. One team updates the billing service in Go while another updates the Shopify sync engine in PHP, and a bug in one service is less likely to take down the whole application.
 
 ### When to consider microservices
 

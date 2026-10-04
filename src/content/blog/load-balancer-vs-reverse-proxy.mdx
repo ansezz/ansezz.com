@@ -150,7 +150,7 @@ A reverse proxy like Nginx or Traefik is standard practice because it keeps your
 
 ### Blue-green deployments
 
-Combining a load balancer and a reverse proxy lets you run blue-green deployments. You spin up a new version, test it, then tell the load balancer to slowly shift traffic from the old version to the new one.
+Combining a load balancer and a reverse proxy lets you run blue-green deployments. You spin up a new version, test it, then switch the load balancer from the old version to the new one.
 
 If something breaks, you flip the switch back. You need both components working together to get this level of control.
 

@@ -36,7 +36,7 @@ Do it wrong and you end up with a distributed monolith. You get all the complexi
 
 ### Pragmatic scaling
 
-A "big bang" rewrite won't fix it. Pragmatic scaling will. I use the **strangler fig pattern** to move from monoliths to microservices without losing my mind or my job.
+I skip the "big bang" rewrite and use the **strangler fig pattern** to move from monoliths to microservices without losing my mind or my job.
 
 If you are still deciding whether to split at all, start with [monolith vs microservices](/blog/monolith-vs-microservices/). This post assumes you have made that call and want the migration playbook.
 
@@ -44,11 +44,9 @@ If you are still deciding whether to split at all, start with [monolith vs micro
 
 When a monolith gets too heavy, the first reaction is to scrap it. I have seen companies spend two years on a rewrite only to ship a product with half the features of the original.
 
-The business dies while the engineers play with new toys.
-
 ### Coupling is the enemy
 
-The monolith is not your enemy. It is a phase. The real problem is coupling.
+The monolith is a phase. The real problem is coupling.
 
 When every part of your app knows too much about every other part, you cannot move. If you jump straight into microservices, you will likely port those dependencies into a network layer. Instead of a function call failing, you get a 500 error across a network socket.
 
@@ -185,6 +183,6 @@ If you are hitting walls every day and your developers are afraid to touch the c
 - **Only split when the monolith starts to hurt** your productivity.
 </Takeaway>
 
-Migration is a marathon, not a sprint. I have spent months on a single extraction to get it right, because the goal is a system that grows with your business, not a count of services. If you're planning that first extraction, [here's how I help teams move from a monolith to services without a rewrite](/services/), or [tell me about your migration](/contact/).
+Migration takes time. I have spent months on a single extraction to get it right, because the goal is a system that grows with your business, not a count of services. If you're planning that first extraction, [here's how I help teams move from a monolith to services without a rewrite](/services/), or [tell me about your migration](/contact/).
 
 Have you ever tried a "big bang" rewrite only to regret it six months later?

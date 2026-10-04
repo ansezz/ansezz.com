@@ -32,13 +32,13 @@ Without a shared way to pass context, the model often hallucinates because it la
 
 The **Model Context Protocol** (MCP) changes this. It is an open standard created by Anthropic and donated in December 2025 to the Agentic AI Foundation, a Linux Foundation fund co-founded by Anthropic, Block and OpenAI.
 
-It lets me build agents that connect to any data source through one shared language. If you want the bigger picture, I broke down [API vs MCP](/blog/api-vs-mcp/) separately. MCP is the missing link in the agentic workflow.
+It lets me build agents that connect to any data source through one shared language. If you want the bigger picture, I broke down [API vs MCP](/blog/api-vs-mcp/) separately.
 
 ## Why MCP matters for developers
 
 A recurring hurdle in custom web applications has always been data silos. When I work on [complex technical challenges](/work/), the goal is usually to make data actionable.
 
-Traditional tool use makes the developer define every schema and function call for the model by hand. MCP flips this.
+Traditional tool use means wiring every schema and function call into each app by hand. With MCP, you define them once in a server, and any client can discover them.
 
 ### A clear boundary
 
