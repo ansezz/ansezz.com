@@ -169,6 +169,30 @@ export const PAGE_OG: PageOg[] = [
     title: "How fast can your Shopify sync run?",
   },
   {
+    slug: "tool-postgres-connection-calculator",
+    path: "/tools/postgres-connection-calculator/",
+    label: "Free tool",
+    title: "Will your Laravel app run out of Postgres connections?",
+  },
+  {
+    slug: "tool-shopify-api-versions",
+    path: "/tools/shopify-api-versions/",
+    label: "Free tool",
+    title: "How long is your Shopify API version supported?",
+  },
+  {
+    slug: "tool-php-unserialize",
+    path: "/tools/php-unserialize/",
+    label: "Free tool",
+    title: "Read PHP serialized data without running it.",
+  },
+  {
+    slug: "tool-self-hosting-cost-calculator",
+    path: "/tools/self-hosting-cost-calculator/",
+    label: "Free tool",
+    title: "Coolify on a VPS or a managed platform?",
+  },
+  {
     slug: "tool-laravel-encrypt-decrypt",
     path: "/tools/laravel-encrypt-decrypt/",
     label: "Free tool",

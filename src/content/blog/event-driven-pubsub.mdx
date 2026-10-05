@@ -118,7 +118,7 @@ A DLQ is another topic where Google Pub/Sub sends messages that failed to be ack
 
 I always recommend a DLQ for every important subscription. It acts as a safety net.
 
-You can build a small dashboard or script to inspect the failed messages, fix the underlying issue and replay them. That prevents data loss and keeps your system moving.
+You can build a small dashboard or script to inspect the failed messages, fix the underlying issue and replay them. For Laravel jobs, my [PHP unserialize tool](/tools/php-unserialize/) turns a failed payload back into readable data. That prevents data loss and keeps your system moving.
 
 <Figure
   src="/blog/event-driven-pubsub/inline-2.webp"

@@ -1,0 +1,638 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import ShareLink from "@/components/tools/ShareLink.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+import { pageOgPath } from "@/lib/og-pages";
+import {
+  COOLIFY,
+  MANAGED,
+  PRICES_VERIFIED_LABEL,
+  VERCEL,
+  VPS_PLANS,
+  type Source,
+} from "@/data/hosting-prices";
+import { managedDefaults, tierLabels, type Workload } from "@/lib/hosting-cost";
+
+const TOOL_PATH = "/tools/self-hosting-cost-calculator/";
+const TOOL_NAME = "Self-Hosting Cost Calculator";
+const tool = getTool(TOOL_PATH);
+const P = "self-hosting-cost-calculator-";
+
+const W: Workload = {
+  apps: 1,
+  appRamGb: 1,
+  workers: 1,
+  workerRamGb: 0.5,
+  databases: 1,
+  dbRamGb: 2,
+  dbStorageGb: 20,
+  redis: 1,
+  redisRamGb: 0.25,
+  egressGb: 200,
+  cpuPerService: 0.5,
+};
+const plan = VPS_PLANS[0];
+const platform = MANAGED[0];
+const m = managedDefaults(platform, W);
+
+const DESCRIPTION =
+  "Coolify on a VPS versus Render, Railway or Heroku: monthly cost for your apps, workers, Postgres and Redis, with your ops hours priced in. Prices verified and editable.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const faq = [
+  {
+    q: "Is self-hosting with Coolify cheaper than Render, Railway or Heroku?",
+    a: "On the server bill, almost always: a VPS gives you far more RAM per dollar than a managed service. The total is closer once you count your own time. Patching, backups, restores, monitoring and the night something breaks are now your job. Put an honest number of hours into the ops line and see where you land.",
+  },
+  {
+    q: "How many ops hours a month should I count?",
+    a: "For one small app on one server, 2 to 4 hours a month is a fair start: OS and Coolify updates, checking backups, a restore test now and then. Add more for each extra server, for a database you care about, and for incidents. Managed platforms are not zero either, so count an hour or so for upgrades and config.",
+  },
+  {
+    q: "What does Coolify cost?",
+    a: `Self-hosted Coolify is free and open source. It needs at least 2 CPU cores, 2 GB of RAM and 10 GB of disk on the server it runs on, which the calculator adds to your RAM. Coolify Cloud runs the dashboard for you for $${COOLIFY.cloudBase} a month with ${COOLIFY.cloudIncludedServers} servers, plus $${COOLIFY.cloudPerExtraServer} per extra server, and your apps still run on your own servers.`,
+  },
+  {
+    q: "What do I give up when I leave a managed platform?",
+    a: "Mostly the things you do not see: managed database backups and restores, a provider on call, easy scaling, and redundancy. One VPS is one point of failure. To get close you need off-site backups, a tested restore, monitoring and often a second server, and the calculator has an extras line for that.",
+  },
+  {
+    q: "Why is Vercel not in the comparison?",
+    a: `Vercel runs frontends and serverless functions, but not long-running queue workers or a database of its own, so it does not map onto the same workload. Its Pro plan is $${VERCEL.proSeat} per developer seat a month with $${VERCEL.proCredit} of usage included. For a Laravel or Node app with workers, Render, Railway and Heroku are the closer match.`,
+  },
+  {
+    q: "Where do the prices come from?",
+    a: `From each provider's public pricing page, checked on ${PRICES_VERIFIED_LABEL}, in USD per month without VAT. They are all in one data file with links below. Prices change and differ by region, so every number on this page is editable, and changing a plan only refills the fields it owns.`,
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: TOOL_NAME,
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  browserRequirements: "Requires JavaScript",
+  inLanguage: "en",
+  dateModified: tool.updated,
+  screenshot: new URL(pageOgPath(TOOL_PATH) ?? "/og.png", SITE.URL).href,
+  featureList: [
+    "Coolify on Hetzner or DigitalOcean versus Render, Railway and Heroku",
+    "Apps, workers, Postgres, Redis, storage and bandwidth",
+    "Ops hours times your hourly rate",
+    "Every price editable, with sources and a verified date",
+  ],
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const inputClass =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono font-bold focus:outline-none";
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const smallLabel = "mb-1 block text-xs font-bold";
+const hintClass = "mt-1 text-xs leading-snug opacity-80";
+const radioClass =
+  "border-ink bg-paper shadow-neo-xs inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-[4px] border-[2px] px-3 font-bold";
+const rowClass = "flex flex-wrap items-baseline justify-between gap-x-3";
+
+type F = { id: string; label: string; value: number; step?: string };
+const workloadFields: F[] = [
+  { id: "apps", label: "Web apps", value: W.apps },
+  { id: "appRamGb", label: "RAM each (GB)", value: W.appRamGb, step: "0.25" },
+  { id: "workers", label: "Workers", value: W.workers },
+  {
+    id: "workerRamGb",
+    label: "RAM each (GB)",
+    value: W.workerRamGb,
+    step: "0.25",
+  },
+  { id: "databases", label: "Postgres", value: W.databases },
+  { id: "dbRamGb", label: "RAM each (GB)", value: W.dbRamGb, step: "0.25" },
+  { id: "redis", label: "Redis", value: W.redis },
+  {
+    id: "redisRamGb",
+    label: "RAM each (GB)",
+    value: W.redisRamGb,
+    step: "0.25",
+  },
+  { id: "dbStorageGb", label: "DB storage (GB)", value: W.dbStorageGb },
+  { id: "egressGb", label: "Traffic out (GB/mo)", value: W.egressGb },
+  {
+    id: "cpuPerService",
+    label: "vCPU per service",
+    value: W.cpuPerService,
+    step: "0.1",
+  },
+];
+const vpsFields: F[] = [
+  { id: "serverPrice", label: "Server $/mo", value: plan.price, step: "0.01" },
+  { id: "serverRamGb", label: "Server RAM (GB)", value: plan.ramGb },
+  { id: "serversOverride", label: "Servers (0 = auto)", value: 0 },
+  { id: "usablePct", label: "RAM you plan to use %", value: 80 },
+  { id: "ipv4", label: "IPv4 $/mo each", value: plan.ipv4, step: "0.01" },
+  { id: "backupPct", label: "Backups % of price", value: plan.backupPct },
+  {
+    id: "includedGbPerServer",
+    label: "Traffic included (GB)",
+    value: plan.includedGb,
+  },
+  {
+    id: "overagePerGb",
+    label: "Extra traffic $/GB",
+    value: plan.overagePerGb,
+    step: "0.0001",
+  },
+  {
+    id: "extras",
+    label: "Off-site backups, extras $/mo",
+    value: 0,
+    step: "0.01",
+  },
+];
+const coolifyFields: F[] = [
+  {
+    id: "coolifyRamGb",
+    label: "Coolify RAM (GB)",
+    value: COOLIFY.selfHostedRamGb,
+    step: "0.5",
+  },
+  {
+    id: "cloudBase",
+    label: "Cloud base $/mo",
+    value: COOLIFY.cloudBase,
+    step: "0.01",
+  },
+  {
+    id: "cloudIncludedServers",
+    label: "Servers included",
+    value: COOLIFY.cloudIncludedServers,
+  },
+  {
+    id: "cloudPerExtraServer",
+    label: "$ per extra server",
+    value: COOLIFY.cloudPerExtraServer,
+    step: "0.01",
+  },
+];
+const managedFields: F[] = [
+  {
+    id: "platformFee",
+    label: "Plan fee $/mo",
+    value: m.platformFee,
+    step: "0.01",
+  },
+  {
+    id: "includedCredit",
+    label: "Usage included $",
+    value: m.includedCredit,
+    step: "0.01",
+  },
+  {
+    id: "appPrice",
+    label: "Web app $/mo each",
+    value: m.appPrice,
+    step: "0.01",
+  },
+  {
+    id: "workerPrice",
+    label: "Worker $/mo each",
+    value: m.workerPrice,
+    step: "0.01",
+  },
+  {
+    id: "dbPrice",
+    label: "Postgres $/mo each",
+    value: m.dbPrice,
+    step: "0.01",
+  },
+  {
+    id: "redisPrice",
+    label: "Redis $/mo each",
+    value: m.redisPrice,
+    step: "0.01",
+  },
+  {
+    id: "dbStoragePerGb",
+    label: "DB storage $/GB",
+    value: m.dbStoragePerGb,
+    step: "0.01",
+  },
+  { id: "includedGb", label: "Traffic included (GB)", value: m.includedGb },
+  {
+    id: "m-overagePerGb",
+    label: "Extra traffic $/GB",
+    value: m.overagePerGb,
+    step: "0.001",
+  },
+];
+const opsFields: F[] = [
+  { id: "selfHours", label: "Self-hosted ops hours/mo", value: 4, step: "0.5" },
+  { id: "managedHours", label: "Managed ops hours/mo", value: 1, step: "0.5" },
+  { id: "rate", label: "Your rate $/hour", value: 50 },
+];
+
+// Every source, once, for the list under the tool.
+const sources: Source[] = [];
+const seen = new Set<string>();
+for (const s of [
+  ...VPS_PLANS.map((p) => p.source),
+  {
+    label: "Hetzner primary IPv4 pricing",
+    url: "https://docs.hetzner.com/cloud/servers/primary-ips/overview/",
+  },
+  {
+    label: "Hetzner traffic",
+    url: "https://docs.hetzner.com/robot/general/traffic/",
+  },
+  {
+    label: "DigitalOcean bandwidth billing",
+    url: "https://docs.digitalocean.com/platform/billing/bandwidth/",
+  },
+  ...COOLIFY.sources,
+  ...MANAGED.flatMap((p) => p.sources),
+  VERCEL.source,
+]) {
+  if (seen.has(s.url)) continue;
+  seen.add(s.url);
+  sources.push(s);
+}
+
+const relatedLinks = [
+  {
+    href: "/tools/capacity-calculator/",
+    note: "Size the servers first: requests per second to workers and RAM.",
+  },
+  {
+    href: "/tools/postgres-connection-calculator/",
+    note: "Self-hosting Postgres? Check max_connections and PgBouncer before launch.",
+  },
+  {
+    href: "/blog/coolify-self-hosted-saas/",
+    label: "Self-hosting a SaaS with Coolify",
+    note: "What the setup looks like once the numbers say yes.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/coolify-2026-self-hosted-paas/",
+    label: "Coolify in 2026",
+    note: "Where Coolify fits next to managed platforms today.",
+    kind: "Post" as const,
+  },
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Self-Hosting Cost Calculator."
+  intro="Coolify on a VPS or a managed platform? Compare the monthly bill for your apps, workers, Postgres and Redis, then add the hours you will spend running it."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Prices verified {PRICES_VERIFIED_LABEL}
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Public list prices in USD per month, before VAT. Every number below is
+        editable, because prices change and regions differ.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id={`${P}root`}>
+    <div class="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_340px]">
+      <div class="min-w-0 space-y-6">
+        <NeoCard tone="paper" shadow="md" class="min-w-0">
+          <p class={labelClass}>1. Your workload</p>
+          <div class="grid grid-cols-2 gap-4">
+            {
+              workloadFields.map((f) => (
+                <div class="min-w-0">
+                  <label for={`${P}${f.id}`} class={smallLabel}>
+                    {f.label}
+                  </label>
+                  <input
+                    id={`${P}${f.id}`}
+                    type="number"
+                    min="0"
+                    step={f.step ?? "1"}
+                    inputmode="decimal"
+                    value={f.value}
+                    class={inputClass}
+                  />
+                </div>
+              ))
+            }
+          </div>
+          <p class={hintClass}>
+            vCPU per service only matters for usage-billed platforms like
+            Railway.
+          </p>
+        </NeoCard>
+
+        <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-4">
+          <p class={labelClass + " mb-0"}>2. Coolify on a VPS</p>
+          <div>
+            <label for={`${P}plan`} class={smallLabel}>Server plan</label>
+            <select id={`${P}plan`} class={inputClass}>
+              {
+                VPS_PLANS.map((p, i) => (
+                  <option value={p.id} selected={i === 0}>
+                    {p.label}, ${p.price}
+                  </option>
+                ))
+              }
+              <option value="custom">Custom</option>
+            </select>
+            <p id={`${P}plan-note`} class={hintClass}>{plan.note}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            {
+              vpsFields.map((f) => (
+                <div class="min-w-0">
+                  <label for={`${P}${f.id}`} class={smallLabel}>
+                    {f.label}
+                  </label>
+                  <input
+                    id={`${P}${f.id}`}
+                    type="number"
+                    min="0"
+                    step={f.step ?? "1"}
+                    inputmode="decimal"
+                    value={f.value}
+                    class={inputClass}
+                  />
+                </div>
+              ))
+            }
+          </div>
+          <fieldset>
+            <legend class={smallLabel}>Coolify</legend>
+            <div class="flex flex-wrap gap-3">
+              <label class={radioClass}>
+                <input
+                  type="radio"
+                  id={`${P}coolify-self`}
+                  name={`${P}coolify`}
+                  value="self"
+                  checked
+                />
+                Self-hosted, free
+              </label>
+              <label class={radioClass}>
+                <input
+                  type="radio"
+                  id={`${P}coolify-cloud`}
+                  name={`${P}coolify`}
+                  value="cloud"
+                />
+                Coolify Cloud
+              </label>
+            </div>
+          </fieldset>
+          <div class="grid grid-cols-2 gap-4">
+            {
+              coolifyFields.map((f) => (
+                <div class="min-w-0">
+                  <label for={`${P}${f.id}`} class={smallLabel}>
+                    {f.label}
+                  </label>
+                  <input
+                    id={`${P}${f.id}`}
+                    type="number"
+                    min="0"
+                    step={f.step ?? "1"}
+                    inputmode="decimal"
+                    value={f.value}
+                    class={inputClass}
+                  />
+                </div>
+              ))
+            }
+          </div>
+          <p class={hintClass}>
+            Self-hosted Coolify runs on your server and needs about 2 GB of RAM.
+            Coolify Cloud runs the dashboard for you, so that RAM is free.
+          </p>
+        </NeoCard>
+
+        <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-4">
+          <p class={labelClass + " mb-0"}>3. Managed platform</p>
+          <div>
+            <label for={`${P}platform`} class={smallLabel}>Platform</label>
+            <select id={`${P}platform`} class={inputClass}>
+              {
+                MANAGED.map((p, i) => (
+                  <option value={p.id} selected={i === 0}>
+                    {p.label}
+                  </option>
+                ))
+              }
+            </select>
+            <p id={`${P}tiers`} class={hintClass}>
+              {tierLabels(platform, W).join(" · ")}
+            </p>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            {
+              managedFields.map((f) => (
+                <div class="min-w-0">
+                  <label for={`${P}${f.id}`} class={smallLabel}>
+                    {f.label}
+                  </label>
+                  <input
+                    id={`${P}${f.id}`}
+                    type="number"
+                    min="0"
+                    step={f.step ?? "1"}
+                    inputmode="decimal"
+                    value={f.value}
+                    class={inputClass}
+                  />
+                </div>
+              ))
+            }
+          </div>
+          <p class={hintClass}>
+            Changing the platform or a RAM size refills these prices from the
+            price list. Edit them after that.
+          </p>
+        </NeoCard>
+
+        <NeoCard tone="paper" shadow="md" class="min-w-0">
+          <p class={labelClass}>4. Your time</p>
+          <div class="grid gap-4 sm:grid-cols-3">
+            {
+              opsFields.map((f) => (
+                <div class="min-w-0">
+                  <label for={`${P}${f.id}`} class={smallLabel}>
+                    {f.label}
+                  </label>
+                  <input
+                    id={`${P}${f.id}`}
+                    type="number"
+                    min="0"
+                    step={f.step ?? "1"}
+                    inputmode="decimal"
+                    value={f.value}
+                    class={inputClass}
+                  />
+                </div>
+              ))
+            }
+          </div>
+          <p class={hintClass}>
+            Updates, backups, restore tests, monitoring and incidents. Be
+            honest: this line decides the result more often than the servers do.
+          </p>
+        </NeoCard>
+      </div>
+
+      <NeoCard
+        tone="cyan"
+        shadow="md"
+        class="min-w-0 space-y-4 md:sticky md:top-24"
+      >
+        <div aria-live="polite">
+          <p class="mono text-[11px] font-bold tracking-widest uppercase">
+            Per month, with your time
+          </p>
+          <dl class="mt-2 space-y-2">
+            <div class={rowClass}>
+              <dt class="font-bold">Coolify + VPS</dt>
+              <dd id={`${P}self-total`} class="display text-2xl">$0</dd>
+            </div>
+            <div class={rowClass}>
+              <dt class="font-bold" id={`${P}managed-name`}>Managed</dt>
+              <dd id={`${P}managed-total`} class="display text-2xl">$0</dd>
+            </div>
+          </dl>
+          <p id={`${P}verdict`} class="mt-2 text-sm leading-snug font-bold"></p>
+        </div>
+        <div class="border-ink border-t-[2px] pt-3">
+          <p class="mono mb-1 text-[11px] font-bold tracking-widest uppercase">
+            Coolify + VPS
+          </p>
+          <p id={`${P}servers`} class="text-xs opacity-80"></p>
+          <dl id={`${P}self-lines`} class="mt-1 space-y-1 text-sm"></dl>
+        </div>
+        <div class="border-ink border-t-[2px] pt-3">
+          <p class="mono mb-1 text-[11px] font-bold tracking-widest uppercase">
+            Managed
+          </p>
+          <dl id={`${P}managed-lines`} class="mt-1 space-y-1 text-sm"></dl>
+        </div>
+        <ul id={`${P}notes`} class="space-y-2 text-xs leading-snug"></ul>
+      </NeoCard>
+    </div>
+    <div class="mt-6"><ShareLink /></div>
+    <div class="mt-8 max-w-3xl">
+      <h2 class="heading mb-2 text-xl uppercase">
+        Prices verified {PRICES_VERIFIED_LABEL}
+      </h2>
+      <p class="mb-2 text-sm">
+        USD per month, before VAT and sales tax. Hetzner prices are for Germany
+        and Finland and exclude the IPv4 address, which is a separate line.
+      </p>
+      <ul class="space-y-1 text-sm">
+        {
+          sources.map((s) => (
+            <li class="break-words">
+              <a class="font-bold underline" href={s.url} rel="noopener">
+                {s.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">How the comparison works</h2>
+      <p>
+        Both sides run the same workload. On the self-hosted side the calculator
+        adds up the RAM your services need, plus about 2 GB for Coolify itself,
+        and fits it onto as many servers of your plan as it takes at the RAM
+        share you choose. Then it adds the IPv4 address, server backups, traffic
+        over the included amount and any extras such as off-site backup storage.
+      </p>
+      <p>
+        On the managed side, each web app, worker, database and Redis instance
+        gets the first plan on the price list with at least the RAM you asked
+        for. Railway bills by usage instead, so it uses RAM and vCPU prices.
+        Plan fees and included usage credit are applied, then storage and
+        bandwidth.
+      </p>
+      <p>
+        Last comes your time. Hours a month times your rate goes on both sides,
+        because managed platforms still need some care. The break-even line
+        tells you how many self-hosting hours a month you can spend before the
+        managed platform would have been the cheaper choice.
+      </p>
+      <h2 class="display pt-4 text-2xl uppercase">
+        What the numbers leave out
+      </h2>
+      <p>
+        A single VPS is a single point of failure. Managed databases come with
+        automated backups and someone else on call. Matching that yourself means
+        off-site backups, restore tests, monitoring, and often a second server.
+        None of that is hard with Coolify, but it is real work, so put it in the
+        extras and the hours. On the other side, managed prices climb fast with
+        RAM, so a growing app often outgrows the tiers before it outgrows a VPS.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/self-hosting-cost-calculator";
+</script>

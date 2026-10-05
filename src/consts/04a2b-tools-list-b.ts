@@ -102,6 +102,37 @@ export const TOOL_LIST_B: ToolEntry[] = [
     tags: ["infrastructure", "scaling", "performance"],
   },
 
+  {
+    title: "Postgres Connection Pool Calculator",
+    blurb:
+      "Count the Postgres connections your PHP-FPM or Octane servers, Horizon workers and scheduler can open, compare them with max_connections and get PgBouncer settings.",
+    href: "/tools/postgres-connection-calculator/",
+    seoTitle: "Postgres Connection Pool Calculator: PgBouncer",
+    updated: "2026-10-05",
+    verifiedLabel: "October 5, 2026 (Postgres and PgBouncer defaults)",
+    services: ["audit", "mvp"],
+    icon: "lucide:database-zap",
+    tone: "cyan",
+    status: "live",
+    group: "infra",
+    tags: ["databases", "laravel", "scaling"],
+  },
+  {
+    title: "Self-Hosting Cost Calculator",
+    blurb:
+      "Coolify on a VPS versus Render, Railway or Heroku for the same apps, workers, Postgres and Redis. Every price is editable, and your ops hours count too.",
+    href: "/tools/self-hosting-cost-calculator/",
+    seoTitle: "Self-Hosting Cost Calculator: Coolify vs PaaS",
+    updated: "2026-10-05",
+    verifiedLabel: "October 5, 2026 (public prices)",
+    services: ["audit"],
+    icon: "lucide:server-cog",
+    tone: "yellow",
+    status: "live",
+    group: "infra",
+    tags: ["coolify", "self-hosting", "docker"],
+  },
+
   // ── Shopify ──
   {
     title: "Shopify Webhook HMAC Verifier",
@@ -146,6 +177,22 @@ export const TOOL_LIST_B: ToolEntry[] = [
     status: "live",
     group: "shopify",
     tags: ["shopify", "performance", "scaling"],
+  },
+
+  {
+    title: "Shopify API Version Calendar",
+    blurb:
+      "Every Shopify API version with its release date, end of support and fall-forward date, computed from Shopify's quarterly rule. Check how many months your version has left.",
+    href: "/tools/shopify-api-versions/",
+    seoTitle: "Shopify API Version Calendar and Support Dates",
+    updated: "2026-10-05",
+    verifiedLabel: "October 5, 2026 (versioning rule)",
+    services: ["shopify"],
+    icon: "lucide:calendar-clock",
+    tone: "green",
+    status: "live",
+    group: "shopify",
+    tags: ["shopify", "api-design", "agentic-commerce"],
   },
 
   // ── Reference ──

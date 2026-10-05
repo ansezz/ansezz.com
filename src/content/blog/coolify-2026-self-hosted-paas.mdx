@@ -201,7 +201,7 @@ I made this exact switch and wrote up the numbers in [why I'm ditching expensive
 
 If you're considering the move, the order matters more than the tooling:
 
-- **Price it honestly.** Add up your current managed spend including bandwidth and build minutes, then compare against a VPS with 2x the resources you think you need. If the gap isn't at least 3x, the operational burden probably isn't worth it.
+- **Price it honestly.** Add up your current managed spend including bandwidth and build minutes, then compare against a VPS with 2x the resources you think you need. If the gap isn't at least 3x, the operational burden probably isn't worth it. My [self-hosting cost calculator](/tools/self-hosting-cost-calculator/) does that sum and prices in your ops hours.
 - **Start with something you can afford to break.** Staging environments, internal dashboards, side projects. Learn the failure modes on workloads where the blast radius is you.
 - **Get containerized first.** If your app already builds from a Dockerfile, migration is an afternoon. If it doesn't, fix that _before_ you touch Coolify; you'll be debugging one thing instead of two.
 - **Wire up S3 backups on day one.** Before the first production workload lands. A single server with no offsite backup is a countdown, not an architecture.

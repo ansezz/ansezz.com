@@ -93,7 +93,7 @@ Your choice depends on your current stage and technical needs. Here is how the t
 
 When you move to a horizontal model, the database becomes the main bottleneck.
 
-Scaling the application layer is fairly easy because app servers are usually stateless. Scaling a database is harder because data must stay consistent across multiple nodes.
+Scaling the application layer is fairly easy because app servers are usually stateless. Scaling a database is harder because data must stay consistent across multiple nodes. Every new app server also opens its own database connections, and my [Postgres connection pool calculator](/tools/postgres-connection-calculator/) shows when you will hit `max_connections`.
 
 ### Start with read replicas
 
