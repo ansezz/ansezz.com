@@ -168,7 +168,7 @@ Once Octane is running, a few technical levers can squeeze out more performance.
 4. **Graceful reloads:** when you deploy new code, run `php artisan octane:reload`. It gracefully restarts the workers without dropping current connections, which you need for zero-downtime deployments.
 
 <TryThis>
-Add `php artisan octane:reload` as the last step of your deploy script, and check that `workers x app servers` stays below your database's max connections.
+Add `php artisan octane:reload` as the last step of your deploy script, and check that `workers x app servers` stays below your database's max connections. My [Postgres connection pool calculator](/tools/postgres-connection-calculator/) does that sum for you and suggests PgBouncer settings.
 </TryThis>
 
 <Takeaway>

@@ -1,0 +1,589 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import ShareLink from "@/components/tools/ShareLink.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+import { pageOgPath } from "@/lib/og-pages";
+import { PG_DEFAULTS } from "@/lib/pg-connections";
+
+const TOOL_PATH = "/tools/postgres-connection-calculator/";
+const TOOL_NAME = "Postgres Connection Pool Calculator";
+const tool = getTool(TOOL_PATH);
+const VERIFIED = "October 5, 2026";
+const P = "postgres-connection-calculator-";
+
+const DESCRIPTION =
+  "Postgres max_connections and PgBouncer pool size calculator for Laravel: PHP-FPM, Octane, Horizon and scheduler connections, default_pool_size and a reserve.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const faq = [
+  {
+    q: "How many connections does a Laravel app open to Postgres?",
+    a: "One per PHP process that talks to the database, per database connection it uses. A PHP-FPM child opens it while it serves a request and closes it at the end, so the peak is servers times pm.max_children. Octane workers, Horizon workers and queue:work processes are long running and keep their connection open the whole time. A read/write split or a second connection in config/database.php doubles the count.",
+  },
+  {
+    q: "What should max_connections be?",
+    a: "The Postgres default is 100, with 3 slots kept for superusers. Raising it works up to a point, but every connection is its own backend process and Postgres sizes some shared memory from max_connections, so idle connections still cost memory. If your peak is far above a few hundred, put PgBouncer in front instead of raising the limit again.",
+  },
+  {
+    q: "What is a good PgBouncer default_pool_size?",
+    a: "Start near twice the CPU cores of the database server. The PostgreSQL wiki suggests about (cores × 2) + effective spindles active connections for throughput, and spindles count as zero when your data fits in memory. PgBouncer's own default is 20. Add a small reserve_pool_size for bursts, then load test and watch SHOW POOLS for clients waiting.",
+  },
+  {
+    q: "Do prepared statements work with PgBouncer transaction mode?",
+    a: "With PgBouncer 1.21 or newer and max_prepared_statements above 0, yes. It tracks the protocol level prepared statements that PDO uses, and 1.24 turned this on by default with a value of 200. On older versions, set PDO::ATTR_EMULATE_PREPARES to true in the options of your pgsql connection, or you will see errors like prepared statement does not exist.",
+  },
+  {
+    q: "What breaks in transaction pooling mode?",
+    a: "Anything that expects the same session across transactions: SET without LOCAL (for example a per-tenant search_path), session advisory locks, LISTEN and NOTIFY, temporary tables and WITH HOLD cursors. Wrap those in a transaction with SET LOCAL, or send that traffic to a separate pool in session mode. Normal Eloquent queries and DB::transaction work fine.",
+  },
+  {
+    q: "Is anything I type sent to a server?",
+    a: "No. The page does the maths in your browser and keeps your numbers in the address bar so you can share the result. There are no secrets in it: only counts and settings.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: TOOL_NAME,
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  browserRequirements: "Requires JavaScript",
+  inLanguage: "en",
+  dateModified: tool.updated,
+  screenshot: new URL(pageOgPath(TOOL_PATH) ?? "/og.png", SITE.URL).href,
+  featureList: [
+    "Connections per role: PHP-FPM, Octane, Horizon, scheduler",
+    "Compare with max_connections and reserved slots",
+    "PgBouncer default_pool_size, reserve and max_client_conn",
+    "pgbouncer.ini and Laravel config snippets",
+  ],
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const inputClass =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono font-bold focus:outline-none";
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const smallLabel = "mb-1 block text-xs font-bold";
+const hintClass = "mt-1 text-xs leading-snug opacity-80";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1 break-words";
+const rowClass = "flex flex-wrap items-baseline justify-between gap-x-3";
+const radioClass =
+  "border-ink bg-paper shadow-neo-xs inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-[4px] border-[2px] px-3 font-bold";
+const preClass =
+  "border-ink bg-bg-alt max-h-96 overflow-auto rounded-[4px] border-[3px] p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap break-all";
+const btnClass =
+  "mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow inline-flex min-h-10 items-center rounded-full border-[2px] px-4 text-[11px] font-bold tracking-widest uppercase";
+
+const num = (
+  id: keyof typeof PG_DEFAULTS,
+  label: string,
+  hint?: string,
+  min = 0,
+) => ({ id, label, hint, min, value: PG_DEFAULTS[id] as number });
+
+const queueFields = [
+  num("queueServers", "Queue servers"),
+  num(
+    "queueProcesses",
+    "Worker processes each",
+    "Horizon maxProcesses, summed over supervisors.",
+  ),
+];
+const otherFields = [
+  num(
+    "schedulerProcesses",
+    "Scheduled commands at once",
+    "Commands that overlap, e.g. runInBackground.",
+  ),
+  num(
+    "connsPerProcess",
+    "DB connections per process",
+    "2 with a read/write split.",
+    1,
+  ),
+  num(
+    "otherClients",
+    "Other clients",
+    "Migrations, psql, backups, monitoring.",
+  ),
+];
+const pgFields = [
+  num("maxConnections", "max_connections", "Postgres default: 100."),
+  num("superuserReserved", "superuser_reserved_connections", "Default: 3."),
+  num("reserved", "reserved_connections", "Postgres 16+, default 0."),
+  num("dbCores", "DB server CPU cores", "Physical cores, not threads.", 1),
+  num("pools", "PgBouncer pools", "One per database and user pair.", 1),
+];
+
+const relatedLinks = [
+  {
+    href: "/tools/capacity-calculator/",
+    note: "Work out how many workers your traffic needs before you count their connections.",
+  },
+  {
+    href: "/tools/self-hosting-cost-calculator/",
+    note: "Price the servers that run Postgres and PgBouncer yourself.",
+  },
+  {
+    href: "/blog/laravel-octane-high-traffic/",
+    label: "Laravel Octane for high traffic",
+    note: "Why long-running workers change your connection count.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/horizontal-vs-vertical-scaling/",
+    label: "Horizontal vs vertical scaling",
+    note: "Every new app server adds connections. Plan for it.",
+    kind: "Post" as const,
+  },
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Postgres Connection Pool Calculator."
+  intro="Count the Postgres connections your Laravel app can open at peak, compare them with max_connections, and get PgBouncer settings that fit."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="cyan" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Defaults checked {VERIFIED}
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Postgres and PgBouncer defaults come from their docs. Pool sizes are
+        rules of thumb, so load test before you rely on them.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id={`${P}root`}>
+    <div class="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_340px]">
+      <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-6">
+        <fieldset class="space-y-3">
+          <legend class={labelClass}>Web</legend>
+          <div class="flex flex-wrap gap-3">
+            <label class={radioClass}>
+              <input
+                type="radio"
+                id={`${P}mode-fpm`}
+                name={`${P}mode`}
+                value="fpm"
+                checked
+              />
+              PHP-FPM
+            </label>
+            <label class={radioClass}>
+              <input
+                type="radio"
+                id={`${P}mode-octane`}
+                name={`${P}mode`}
+                value="octane"
+              />
+              Octane
+            </label>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="min-w-0">
+              <label for={`${P}webServers`} class={smallLabel}
+                >Web servers</label
+              >
+              <input
+                id={`${P}webServers`}
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                value={PG_DEFAULTS.webServers}
+                class={inputClass}
+              />
+            </div>
+            <div class="min-w-0">
+              <label
+                for={`${P}webProcesses`}
+                class={smallLabel}
+                id={`${P}webProcesses-label`}>pm.max_children each</label
+              >
+              <input
+                id={`${P}webProcesses`}
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                value={PG_DEFAULTS.webProcesses}
+                class={inputClass}
+              />
+            </div>
+          </div>
+          <p id={`${P}web-hint`} class={hintClass}>
+            A child holds a connection only while it serves a request.
+          </p>
+        </fieldset>
+
+        <fieldset class="space-y-3">
+          <legend class={labelClass}>Queues</legend>
+          <div class="grid grid-cols-2 gap-4">
+            {
+              queueFields.map((f) => (
+                <div class="min-w-0">
+                  <label for={`${P}${f.id}`} class={smallLabel}>
+                    {f.label}
+                  </label>
+                  <input
+                    id={`${P}${f.id}`}
+                    type="number"
+                    min={f.min}
+                    step="1"
+                    inputmode="numeric"
+                    value={f.value}
+                    class={inputClass}
+                  />
+                  {f.hint && <p class={hintClass}>{f.hint}</p>}
+                </div>
+              ))
+            }
+          </div>
+        </fieldset>
+
+        <fieldset class="space-y-3">
+          <legend class={labelClass}>Scheduler and the rest</legend>
+          <div class="grid gap-4 sm:grid-cols-3">
+            {
+              otherFields.map((f) => (
+                <div class="min-w-0">
+                  <label for={`${P}${f.id}`} class={smallLabel}>
+                    {f.label}
+                  </label>
+                  <input
+                    id={`${P}${f.id}`}
+                    type="number"
+                    min={f.min}
+                    step="1"
+                    inputmode="numeric"
+                    value={f.value}
+                    class={inputClass}
+                  />
+                  {f.hint && <p class={hintClass}>{f.hint}</p>}
+                </div>
+              ))
+            }
+          </div>
+        </fieldset>
+
+        <fieldset class="space-y-3">
+          <legend class={labelClass}>Postgres and PgBouncer</legend>
+          <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {
+              pgFields.map((f) => (
+                <div class="min-w-0">
+                  <label for={`${P}${f.id}`} class={smallLabel + " break-all"}>
+                    {f.label}
+                  </label>
+                  <input
+                    id={`${P}${f.id}`}
+                    type="number"
+                    min={f.min}
+                    step="1"
+                    inputmode="numeric"
+                    value={f.value}
+                    class={inputClass}
+                  />
+                  {f.hint && <p class={hintClass}>{f.hint}</p>}
+                </div>
+              ))
+            }
+          </div>
+        </fieldset>
+      </NeoCard>
+
+      <NeoCard
+        tone="cyan"
+        shadow="md"
+        class="min-w-0 space-y-4 md:sticky md:top-24"
+      >
+        <div>
+          <p class="mono text-[11px] font-bold tracking-widest uppercase">
+            Peak connections / usable slots
+          </p>
+          <p
+            id={`${P}total`}
+            class="display text-4xl leading-none break-words"
+            aria-live="polite"
+          >
+            0 / 0
+          </p>
+          <p id={`${P}verdict`} class="mt-2 text-sm leading-snug font-bold"></p>
+        </div>
+        <dl class="space-y-2 text-sm">
+          <div class={rowClass}>
+            <dt>Slots used</dt><dd id={`${P}load`} class="font-mono font-bold">
+              0%
+            </dd>
+          </div>
+          <div class={rowClass}>
+            <dt>max_connections for direct use</dt><dd
+              id={`${P}needed`}
+              class="font-mono font-bold"
+            >
+              0
+            </dd>
+          </div>
+        </dl>
+        <div class="border-ink border-t-[2px] pt-3">
+          <p class="mono mb-2 text-[11px] font-bold tracking-widest uppercase">
+            With PgBouncer, transaction mode
+          </p>
+          <dl class="space-y-2 text-sm">
+            <div class={rowClass}>
+              <dt>default_pool_size</dt><dd
+                id={`${P}pool`}
+                class="font-mono font-bold"
+              >
+                0
+              </dd>
+            </div>
+            <div class={rowClass}>
+              <dt>reserve_pool_size</dt><dd
+                id={`${P}reserve`}
+                class="font-mono font-bold"
+              >
+                0
+              </dd>
+            </div>
+            <div class={rowClass}>
+              <dt>max_client_conn</dt><dd
+                id={`${P}maxclient`}
+                class="font-mono font-bold"
+              >
+                0
+              </dd>
+            </div>
+            <div class={rowClass}>
+              <dt>Server connections used</dt><dd
+                id={`${P}server`}
+                class="font-mono font-bold"
+              >
+                0
+              </dd>
+            </div>
+          </dl>
+        </div>
+        <ul id={`${P}msgs`} class="space-y-2 text-sm leading-snug"></ul>
+        <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+          Live as you type · runs in your browser
+        </p>
+      </NeoCard>
+    </div>
+
+    <h2 class="heading mt-10 mb-3 text-xl uppercase">Where they come from.</h2>
+    <div class="relative overflow-x-auto">
+      <table
+        class="border-ink bg-paper w-full min-w-[480px] border-[3px] text-sm"
+      >
+        <thead class="bg-bg-alt">
+          <tr>
+            <th class="p-2 text-left">Role</th>
+            <th class="p-2 text-right">Servers</th>
+            <th class="p-2 text-right">Processes</th>
+            <th class="p-2 text-right">Connections</th>
+          </tr>
+        </thead>
+        <tbody id={`${P}rows`}></tbody>
+      </table>
+    </div>
+
+    <div class="mt-8 grid gap-6 md:grid-cols-2">
+      <div class="min-w-0">
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <p class={labelClass + " mb-0"}>pgbouncer.ini</p>
+          <button type="button" class={btnClass} data-copy-target={`${P}ini`}
+            >Copy</button
+          >
+        </div>
+        <pre id={`${P}ini`} class={preClass}></pre>
+      </div>
+      <div class="min-w-0">
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <p class={labelClass + " mb-0"}>config/database.php</p>
+          <button
+            type="button"
+            class={btnClass}
+            data-copy-target={`${P}laravel`}>Copy</button
+          >
+        </div>
+        <pre id={`${P}laravel`} class={preClass}></pre>
+      </div>
+    </div>
+    <div class="mt-6"><ShareLink /></div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">How the calculator counts</h2>
+      <p>
+        Every PHP process that runs a query holds one connection per database
+        connection it uses. The calculator adds them up per role:
+      </p>
+      <ul class="space-y-2">
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Web:</strong> servers × <code class={codeClass}
+              >pm.max_children</code
+            > for PHP-FPM, or servers × Octane workers. FPM children close their connection
+            when the request ends, so this is the peak with every child busy. Octane
+            workers keep theirs open.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Queues:</strong> servers × worker processes. Horizon and
+            <code class={codeClass}>queue:work</code> are long running, so each process
+            keeps a connection.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Scheduler:</strong> scheduled commands that can run at the same
+            time, plus anything else that connects: migrations, a psql session, backups,
+            monitoring.</span
+          >
+        </li>
+        <li class="flex gap-3">
+          <span aria-hidden="true" class="font-bold">▸</span>
+          <span
+            ><strong>Usable slots:</strong>
+            <code class={codeClass}
+              >max_connections - superuser_reserved_connections -
+              reserved_connections</code
+            >. The direct budget adds 20% headroom for deploys, when new workers
+            start before old ones stop.</span
+          >
+        </li>
+      </ul>
+      <p>
+        Worked example: two web servers with <code class={codeClass}
+          >pm.max_children = 20</code
+        >, one Horizon box with 10 processes, two overlapping scheduled commands
+        and 5 other clients come to 40 + 10 + 2 + 5 = 57 connections. With the
+        default 100 and 3 reserved, that is 59% of 97 slots. Add a third web
+        server or switch to Octane with a read/write split and you pass 100.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">
+        PgBouncer in transaction mode
+      </h2>
+      <p>
+        PgBouncer lets hundreds of clients share a small pool of real
+        connections. In <code class={codeClass}>pool_mode = transaction</code> a server
+        connection goes back to the pool when a transaction ends, so a mostly idle
+        FPM child or queue worker no longer holds a Postgres backend. The pool only
+        needs to cover queries running at the same moment, which is why the suggestion
+        is about twice the database's CPU cores, from the PostgreSQL wiki's <code
+          class={codeClass}>(cores × 2) + spindles</code
+        > rule, with a small reserve for bursts.
+      </p>
+      <p>
+        Two things change for Laravel. Prepared statements: PDO prepares on the
+        server, and PgBouncer 1.21 and newer handle that when <code
+          class={codeClass}>max_prepared_statements</code
+        > is above 0 (200 by default since 1.24). On an older PgBouncer, set <code
+          class={codeClass}>PDO::ATTR_EMULATE_PREPARES =&gt; true</code
+        >. Session state: <code class={codeClass}>SET</code> without <code
+          class={codeClass}>LOCAL</code
+        >, advisory locks, <code class={codeClass}>LISTEN</code> and temporary tables
+        do not survive between transactions. Keep those in one transaction, or give
+        them a separate pool in session mode.
+      </p>
+      <p class="text-sm">
+        Sources, checked {VERIFIED}:{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://www.postgresql.org/docs/current/runtime-config-connection.html"
+          rel="noopener">Postgres connection settings</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://www.pgbouncer.org/config.html"
+          rel="noopener">PgBouncer configuration</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://www.pgbouncer.org/changelog.html"
+          rel="noopener">PgBouncer changelog</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://wiki.postgresql.org/wiki/Number_Of_Database_Connections"
+          rel="noopener">PostgreSQL wiki: number of connections</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://laravel.com/docs/12.x/octane#specifying-the-worker-count"
+          rel="noopener">Laravel Octane worker count</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://www.php.net/manual/en/ref.pdo-pgsql.php"
+          rel="noopener">PDO_PGSQL</a
+        >.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/postgres-connection-calculator";
+</script>

@@ -222,4 +222,18 @@ export const TOOL_LIST_A: ToolEntry[] = [
     group: "data",
     tags: ["api-design"],
   },
+  {
+    title: "PHP Unserialize & Laravel Job Decoder",
+    blurb:
+      "Read PHP serialized data as a tree and JSON without running any code. Paste a failed_jobs payload to see the job, its queue and the models it was given.",
+    href: "/tools/php-unserialize/",
+    seoTitle: "PHP Unserialize Online and Laravel Job Decoder",
+    updated: "2026-10-05",
+    services: ["mvp"],
+    icon: "lucide:package-open",
+    tone: "pink",
+    status: "live",
+    group: "data",
+    tags: ["laravel", "messaging", "redis"],
+  },
 ];

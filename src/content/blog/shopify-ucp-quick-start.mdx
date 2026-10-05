@@ -65,7 +65,7 @@ It defines a handshake between a business and an AI agent, covering cart creatio
 
 The core of the handshake is a JSON profile at `/.well-known/ucp`. When an agent reaches your domain, it fetches this file to learn what you support, then negotiates the capabilities you have in common.
 
-The spec requires `version`, `services` and `payment_handlers` inside the `ucp` object, and `capabilities` is optional. Versions are dates; the latest stable release is 2026-08-25.
+The spec requires `version`, `services` and `payment_handlers` inside the `ucp` object, and `capabilities` is optional. Versions are dates; the latest stable release is 2026-08-25. Shopify's own Admin and Storefront APIs use dated versions too, released every quarter, and my [Shopify API version calendar](/tools/shopify-api-versions/) shows which ones are still supported.
 
 Here is a trimmed version of the profile a live Shopify store serves today:
 

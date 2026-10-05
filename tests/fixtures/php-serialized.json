@@ -1,0 +1,112 @@
+[
+    {
+        "name": "multibyte strings",
+        "b64": "YTo0OntzOjQ6Im5hbWUiO3M6MTk6IkNhZsOpIOKYlSDml6XmnKzoqp4iO3M6NToiZW1vamkiO3M6ODoi8J+RjfCfj70iO3M6MjoiYXIiO3M6MTA6ItmF2LHYrdio2KciO3M6NToiZW1wdHkiO3M6MDoiIjt9",
+        "json": {
+            "name": "Café ☕ 日本語",
+            "emoji": "👍🏽",
+            "ar": "مرحبا",
+            "empty": ""
+        }
+    },
+    {
+        "name": "nested arrays",
+        "b64": "YTo1OntpOjA7aToxO2k6MTthOjI6e2k6MDtpOjI7aToxO2E6Mjp7aTowO2k6MztpOjE7YToyOntzOjQ6ImRlZXAiO2I6MTtzOjQ6Imxpc3QiO2E6Mzp7aTowO047aToxO2I6MDtpOjI7aTowO319fX1zOjE6ImsiO2E6MDp7fWk6MTA7czozOiJ0ZW4iO2k6LTU7czozOiJuZWciO30=",
+        "json": {
+            "0": 1,
+            "1": [
+                2,
+                [
+                    3,
+                    {
+                        "deep": true,
+                        "list": [
+                            null,
+                            false,
+                            0
+                        ]
+                    }
+                ]
+            ],
+            "k": [],
+            "10": "ten",
+            "-5": "neg"
+        }
+    },
+    {
+        "name": "scalars",
+        "b64": "YToxMjp7aTowO2k6LTQyO2k6MTtpOjkyMjMzNzIwMzY4NTQ3NzU4MDc7aToyO2k6LTkyMjMzNzIwMzY4NTQ3NzU4MDg7aTozO2Q6MC4xO2k6NDtkOjEuMEUrMjU7aTo1O2Q6LTA7aTo2O2Q6MS41O2k6NztiOjE7aTo4O2I6MDtpOjk7TjtpOjEwO2Q6SU5GO2k6MTE7ZDotSU5GO30=",
+        "json": [
+            -42,
+            9223372036854775807,
+            -9223372036854775808,
+            0.1,
+            1.0e+25,
+            -0.0,
+            1.5,
+            true,
+            false,
+            null,
+            "INF",
+            "-INF"
+        ]
+    },
+    {
+        "name": "object visibility",
+        "b64": "Tzo1OiJDaGlsZCI6Njp7czoxMjoiAEJhc2UAc2VjcmV0IjtzOjExOiJiYXNlLXNlY3JldCI7czo4OiIAKgBsZXZlbCI7aToxO3M6NDoibmFtZSI7czo0OiJiYXNlIjtzOjEzOiIAQ2hpbGQAc2VjcmV0IjtzOjEyOiJjaGlsZC1zZWNyZXQiO3M6NzoiACoAdGFncyI7YToyOntpOjA7czoxOiJhIjtpOjE7czoxOiJiIjt9czoyOiJpZCI7aTo3O30=",
+        "json": {
+            "__class": "Child",
+            "secret": "base-secret",
+            "level": 1,
+            "name": "base",
+            "Child::secret": "child-secret",
+            "tags": [
+                "a",
+                "b"
+            ],
+            "id": 7
+        }
+    },
+    {
+        "name": "enum",
+        "b64": "YToyOntzOjQ6InN1aXQiO0U6MTE6IlN1aXQ6SGVhcnRzIjtzOjU6ImFnYWluIjtFOjExOiJTdWl0OlNwYWRlcyI7fQ==",
+        "json": {
+            "suit": "Suit::Hearts",
+            "again": "Suit::Spades"
+        }
+    },
+    {
+        "name": "object reference r:",
+        "b64": "YTozOntpOjA7Tzo4OiJzdGRDbGFzcyI6MTp7czoxOiJuIjtpOjE7fWk6MTtyOjI7czoxOiJuIjtyOjI7fQ==",
+        "raw": "a:3:{i:0;O:8:\"stdClass\":1:{s:1:\"n\";i:1;}i:1;r:2;s:1:\"n\";r:2;}"
+    },
+    {
+        "name": "php reference R:",
+        "b64": "YToyOntzOjE6ImEiO3M6NDoic2FtZSI7czoxOiJiIjtSOjI7fQ==",
+        "raw": "a:2:{s:1:\"a\";s:4:\"same\";s:1:\"b\";R:2;}"
+    },
+    {
+        "name": "self reference",
+        "b64": "Tzo4OiJzdGRDbGFzcyI6MTp7czo0OiJzZWxmIjtyOjE7fQ==",
+        "raw": "O:8:\"stdClass\":1:{s:4:\"self\";r:1;}"
+    },
+    {
+        "name": "NAN",
+        "b64": "ZDpOQU47",
+        "raw": "d:NAN;"
+    },
+    {
+        "name": "custom Serializable",
+        "b64": "YToxOntpOjA7Qzo2OiJMZWdhY3kiOjE0OntsZWdhY3ktZGF0YTrDqX19",
+        "raw": "a:1:{i:0;C:6:\"Legacy\":14:{legacy-data:é}}"
+    },
+    {
+        "name": "__serialize object",
+        "b64": "Tzo2OiJNb2Rlcm4iOjI6e3M6MToieCI7aToxO2k6MDtzOjQ6Inplcm8iO30=",
+        "raw": "O:6:\"Modern\":2:{s:1:\"x\";i:1;i:0;s:4:\"zero\";}"
+    },
+    {
+        "name": "binary string",
+        "b64": "czo1OiJhAGL//iI7"
+    }
+]

@@ -108,7 +108,7 @@ Some documents simply _cannot_ be processed. Maybe it's a password-protected PDF
 
 This is where a **dead-letter queue (DLQ)** comes in. After a set number of failed attempts, the message moves to the DLQ, a "quarantine" zone.
 
-SQS gives you this natively through the queue's redrive policy. With BullMQ or Laravel, you route exhausted jobs there yourself (listen for the `failed` event in BullMQ, or use `failed_jobs` plus a handler in Laravel). You can then inspect the failed jobs, fix the issue and re-queue them.
+SQS gives you this natively through the queue's redrive policy. With BullMQ or Laravel, you route exhausted jobs there yourself (listen for the `failed` event in BullMQ, or use `failed_jobs` plus a handler in Laravel). You can then inspect the failed jobs, fix the issue and re-queue them. My [PHP unserialize tool](/tools/php-unserialize/) decodes a `failed_jobs` payload so you can see exactly what the job received.
 
 <TryThis>
 Set explicit attempts and an exponential backoff on your embedding job today, and add a failed-job handler that records the `doc_id` and error so you can replay it.

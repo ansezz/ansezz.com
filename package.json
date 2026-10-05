@@ -11,6 +11,7 @@
     "build": "pnpm assert:taxonomy && astro build && pagefind --site dist",
     "preview": "astro preview",
     "check": "pnpm assert:taxonomy && astro check",
+    "test": "node --test tests/*.test.mjs",
     "lighthouse": "pnpm dlx @lhci/cli@0.15.x autorun",
     "format": "prettier --write .",
     "optimize:images": "node scripts/optimize-images.mjs",

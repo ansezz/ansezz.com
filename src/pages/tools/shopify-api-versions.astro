@@ -1,0 +1,352 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import ShareLink from "@/components/tools/ShareLink.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+import { pageOgPath } from "@/lib/og-pages";
+import {
+  STATUS_LABEL,
+  calendar,
+  formatUtc,
+  latestStable,
+  shiftQuarters,
+} from "@/lib/shopify-api-versions";
+
+const TOOL_PATH = "/tools/shopify-api-versions/";
+const TOOL_NAME = "Shopify API Version Calendar";
+const tool = getTool(TOOL_PATH);
+const VERIFIED = "October 5, 2026";
+const P = "shopify-api-versions-";
+
+// Build-time snapshot. The script redraws it from the visitor's clock.
+const now = new Date();
+const rows = calendar(now, 6);
+const latest = latestStable(now);
+const suggestions = Array.from({ length: 16 }, (_, i) =>
+  shiftQuarters(latest, 1 - i),
+).map((v) => v.name);
+
+const DESCRIPTION =
+  "Shopify API version calendar: every Admin and Storefront API version with its release date, end of support and fall-forward date, plus a months-left checker.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const faq = [
+  {
+    q: "How often does Shopify release a new API version?",
+    a: "Every three months. A new version ships at 5pm UTC on the first day of January, April, July and October, and it is named after its release month, like 2026-10. The release candidate for the next quarter comes out the same day.",
+  },
+  {
+    q: "How long is a Shopify API version supported?",
+    a: "At least 12 months from its release, and two versions in a row overlap for at least nine months. In practice that means you have about a year to move off a version, and four stable versions are supported at any time.",
+  },
+  {
+    q: "What happens when my version is no longer supported?",
+    a: "Shopify still answers it for a short time. In its version table, a version stays accessible until the 16th of the month a year after release. After that, a request that names it gets the oldest version that is still accessible instead, so your code runs against a newer API than you tested.",
+  },
+  {
+    q: "How do I see which version answered my request?",
+    a: "Read the X-Shopify-API-Version response header. If it is not the version in your URL, your version has fallen forward. Webhooks carry an X-Shopify-Api-Version header too, and the version they use is set in your app configuration.",
+  },
+  {
+    q: "Does this apply to the Storefront API and webhooks?",
+    a: "Yes. The GraphQL Admin API, Storefront API, Customer Account API, Partner API, Payments Apps API, Function APIs and webhooks all use the same quarterly versions. Liquid, the Ajax API and OAuth endpoints are not versioned. Shopify CLI also blocks deploys of UI extensions that target a version more than 12 months old.",
+  },
+  {
+    q: "Is the calendar hard coded?",
+    a: `No. It is computed from the rule Shopify documents, using your device's clock, so it moves forward on its own. I checked the rule and the current table on shopify.dev on ${VERIFIED}. If Shopify changes the rule, their page wins.`,
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: TOOL_NAME,
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  browserRequirements: "Requires JavaScript",
+  inLanguage: "en",
+  dateModified: tool.updated,
+  screenshot: new URL(pageOgPath(TOOL_PATH) ?? "/og.png", SITE.URL).href,
+  featureList: [
+    "Shopify API versions with release, support and fall-forward dates",
+    "Status computed from today's date",
+    "Months and days left for your version",
+    "Times in UTC and your local time zone",
+  ],
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const inputClass =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono font-bold focus:outline-none";
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const hintClass = "mt-1 text-xs leading-snug opacity-80";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1 break-words";
+const btnClass =
+  "mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow inline-flex min-h-10 items-center rounded-full border-[2px] px-3 text-[11px] font-bold tracking-widest uppercase";
+const preClass =
+  "border-ink bg-bg-alt overflow-auto rounded-[4px] border-[3px] p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap break-all";
+
+const CURL = `curl -s -o /dev/null -D - \\
+  -H "X-Shopify-Access-Token: \$TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{"query":"{ shop { name } }"}' \\
+  https://your-store.myshopify.com/admin/api/2026-07/graphql.json \\
+  | grep -i x-shopify-api-version`;
+
+const STATUS_CLASS: Record<string, string> = {
+  "release-candidate": "bg-cyan text-on-accent",
+  latest: "bg-green text-on-accent",
+  supported: "bg-paper text-ink",
+  unsupported: "bg-yellow text-on-accent",
+  retired: "bg-pink text-on-accent",
+  future: "bg-paper text-ink",
+};
+
+const relatedLinks = [
+  {
+    href: "/tools/shopify-rate-limit-planner/",
+    note: "Plan bulk syncs against the GraphQL cost bucket and REST leaky bucket.",
+  },
+  {
+    href: "/tools/shopify-gid-decoder/",
+    note: "Turn gid://shopify/Product/123 into its parts, or build one.",
+  },
+  {
+    href: "/tools/shopify-hmac-verifier/",
+    note: "Check webhook and app proxy signatures while you test an upgrade.",
+  },
+  {
+    href: "/blog/shopify-liquid-vs-headless/",
+    label: "Shopify Liquid vs headless",
+    note: "Headless storefronts pin a Storefront API version. Plan for upgrades.",
+    kind: "Post" as const,
+  },
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Shopify API Version Calendar."
+  intro="Which Shopify API versions are supported today, when each one stops answering, and how many months your version has left."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="green" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Rule checked {VERIFIED}
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        A new version every quarter, each supported for at least 12 months.
+        Dates are computed from that rule and your clock.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id={`${P}root`}>
+    <div class="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_340px]">
+      <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-4">
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 class="heading text-xl uppercase">Versions today</h2>
+          <p id={`${P}today`} class="font-mono text-xs font-bold break-all">
+            As of {formatUtc(now, true)}
+          </p>
+        </div>
+        <div class="relative overflow-x-auto">
+          <table class="w-full min-w-[520px] text-sm">
+            <thead>
+              <tr class="border-ink border-b-[3px] text-left">
+                <th class="py-2 pr-2">Version</th>
+                <th class="py-2 pr-2">Status</th>
+                <th class="py-2 pr-2">Released</th>
+                <th class="py-2 pr-2">Supported until</th>
+                <th class="py-2 pr-2">Answers until</th>
+                <th class="py-2"><span class="sr-only">Check</span></th>
+              </tr>
+            </thead>
+            <tbody id={`${P}rows`}>
+              {
+                rows.map((r) => (
+                  <tr class="border-ink border-b-[2px] align-middle">
+                    <td class="py-2 pr-2 font-mono font-bold">{r.name}</td>
+                    <td class="py-2 pr-2">
+                      <span
+                        class={`border-ink inline-block rounded-[4px] border-[2px] px-2 py-0.5 text-xs font-bold ${STATUS_CLASS[r.status]}`}
+                      >
+                        {STATUS_LABEL[r.status]}
+                      </span>
+                    </td>
+                    <td class="py-2 pr-2 font-mono">
+                      {formatUtc(r.releasedAt)}
+                    </td>
+                    <td class="py-2 pr-2 font-mono">
+                      {formatUtc(r.supportEndsAt)}
+                    </td>
+                    <td class="py-2 pr-2 font-mono">
+                      {formatUtc(r.accessibleUntil)}
+                    </td>
+                    <td class="py-2">
+                      <button type="button" class={btnClass} data-pick={r.name}>
+                        Check
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class={hintClass}>
+          Dates in UTC. Releases go out at 17:00 UTC. "Answers until" is the
+          last day Shopify still serves a version before requests fall forward
+          to the oldest accessible one.
+        </p>
+      </NeoCard>
+
+      <NeoCard
+        tone="cyan"
+        shadow="md"
+        class="min-w-0 space-y-4 md:sticky md:top-24"
+      >
+        <div>
+          <label for={`${P}version`} class={labelClass}>My version</label>
+          <input
+            id={`${P}version`}
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            spellcheck="false"
+            maxlength="7"
+            list={`${P}list`}
+            placeholder={shiftQuarters(latest, -3).name}
+            value=""
+            class={inputClass}
+          />
+          <datalist id={`${P}list`}>
+            {suggestions.map((s) => <option value={s} />)}
+          </datalist>
+          <p class={hintClass}>YYYY-MM, as in your API URL or app config.</p>
+        </div>
+        <div>
+          <label for={`${P}asof`} class={labelClass}>As of (optional)</label>
+          <input id={`${P}asof`} type="date" class={inputClass} />
+          <p class={hintClass}>Leave empty to use today.</p>
+        </div>
+        <div aria-live="polite">
+          <p class="mono text-[11px] font-bold tracking-widest uppercase">
+            Support left
+          </p>
+          <p id={`${P}left`} class="display text-3xl leading-none break-words">
+            &nbsp;
+          </p>
+          <p
+            id={`${P}status`}
+            class="border-ink mt-2 inline-block rounded-[4px] border-[2px] px-2 py-0.5 text-xs font-bold"
+          >
+          </p>
+          <p id={`${P}verdict`} class="mt-2 text-sm leading-snug font-bold"></p>
+        </div>
+        <dl id={`${P}dates`} class="space-y-2 text-sm"></dl>
+        <p class="mono text-[10px] tracking-widest uppercase opacity-70">
+          Computed in your browser
+        </p>
+      </NeoCard>
+    </div>
+    <div class="mt-6"><ShareLink /></div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">How Shopify versions work</h2>
+      <p>
+        Shopify's APIs are versioned by date. Every quarter a new stable version
+        ships at 17:00 UTC on the first day of January, April, July or October,
+        named <code class={codeClass}>YYYY-MM</code>. Each stable version is
+        supported for at least 12 months, and consecutive versions overlap for
+        at least nine. The same day, the release candidate for the next quarter
+        appears so you can test what is coming.
+      </p>
+      <p>
+        When a version leaves support it does not stop at once. In Shopify's own
+        table, each version stays accessible until the 16th of the month a year
+        after release, at 15:00 UTC. From then on, a request that names that
+        version is answered by the oldest version still accessible. The calendar
+        above applies that pattern to every quarter, so it stays correct without
+        a manual update.
+      </p>
+      <p>To see which version really answered, read the response header:</p>
+      <pre class={preClass}>{CURL}</pre>
+      <p>
+        If the header and the version in your URL differ, you have fallen
+        forward. Two more dates are worth knowing: Shopify CLI refuses to deploy
+        UI extensions that target a version older than 12 months, and public
+        apps that keep calling unsupported resources can be delisted from the
+        App Store.
+      </p>
+      <p class="text-sm">
+        Sources, checked {VERIFIED}:{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://shopify.dev/docs/api/usage/versioning"
+          rel="noopener">Shopify API versioning</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://shopify.dev/docs/api/release-notes"
+          rel="noopener">Shopify API release notes</a
+        >.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/shopify-api-versions";
+</script>

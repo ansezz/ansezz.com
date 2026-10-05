@@ -1,0 +1,333 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import ShareLink from "@/components/tools/ShareLink.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { breadcrumbList, faqPage } from "@/lib/seo";
+import { pageOgPath } from "@/lib/og-pages";
+
+const TOOL_PATH = "/tools/php-unserialize/";
+const TOOL_NAME = "PHP Unserialize and Laravel Job Decoder";
+const tool = getTool(TOOL_PATH);
+const VERIFIED = "October 5, 2026";
+const P = "php-unserialize-";
+
+const DESCRIPTION =
+  "Online PHP unserialize that never runs code: see serialized data as a tree and JSON, and decode Laravel failed_jobs payloads. Private, protected and references.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const faq = [
+  {
+    q: "Is it safe to paste serialized data here?",
+    a: "Yes. The parser is a small JavaScript reader for the serialize() format. It turns the text into plain data and keeps class names as strings, so nothing is instantiated, no __wakeup or __destruct runs, and nothing is sent anywhere. That is the opposite of calling unserialize() on untrusted input in PHP, which is how object injection attacks work.",
+  },
+  {
+    q: "Why do private and protected properties look strange?",
+    a: "PHP stores them with a NUL byte prefix. A protected property is saved as \\0*\\0name and a private one as \\0ClassName\\0name, where ClassName is the class that declared it. The tree shows the clean name with its visibility, and the JSON adds the class to a private name only when a parent and child class use the same name.",
+  },
+  {
+    q: "I get a string length error. What happened?",
+    a: "The s:N: length counts bytes, not characters, so it breaks if the text was changed after serialize(). Common causes are NUL bytes lost when copying from a log or a database GUI, a search and replace on a database dump, or line endings converted from \\n to \\r\\n. Tick lenient mode to read past wrong lengths. Each fix shows up as a warning so you know the data was damaged.",
+  },
+  {
+    q: "How do I decode a Laravel failed job?",
+    a: "Copy the payload column from the failed_jobs table, for example with SELECT payload FROM failed_jobs WHERE uuid = '...', and paste it in Laravel failed job mode. The tool reads the JSON, takes data.command and unserializes it. You get the job class, queue, tries, timeout and the models it was given.",
+  },
+  {
+    q: "Why does my job show ModelIdentifier instead of my model?",
+    a: "Jobs that use the SerializesModels trait store each Eloquent model as a ModelIdentifier: the class, the primary key, loaded relations and the connection. The worker loads a fresh copy from the database when the job runs. That is also why a job fails with ModelNotFoundException if the row was deleted before it ran.",
+  },
+  {
+    q: "What about encrypted jobs?",
+    a: "If the job implements ShouldBeEncrypted, data.command is a Laravel encrypted string and needs your APP_KEY. The tool spots that and points you to the Laravel encrypt/decrypt tool. Decrypt there, then paste the result here in Serialized PHP mode.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: TOOL_NAME,
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  browserRequirements: "Requires JavaScript",
+  inLanguage: "en",
+  dateModified: tool.updated,
+  screenshot: new URL(pageOgPath(TOOL_PATH) ?? "/og.png", SITE.URL).href,
+  featureList: [
+    "Reads PHP serialize() output without running code",
+    "Tree view and JSON output",
+    "Private, protected, enums, references and multibyte strings",
+    "Laravel failed_jobs payload decoder",
+    "Lenient mode for damaged string lengths",
+  ],
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  author: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const areaClass =
+  "border-ink bg-paper shadow-neo-sm min-h-56 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono text-sm break-all focus:outline-none";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1 break-words";
+const radioClass =
+  "border-ink bg-paper shadow-neo-xs inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-[4px] border-[2px] px-3 font-bold";
+const btnClass =
+  "mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow inline-flex min-h-10 items-center rounded-full border-[2px] px-4 text-[11px] font-bold tracking-widest uppercase";
+const preClass =
+  "border-ink bg-bg-alt max-h-[32rem] overflow-auto rounded-[4px] border-[3px] p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap break-all";
+
+const examples = [
+  { id: "object", label: "Object" },
+  { id: "multibyte", label: "Multibyte" },
+  { id: "refs", label: "References" },
+  { id: "job", label: "Failed job" },
+  { id: "encrypted", label: "Encrypted job" },
+];
+
+const relatedLinks = [
+  {
+    href: "/tools/laravel-encrypt-decrypt/",
+    note: "Decrypt an encrypted job or cookie with your APP_KEY, in the browser.",
+  },
+  {
+    href: "/tools/json-formatter/",
+    note: "Format and validate the JSON output or a whole payload.",
+  },
+  {
+    href: "/blog/message-queues-document-processing/",
+    label: "Message queues for document processing",
+    note: "What goes in a job payload and what should stay in storage.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/scaling-with-rabbitmq/",
+    label: "Scaling with RabbitMQ",
+    note: "Queue design once a single Redis queue is not enough.",
+    kind: "Post" as const,
+  },
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="PHP Unserialize, Safely."
+  intro="Paste PHP serialized data or a Laravel failed_jobs payload and see it as a tree and as JSON. Nothing is instantiated, nothing runs, nothing leaves your browser."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="pink" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Tested {VERIFIED}
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Checked against real serialize() output from PHP 8.4 and real
+        failed_jobs rows from Laravel 13.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id={`${P}root`}>
+    <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-4">
+      <fieldset>
+        <legend class={labelClass}>Mode</legend>
+        <div class="flex flex-wrap gap-3">
+          <label class={radioClass}>
+            <input
+              type="radio"
+              id={`${P}mode-php`}
+              name={`${P}mode`}
+              value="php"
+              checked
+            />
+            Serialized PHP
+          </label>
+          <label class={radioClass}>
+            <input
+              type="radio"
+              id={`${P}mode-laravel`}
+              name={`${P}mode`}
+              value="laravel"
+            />
+            Laravel failed job
+          </label>
+        </div>
+      </fieldset>
+      <div class="min-w-0">
+        <label for={`${P}input`} class={labelClass} id={`${P}input-label`}
+          >Serialized PHP</label
+        >
+        <textarea
+          id={`${P}input`}
+          class={areaClass}
+          rows="8"
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="off"></textarea>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <label class={radioClass}>
+          <input type="checkbox" id={`${P}lenient`} />
+          Lenient mode
+        </label>
+        <button type="button" id={`${P}clear`} class={btnClass}>Clear</button>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="mono text-[11px] font-bold tracking-widest uppercase"
+          >Examples:</span
+        >
+        {
+          examples.map((e) => (
+            <button type="button" class={btnClass} data-example={e.id}>
+              {e.label}
+            </button>
+          ))
+        }
+      </div>
+      <p id={`${P}status`} role="status" aria-live="polite"></p>
+      <dl id={`${P}facts`} class="space-y-1 text-sm" hidden></dl>
+      <ul
+        id={`${P}warnings`}
+        class="border-ink bg-yellow text-on-accent list-disc space-y-1 rounded-[4px] border-[2px] p-3 pl-7 text-sm"
+        hidden
+      >
+      </ul>
+    </NeoCard>
+
+    <div class="mt-6 grid gap-6 md:grid-cols-2">
+      <NeoCard tone="paper" shadow="md" class="min-w-0">
+        <p class={labelClass}>Tree</p>
+        <div id={`${P}tree`} class="max-h-[32rem] min-w-0 overflow-auto"></div>
+      </NeoCard>
+      <NeoCard tone="paper" shadow="md" class="min-w-0">
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <p class={labelClass + " mb-0"}>JSON</p>
+          <button
+            type="button"
+            id={`${P}copy`}
+            class={btnClass + " opacity-50"}
+            disabled>Copy JSON</button
+          >
+        </div>
+        <pre id={`${P}json`} class={preClass}></pre>
+      </NeoCard>
+    </div>
+    <div class="mt-6">
+      <ShareLink />
+      <p class="mt-2 text-xs opacity-80">
+        The link keeps the mode and options only. What you paste stays out of
+        the URL.
+      </p>
+    </div>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">Reading the serialize() format</h2>
+      <p>
+        PHP's <code class={codeClass}>serialize()</code> writes a value as typed tokens:
+        <code class={codeClass}>i:42;</code> for an int, <code class={codeClass}
+          >s:5:"hello";</code
+        > for a string with its length in bytes, <code class={codeClass}
+          >a:2:{"{"}...{"}"}</code
+        > for an array of key and value pairs, and <code class={codeClass}
+          >O:4:"User":3:{"{"}...{"}"}</code
+        > for an object with its class name and property count. PHP 8.1 enums are
+        <code class={codeClass}>E:</code>, and <code class={codeClass}>r:</code> and
+        <code class={codeClass}>R:</code> point back at an earlier value by its number,
+        which the tree shows as <code class={codeClass}>#n</code>.
+      </p>
+      <p>
+        Calling <code class={codeClass}>unserialize()</code> on data you do not control
+        is risky in PHP, because it creates objects and their magic methods run. This
+        tool reads the same format in JavaScript and only builds plain data, so you
+        can look inside a session, a cache entry or a queue job without that risk.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">Laravel failed jobs</h2>
+      <p>
+        A queued Laravel job is stored as JSON. The useful part is <code
+          class={codeClass}>data.command</code
+        >: the job object passed through <code class={codeClass}
+          >serialize()</code
+        >. When a job fails for good, Laravel copies that payload into the <code
+          class={codeClass}>failed_jobs</code
+        > table next to the exception. Paste the payload column here to see the exact
+        properties the worker received, which queue and connection it used, and which
+        models it was given as <code class={codeClass}>ModelIdentifier</code> entries.
+        If the payload is encrypted, the tool tells you and links to the decrypt tool.
+      </p>
+      <p class="text-sm">
+        Sources, checked {VERIFIED}:{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://www.php.net/manual/en/function.serialize.php"
+          rel="noopener">PHP serialize()</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://www.php.net/manual/en/function.unserialize.php"
+          rel="noopener">PHP unserialize() security warning</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://github.com/php/php-src/blob/master/ext/standard/var_unserializer.re"
+          rel="noopener">php-src var_unserializer</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://laravel.com/docs/12.x/queues#dealing-with-failed-jobs"
+          rel="noopener">Laravel failed jobs</a
+        >.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/php-unserialize";
+</script>
