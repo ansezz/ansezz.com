@@ -205,7 +205,7 @@ If you're considering the move, the order matters more than the tooling:
 - **Start with something you can afford to break.** Staging environments, internal dashboards, side projects. Learn the failure modes on workloads where the blast radius is you.
 - **Get containerized first.** If your app already builds from a Dockerfile, migration is an afternoon. If it doesn't, fix that _before_ you touch Coolify; you'll be debugging one thing instead of two.
 - **Wire up S3 backups on day one.** Before the first production workload lands. A single server with no offsite backup is a countdown, not an architecture.
-- **Put the control plane on its own box.** Coolify's documented minimum is 2 cores, 2 GB of RAM, and 30 GB of disk, the cheapest tier most providers sell. A dedicated instance means a runaway build can never take down the dashboard you'd use to fix it.
+- **Put the control plane on its own box.** Coolify's documented minimum is 2 cores, 2 GB of RAM, and 10 GB of free disk, which the cheapest tier most providers sell already covers. A dedicated instance means a runaway build can never take down the dashboard you'd use to fix it.
 - **Add external monitoring.** Coolify tells you a container is running. It does not tell you your users can check out. Uptime Kuma (one-click, naturally) or Better Stack closes that gap.
 
 Coolify's real achievement is that it made the PaaS experience a commodity. The dashboard, the git integration, the automatic TLS: these were competitive moats five years ago.
