@@ -42,7 +42,7 @@ const platform = MANAGED[0];
 const m = managedDefaults(platform, W);
 
 const DESCRIPTION =
-  "Coolify on a VPS versus Render, Railway or Heroku: monthly cost for your apps, workers, Postgres and Redis, with your ops hours priced in. Prices verified and editable.";
+  "Coolify on a VPS versus Render, Railway or Heroku: monthly cost for your apps, workers, Postgres and Redis, with ops hours priced in. Every price is editable.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -98,6 +98,7 @@ const appLd = {
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   isAccessibleForFree: true,
   author: { "@id": `${SITE.URL}#person` },
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

@@ -1,0 +1,508 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import ShareLink from "@/components/tools/ShareLink.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
+
+const TOOL_PATH = "/tools/llms-txt-generator/";
+const TOOL_NAME = "llms.txt Generator and Validator";
+const tool = getTool(TOOL_PATH);
+const VERIFIED = "October 10, 2026";
+const P = "llms-txt-generator-";
+
+const DESCRIPTION =
+  "Free llms.txt generator and validator. Fill in your site name, summary and link sections, get a file that follows the llmstxt.org format, or check your own.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const faq = [
+  {
+    q: "What is an llms.txt file?",
+    a: "A markdown file at /llms.txt that gives AI agents a short guide to your site: what it is, and which pages to read for which questions. It was proposed by Jeremy Howard in September 2024 and updated to v2 in August 2026. Agents read it, then follow the links that match the task, so the file itself stays small.",
+  },
+  {
+    q: "What does the format require?",
+    a: "Only an H1 with the name of the site or project. After that, in this order: an optional blockquote summary, optional paragraphs or lists with more detail (no headings), then optional H2 sections that each hold a list of links written as - [name](url), with an optional colon and a note. The validator checks that order and every link line.",
+  },
+  {
+    q: "Is llms.txt the same as robots.txt or sitemap.xml?",
+    a: "No. robots.txt tells crawlers what they may fetch, and sitemap.xml lists every page for search engines. llms.txt is a short, hand-picked reading list for agents that are helping someone right now. You can start from your sitemap here with the import box, then cut it down to the pages that answer real questions.",
+  },
+  {
+    q: "Should the links point to markdown files?",
+    a: "If you have them, yes. The proposal suggests serving a clean markdown copy of a page at the same URL with .md added, like page.html.md or page.md, because markdown costs far fewer tokens than HTML. Plain HTML links still work. The validator only counts how many of your links are markdown, it does not fail the file for it.",
+  },
+  {
+    q: "What is the Optional section for?",
+    a: "By convention, an H2 called Optional holds secondary links an agent can skip when it is short on context. In v1 of the proposal some tools dropped that section automatically. Since v2 it is only a convention with no special processing, so you can use it or leave it out.",
+  },
+  {
+    q: "Where do I put the file, and can I have more than one?",
+    a: "Put it at the root, https://yoursite.com/llms.txt. v2 also allows a file under a path, like /docs/llms.txt, which covers the pages under that path. When more than one file applies, agents should use the most specific one. Anything you type here stays in your browser; the share link holds your form in the URL so you can send it to a teammate.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: TOOL_NAME,
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  browserRequirements: "Requires JavaScript",
+  inLanguage: "en",
+  dateModified: tool.updated,
+  screenshot: toolScreenshot(new URL(TOOL_PATH, SITE.URL).href),
+  featureList: [
+    "llms.txt generator with sections, links and notes",
+    "Validator for pasted llms.txt files with line numbers",
+    "Import links from a sitemap.xml or a URL list",
+    "Copy, download and share link",
+    "Follows the llmstxt.org v2 format",
+  ],
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  author: { "@id": `${SITE.URL}#person` },
+  creator: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
+
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const smallLabel = "mb-1 block text-xs font-bold";
+const hintClass = "mt-1 text-xs leading-snug opacity-80";
+const inputClass =
+  "border-ink bg-paper shadow-neo-sm min-h-10 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2 text-sm focus:outline-none";
+const areaClass =
+  "border-ink bg-paper shadow-neo-sm w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2.5 font-mono text-sm break-words focus:outline-none";
+const codeClass =
+  "font-mono text-[0.88em] font-bold border-[2px] border-ink rounded-[3px] bg-bg-alt px-1 break-words";
+const preClass =
+  "border-ink bg-bg-alt max-h-[32rem] min-h-40 overflow-auto rounded-[4px] border-[3px] p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap break-words";
+const btnClass =
+  "mono border-ink bg-bg-alt shadow-neo-xs hover:bg-yellow inline-flex min-h-10 items-center justify-center gap-2 rounded-full border-[2px] px-4 text-[11px] font-bold tracking-widest uppercase disabled:opacity-50";
+const iconBtn =
+  "border-ink bg-paper shadow-neo-xs hover:bg-pink inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[4px] border-[2px]";
+
+const relatedLinks = [
+  {
+    href: "/tools/mcp-config-generator/",
+    note: "The other half of agent access: connect a client to your MCP server.",
+  },
+  {
+    href: "/tools/token-counter/",
+    note: "Check how many tokens your llms.txt costs an agent to read.",
+  },
+  {
+    href: "/blog/mcp-first-is-the-new-mobile-first/",
+    label: "MCP first is the new mobile first",
+    note: "Why sites now need a way in for agents, and what that looks like.",
+    kind: "Post" as const,
+  },
+  {
+    href: "/blog/shopify-storefront-web-components/",
+    label: "Shopify Storefront Web Components",
+    note: "A real llms.txt in use: Shopify's file for its web components.",
+    kind: "Post" as const,
+  },
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="llms.txt, Written and Checked."
+  intro="Build an llms.txt file from a short form, or paste one to check it against the llmstxt.org format. Everything runs in your browser."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="cyan" tilt={-1.5} class="max-w-md">
+      <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
+        ▸ Checked {VERIFIED}
+      </p>
+      <p class="text-sm leading-snug font-bold">
+        Follows v2 of the llmstxt.org proposal, updated August 10, 2026. This
+        site's own /llms.txt passes the validator.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id={`${P}root`}>
+    <h2 class="heading mb-4 text-xl uppercase">1. Generate a file.</h2>
+    <div
+      class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+    >
+      <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-5">
+        <div class="min-w-0">
+          <label for={`${P}name`} class={labelClass}>Site or project name</label
+          >
+          <input
+            id={`${P}name`}
+            type="text"
+            autocomplete="off"
+            placeholder="Example Docs"
+            class={inputClass}
+          />
+          <p class={hintClass}>
+            Becomes the H1. This is the only required part.
+          </p>
+        </div>
+        <div class="min-w-0">
+          <label for={`${P}summary`} class={labelClass}>Summary</label>
+          <textarea
+            id={`${P}summary`}
+            rows="3"
+            placeholder="What the site is and who it is for, in one or two sentences."
+            class={areaClass}></textarea>
+          <p class={hintClass}>
+            Written as a blockquote under the title. Agents read it first.
+          </p>
+        </div>
+        <div class="min-w-0">
+          <label for={`${P}details`} class={labelClass}
+            >Details for agents (optional)</label
+          >
+          <textarea
+            id={`${P}details`}
+            rows="4"
+            placeholder="How to read the links, key facts, things the site is not. Paragraphs and lists only."
+            class={areaClass}></textarea>
+          <p class={hintClass}>
+            Markdown paragraphs and lists. No headings here; the format reserves
+            them for the title and the link sections.
+          </p>
+        </div>
+
+        <div class="min-w-0">
+          <p class={labelClass}>Link sections</p>
+          <div id={`${P}sections`} class="space-y-4"></div>
+          <div class="mt-4 flex flex-wrap gap-3">
+            <button type="button" id={`${P}add-section`} class={btnClass}>
+              <Icon name="lucide:plus" class="h-4 w-4" aria-hidden="true" />
+              Add section
+            </button>
+            <button type="button" id={`${P}add-optional`} class={btnClass}>
+              <Icon name="lucide:plus" class="h-4 w-4" aria-hidden="true" />
+              Add Optional section
+            </button>
+          </div>
+        </div>
+
+        <details class="border-ink rounded-[4px] border-[2px] p-3">
+          <summary class="flex min-h-10 cursor-pointer items-center font-bold">
+            Start from a sitemap or a URL list
+          </summary>
+          <div class="mt-3 space-y-3">
+            <label for={`${P}import`} class={smallLabel}
+              >Paste sitemap.xml content or one URL per line</label
+            >
+            <textarea
+              id={`${P}import`}
+              rows="4"
+              spellcheck="false"
+              placeholder="<urlset><url><loc>https://example.com/docs/start/</loc></url>..."
+              class={areaClass}></textarea>
+            <p class={hintClass}>
+              Read in your browser, nothing is fetched. URLs are grouped by
+              their first folder. Up to 200 links, so trim the list to the pages
+              that matter.
+            </p>
+            <button type="button" id={`${P}import-btn`} class={btnClass}
+              >Add these links</button
+            >
+            <p id={`${P}import-status`} class="text-sm" aria-live="polite"></p>
+          </div>
+        </details>
+
+        <div class="flex flex-wrap gap-3">
+          <button type="button" id={`${P}example`} class={btnClass}
+            >Load example</button
+          >
+          <button type="button" id={`${P}reset`} class={btnClass}
+            >Clear form</button
+          >
+        </div>
+      </NeoCard>
+
+      <NeoCard
+        tone="paper"
+        shadow="md"
+        class="min-w-0 space-y-4 lg:sticky lg:top-24"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p class={labelClass + " mb-0"}>Your llms.txt</p>
+          <p id={`${P}out-status`} class="text-sm font-bold" aria-live="polite">
+          </p>
+        </div>
+        <pre id={`${P}output`} class={preClass}></pre>
+        <div class="flex flex-wrap gap-3">
+          <button type="button" id={`${P}copy`} class={btnClass}>
+            <Icon name="lucide:copy" class="h-4 w-4" aria-hidden="true" />
+            <span id={`${P}copy-label`}>Copy</span>
+          </button>
+          <button type="button" id={`${P}download`} class={btnClass}>
+            <Icon name="lucide:download" class="h-4 w-4" aria-hidden="true" />
+            Download llms.txt
+          </button>
+          <button type="button" id={`${P}to-check`} class={btnClass}
+            >Check it below</button
+          >
+        </div>
+        <ul id={`${P}out-issues`} class="space-y-2 text-sm"></ul>
+        <ShareLink label="Copy link to this form" />
+        <p id={`${P}share-note`} class={hintClass}>
+          The link stores the form in the URL. Do not put anything private in
+          it.
+        </p>
+      </NeoCard>
+    </div>
+
+    <h2 class="heading mt-12 mb-4 text-xl uppercase">2. Validate a file.</h2>
+    <NeoCard tone="paper" shadow="md" class="min-w-0 space-y-4">
+      <div class="min-w-0">
+        <label for={`${P}vtext`} class={labelClass}
+          >Paste an llms.txt file</label
+        >
+        <textarea
+          id={`${P}vtext`}
+          rows="12"
+          spellcheck="false"
+          placeholder="# Site name
+
+> Summary
+
+## Docs
+
+- [Start here](https://example.com/start.md): First steps"
+          class={areaClass}></textarea>
+        <p class={hintClass}>
+          Checked live in your browser. Never saved in the URL.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button type="button" id={`${P}load-own`} class={btnClass}
+          >Load this site's /llms.txt</button
+        >
+        <button type="button" id={`${P}vclear`} class={btnClass}>Clear</button>
+      </div>
+      <p id={`${P}vsummary`} class="font-bold" aria-live="polite">
+        Paste a file to check it.
+      </p>
+      <dl
+        id={`${P}vstats`}
+        class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4"
+        hidden
+      >
+      </dl>
+      <ul id={`${P}vissues`} class="space-y-2 text-sm"></ul>
+    </NeoCard>
+
+    <template id={`${P}section-tpl`}>
+      <fieldset
+        class="border-ink bg-bg-alt min-w-0 space-y-3 rounded-[4px] border-[2px] p-3"
+        data-section
+      >
+        <div class="flex items-end gap-2">
+          <label class="min-w-0 flex-1">
+            <span class={smallLabel}>Section name (H2)</span>
+            <input
+              type="text"
+              data-field="name"
+              autocomplete="off"
+              placeholder="Docs"
+              class={inputClass}
+            />
+          </label>
+          <button
+            type="button"
+            class={iconBtn}
+            data-remove-section
+            aria-label="Remove section"
+          >
+            <Icon name="lucide:trash-2" class="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+        <ol class="space-y-3" data-links></ol>
+        <button type="button" class={btnClass} data-add-link>
+          <Icon name="lucide:plus" class="h-4 w-4" aria-hidden="true" />
+          Add link
+        </button>
+      </fieldset>
+    </template>
+
+    <template id={`${P}link-tpl`}>
+      <li
+        class="border-ink bg-paper grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-[4px] border-[2px] p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto]"
+        data-link
+      >
+        <label class="col-start-1 row-start-1 min-w-0">
+          <span class="sr-only">Link title</span>
+          <input
+            type="text"
+            data-field="title"
+            autocomplete="off"
+            placeholder="Title"
+            class={inputClass}
+          />
+        </label>
+        <label
+          class="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2 sm:row-start-1"
+        >
+          <span class="sr-only">URL</span>
+          <input
+            type="url"
+            data-field="url"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="https://example.com/page.md"
+            class={inputClass}
+          />
+        </label>
+        <button
+          type="button"
+          class={iconBtn +
+            " col-start-2 row-start-1 justify-self-end sm:col-start-3"}
+          data-remove-link
+          aria-label="Remove link"
+        >
+          <Icon name="lucide:x" class="h-4 w-4" aria-hidden="true" />
+        </button>
+        <label class="col-span-2 min-w-0 sm:col-span-3">
+          <span class="sr-only">Notes</span>
+          <input
+            type="text"
+            data-field="notes"
+            autocomplete="off"
+            placeholder="Notes: what an agent finds on this page (optional)"
+            class={inputClass}
+          />
+        </label>
+      </li>
+    </template>
+  </section>
+
+  <!-- Explainer -->
+  <section class="mx-auto max-w-3xl px-5 pb-14">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">What goes in an llms.txt file</h2>
+      <p>
+        An llms.txt file is a markdown guide to your site for AI agents. A
+        coding agent fetches it to find the right API page, and a chat assistant
+        reads it to answer questions about your product. Web pages carry
+        navigation, scripts and layout that cost tokens and hide the content, so
+        the file points agents straight at the pages worth reading.
+      </p>
+      <p>The format is plain markdown in a fixed order:</p>
+      <ol class="list-decimal space-y-1 pl-6">
+        <li>
+          An <strong>H1</strong> with the site or project name. This is the only required
+          part.
+        </li>
+        <li>
+          A <strong>blockquote</strong> with a short summary, the key facts an agent
+          needs to read the rest.
+        </li>
+        <li>
+          Any number of <strong>paragraphs or lists</strong> with more detail. No
+          headings in this part.
+        </li>
+        <li>
+          Any number of <strong>H2 sections</strong>, each a list of links
+          written as <code class={codeClass}>- [name](url): notes</code>. The
+          notes are optional.
+        </li>
+      </ol>
+      <p>
+        By convention an H2 named <code class={codeClass}>Optional</code> holds secondary
+        links an agent can skip. The generator writes exactly this structure and escapes
+        brackets in titles and spaces or parentheses in URLs, so the links parse.
+        The validator reads a pasted file the same way a simple parser would and reports
+        each problem with its line number: content before the title, headings in the
+        wrong place, list items without a link, broken or relative URLs, duplicates
+        and empty sections.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">What changed in v2</h2>
+      <p>
+        The proposal was updated on August 10, 2026. A file can now sit under
+        any path, like <code class={codeClass}>/docs/llms.txt</code>, and covers
+        the pages under it; the most specific file wins. Markdown copies of
+        pages can use either
+        <code class={codeClass}>page.html.md</code> or <code class={codeClass}
+          >page.md</code
+        >. Pages can point to their markdown copy with <code class={codeClass}
+          >rel="alternate" type="text/markdown"</code
+        > and to the llms.txt that covers them with <code class={codeClass}
+          >rel="describedby"</code
+        >, as a link tag or a <code class={codeClass}>Link:</code> header. The Optional
+        section is still allowed but no longer has a special processing meaning.
+      </p>
+
+      <h2 class="display pt-4 text-2xl uppercase">Writing a good one</h2>
+      <p>
+        Keep it short. The file should fit in an agent's context with room to
+        spare, and the detail lives behind the links. Write notes that say what
+        a page answers, not what it is called. Link to markdown copies when you
+        have them. Then test it: give an agent only your llms.txt and ask it
+        three questions a customer would ask. If it picks the wrong page, fix
+        the notes.
+      </p>
+      <p class="text-sm">
+        Sources, checked {VERIFIED}:{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://llmstxt.org/"
+          rel="noopener">The /llms.txt file, v2 (llmstxt.org)</a
+        >,{" "}
+        <a
+          class="font-bold break-words underline"
+          href="https://llmstxt.org/changes.html"
+          rel="noopener">llmstxt.org changes for v2</a
+        >.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((f) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{f.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/llms-txt-generator";
+</script>

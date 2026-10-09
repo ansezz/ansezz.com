@@ -8,7 +8,7 @@ import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/common-ports/");
 
@@ -951,7 +951,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: PAGE_TITLE,
   applicationCategory: "DeveloperApplication",
@@ -962,6 +962,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL("/tools/common-ports/", SITE.URL).href),
+  featureList: [
+    "TCP and UDP ports for web, databases, caches and containers",
+    "Note on what listens on each port",
+    "Live filter",
+    "Direct link to each port",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
@@ -1017,6 +1026,19 @@ const relatedLinks = [
     note: "Same category of thing you look up mid-incident and never memorise.",
   },
 ];
+
+// Stable per-row anchors (#429, #cache-control, #port-5432) so a row can be
+// linked directly. The first row with a given key wins; repeats get no id.
+const usedAnchors = new Set<string>();
+const anchorId = (key: string): string | undefined => {
+  const id = key
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  if (!id || usedAnchors.has(id)) return undefined;
+  usedAnchors.add(id);
+  return id;
+};
 ---
 
 <Page
@@ -1202,7 +1224,8 @@ const relatedLinks = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(`port-${p.port}`)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1294,7 +1317,8 @@ const relatedLinks = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(`port-${p.port}`)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1383,7 +1407,8 @@ const relatedLinks = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(`port-${p.port}`)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1475,7 +1500,8 @@ const relatedLinks = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(`port-${p.port}`)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1570,7 +1596,8 @@ const relatedLinks = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(`port-${p.port}`)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1660,7 +1687,8 @@ const relatedLinks = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(`port-${p.port}`)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1751,7 +1779,8 @@ const relatedLinks = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(`port-${p.port}`)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1843,7 +1872,8 @@ const relatedLinks = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(`port-${p.port}`)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1933,7 +1963,8 @@ const relatedLinks = [
                 <tr
                   data-port-row
                   data-port-keywords={p.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(`port-${p.port}`)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"

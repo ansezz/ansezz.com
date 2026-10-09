@@ -147,7 +147,7 @@ If your app handles thousands of webhooks per minute, you can't log every succes
 
 ### Monitor the limits, log the failures
 
-Instead, use monitoring to track the "Webhook Success Rate" and your API rate-limit use. Shopify's GraphQL Admin API meters calls by calculated query cost using a leaky bucket (on the Standard plan, your quota restores at 100 points per second, and a single query can't cost more than 1,000 points). The REST Admin API uses a request-based bucket.
+Instead, use monitoring to track the "Webhook Success Rate" and your API rate-limit use. Shopify's GraphQL Admin API meters calls by calculated query cost using a leaky bucket (on the Standard plan, your quota restores at 100 points per second, and a single query can't cost more than 1,000 points). The REST Admin API uses a request-based bucket. To see how fast a full sync can run inside those limits, use my [Shopify rate limit planner](/tools/shopify-rate-limit-planner/).
 
 Watch how close you run to those ceilings, then use logging to investigate the specific failed payloads when the success rate drops.
 

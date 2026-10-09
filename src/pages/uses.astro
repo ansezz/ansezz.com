@@ -232,7 +232,11 @@ const groups: Group[] = [
     tone: "paper",
     items: [
       { name: "Neovim + LazyVim", note: "Daily editor", daily: true },
-      { name: "Cursor", note: "AI-native IDE for pairing + agents", daily: true },
+      {
+        name: "Cursor",
+        note: "AI-native IDE for pairing + agents",
+        daily: true,
+      },
       { name: "PhpStorm", note: "When refactoring large codebases" },
       { name: "Ghostty", note: "Terminal" },
       { name: "Claude Code (CLI)", note: "Agent pairing", daily: true },
@@ -436,6 +440,16 @@ const relatedLinks: RelatedLink[] = [
         ))
       }
     </ul>
+    <p class="mt-6 text-sm font-medium opacity-80">
+      I also keep small browser tools for the math I redo often, like token
+      counts, cron schedules and connection pools.
+      <a
+        href="/tools/"
+        class="font-bold underline decoration-2 underline-offset-2"
+      >
+        See the free tools →
+      </a>
+    </p>
   </section>
 
   <section class="mx-auto max-w-6xl px-5">

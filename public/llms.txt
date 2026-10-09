@@ -1,28 +1,29 @@
-# Anass Ez-zouaine — Senior Backend Engineer · Software Architect · AI Engineer
+# Anass Ez-zouaine: Senior Backend Engineer, Software Architect, AI Engineer
 
-> Personal site, portfolio, and engineering blog of Anass Ez-zouaine. Shipping
-> production Laravel SaaS, Shopify Plus apps, and AI features (Anthropic
+> Personal site, portfolio and engineering blog of Anass Ez-zouaine. Shipping
+> production Laravel SaaS, Shopify Plus apps and AI features (Anthropic
 > Claude, MCP, RAG, agentic systems) since 2012. Remote-first since 2014, based
-> in Meknes, Morocco. Open to senior / lead / fractional CTO and advisory
+> in Meknes, Morocco. Open to senior, lead, fractional CTO and advisory
 > engagements, contract or employed.
+
+The blog has 88 posts on Laravel internals and Octane, AI engineering with
+Claude and MCP, RAG pipelines on pgvector, Shopify Plus and agentic commerce,
+DevOps and self-hosting with Coolify, and software architecture trade-offs.
+Email: me@ansezz.com
 
 ## About
 
-- [About](https://ansezz.com/about/): Background, experience, principles, and how I work.
-- [Work](https://ansezz.com/work/): 26 case-study entries plus live links — AI engineering, Shopify Plus apps and storefronts, multi-tenant SaaS.
-- [Services](https://ansezz.com/services/): Engagements — MVP build, AI integration sprint, Shopify Plus app, architecture audit. Rates, contracts, and time zones answered here.
+- [About](https://ansezz.com/about/): Background, experience, principles and how I work.
+- [Work](https://ansezz.com/work/): 26 case-study entries plus live links: AI engineering, Shopify Plus apps and storefronts, multi-tenant SaaS.
+- [Services](https://ansezz.com/services/): Engagements: MVP build, AI integration sprint, Shopify Plus app, architecture audit. Rates, contracts and time zones answered here.
 - [Now](https://ansezz.com/now/): What I'm focused on right now.
-- [Uses](https://ansezz.com/uses/): Tools, stack, and hardware I use daily.
-- [Contact](https://ansezz.com/contact/): Email, phone, booking, contact form, and socials.
+- [Uses](https://ansezz.com/uses/): Tools, stack and hardware I use daily.
+- [Contact](https://ansezz.com/contact/): Email, phone, booking, contact form and socials.
 
 ## Blog
 
-71 posts on Laravel internals and Octane, AI engineering with Claude + MCP,
-RAG pipelines on pgvector, Shopify Plus and agentic commerce, DevOps and
-self-hosting with Coolify, and software architecture trade-offs.
-
 - [Blog index](https://ansezz.com/blog/): All posts.
-- [Series](https://ansezz.com/blog/series/): 13 ordered reading paths — RAG in Production, Vibe Coding to Agentic Engineering, Infrastructure Decisions, AI Architecture Decisions, Shopify Plus Deep, Self-Hosting SaaS with Coolify, Async & Messaging, Engineering Roles Compared, Monolith and Modularity, Serving AI in Production, Production Operations, Performance and Limits, Laravel at Scale.
+- [Series](https://ansezz.com/blog/series/): 13 ordered reading paths: RAG in Production, Vibe Coding to Agentic Engineering, Infrastructure Decisions, AI Architecture Decisions, Shopify Plus Deep, Self-Hosting SaaS with Coolify, Async and Messaging, Engineering Roles Compared, Monolith and Modularity, Serving AI in Production, Production Operations, Performance and Limits, Laravel at Scale.
 - [AI posts](https://ansezz.com/blog/category/ai/)
 - [Laravel posts](https://ansezz.com/blog/category/laravel/)
 - [Shopify posts](https://ansezz.com/blog/category/shopify/)
@@ -32,16 +33,14 @@ self-hosting with Coolify, and software architecture trade-offs.
 
 ## Tools
 
-- [Free engineering tools](https://ansezz.com/tools/): 23 no-signup utilities that run entirely in the browser — LLM token/cost/context math and RAG chunking, encoding and hashing, JSON and URL tooling, infrastructure sizing and cron/epoch/chmod helpers, Shopify webhook HMAC and GID decoding, and filterable HTTP status/header/port references. Nothing is uploaded.
+- [Free engineering tools](https://ansezz.com/tools/): 33 no-signup utilities that run in the browser: LLM token, cost and context math, RAG chunking and pgvector sizing, MCP config and llms.txt generators, encoding and hashing, JSON, URL and PHP payload tooling, infrastructure sizing, Shopify helpers, and filterable HTTP status, header and port references. Nothing is uploaded.
+- [llms.txt generator and validator](https://ansezz.com/tools/llms-txt-generator/): Build or check an llms.txt file like this one.
 
 ## Reference
 
-- [Library](https://ansezz.com/library/): Books, docs, and tools I recommend.
+- [Library](https://ansezz.com/library/): Books, docs and tools I recommend.
 - [Feed hub](https://ansezz.com/feed/): Every subscription option and social profile.
-- [RSS](https://ansezz.com/rss.xml) · [JSON Feed](https://ansezz.com/feed.json) · [JSON Resume](https://ansezz.com/resume.json)
-- [Privacy](https://ansezz.com/privacy/): No analytics, no tracking, no cookies set by the site.
-
-## Contact
-
-- Email: me@ansezz.com
-- Site: https://ansezz.com
+- [RSS](https://ansezz.com/rss.xml): Full blog feed.
+- [JSON Feed](https://ansezz.com/feed.json): The same feed as JSON.
+- [JSON Resume](https://ansezz.com/resume.json): Machine-readable CV.
+- [Privacy](https://ansezz.com/privacy/): Cloudflare's privacy-focused analytics only, no cookies set by the site.

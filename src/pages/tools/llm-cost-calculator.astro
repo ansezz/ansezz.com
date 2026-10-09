@@ -8,7 +8,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 import {
   LLM_MODELS,
   LLM_DATA_VERIFIED,
@@ -20,7 +20,7 @@ const tool = getTool("/tools/llm-cost-calculator/");
 const TOOL_NAME = "LLM Cost Calculator";
 const TOOL_PATH = "/tools/llm-cost-calculator/";
 const TOOL_DESCRIPTION =
-  "LLM cost calculator for Claude, GPT and Gemini. Estimate API spend per request, day and month, with real prompt-cache read and write prices. Runs in your browser.";
+  "LLM cost calculator for Claude, GPT and Gemini. Estimate API spend per request, day and month, with prompt cache read and write prices. Runs in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -109,7 +109,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
@@ -120,6 +120,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL(TOOL_PATH, SITE.URL).href),
+  featureList: [
+    "Monthly API cost for Claude, GPT and Gemini models",
+    "Prompt cache read and write prices with hit rate",
+    "Batch API discount and long context pricing",
+    "Shareable link with your inputs",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

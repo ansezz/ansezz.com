@@ -146,7 +146,7 @@ LIMIT 5;
 
 ### Let the index do its job
 
-Order by the distance expression itself and keep the `LIMIT`. That is the shape pgvector's HNSW and IVFFlat indexes can use.
+Order by the distance expression itself and keep the `LIMIT`. That is the shape pgvector's HNSW and IVFFlat indexes can use. To see how big those indexes get and how much RAM they need, try my [pgvector size calculator](/tools/pgvector-calculator/).
 
 A `WHERE` filter on the similarity score (for example `> 0.8`) cannot use the index and forces a full scan, so apply a score threshold to the five rows you get back instead.
 

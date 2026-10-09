@@ -8,7 +8,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/url-parser/");
 
@@ -23,7 +23,7 @@ const breadcrumbLd = breadcrumbList([
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: "URL Parser & Encoder",
   applicationCategory: "DeveloperApplication",
@@ -34,6 +34,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL("/tools/url-parser/", SITE.URL).href),
+  featureList: [
+    "Splits a URL into its parts",
+    "Live query parameter editor",
+    "Compares encodeURI, encodeURIComponent and their decoders",
+    "Shareable link with the URL",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faq = [

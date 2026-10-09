@@ -7,7 +7,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/rag-chunk-splitter/");
 
@@ -85,7 +85,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: "RAG Chunk Splitter",
   applicationCategory: "DeveloperApplication",
@@ -96,6 +96,17 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(
+    new URL("/tools/rag-chunk-splitter/", SITE.URL).href,
+  ),
+  featureList: [
+    "Fixed, sentence, paragraph and markdown heading splits",
+    "Token count per chunk and overlap seams",
+    "Copy chunks as JSON or download them as JSONL",
+    "Embedding cost and storage estimate",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
@@ -410,6 +421,15 @@ const relatedLinks = [
         >
           <Icon name="lucide:copy" class="h-4 w-4" aria-hidden="true" />
           <span id="rag-chunk-splitter-copy-label">Copy chunks as JSON</span>
+        </button>
+        <button
+          type="button"
+          id="rag-chunk-splitter-jsonl"
+          class="border-ink bg-paper shadow-neo-sm hover:bg-yellow hover:shadow-neo-md inline-flex w-full items-center justify-center gap-2 rounded-[6px] border-[3px] px-4 py-2.5 text-xs font-bold tracking-wide uppercase transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 disabled:opacity-50"
+          disabled
+        >
+          <Icon name="lucide:download" class="h-4 w-4" aria-hidden="true" />
+          <span>Download JSONL</span>
         </button>
 
         <p class="mono text-[10px] tracking-widest uppercase opacity-70">

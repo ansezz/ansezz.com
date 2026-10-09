@@ -7,7 +7,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/chmod-calculator/");
 
@@ -93,7 +93,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: PAGE_TITLE,
   applicationCategory: "DeveloperApplication",
@@ -104,34 +104,20 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(
+    new URL("/tools/chmod-calculator/", SITE.URL).href,
+  ),
+  featureList: [
+    "Checkboxes, octal and symbolic modes in sync",
+    "Setuid, setgid and sticky bits",
+    "umask explainer",
+    "Shareable link with the mode",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
-
-const howToLd = howTo({
-  name: "Work out a Unix file permission mode",
-  description:
-    "Build an octal chmod mode from read, write and execute permissions for owner, group and others, and read back the symbolic form.",
-  url: new URL("/tools/chmod-calculator/", SITE.URL).href,
-  steps: [
-    {
-      name: "Set the owner permissions",
-      text: "Tick read, write and execute for the file's owner. They are worth 4, 2 and 1, summed into the first digit.",
-    },
-    {
-      name: "Set group and others",
-      text: "Repeat for the group and for everyone else, producing the second and third digits of the mode.",
-    },
-    {
-      name: "Read both forms",
-      text: "The tool shows the octal mode (755) alongside the symbolic form (rwxr-xr-x) and the ready-to-run chmod command.",
-    },
-    {
-      name: "Add a special bit if you need one",
-      text: "setuid, setgid and the sticky bit form an optional fourth leading digit, worth 4, 2 and 1 respectively — 4755 is setuid plus 755.",
-    },
-  ],
-});
 
 const related = [
   {
@@ -175,7 +161,7 @@ const relatedLinks = [
   eyebrow="Free tool"
   heading="Chmod Permissions Calculator."
   intro="Tick the boxes or type the number — both directions stay in sync. Includes the setuid, setgid, and sticky bits, with the S/T rendering everyone else gets wrong."
-  structuredData={[breadcrumbLd, appLd, faqLd, howToLd]}
+  structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-4xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
@@ -302,7 +288,7 @@ const relatedLinks = [
                     <td class="border-ink border-b-[2px] p-2">
                       <label
                         for={`chmod-${cls.key}-${bit.key}`}
-                        class="inline-flex cursor-pointer items-center gap-1.5"
+                        class="inline-flex min-h-10 cursor-pointer items-center gap-1.5"
                       >
                         <input
                           id={`chmod-${cls.key}-${bit.key}`}

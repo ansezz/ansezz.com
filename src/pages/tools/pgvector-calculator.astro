@@ -7,14 +7,14 @@ import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const TOOL_PATH = "/tools/pgvector-calculator/";
 const TOOL_NAME = "pgvector Size Calculator";
 const tool = getTool(TOOL_PATH);
 
 const DESCRIPTION =
-  "pgvector size calculator: estimate table size, HNSW or IVFFlat index size, RAM and maintenance_work_mem for your embeddings. vector, halfvec and bit. Runs in your browser.";
+  "pgvector size calculator: table size, HNSW or IVFFlat index size, RAM and maintenance_work_mem for your embeddings. vector, halfvec and bit, in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -53,7 +53,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
@@ -64,6 +64,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL(TOOL_PATH, SITE.URL).href),
+  featureList: [
+    "Table size for vector, halfvec and bit columns",
+    "HNSW and IVFFlat index size",
+    "RAM and maintenance_work_mem estimate",
+    "Formulas shown on the page",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

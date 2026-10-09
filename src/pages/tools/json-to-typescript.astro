@@ -7,7 +7,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/json-to-typescript/");
 
@@ -22,7 +22,7 @@ const breadcrumbLd = breadcrumbList([
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: "JSON to TypeScript & Zod",
   applicationCategory: "DeveloperApplication",
@@ -33,6 +33,17 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(
+    new URL("/tools/json-to-typescript/", SITE.URL).href,
+  ),
+  featureList: [
+    "TypeScript interfaces from a JSON sample",
+    "Zod v4 schema",
+    "Union merging and optional field inference",
+    "Date, email and URL format detection",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faq = [
@@ -63,31 +74,6 @@ const faq = [
 ];
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
-
-const howToLd = howTo({
-  name: "Generate a TypeScript interface or Zod schema from JSON",
-  description:
-    "Turn a sample JSON payload into a TypeScript interface or a Zod v4 schema, and know which parts of the output still need a human.",
-  url: new URL("/tools/json-to-typescript/", SITE.URL).href,
-  steps: [
-    {
-      name: "Paste a representative sample",
-      text: "Use a real response with every optional field populated. Anything absent from the sample cannot be inferred, so a thin sample produces a wrong type.",
-    },
-    {
-      name: "Choose the output format",
-      text: "Switch between a plain TypeScript interface and a Zod v4 schema depending on whether you need compile-time types or runtime validation.",
-    },
-    {
-      name: "Review the inferred optionality",
-      text: "A key missing from any object in an array is emitted as optional. Widen or narrow those by hand wherever the sample was not representative.",
-    },
-    {
-      name: "Check nested and union types",
-      text: "Nested objects become their own named types and mixed-type arrays become unions. Rename the generated types to match your domain vocabulary before committing them.",
-    },
-  ],
-});
 
 const SAMPLES: { label: string; value: unknown }[] = [
   {
@@ -264,7 +250,7 @@ const relatedLinks = [
   eyebrow="Free tool"
   heading="JSON to TypeScript & Zod."
   intro="Paste a JSON sample, get a TypeScript interface tree and a matching Zod v4 schema. It merges array elements into unions, marks the keys that went missing, and detects the string formats worth validating."
-  structuredData={[breadcrumbLd, appLd, faqLd, howToLd]}
+  structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
@@ -412,7 +398,7 @@ const relatedLinks = [
       <ul class="border-ink grid gap-2.5 border-t-[2.5px] pt-4 sm:grid-cols-2">
         <li>
           <label
-            class="flex cursor-pointer items-start gap-2.5 text-sm font-bold"
+            class="flex min-h-10 cursor-pointer items-start gap-2.5 text-sm font-bold"
           >
             <input
               id="jts-nested"
@@ -430,7 +416,7 @@ const relatedLinks = [
         </li>
         <li>
           <label
-            class="flex cursor-pointer items-start gap-2.5 text-sm font-bold"
+            class="flex min-h-10 cursor-pointer items-start gap-2.5 text-sm font-bold"
           >
             <input
               id="jts-formats"
@@ -448,7 +434,7 @@ const relatedLinks = [
         </li>
         <li>
           <label
-            class="flex cursor-pointer items-start gap-2.5 text-sm font-bold"
+            class="flex min-h-10 cursor-pointer items-start gap-2.5 text-sm font-bold"
           >
             <input
               id="jts-readonly"
@@ -465,7 +451,7 @@ const relatedLinks = [
         </li>
         <li>
           <label
-            class="flex cursor-pointer items-start gap-2.5 text-sm font-bold"
+            class="flex min-h-10 cursor-pointer items-start gap-2.5 text-sm font-bold"
           >
             <input
               id="jts-dates"

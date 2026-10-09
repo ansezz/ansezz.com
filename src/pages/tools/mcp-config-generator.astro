@@ -7,7 +7,7 @@ import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 import { MCP_CLIENTS } from "@/lib/mcp-config";
 
 const TOOL_PATH = "/tools/mcp-config-generator/";
@@ -16,7 +16,7 @@ const tool = getTool(TOOL_PATH);
 const VERIFIED = "October 4, 2026";
 
 const DESCRIPTION =
-  "MCP config generator and validator for Claude Desktop, Claude Code, Cursor and VS Code. Build mcp.json for stdio or remote HTTP servers, then paste a config to find mistakes.";
+  "MCP config generator and validator for Claude Desktop, Claude Code, Cursor and VS Code. Build stdio or remote HTTP configs, or paste one to find mistakes.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -88,7 +88,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
@@ -99,6 +99,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL(TOOL_PATH, SITE.URL).href),
+  featureList: [
+    "MCP config for Claude Desktop, Claude Code, Cursor and VS Code",
+    "stdio and remote HTTP servers",
+    "Validator for pasted configs",
+    "Per OS config file paths",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

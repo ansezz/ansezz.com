@@ -157,7 +157,14 @@ const CHARSETS: Record<ToggleKey, string> = {
   symbols: SYMBOLS,
 };
 
-type Mode = "custom" | "hex" | "base64url" | "passphrase" | "laravel";
+type Mode =
+  | "custom"
+  | "hex"
+  | "base64url"
+  | "passphrase"
+  | "laravel"
+  | "authjs"
+  | "django";
 
 interface Preset {
   mode: Mode;
@@ -177,6 +184,8 @@ const PRESETS: Record<string, Preset> = {
   },
   appsecret: { mode: "hex", length: 64 },
   laravel: { mode: "laravel" },
+  authjs: { mode: "authjs" },
+  django: { mode: "django" },
   passphrase: { mode: "passphrase", words: 8 },
 };
 
@@ -254,12 +263,22 @@ function randomPassphrase(words: number, nextByte: () => number): string {
 // Laravel APP_KEY: "base64:" + standard base64 of 32 random bytes, the same
 // shape `php artisan key:generate` writes for the default AES-256-CBC cipher.
 function laravelAppKey(): string {
-  const bytes = new Uint8Array(32);
+  return `base64:${randomBase64(32)}`;
+}
+
+// Standard base64 of n random bytes. Auth.js `npx auth secret` writes 32
+// bytes this way.
+function randomBase64(n: number): string {
+  const bytes = new Uint8Array(n);
   crypto.getRandomValues(bytes);
   let bin = "";
   for (const b of bytes) bin += String.fromCharCode(b);
-  return `base64:${btoa(bin)}`;
+  return btoa(bin);
 }
+
+// Django's get_random_secret_key(): 50 characters from this alphabet
+// (django/core/management/utils.py).
+const DJANGO_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)";
 
 function entropyBits(length: number, size: number): number {
   if (length <= 0 || size <= 1) return 0;
@@ -365,7 +384,11 @@ function init(): void {
 
   function paintMode(): void {
     const fixedAlphabet = mode === "hex" || mode === "base64url";
-    stringControls.hidden = mode === "passphrase" || mode === "laravel";
+    stringControls.hidden =
+      mode === "passphrase" ||
+      mode === "laravel" ||
+      mode === "authjs" ||
+      mode === "django";
     passphraseControls.hidden = mode !== "passphrase";
     charsetSet.disabled = fixedAlphabet;
     charsetSet.classList.toggle("opacity-50", fixedAlphabet);
@@ -401,6 +424,33 @@ function init(): void {
         256,
         "32 random bytes × 8 = 256 bits per key",
         "base64: prefix + standard base64 of 32 bytes (AES-256-CBC)",
+      );
+      return;
+    }
+
+    if (mode === "authjs") {
+      setError(null);
+      output.value = Array.from({ length: count }, () => randomBase64(32)).join(
+        "\n",
+      );
+      showStats(
+        256,
+        "32 random bytes × 8 = 256 bits per secret",
+        "standard base64 of 32 bytes, the same shape as npx auth secret",
+      );
+      return;
+    }
+
+    if (mode === "django") {
+      setError(null);
+      output.value = Array.from({ length: count }, () =>
+        randomChars(50, DJANGO_CHARS, nextByte),
+      ).join("\n");
+      const bits = entropyBits(50, DJANGO_CHARS.length);
+      showStats(
+        bits,
+        `50 chars × log₂(${DJANGO_CHARS.length}) ≈ ${Math.round(bits)} bits per key`,
+        DJANGO_CHARS,
       );
       return;
     }

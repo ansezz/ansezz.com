@@ -1,6 +1,28 @@
 // Client-side JWT decoder. Decodes header + payload (base64url), surfaces
 // common time claims as human dates. Does NOT verify the signature.
 
+/** "in 12 min" / "3 days ago" for a difference in seconds. */
+function relative(diffSec: number): string {
+  const abs = Math.abs(diffSec);
+  const units: [number, string][] = [
+    [86400 * 365, "year"],
+    [86400 * 30, "month"],
+    [86400, "day"],
+    [3600, "hour"],
+    [60, "min"],
+  ];
+  let text = `${Math.round(abs)} s`;
+  for (const [size, name] of units) {
+    if (abs >= size) {
+      const n = Math.floor(abs / size);
+      text = name === "min" ? `${n} min` : `${n} ${name}${n === 1 ? "" : "s"}`;
+      break;
+    }
+  }
+  if (abs < 1) return "now";
+  return diffSec >= 0 ? `in ${text}` : `${text} ago`;
+}
+
 function b64urlDecode(part: string): string {
   const b64 = part.replace(/-/g, "+").replace(/_/g, "/");
   const pad = b64.length % 4 ? "=".repeat(4 - (b64.length % 4)) : "";
@@ -76,9 +98,10 @@ function init(): void {
           k.className = "font-mono font-bold shrink-0 w-28";
           k.textContent = `${key} (${label})`;
           const v = document.createElement("span");
-          let txt = fmtTime(payload[key]);
+          let txt = `${fmtTime(payload[key])} (${relative(payload[key] - now)})`;
           if (key === "exp")
-            txt += payload[key] < now ? " — EXPIRED" : " — valid";
+            txt += payload[key] < now ? " · EXPIRED" : " · valid";
+          if (key === "nbf" && payload[key] > now) txt += " · not valid yet";
           v.textContent = txt;
           v.className =
             key === "exp" && payload[key] < now
