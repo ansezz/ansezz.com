@@ -8,14 +8,14 @@ import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import CodeBlock from "@/components/neobrutalist/CodeBlock.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/hash-generator/");
 
 const TOOL_NAME = "SHA Hash Generator";
 const TOOL_PATH = "/tools/hash-generator/";
 const TOOL_DESCRIPTION =
-  "Free SHA and HMAC generator. Hash text or a file and get SHA-1, SHA-256, SHA-384 and SHA-512 digests or HMAC tags in hex or base64. Runs in your browser, never uploaded.";
+  "Free SHA and HMAC generator. Hash text or a file to SHA-1, SHA-256, SHA-384 or SHA-512, or make an HMAC tag, in hex or base64. Runs in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -118,7 +118,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
@@ -129,6 +129,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL(TOOL_PATH, SITE.URL).href),
+  featureList: [
+    "SHA-1, SHA-256, SHA-384 and SHA-512",
+    "HMAC with your own key",
+    "Text or file input",
+    "Hex or base64 output",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

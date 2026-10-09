@@ -7,7 +7,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 import {
   LLM_MODELS,
   LLM_DATA_VERIFIED,
@@ -32,7 +32,7 @@ const breadcrumbLd = breadcrumbList([
 ]);
 
 const DESCRIPTION =
-  "Free context window checker. Paste a prompt and see if it fits Claude, GPT and Gemini windows, with exact GPT token counts, headroom and output reserve. Runs in your browser.";
+  "Free context window checker. Paste a prompt and see if it fits Claude, GPT and Gemini, with exact GPT token counts, headroom and output reserve.";
 
 // Named rows come from the shared model file (src/data/llm-models.ts), which
 // records when each window was checked. Models with the same provider, window
@@ -165,7 +165,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: "Context Window Checker",
   applicationCategory: "DeveloperApplication",
@@ -176,6 +176,17 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(
+    new URL("/tools/context-window-checker/", SITE.URL).href,
+  ),
+  featureList: [
+    "Tokens used per prompt segment",
+    "Headroom against named model context windows",
+    "Output reserve check",
+    "Exact GPT counts, estimates for other models",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

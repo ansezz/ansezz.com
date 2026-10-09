@@ -8,7 +8,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/epoch-converter/");
 
@@ -83,7 +83,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: "Epoch / Unix Timestamp Converter",
   applicationCategory: "DeveloperApplication",
@@ -94,6 +94,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL("/tools/epoch-converter/", SITE.URL).href),
+  featureList: [
+    "Unix timestamp to UTC, local, ISO 8601 and relative time",
+    "Seconds and milliseconds detection",
+    "Date to timestamp",
+    "Shareable link with the value",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

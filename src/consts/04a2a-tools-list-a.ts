@@ -53,7 +53,7 @@ export const TOOL_LIST_A: ToolEntry[] = [
       "Split text into retrieval chunks — fixed, sentence, paragraph, or markdown-heading aware — and see every chunk's token count and overlap seam.",
     href: "/tools/rag-chunk-splitter/",
     seoTitle: "RAG Chunk Splitter: Test Chunk Size and Overlap",
-    updated: "2026-10-03",
+    updated: "2026-10-10",
     services: ["ai"],
     icon: "lucide:scissors",
     tone: "pink",
@@ -106,6 +106,21 @@ export const TOOL_LIST_A: ToolEntry[] = [
     group: "ai",
     tags: ["mcp", "claude", "ai"],
   },
+  {
+    title: "llms.txt Generator & Validator",
+    blurb:
+      "Fill in a short form and get an llms.txt file in the llmstxt.org format, or paste one to check it line by line. Starts from your sitemap if you like.",
+    href: "/tools/llms-txt-generator/",
+    seoTitle: "llms.txt Generator and Validator (llmstxt.org)",
+    updated: "2026-10-10",
+    verifiedLabel: "October 10, 2026 (llmstxt.org v2)",
+    services: ["ai", "shopify"],
+    icon: "lucide:file-text",
+    tone: "green",
+    status: "live",
+    group: "ai",
+    tags: ["agentic-ai", "agentic-commerce", "mcp"],
+  },
 
   // ── Encoding & secrets ──
   {
@@ -114,7 +129,7 @@ export const TOOL_LIST_A: ToolEntry[] = [
       "Paste a JWT and read its header and payload — claims, algorithm, and expiry decoded in your browser. Decode-only; nothing is sent anywhere.",
     href: "/tools/jwt-decoder/",
     seoTitle: "JWT Decoder Online: Decode Tokens, No Upload",
-    updated: "2026-08-12",
+    updated: "2026-10-10",
     services: ["mvp", "ai"],
     icon: "lucide:key-round",
     tone: "purple",
@@ -170,7 +185,7 @@ export const TOOL_LIST_A: ToolEntry[] = [
       "Keys, hex secrets, passphrases and Laravel APP_KEY values from crypto.getRandomValues, never Math.random. Unbiased sampling, entropy readout, nothing logged.",
     href: "/tools/secret-generator/",
     seoTitle: "Secret Key Generator: API Keys, Laravel APP_KEY",
-    updated: "2026-10-03",
+    updated: "2026-10-10",
     services: ["mvp"],
     icon: "lucide:key-square",
     tone: "pink",

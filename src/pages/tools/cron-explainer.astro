@@ -7,7 +7,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage, howTo } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/cron-explainer/");
 
@@ -107,7 +107,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
@@ -118,38 +118,18 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL(TOOL_PATH, SITE.URL).href),
+  featureList: [
+    "Cron expression in plain English",
+    "Next five run times in local time or UTC",
+    "Laravel scheduler equivalent",
+    "Shareable link with the expression",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
-
-const howToLd = howTo({
-  name: "Read a cron expression",
-  description:
-    "Break a five-field cron schedule down field by field to see exactly when it fires, and catch the two mistakes that cause most surprise runs.",
-  url: new URL("/tools/cron-explainer/", SITE.URL).href,
-  steps: [
-    {
-      name: "Paste the five-field schedule",
-      text: "Minute, hour, day-of-month, month, day-of-week, in that order, separated by spaces.",
-    },
-    {
-      name: "Read the field breakdown",
-      text: "Each field is explained on its own, so you can see which one is not doing what you assumed.",
-    },
-    {
-      name: "Check how day-of-month and day-of-week interact",
-      text: "When both are restricted, cron fires on either match rather than requiring both. This is the single most common reason a job runs on an unexpected day.",
-    },
-    {
-      name: "Check your step values",
-      text: "A step like */7 restarts its count at the top of every hour, so it does not mean 'every 7 minutes' continuously across the hour boundary.",
-    },
-    {
-      name: "Confirm the timezone",
-      text: "Cron uses the host's system timezone, not UTC, unless the host itself is set to UTC. Check the machine rather than the expression.",
-    },
-  ],
-});
 
 const related = [
   {
@@ -210,7 +190,7 @@ const relatedLinks = [
   eyebrow="Free tool"
   heading="Cron Explainer."
   intro="Paste a 5-field cron expression and get a plain-English description, the next five run times and the Laravel scheduler line. I built it for my own schedulers."
-  structuredData={[breadcrumbLd, appLd, faqLd, howToLd]}
+  structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-3xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
@@ -407,6 +387,31 @@ const relatedLinks = [
           class="font-bold underline decoration-2 underline-offset-2"
           >epoch converter</a
         >, and make jobs idempotent so a double fire is boring.
+      </p>
+    </div>
+
+    <div class="space-y-4" id="github-actions-cron">
+      <h2 class="display text-2xl uppercase">Cron in GitHub Actions</h2>
+      <p class="text-base leading-relaxed opacity-90">
+        The <code class="mono font-bold">on: schedule</code> trigger takes the same
+        five fields, so anything this page explains works there. A few rules are different.
+        Schedules run in UTC unless you add a <code class="mono font-bold"
+          >timezone</code
+        > key next to the <code class="mono font-bold">cron</code> line, for example
+        <code class="mono font-bold break-all"
+          >timezone: "America/New_York"</code
+        >. The shortest interval is once every 5 minutes. Scheduled runs only
+        use the latest commit on the default branch, and GitHub says they can be
+        delayed when Actions is under heavy load, so do not use them for
+        anything that must fire on the exact minute.
+      </p>
+      <p class="text-sm opacity-80">
+        Source, checked October 10, 2026:{" "}
+        <a
+          href="https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule"
+          class="font-bold break-words underline"
+          rel="noopener">GitHub Docs, events that trigger workflows: schedule</a
+        >.
       </p>
     </div>
 

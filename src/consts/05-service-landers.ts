@@ -96,7 +96,7 @@ export const SERVICE_LANDERS: ServiceLander[] = [
         kind: "Post",
       },
       {
-        href: "/work/order-protection-saas/",
+        href: "/work/#work-saas",
         label: "Order protection SaaS",
         note: "A Shopify-adjacent SaaS build: billing, ops, and merchant workflows.",
         kind: "Page",
@@ -380,6 +380,7 @@ export const SERVICE_LANDERS_BY_SLUG: Record<string, ServiceLander> =
 export const SERVICE_LANDERS_BY_PACKAGE: Record<
   ServicePackageId,
   ServiceLander
-> = Object.fromEntries(
-  SERVICE_LANDERS.map((l) => [l.packageId, l]),
-) as Record<ServicePackageId, ServiceLander>;
+> = Object.fromEntries(SERVICE_LANDERS.map((l) => [l.packageId, l])) as Record<
+  ServicePackageId,
+  ServiceLander
+>;

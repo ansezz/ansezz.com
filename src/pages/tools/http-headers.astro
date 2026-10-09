@@ -6,7 +6,7 @@ import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/http-headers/");
 
@@ -1197,7 +1197,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: PAGE_TITLE,
   applicationCategory: "DeveloperApplication",
@@ -1208,6 +1208,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL("/tools/http-headers/", SITE.URL).href),
+  featureList: [
+    "Caching, CORS, security and proxy headers",
+    "Example value for each header",
+    "Live filter",
+    "Direct link to each header",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));
@@ -1263,6 +1272,19 @@ const relatedLinks = [
     note: "The line above the headers: every part of the request URL, broken out.",
   },
 ];
+
+// Stable per-row anchors (#429, #cache-control, #port-5432) so a row can be
+// linked directly. The first row with a given key wins; repeats get no id.
+const usedAnchors = new Set<string>();
+const anchorId = (key: string): string | undefined => {
+  const id = key
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  if (!id || usedAnchors.has(id)) return undefined;
+  usedAnchors.add(id);
+  return id;
+};
 ---
 
 <Page
@@ -1463,7 +1485,8 @@ const relatedLinks = [
                 <tr
                   data-header-row
                   data-header-keywords={h.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(h.name)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1554,7 +1577,8 @@ const relatedLinks = [
                 <tr
                   data-header-row
                   data-header-keywords={h.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(h.name)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1706,7 +1730,8 @@ const relatedLinks = [
                 <tr
                   data-header-row
                   data-header-keywords={h.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(h.name)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1808,7 +1833,8 @@ const relatedLinks = [
                 <tr
                   data-header-row
                   data-header-keywords={h.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(h.name)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -1914,7 +1940,8 @@ const relatedLinks = [
                 <tr
                   data-header-row
                   data-header-keywords={h.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(h.name)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -2050,7 +2077,8 @@ const relatedLinks = [
                 <tr
                   data-header-row
                   data-header-keywords={h.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(h.name)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -2155,7 +2183,8 @@ const relatedLinks = [
                 <tr
                   data-header-row
                   data-header-keywords={h.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(h.name)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -2255,7 +2284,8 @@ const relatedLinks = [
                 <tr
                   data-header-row
                   data-header-keywords={h.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(h.name)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -2359,7 +2389,8 @@ const relatedLinks = [
                 <tr
                   data-header-row
                   data-header-keywords={h.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(h.name)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"
@@ -2508,7 +2539,8 @@ const relatedLinks = [
                 <tr
                   data-header-row
                   data-header-keywords={h.keywords}
-                  class="hover:bg-bg-alt align-top transition-colors"
+                  id={anchorId(h.name)}
+                  class="hover:bg-bg-alt target:outline-pink scroll-mt-24 align-top transition-colors target:outline-[3px] target:-outline-offset-[3px]"
                 >
                   <th
                     scope="row"

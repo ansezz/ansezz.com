@@ -5,6 +5,7 @@
 // @/lib/tokens). Until it loads, a ~4 chars/token estimate stands in.
 
 import { loadGptCounter, type GptCounter } from "@/lib/tokens";
+import { downloadText } from "@/lib/download";
 
 type Strategy = "fixed" | "sentence" | "paragraph" | "markdown";
 type Unit = "tokens" | "chars";
@@ -854,6 +855,7 @@ function init(): void {
   const costEl = document.getElementById("rag-chunk-splitter-cost");
   const copyBtn = document.getElementById("rag-chunk-splitter-copy");
   const copyLabel = document.getElementById("rag-chunk-splitter-copy-label");
+  const jsonlBtn = document.getElementById("rag-chunk-splitter-jsonl");
   const sampleBtn = document.getElementById("rag-chunk-splitter-sample");
   const clearBtn = document.getElementById("rag-chunk-splitter-clear");
 
@@ -1019,6 +1021,9 @@ function init(): void {
     if (copyBtn instanceof HTMLButtonElement) {
       copyBtn.disabled = result.chunks.length === 0;
     }
+    if (jsonlBtn instanceof HTMLButtonElement) {
+      jsonlBtn.disabled = result.chunks.length === 0;
+    }
   }
 
   function scheduleRender(): void {
@@ -1077,19 +1082,25 @@ function init(): void {
     }, 1500);
   }
 
+  const exportRows = () =>
+    latest.map((c) => ({
+      index: c.index,
+      tokens: c.tokens,
+      chars: c.chars,
+      ...(c.headingPath ? { heading: c.headingPath } : {}),
+      text: c.text,
+    }));
+
+  // One JSON object per line, the format most embedding batch jobs read.
+  jsonlBtn?.addEventListener("click", () => {
+    if (latest.length === 0) return;
+    const lines = exportRows().map((row) => JSON.stringify(row));
+    downloadText("chunks.jsonl", lines.join("\n") + "\n", "application/jsonl");
+  });
+
   copyBtn?.addEventListener("click", async () => {
     if (latest.length === 0) return;
-    const payload = JSON.stringify(
-      latest.map((c) => ({
-        index: c.index,
-        tokens: c.tokens,
-        chars: c.chars,
-        ...(c.headingPath ? { heading: c.headingPath } : {}),
-        text: c.text,
-      })),
-      null,
-      2,
-    );
+    const payload = JSON.stringify(exportRows(), null, 2);
     try {
       await navigator.clipboard.writeText(payload);
       flashCopyLabel("Copied!");

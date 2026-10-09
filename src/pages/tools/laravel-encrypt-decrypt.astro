@@ -6,7 +6,7 @@ import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const TOOL_PATH = "/tools/laravel-encrypt-decrypt/";
 const TOOL_NAME = "Laravel Encrypt and Decrypt";
@@ -50,7 +50,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
@@ -61,6 +61,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript and the Web Crypto API",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL(TOOL_PATH, SITE.URL).href),
+  featureList: [
+    "Decrypts Laravel Crypt payloads and cookies",
+    "Encrypts with your APP_KEY",
+    "AES-CBC with MAC check and AES-GCM",
+    "Runs in the browser with Web Crypto",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

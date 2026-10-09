@@ -7,7 +7,7 @@ import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 import { GRAPHQL_RATE, PLAN_LABEL, REST_RATE } from "@/lib/shopify-rate-limits";
 
 const TOOL_PATH = "/tools/shopify-rate-limit-planner/";
@@ -62,7 +62,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
@@ -73,6 +73,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL(TOOL_PATH, SITE.URL).href),
+  featureList: [
+    "GraphQL Admin, REST and Storefront limits by plan",
+    "Time to sync N records",
+    "Batch size and concurrency advice",
+    "Uses costs from a pasted response",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

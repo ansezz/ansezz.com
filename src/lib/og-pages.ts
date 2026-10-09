@@ -163,6 +163,12 @@ export const PAGE_OG: PageOg[] = [
     title: "MCP config for every client, checked.",
   },
   {
+    slug: "tool-llms-txt-generator",
+    path: "/tools/llms-txt-generator/",
+    label: "Free tool",
+    title: "Give agents a map of your site.",
+  },
+  {
     slug: "tool-shopify-rate-limit-planner",
     path: "/tools/shopify-rate-limit-planner/",
     label: "Free tool",

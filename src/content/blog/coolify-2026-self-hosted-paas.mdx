@@ -146,7 +146,7 @@ This is where I'll break with the usual Coolify writeup, because there's a claim
 Here's what Coolify actually gives you:
 
 - **Automatic TLS.** Let's Encrypt issuance and renewal for custom domains, handled by the bundled proxy: Traefik by default, Caddy still marked experimental.
-- **Encrypted secrets.** Environment variable values are stored with Laravel's `encrypted` cast, so they're not sitting in the database as plaintext. Scopes go per-resource, with shared variables at the environment, project, and team level, and separate build-time and runtime visibility.
+- **Encrypted secrets.** Environment variable values are stored with Laravel's `encrypted` cast, so they're not sitting in the database as plaintext. That cast uses Laravel's standard encrypted payload, the same format my [Laravel decrypt tool](/tools/laravel-encrypt-decrypt/) reads with an APP_KEY. Scopes go per-resource, with shared variables at the environment, project, and team level, and separate build-time and runtime visibility.
 - **Team roles.** `owner`, `admin`, and `member` per team, so a contractor doesn't get production database access.
 - **Scheduled backups.** Postgres gets first-class scheduled dumps (Coolify backs up its own database the same way); MySQL, MariaDB, and MongoDB are covered too. Destination is local disk or any S3-compatible bucket. Backblaze B2 and Cloudflare R2 both work and cost almost nothing.
 

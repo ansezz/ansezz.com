@@ -7,7 +7,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/json-formatter/");
 
@@ -112,7 +112,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
@@ -123,6 +123,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL("/tools/json-formatter/", SITE.URL).href),
+  featureList: [
+    "Format, minify and sort keys",
+    "Exact line and column for syntax errors",
+    "Hints for common mistakes like trailing commas",
+    "Runs in the browser",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

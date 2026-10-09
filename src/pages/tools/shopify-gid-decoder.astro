@@ -9,7 +9,7 @@ import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import ComparisonTable from "@/components/neobrutalist/ComparisonTable.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const tool = getTool("/tools/shopify-gid-decoder/");
 
@@ -24,7 +24,7 @@ const breadcrumbLd = breadcrumbList([
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: "Shopify GID Decoder",
   applicationCategory: "DeveloperApplication",
@@ -35,6 +35,17 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(
+    new URL("/tools/shopify-gid-decoder/", SITE.URL).href,
+  ),
+  featureList: [
+    "Shopify GID to numeric ID and back",
+    "Base64 legacy ID decoding",
+    "Bulk mode",
+    "Shareable link with the input",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faq = [

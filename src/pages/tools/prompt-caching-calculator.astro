@@ -7,14 +7,14 @@ import NeoCard from "@/components/neobrutalist/NeoCard.astro";
 import StickyNote from "@/components/neobrutalist/StickyNote.astro";
 import { Icon } from "astro-icon/components";
 import { SITE, getTool } from "@/consts";
-import { breadcrumbList, faqPage } from "@/lib/seo";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 
 const TOOL_PATH = "/tools/prompt-caching-calculator/";
 const TOOL_NAME = "Prompt Caching Calculator";
 const tool = getTool(TOOL_PATH);
 
 const DESCRIPTION =
-  "Prompt caching calculator: compare LLM API cost with and without caching. Set prefix tokens, hit rate, write premium and read discount, and see savings and the break even hit rate.";
+  "Prompt caching calculator: LLM API cost with and without caching. Set prefix tokens, hit rate, write premium and read discount to see savings and break even.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -107,7 +107,7 @@ const faq = [
 
 const appLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   dateModified: tool.updated,
   name: TOOL_NAME,
   applicationCategory: "DeveloperApplication",
@@ -118,6 +118,15 @@ const appLd = {
   isAccessibleForFree: true,
   browserRequirements: "Requires JavaScript",
   author: { "@id": `${SITE.URL}#person` },
+  inLanguage: "en",
+  screenshot: toolScreenshot(new URL(TOOL_PATH, SITE.URL).href),
+  featureList: [
+    "Cost with and without prompt caching",
+    "Cache write premium and read discount",
+    "Break even hit rate",
+    "Editable provider presets",
+  ],
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

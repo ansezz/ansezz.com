@@ -74,6 +74,7 @@ const appLd = {
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   isAccessibleForFree: true,
   author: { "@id": `${SITE.URL}#person` },
+  creator: { "@id": `${SITE.URL}#person` },
 };
 
 const faqLd = faqPage(faq.map((f) => ({ question: f.q, answer: f.a })));

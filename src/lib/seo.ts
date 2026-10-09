@@ -1,4 +1,5 @@
 import { SITE } from "@/consts";
+import { pageOgPath } from "@/lib/og-pages";
 
 interface BreadcrumbEntry {
   name: string;
@@ -136,29 +137,13 @@ export function faqPage(items: FaqItem[]) {
   };
 }
 
-interface HowToStep {
-  name: string;
-  text: string;
-}
-
-export function howTo(opts: {
-  name: string;
-  description: string;
-  url: string;
-  steps: HowToStep[];
-}) {
-  const { name, description, url, steps } = opts;
-  return {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    "@id": `${url}#howto`,
-    name,
-    description,
-    step: steps.map((s, i) => ({
-      "@type": "HowToStep",
-      position: i + 1,
-      name: s.name,
-      text: s.text,
-    })),
-  };
+/**
+ * Absolute URL of a tool page's OG card, used as the WebApplication
+ * screenshot. Falls back to the site card when a page has no own card.
+ */
+export function toolScreenshot(pageUrl: string): string {
+  return new URL(
+    pageOgPath(new URL(pageUrl, SITE.URL).pathname) ?? "/og.png",
+    SITE.URL,
+  ).href;
 }
