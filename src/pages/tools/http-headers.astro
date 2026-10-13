@@ -96,7 +96,7 @@ const CACHING: HeaderRow[] = [
     purpose:
       "An absolute date after which the response is stale. The HTTP/1.0 way of saying max-age.",
     example: "Expires: Wed, 12 Aug 2026 09:14:00 GMT",
-    note: "Ignored whenever Cache-Control max-age or s-maxage is present. Expires: 0 is the widespread non-conforming way to say 'already stale' — use no-cache instead.",
+    note: "Ignored whenever Cache-Control max-age or s-maxage is present. Expires: 0 is the widespread non-conforming way to say 'already stale'. Use no-cache instead.",
     flag: "legacy",
   },
   {
@@ -194,7 +194,7 @@ const DIRECTIVES: HeaderRow[] = [
     name: "max-age=N",
     dir: "both",
     purpose:
-      "On a response: fresh for N seconds, counted from when the origin generated it — not from when you received it. On a request: I will not accept anything older than N seconds.",
+      "On a response: fresh for N seconds, counted from when the origin generated it, not from when you received it. On a request: I will not accept anything older than N seconds.",
     example: "Cache-Control: max-age=600",
     note: "Age is what makes the origin-relative part work. A response that spent 500s in a CDN has 100s of freshness left, not 600.",
     keywords: "ttl freshness",
@@ -203,7 +203,7 @@ const DIRECTIVES: HeaderRow[] = [
     name: "s-maxage=N",
     dir: "res",
     purpose:
-      "Freshness for shared caches only — CDN, reverse proxy. Overrides both max-age and Expires for them, and leaves the browser on max-age.",
+      "Freshness for shared caches only (CDN, reverse proxy). Overrides both max-age and Expires for them, and leaves the browser on max-age.",
     example: "Cache-Control: max-age=60, s-maxage=86400",
     note: "Also implies proxy-revalidate, so a shared cache may not serve it stale once it expires.",
     keywords: "cdn shared cache proxy",
@@ -230,7 +230,7 @@ const DIRECTIVES: HeaderRow[] = [
     name: "private",
     dir: "res",
     purpose:
-      "Only a single-user cache — the browser — may store this. Shared caches must not.",
+      "Only a single-user cache (the browser) may store this. Shared caches must not.",
     example: "Cache-Control: private, no-store",
     note: "Not a security control. It is a request to well-behaved caches, and the body still passes in cleartext through anything terminating your TLS.",
     keywords: "shared cache browser",
@@ -239,7 +239,7 @@ const DIRECTIVES: HeaderRow[] = [
     name: "public",
     dir: "res",
     purpose:
-      "Storable even in the cases where it normally would not be — most usefully, when the request carried an Authorization header.",
+      "Storable even in the cases where it normally would not be. Most usefully, when the request carried an Authorization header.",
     example: "Cache-Control: public, max-age=3600",
     note: "Redundant on an ordinary unauthenticated GET; that is already cacheable. Adding it out of habit to authenticated responses is how private data lands in a CDN.",
     keywords: "authorization shared cache",
@@ -293,7 +293,7 @@ const DIRECTIVES: HeaderRow[] = [
     purpose:
       "Intermediaries must not recompress images, minify, or otherwise rewrite the payload.",
     example: "Cache-Control: no-transform",
-    note: "Worth setting on anything signed, checksummed, or byte-exact — and on images where a carrier proxy would otherwise degrade them.",
+    note: "Worth setting on anything signed, checksummed, or byte-exact, and on images where a carrier proxy would otherwise degrade them.",
     keywords: "proxy compression rewrite",
   },
   {
@@ -355,7 +355,7 @@ const CONDITIONAL: HeaderRow[] = [
     dir: "req",
     purpose: "Ask for specific byte ranges instead of the whole body.",
     example: "Range: bytes=0-1048575",
-    note: "Answered with 206 and a Content-Range, or 416 if the range makes no sense. Multi-range requests are legal and mostly a denial-of-service vector — cap them.",
+    note: "Answered with 206 and a Content-Range, or 416 if the range makes no sense. Multi-range requests are legal and mostly a denial-of-service vector. Cap them.",
     keywords: "206 video seek resume partial download streaming",
   },
   {
@@ -394,7 +394,7 @@ const CONTENT: HeaderRow[] = [
     purpose:
       "Media types the client can handle, with q-weights expressing preference.",
     example: "Accept: application/json;q=1.0, text/plain;q=0.5, */*;q=0.1",
-    note: "If nothing matches, the honest answer is 406. Most APIs ignore this and always return JSON, which is fine — just do not also advertise negotiation you do not do.",
+    note: "If nothing matches, the honest answer is 406. Most APIs ignore this and always return JSON, which is fine, just do not also advertise negotiation you do not do.",
     keywords: "content negotiation 406 media type",
   },
   {
@@ -444,7 +444,7 @@ const CONTENT: HeaderRow[] = [
     name: "Content-Language",
     dir: "res",
     purpose:
-      "Which language the body is in — the answer to Accept-Language, and one of the seven headers CORS exposes by default.",
+      "Which language the body is in, the answer to Accept-Language, and one of the seven headers CORS exposes by default.",
     example: "Content-Language: en-GB",
     keywords: "i18n",
   },
@@ -461,7 +461,7 @@ const CONTENT: HeaderRow[] = [
     dir: "res",
     purpose: "Render inline or download, and what to call the file.",
     example: 'Content-Disposition: attachment; filename="q3-report.csv"',
-    note: "For non-ASCII names use the filename* form with UTF-8 percent-encoding. Sanitise it either way — an unescaped filename is a header-injection hole.",
+    note: "For non-ASCII names use the filename* form with UTF-8 percent-encoding. Sanitise it either way: an unescaped filename is a header-injection hole.",
     keywords: "download attachment inline filename",
   },
   {
@@ -486,7 +486,7 @@ const CONTENT: HeaderRow[] = [
     name: "Transfer-Encoding",
     dir: "both",
     purpose:
-      "How the message body was framed on this hop — in practice, chunked.",
+      "How the message body was framed on this hop, in practice, chunked.",
     example: "Transfer-Encoding: chunked",
     note: "HTTP/1.1 only. Forbidden in HTTP/2 and HTTP/3, which do their own framing.",
     keywords: "chunked framing smuggling",
@@ -536,7 +536,7 @@ const CORS: HeaderRow[] = [
     purpose:
       "Which origin the request came from. The browser sets it and page JavaScript cannot change it.",
     example: "Origin: https://app.example.com",
-    note: "Sent on every cross-origin request and on same-origin POST too. It can legitimately be the literal string null — sandboxed iframes, some redirects — so never let null pass an allowlist check.",
+    note: "Sent on every cross-origin request and on same-origin POST too. It can legitimately be the literal string null (sandboxed iframes, some redirects) so never let null pass an allowlist check.",
     keywords: "cors preflight csrf",
   },
   {
@@ -560,7 +560,7 @@ const CORS: HeaderRow[] = [
     name: "Access-Control-Allow-Origin",
     dir: "res",
     purpose:
-      "The single origin allowed to read this response — or the wildcard.",
+      "The single origin allowed to read this response, or the wildcard.",
     example: "Access-Control-Allow-Origin: https://app.example.com",
     note: "You may send one origin, never a list. Check the request Origin against your allowlist, echo it back, and add Vary: Origin the moment you do.",
     keywords: "cors acao wildcard allowlist",
@@ -606,7 +606,7 @@ const CORS: HeaderRow[] = [
     purpose:
       "How long the browser may cache this preflight result, in seconds.",
     example: "Access-Control-Max-Age: 600",
-    note: "The default is 5 seconds and browsers clamp the maximum — Chromium at 7200, Firefox at 86400. Anything larger is silently reduced, not honoured.",
+    note: "The default is 5 seconds and browsers clamp the maximum: Chromium at 7200, Firefox at 86400. Anything larger is silently reduced, not honoured.",
     keywords: "cors preflight cache latency",
   },
   {
@@ -628,7 +628,7 @@ const SECURITY: HeaderRow[] = [
       "Forces HTTPS for this host for max-age seconds, with no click-through past certificate errors.",
     example:
       "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload",
-    note: "Ignored over plain HTTP by design. includeSubDomains covers hosts you forgot about; preload bakes you into browser binaries and is genuinely hard to undo. Ship a short max-age first.",
+    note: "Ignored over plain HTTP by design. includeSubDomains covers hosts you forgot about; preload bakes you into browser binaries and is hard to undo. Ship a short max-age first.",
     keywords: "hsts https tls downgrade preload",
   },
   {
@@ -647,7 +647,7 @@ const SECURITY: HeaderRow[] = [
     purpose: "The same policy, enforced nowhere, violations reported.",
     example:
       "Content-Security-Policy-Report-Only: default-src 'self'; report-to csp",
-    note: "Always run a new policy here first. Real traffic breaks a CSP in ways staging never will — analytics snippets, injected extensions, a marketing tag someone added last quarter.",
+    note: "Always run a new policy here first. Real traffic breaks a CSP in ways staging never will. Analytics snippets, injected extensions, a marketing tag someone added last quarter.",
     keywords: "csp report violations rollout",
   },
   {
@@ -691,7 +691,7 @@ const SECURITY: HeaderRow[] = [
     purpose:
       "Severs the window.opener link between your document and cross-origin ones.",
     example: "Cross-Origin-Opener-Policy: same-origin",
-    note: "Half of the cross-origin isolation pair, and worth setting on its own — it closes a family of tab-napping and cross-window probing attacks.",
+    note: "Half of the cross-origin isolation pair, and worth setting on its own. It closes a family of tab-napping and cross-window probing attacks.",
     keywords: "coop isolation opener tabnabbing",
   },
   {
@@ -725,7 +725,7 @@ const SECURITY: HeaderRow[] = [
     purpose:
       "Tells the browser to wipe cookies, storage or cache for this origin.",
     example: 'Clear-Site-Data: "cookies", "storage"',
-    note: "The values are quoted strings — unquoted is a silent no-op. Send it on logout. HTTPS only, and cache clearing support varies.",
+    note: "The values are quoted strings. Unquoted is a silent no-op. Send it on logout. HTTPS only, and cache clearing support varies.",
     keywords: "logout session cookies storage wipe",
   },
   {
@@ -812,7 +812,7 @@ const AUTH: HeaderRow[] = [
     name: "Authentication-Info",
     dir: "res",
     purpose:
-      "Extra data at the end of a successful authenticated exchange — a next nonce, mutual-auth proof.",
+      "Extra data at the end of a successful authenticated exchange: a next nonce, mutual-auth proof.",
     example: 'Authentication-Info: nextnonce="a1b2c3d4"',
     note: "Digest and mutual schemes only. You will never write it by hand for a bearer-token API.",
     keywords: "digest mutual nonce",
@@ -832,7 +832,7 @@ const AUTH: HeaderRow[] = [
     purpose: "Sets one cookie, with its lifetime and its security flags.",
     example:
       "Set-Cookie: sid=8f3c1d…; Max-Age=3600; Path=/; Secure; HttpOnly; SameSite=Lax",
-    note: "The one header that legitimately repeats — never join them with commas. SameSite=Lax by default; SameSite=None is only valid with Secure. The __Host- prefix forces Secure, Path=/ and no Domain, and is the strongest cookie you can ship.",
+    note: "The one header that legitimately repeats, never join them with commas. SameSite=Lax by default; SameSite=None is only valid with Secure. The __Host- prefix forces Secure, Path=/ and no Domain, and is the strongest cookie you can ship.",
     keywords: "session httponly secure samesite __host prefix",
   },
 ];
@@ -852,7 +852,7 @@ const RATE_LIMIT: HeaderRow[] = [
     name: "RateLimit-Policy",
     dir: "res",
     purpose:
-      "The policy itself — quota and window length — so a client can pace itself instead of probing for the wall.",
+      "The policy itself (quota and window length) so a client can pace itself instead of probing for the wall.",
     example: 'RateLimit-Policy: "default";q=100;w=60',
     note: "Send this alongside RateLimit and a well-written client never needs to hit a 429 at all.",
     flag: "draft",
@@ -880,7 +880,7 @@ const RATE_LIMIT: HeaderRow[] = [
     dir: "res",
     purpose: "Earlier-draft field: seconds until the window resets.",
     example: "RateLimit-Reset: 28",
-    note: "Delta-seconds here — unlike the X- version, which is where most of the confusion comes from.",
+    note: "Delta-seconds here, unlike the X- version, which is where most of the confusion comes from.",
     flag: "draft",
     keywords: "429 window reset",
   },
@@ -904,7 +904,7 @@ const RATE_LIMIT: HeaderRow[] = [
   {
     name: "X-RateLimit-Reset",
     dir: "res",
-    purpose: "When the window resets — and nobody agrees on the unit.",
+    purpose: "When the window resets, and nobody agrees on the unit.",
     example: "X-RateLimit-Reset: 1786527600",
     note: "GitHub sends a Unix timestamp in seconds. Plenty of others send seconds remaining. A client that guesses wrong either hammers you immediately or sleeps for fifty-six years.",
     flag: "de-facto",
@@ -914,7 +914,7 @@ const RATE_LIMIT: HeaderRow[] = [
     name: "Retry-After",
     dir: "res",
     purpose:
-      "How long to wait before trying again — delta-seconds or an HTTP-date.",
+      "How long to wait before trying again: delta-seconds or an HTTP-date.",
     example: "Retry-After: 30",
     note: "Valid on 429, on 503, and on a 3xx. Sending it on a 503 during a bad deploy turns a retry storm into an orderly queue, which is the cheapest availability win in this table.",
     keywords: "429 503 backoff retry storm",
@@ -947,7 +947,7 @@ const PROXY: HeaderRow[] = [
     dir: "req",
     purpose: "The Host the client originally asked for.",
     example: "X-Forwarded-Host: api.example.com",
-    note: "Build absolute URLs from this without an allowlist and you have host-header injection — including password-reset links that point at somebody else's domain.",
+    note: "Build absolute URLs from this without an allowlist and you have host-header injection, including password-reset links that point at somebody else's domain.",
     flag: "de-facto",
     keywords: "host header injection absolute url",
   },
@@ -991,7 +991,7 @@ const PROXY: HeaderRow[] = [
     purpose:
       "Which virtual host on this connection the request is for. Mandatory in HTTP/1.1.",
     example: "Host: api.example.com",
-    note: "HTTP/2 and HTTP/3 use the :authority pseudo-header instead. Either way it is caller-controlled input — validate it against known hosts before it reaches routing or URL generation.",
+    note: "HTTP/2 and HTTP/3 use the :authority pseudo-header instead. Either way it is caller-controlled input. Validate it against known hosts before it reaches routing or URL generation.",
     keywords: "virtual host authority injection routing",
   },
   {
@@ -1016,7 +1016,7 @@ const PROXY: HeaderRow[] = [
     name: "Upgrade",
     dir: "both",
     purpose:
-      "Ask to switch protocols on this connection — in practice, WebSocket.",
+      "Ask to switch protocols on this connection, in practice, WebSocket.",
     example: "Upgrade: websocket",
     note: "Needs Connection: Upgrade beside it. Over HTTP/2 the mechanism is extended CONNECT instead, so a 101 never appears there.",
     keywords: "websocket 101 switching protocols",
@@ -1043,7 +1043,7 @@ const PROXY: HeaderRow[] = [
     name: "Alt-Svc",
     dir: "res",
     purpose:
-      "Advertises the same service on another protocol or endpoint — how browsers discover HTTP/3.",
+      "Advertises the same service on another protocol or endpoint, which is how browsers discover HTTP/3.",
     example: 'Alt-Svc: h3=":443"; ma=86400',
     note: "Cached for ma seconds. It is the reason your first page load was HTTP/2 and the second was QUIC.",
     keywords: "http3 quic alternative service",
@@ -1065,7 +1065,7 @@ const OBSERVABILITY: HeaderRow[] = [
     dir: "res",
     purpose: "The origin software.",
     example: "Server: nginx",
-    note: "Free reconnaissance for anyone scanning you. Strip the version number at minimum — no client has ever needed it.",
+    note: "Free reconnaissance for anyone scanning you. Strip the version number at minimum. No client has ever needed it.",
     keywords: "fingerprint version disclosure",
   },
   {
@@ -1075,7 +1075,7 @@ const OBSERVABILITY: HeaderRow[] = [
       "Client software string, historically a stack of compatibility lies.",
     example:
       "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
-    note: "Frozen and reduced in Chromium. Do not branch behaviour on it — use feature detection, or client hints if you genuinely need the device.",
+    note: "Frozen and reduced in Chromium. Do not branch behaviour on it. Use feature detection, or client hints if you need the device.",
     keywords: "browser detection client hints sniffing",
   },
   {
@@ -1293,7 +1293,7 @@ const anchorId = (key: string): string | undefined => {
   description={PAGE_DESCRIPTION}
   eyebrow="Free tool"
   heading="HTTP Headers."
-  intro="Every request and response header that earns its place in production — what it does, a value you would really see on the wire, and the trap that comes with it. Type in the box to filter the whole reference."
+  intro="Every request and response header that earns its place in production: what it does, a value you would really see on the wire, and the trap that comes with it. Type in the box to filter the whole reference."
   structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
@@ -1435,11 +1435,10 @@ const anchorId = (key: string): string | undefined => {
       <h2 class="display text-2xl uppercase">Caching and revalidation</h2>
       <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
         <p>
-          Caching headers are the highest-leverage lines of config you will
-          write all quarter. A correct <span class="mono">Cache-Control</span> on
-          a hot endpoint removes more load than a week of query tuning, and a wrong
-          one serves the wrong body to the wrong person from a machine you do not
-          operate.
+          Caching headers are the most valuable lines of config you will write
+          all quarter. A correct <span class="mono">Cache-Control</span> on a hot
+          endpoint removes more load than a week of query tuning, and a wrong one
+          serves the wrong body to the wrong person from a machine you do not operate.
         </p>
         <p>
           Two mental models make the rest of this section obvious. First,
@@ -1635,7 +1634,7 @@ const anchorId = (key: string): string | undefined => {
               >no-cache</span
             > means is <span class="mono">no-store</span>. If a response
             contains a session token, an invoice, or someone's address, that is
-            the one you need — and it should be paired with <span class="mono"
+            the one you need, and it should be paired with <span class="mono"
               >private</span
             >
             so an old intermediary that misreads one of them still gets the message.
@@ -1654,7 +1653,7 @@ const anchorId = (key: string): string | undefined => {
             pick a language from <span class="mono">Accept-Language</span>. You
             echo the caller's <span class="mono">Origin</span> into <span
               class="mono">Access-Control-Allow-Origin</span
-            >. Each of those makes the response depend on a request header — and
+            >. Each of those makes the response depend on a request header, and
             if that header is not in <span class="mono">Vary</span>, the cache
             stores one variant under a key that does not mention it.
           </p>
@@ -1784,7 +1783,7 @@ const anchorId = (key: string): string | undefined => {
           This group describes the body: what format it is in, how it was
           compressed, how long it is, and what the client would have preferred.
           Most APIs use about a third of it and ignore the rest, which is a
-          defensible choice — the trouble starts when you half-implement
+          defensible choice. The trouble starts when you half-implement
           negotiation and forget the <span class="mono">Vary</span> that makes it
           safe behind a cache.
         </p>
@@ -1998,7 +1997,7 @@ const anchorId = (key: string): string | undefined => {
           </p>
           <p class="mt-3 text-sm leading-relaxed">
             So: authorise every request on its own merits, and treat CORS as
-            what it is — a rule about which web origins may read your responses.
+            what it is: a rule about which web origins may read your responses.
             Two things there do carry real weight. Reflecting any
             <span class="mono">Origin</span> you are handed while also sending
             <span class="mono">Access-Control-Allow-Credentials: true</span> hands
@@ -2136,7 +2135,7 @@ const anchorId = (key: string): string | undefined => {
           <span class="mono">Authorization</span> changes how your response is cached:
           a shared cache must not store it unless you explicitly opt in with
           <span class="mono">public</span> or <span class="mono">s-maxage</span
-          >. That protection is real, and so is the footgun — adding
+          >. That protection is real, and so is the footgun. Adding
           <span class="mono">public</span> out of habit to an authenticated endpoint
           is how one customer's data ends up served to another from a CDN.
         </p>
@@ -2242,12 +2241,12 @@ const anchorId = (key: string): string | undefined => {
           Beyond that there are two competing conventions. The
           <span class="mono">X-RateLimit-</span> triplet is the de-facto original,
           specified nowhere, with no agreement on whether the reset value is a Unix
-          timestamp or a countdown. The IETF work — <span class="mono"
+          timestamp or a countdown. The IETF work: <span class="mono"
             >RateLimit</span
-          > and <span class="mono">RateLimit-Policy</span> — fixes that with structured
-          fields and explicit parameters, but it is still a draft and the shape has
-          changed between revisions. If you run a public API, emit both, document
-          the unit in plain words, and remember to list them in
+          > and <span class="mono">RateLimit-Policy</span>: fixes that with
+          structured fields and explicit parameters, but it is still a draft and
+          the shape has changed between revisions. If you run a public API, emit
+          both, document the unit in plain words, and remember to list them in
           <span class="mono">Access-Control-Expose-Headers</span> or your browser
           clients will never see them.
         </p>
@@ -2341,8 +2340,8 @@ const anchorId = (key: string): string | undefined => {
       </h2>
       <div data-header-prose class="mt-3 max-w-3xl space-y-3 leading-relaxed">
         <p>
-          The moment anything sits in front of your application — a load
-          balancer, a CDN, an ingress controller — the connection your code sees
+          The moment anything sits in front of your application (a load
+          balancer, a CDN, an ingress controller) the connection your code sees
           is not the connection the user made. The client IP belongs to the
           proxy, the scheme is plain HTTP because TLS was terminated a hop ago,
           and the Host may have been rewritten. The
@@ -2450,8 +2449,8 @@ const anchorId = (key: string): string | undefined => {
             <span class="mono">X-Forwarded-For</span> is a list that each proxy appends
             to. Nothing stops a client from sending one that is already populated,
             so what arrives at your app is the caller's fiction plus whatever your
-            own infrastructure added. Reading the leftmost entry — the advice in most
-            blog posts — means reading a value the attacker chose. That is how per-IP
+            own infrastructure added. Reading the leftmost entry (the advice in most
+            blog posts) means reading a value the attacker chose. That is how per-IP
             rate limits get bypassed, how IP allowlists get defeated, and how audit
             logs end up full of addresses that never existed.
           </p>
@@ -2460,10 +2459,10 @@ const anchorId = (key: string): string | undefined => {
             nearest proxy appended and the client could not influence, and walk
             left past exactly as many addresses as you operate proxies. The
             first address beyond your own hops is the real client. Every serious
-            framework has a setting for this — trusted proxies in Laravel and
+            framework has a setting for this. Trusted proxies in Laravel and
             Symfony,
             <span class="mono">ProxyFix</span> in Werkzeug,
-            <span class="mono">trust proxy</span> in Express, real_ip in nginx — and
+            <span class="mono">trust proxy</span> in Express, real_ip in nginx, and
             all of them need the hop count or CIDR list to be correct. Configure it
             per environment, because the number of hops in staging is rarely the number
             in production.
@@ -2472,7 +2471,7 @@ const anchorId = (key: string): string | undefined => {
             While you are there: have the edge overwrite
             <span class="mono">X-Real-IP</span> rather than pass it through, and strip
             any inbound <span class="mono">X-Forwarded-Host</span> unless you validate
-            it — a forged Host is how password-reset links end up pointing at somebody
+            it: a forged Host is how password-reset links end up pointing at somebody
             else's domain.
           </p>
         </NeoCard>
@@ -2494,8 +2493,8 @@ const anchorId = (key: string): string | undefined => {
           <span class="mono">X-Request-ID</span> generated at the edge, echoed on
           the response and stamped into every log line turns "a customer says checkout
           failed" into one grep. <span class="mono">traceparent</span> does the same
-          across service boundaries, provided every hop propagates it untouched —
-          and the hop that drops it is always the one nobody instrumented.
+          across service boundaries, provided every hop propagates it untouched, and
+          the hop that drops it is always the one nobody instrumented.
         </p>
         <p>
           <span class="mono">Server-Timing</span> is the underused one: your backend

@@ -15,7 +15,7 @@ const privacyBreadcrumbLd = breadcrumbList([
 ]);
 
 // Bump this by hand when the substance of the notice changes. Do NOT derive
-// it from the file's mtime — a clean CI checkout stamps every file with the
+// it from the file's mtime. A clean CI checkout stamps every file with the
 // build time, which made the page claim it was updated today, every day.
 const UPDATED = "2026-09-14";
 
@@ -31,7 +31,7 @@ const tldr = [
   { label: "Cloudflare Pages Analytics only", tone: "yellow" as const },
   { label: "No cookies set by me", tone: "green" as const },
   { label: "Comments & contact form opt-in", tone: "yellow" as const },
-  { label: "No selling data — ever", tone: "yellow" as const },
+  { label: "No selling data: ever", tone: "yellow" as const },
 ];
 
 const sections = [
@@ -88,7 +88,7 @@ const sections = [
 
 <Page
   title="Privacy"
-  description="Privacy notice for ansezz.com — what data is collected, why it's collected, and your rights. Cloudflare Pages Analytics (privacy-oriented) only; no cookies set by me."
+  description="Privacy notice for ansezz.com: what data is collected, why it's collected, and your rights. Cloudflare Pages Analytics (privacy-oriented) only; no cookies set by me."
   eyebrow="Legal"
   heading="Privacy notice."
   intro="Short version: no accounts, no cookies set by me, no ad trackers. The host injects Cloudflare Pages Analytics (privacy-oriented, no cookies). Comments and the contact form are strictly opt-in. Long version below."
@@ -154,12 +154,12 @@ const sections = [
         </div>
         <p class="text-sm leading-relaxed">
           This site is a static blog and portfolio. It does <strong>not</strong>
-          store any personal information on its own — no login, no server, no database.
+          store any personal information on its own. No login, no server, no database.
           Two features are <strong>opt-in</strong>: blog comments (powered by
           GitHub Discussions via giscus) and the contact form (delivered by
           Web3Forms). You only share data if you choose to use them. Otherwise,
           reach me via email, phone, LinkedIn, or my Google Calendar booking
-          link — data shared that way is handled by those services under their
+          link. Data shared that way is handled by those services under their
           own privacy terms.
         </p>
       </NeoCard>
@@ -174,14 +174,16 @@ const sections = [
           <h2 class="heading text-xl uppercase">Analytics</h2>
         </div>
         <p class="text-sm leading-relaxed">
-          I do <strong>not</strong> run Google Analytics, Plausible, Meta Pixel, or any
-          first-party tracking script in this repo. Cloudflare Pages does inject{" "}
+          I do <strong>not</strong> run Google Analytics, Plausible, Meta Pixel, or
+          any first-party tracking script in this repo. Cloudflare Pages does inject{
+            " "
+          }
           <strong>Cloudflare Web Analytics / Pages Analytics</strong> (the{" "}
           <code>static.cloudflareinsights.com/beacon.min.js</code> beacon) when the
           project has analytics enabled in the Cloudflare dashboard. That beacon is
           privacy-oriented: no cookies, no cross-site tracking, aggregated page views
           only. I cannot identify you from it. To turn it off, disable Pages Analytics
-          in the Cloudflare project settings — it is not controlled from this codebase.
+          in the Cloudflare project settings. It is not controlled from this codebase.
           Access logs from the CDN still exist (see Hosting &amp; CDN below).
         </p>
       </NeoCard>
@@ -199,7 +201,7 @@ const sections = [
           I set <strong>no cookies</strong> and no session identifiers. The only thing
           stored in your browser is a single <code>localStorage</code> key (<code
             >theme</code
-          >) remembering your light/dark mode choice — it never leaves your
+          >) remembering your light/dark mode choice. It never leaves your
           device. If you open the comments and sign in to GitHub, giscus may set
           its own storage inside its embedded frame, under GitHub's terms.
         </p>
@@ -235,11 +237,13 @@ const sections = [
           Fonts and images are self-hosted from this domain. There are no
           embedded social timelines and no ad tags. On every page load the host
           may inject the Cloudflare Pages Analytics beacon (see Analytics). Two
-          features reach outside this domain only when you engage with them:{" "}
+          features reach outside this domain only when you engage with them:{
+            " "
+          }
           <strong>giscus / GitHub</strong> (blog comments) and{" "}
-          <strong>Web3Forms</strong> (contact form delivery). Each loads under
-          its own privacy policy. External links in blog posts point elsewhere — once
-          you leave this domain, the destination's policy applies.
+          <strong>Web3Forms</strong> (contact form delivery). Each loads under its
+          own privacy policy. External links in blog posts point elsewhere. Once you
+          leave this domain, the destination's policy applies.
         </p>
       </NeoCard>
 
@@ -262,8 +266,8 @@ const sections = [
           >, submit the contact form, or book a call via Google Calendar, I keep
           that message / thread / event only as long as needed to reply or run
           the engagement. The contact form is delivered by
-          <strong>Web3Forms</strong>, which forwards your message to my inbox —
-          no marketing list, no sharing, no selling. I'll delete on request.
+          <strong>Web3Forms</strong>, which forwards your message to my inbox.
+          No marketing list, no sharing, no selling. I'll delete on request.
         </p>
       </NeoCard>
 
@@ -300,7 +304,7 @@ const sections = [
         <p class="text-sm leading-relaxed">
           If the site changes how it handles data (a new integration, a new
           opt-in feature), this notice is updated and the "Last updated" date
-          above changes. No retroactive changes — anything new applies forward
+          above changes. No retroactive changes: anything new applies forward
           only.
         </p>
       </NeoCard>

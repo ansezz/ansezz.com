@@ -13,7 +13,7 @@ const tool = getTool("/tools/http-status-codes/");
 
 const PAGE_TITLE = "HTTP Status Codes Reference";
 const PAGE_DESCRIPTION =
-  "HTTP status codes reference: every 1xx–5xx code, what it means, and when to use it, including the non-standard ones. Free, filterable, runs in your browser.";
+  "HTTP status codes reference: every 1xx to 5xx code, what it means, and when to use it, including the non-standard ones. Free, filterable, runs in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -63,7 +63,7 @@ const ONE_XX: StatusCode[] = [
     code: "101",
     name: "Switching Protocols",
     meaning:
-      "The connection is leaving HTTP for whatever the Upgrade header named — in practice, WebSocket.",
+      "The connection is leaving HTTP for whatever the Upgrade header named, in practice, WebSocket.",
     use: "a protocol handshake, and only from the server side. Over HTTP/2 and HTTP/3 WebSockets use extended CONNECT instead, so you will never see a 101 there.",
     keywords: "websocket upgrade handshake",
   },
@@ -100,7 +100,7 @@ const TWO_XX: StatusCode[] = [
     name: "Created",
     meaning:
       "A new resource now exists. The response should carry a Location header pointing at it, and usually the new representation as the body.",
-    use: "a POST or PUT created something addressable — POST /orders that returns order 1234. If nothing was created and you only queued work, that is a 202.",
+    use: "a POST or PUT created something addressable, like POST /orders that returns order 1234. If nothing was created and you only queued work, that is a 202.",
     keywords: "post create location new resource",
   },
   {
@@ -108,7 +108,7 @@ const TWO_XX: StatusCode[] = [
     name: "Accepted",
     meaning:
       "The request was valid and has been queued. Nothing has actually happened yet, and it might still fail.",
-    use: "async work: you enqueued a job, sent it to a worker, or handed it to a batch pipeline. Always return somewhere to poll — a Location header or a status URL in the body. A bare 202 tells the client nothing it can act on.",
+    use: "async work: you enqueued a job, sent it to a worker, or handed it to a batch pipeline. Always return somewhere to poll. A Location header or a status URL in the body. A bare 202 tells the client nothing it can act on.",
     keywords: "async queue job background webhook polling",
   },
   {
@@ -142,7 +142,7 @@ const TWO_XX: StatusCode[] = [
     name: "Partial Content",
     meaning:
       "Here is the byte range that was asked for. Requires a Content-Range header describing what was sent.",
-    use: "range requests — video seeking, resumable downloads, byte-serving PDFs. Your CDN and static file server do this; you rarely hand-write it.",
+    use: "range requests: video seeking, resumable downloads, byte-serving PDFs. Your CDN and static file server do this; you rarely hand-write it.",
     keywords: "range video streaming resume download",
   },
   {
@@ -150,7 +150,7 @@ const TWO_XX: StatusCode[] = [
     name: "Multi-Status",
     meaning:
       "One response body carrying a separate status for each of several resources.",
-    use: "WebDAV. It is also the honest answer for a batch endpoint where individual operations can fail independently — but if you invent your own envelope, do not label it 207.",
+    use: "WebDAV. It is also the honest answer for a batch endpoint where individual operations can fail independently, but if you invent your own envelope, do not label it 207.",
     flag: "webdav",
     keywords: "batch bulk multiple",
   },
@@ -167,7 +167,7 @@ const TWO_XX: StatusCode[] = [
     name: "IM Used",
     meaning:
       "The response is a delta against a version the client already has, per the instance-manipulation extension in RFC 3229.",
-    use: "practically never — almost nothing implements delta encoding.",
+    use: "practically never: almost nothing implements delta encoding.",
     flag: "rare",
     keywords: "delta encoding",
   },
@@ -187,7 +187,7 @@ const THREE_XX: StatusCode[] = [
     code: "301",
     name: "Moved Permanently",
     meaning:
-      "This URL is gone for good; use the new one and update your links. Browsers and caches hold on to it hard — often for the life of the profile.",
+      "This URL is gone for good; use the new one and update your links. Browsers and caches hold on to it hard, often for the life of the profile.",
     use: "a permanent move you are certain about. Clients are allowed to rewrite a POST into a GET on a 301, and they do. If the method matters, use 308.",
     keywords: "seo permanent redirect canonical moved",
   },
@@ -196,7 +196,7 @@ const THREE_XX: StatusCode[] = [
     name: "Found",
     meaning:
       "A temporary redirect. The original URL still owns the resource and should keep being used.",
-    use: "a genuinely temporary move. Most frameworks still emit 302 from their redirect() helper — and it inherits the POST-becomes-GET rewrite from 301, so for a form post-back 303 is the code that actually says what you mean.",
+    use: "a temporary move. Most frameworks still emit 302 from their redirect() helper, and it inherits the POST-becomes-GET rewrite from 301, so for a form post-back 303 is the code that actually says what you mean.",
     keywords: "temporary redirect found",
   },
   {
@@ -204,7 +204,7 @@ const THREE_XX: StatusCode[] = [
     name: "See Other",
     meaning:
       "Go and GET this other URL. Changing the method to GET is mandatory and intentional.",
-    use: "post/redirect/get — you processed a form and want a refresh not to resubmit it. Also correct for handing a client the result URL of a job it POSTed.",
+    use: "post/redirect/get: you processed a form and want a refresh not to resubmit it. Also correct for handing a client the result URL of a job it POSTed.",
     keywords: "post redirect get form resubmit prg",
   },
   {
@@ -212,7 +212,7 @@ const THREE_XX: StatusCode[] = [
     name: "Not Modified",
     meaning:
       "The cached copy the client already has is still fresh. No body is sent.",
-    use: "a conditional request with If-None-Match or If-Modified-Since matched. Send the validators and cache headers, not the payload — that is the whole point.",
+    use: "a conditional request with If-None-Match or If-Modified-Since matched. Send the validators and cache headers, not the payload, that is the whole point.",
     keywords: "cache etag conditional if-none-match revalidate",
   },
   {
@@ -255,7 +255,7 @@ const FOUR_XX: StatusCode[] = [
     name: "Bad Request",
     meaning:
       "The server refuses to process the request because the request itself is wrong: unparseable JSON, a malformed query string, a missing required field.",
-    use: "the payload could not be understood or is structurally invalid. RFC 9110 widened 400 to cover any client error the server cannot classify better, so it is always defensible — but a more specific code is more useful to the caller.",
+    use: "the payload could not be understood or is structurally invalid. RFC 9110 widened 400 to cover any client error the server cannot classify better, so it is always defensible, but a more specific code is more useful to the caller.",
     keywords: "malformed invalid json parse validation",
   },
   {
@@ -296,7 +296,7 @@ const FOUR_XX: StatusCode[] = [
     code: "405",
     name: "Method Not Allowed",
     meaning: "The URL exists but that verb is not supported on it.",
-    use: "you route by method and this one is not wired up. The response must include an Allow header listing the methods that are — frameworks that skip it turn a five-second fix into a debugging session.",
+    use: "you route by method and this one is not wired up. The response must include an Allow header listing the methods that are. Frameworks that skip it turn a five-second fix into a debugging session.",
     keywords: "verb allow method post get put delete",
   },
   {
@@ -304,7 +304,7 @@ const FOUR_XX: StatusCode[] = [
     name: "Not Acceptable",
     meaning:
       "Nothing the server can produce matches the client's Accept header.",
-    use: "content negotiation genuinely fails and returning something anyway would be wrong. Most JSON APIs are better off ignoring a nonsense Accept header and serving JSON.",
+    use: "content negotiation fails and returning something anyway would be wrong. Most JSON APIs are better off ignoring a nonsense Accept header and serving JSON.",
     keywords: "accept content negotiation media type",
   },
   {
@@ -320,14 +320,14 @@ const FOUR_XX: StatusCode[] = [
     name: "Request Timeout",
     meaning:
       "The client was too slow sending the request and the server is closing an idle connection.",
-    use: "you are a server reaping connections. As a client, a 408 is often just keep-alive housekeeping rather than a real error — retry the request once.",
+    use: "you are a server reaping connections. As a client, a 408 is often just keep-alive housekeeping rather than a real error. Retry the request once.",
     keywords: "timeout idle keepalive slow",
   },
   {
     code: "409",
     name: "Conflict",
     meaning: "The request clashes with the current state of the resource.",
-    use: "a duplicate create hits a unique constraint, an edit lands on a stale version, or a delete is blocked by dependents. Say what conflicts in the body — a bare 409 is a support ticket waiting to happen.",
+    use: "a duplicate create hits a unique constraint, an edit lands on a stale version, or a delete is blocked by dependents. Say what conflicts in the body. A bare 409 is a support ticket waiting to happen.",
     keywords: "duplicate unique constraint concurrency state clash",
   },
   {
@@ -350,7 +350,7 @@ const FOUR_XX: StatusCode[] = [
     code: "412",
     name: "Precondition Failed",
     meaning:
-      "A condition the client attached to the request — If-Match, If-Unmodified-Since — did not hold.",
+      "A condition the client attached to the request (If-Match, If-Unmodified-Since) did not hold.",
     use: "optimistic concurrency: the caller sent an ETag and the resource changed underneath them. This is how you stop lost updates without taking a lock.",
     keywords: "etag if-match optimistic locking concurrency lost update",
   },
@@ -359,7 +359,7 @@ const FOUR_XX: StatusCode[] = [
     name: "Content Too Large",
     meaning:
       "The body exceeds what the server is willing to accept. Renamed from Payload Too Large in RFC 9110.",
-    use: "an upload is over the limit. Check the whole chain before blaming your code — nginx defaults client_max_body_size to 1 MB, and most managed gateways cap request bodies far below what your handler allows.",
+    use: "an upload is over the limit. Check the whole chain before blaming your code: nginx defaults client_max_body_size to 1 MB, and most managed gateways cap request bodies far below what your handler allows.",
     keywords: "upload too large payload body size limit nginx",
   },
   {
@@ -387,7 +387,7 @@ const FOUR_XX: StatusCode[] = [
     code: "417",
     name: "Expectation Failed",
     meaning:
-      "The server will not meet the expectation in the Expect header — in practice, Expect: 100-continue.",
+      "The server will not meet the expectation in the Expect header, in practice, Expect: 100-continue.",
     use: "you are a server or proxy that refuses 100-continue.",
     flag: "rare",
     keywords: "expect continue",
@@ -405,7 +405,7 @@ const FOUR_XX: StatusCode[] = [
     code: "421",
     name: "Misdirected Request",
     meaning:
-      "This connection cannot serve requests for that authority — HTTP/2 connection coalescing sent the request to the wrong origin.",
+      "This connection cannot serve requests for that authority. HTTP/2 connection coalescing sent the request to the wrong origin.",
     use: "you are terminating HTTP/2 for multiple hostnames on one certificate. The client is expected to retry on a fresh connection.",
     keywords: "http2 coalescing sni tls origin",
   },
@@ -414,7 +414,7 @@ const FOUR_XX: StatusCode[] = [
     name: "Unprocessable Content",
     meaning:
       "The syntax is fine and the body parsed, but the values are semantically unacceptable.",
-    use: "validation failed on a well-formed request — an end date before a start date, an email that is not an email. Return field-level errors in the body; RFC 9457 problem details is a ready-made shape for that.",
+    use: "validation failed on a well-formed request, like an end date before a start date, an email that is not an email. Return field-level errors in the body; RFC 9457 problem details is a ready-made shape for that.",
     keywords: "validation errors semantic unprocessable entity laravel rails",
   },
   {
@@ -461,7 +461,7 @@ const FOUR_XX: StatusCode[] = [
     code: "429",
     name: "Too Many Requests",
     meaning: "The client has exceeded a rate limit.",
-    use: "rate limiting or quota enforcement — and always with a Retry-After header, in seconds or as an HTTP date. Without it, well-behaved clients guess and badly-behaved ones hammer you. The RateLimit-* fields are still an IETF draft; Retry-After is the one everything already understands.",
+    use: "rate limiting or quota enforcement, and always with a Retry-After header, in seconds or as an HTTP date. Without it, well-behaved clients guess and badly-behaved ones hammer you. The RateLimit-* fields are still an IETF draft; Retry-After is the one everything already understands.",
     keywords: "rate limit throttle quota backoff retry-after 429",
   },
   {
@@ -476,7 +476,7 @@ const FOUR_XX: StatusCode[] = [
     code: "451",
     name: "Unavailable For Legal Reasons",
     meaning:
-      "Blocked because of a legal demand — a court order, a takedown, a sanctions regime — not a technical failure.",
+      "Blocked because of a legal demand (a court order, a takedown, a sanctions regime) not a technical failure.",
     use: "the law, not your policy, is the reason. Include a Link header with rel=blocked-by naming the entity making the demand. Generic geo-blocking with no legal basis is a 403.",
     keywords: "legal censorship dmca gdpr geo block takedown",
   },
@@ -557,7 +557,7 @@ const FOUR_XX: StatusCode[] = [
     name: "Request Header Too Large (nginx)",
     meaning:
       "An nginx-internal code, logged when headers overflow the configured buffers.",
-    use: "never — nginx converts it to a 400 on the wire. Standard equivalent is 431.",
+    use: "never: nginx converts it to a 400 on the wire. Standard equivalent is 431.",
     flag: "non-standard",
     keywords: "nginx header buffer vendor log",
   },
@@ -591,7 +591,7 @@ const FOUR_XX: StatusCode[] = [
     code: "499",
     name: "Client Closed Request (nginx)",
     meaning:
-      "nginx writes this to its access log when the client hung up before a response was ready. It is never sent over the wire — nobody receives a 499.",
+      "nginx writes this to its access log when the client hung up before a response was ready. It is never sent over the wire. Nobody receives a 499.",
     use: "you are reading nginx logs. A spike means callers are timing out first, so look at upstream latency and client timeouts, not at nginx. Esri's servers use 499 for a missing token, which is an unrelated collision.",
     flag: "non-standard",
     keywords: "nginx client closed cancelled timeout log vendor 499",
@@ -604,14 +604,14 @@ const FIVE_XX: StatusCode[] = [
     name: "Internal Server Error",
     meaning:
       "Something in the server blew up and nothing more specific applies. It is a statement that the caller did nothing wrong.",
-    use: "an unhandled exception, a null dereference, a broken invariant. Every 500 should map to a log line with a stack trace. Never use it for validation — that is a 4xx, and mixing the two destroys your error budget.",
+    use: "an unhandled exception, a null dereference, a broken invariant. Every 500 should map to a log line with a stack trace. Never use it for validation, that is a 4xx, and mixing the two destroys your error budget.",
     keywords: "exception crash bug unhandled error",
   },
   {
     code: "501",
     name: "Not Implemented",
     meaning:
-      "The server does not support the method at all, anywhere — not merely on this URL.",
+      "The server does not support the method at all, anywhere, not merely on this URL.",
     use: "a gateway meets a verb it has never heard of. If the method exists but not on this route, that is 405.",
     keywords: "method unsupported gateway verb",
   },
@@ -620,7 +620,7 @@ const FIVE_XX: StatusCode[] = [
     name: "Bad Gateway",
     meaning:
       "A proxy received an invalid, empty, or unparseable response from the server behind it.",
-    use: "you are the proxy. From outside, a 502 almost always means the app crashed, refused the connection, or wrote garbage — check the application logs, not the proxy's.",
+    use: "you are the proxy. From outside, a 502 almost always means the app crashed, refused the connection, or wrote garbage. Check the application logs, not the proxy's.",
     keywords: "proxy upstream crash nginx gateway origin refused",
   },
   {
@@ -628,14 +628,14 @@ const FIVE_XX: StatusCode[] = [
     name: "Service Unavailable",
     meaning:
       "The service is temporarily unable to handle the request: overloaded, draining, starting up, or deliberately in maintenance.",
-    use: "the condition is temporary and you know roughly for how long — pair it with Retry-After. It is the only 5xx that clients, CDNs, and crawlers are meant to treat as transient, which is why a maintenance window should return 503 and never 500 or 404.",
+    use: "the condition is temporary and you know roughly for how long. Pair it with Retry-After. It is the only 5xx that clients, CDNs, and crawlers are meant to treat as transient, which is why a maintenance window should return 503 and never 500 or 404.",
     keywords: "maintenance overload capacity retry-after draining shed",
   },
   {
     code: "504",
     name: "Gateway Timeout",
     meaning: "A proxy gave up waiting for the server behind it to respond.",
-    use: "you are the proxy and upstream blew the timeout budget. A 504 landing at exactly 30 or 60 seconds is a configuration value, not a mystery — compare the gateway timeout with the application's own.",
+    use: "you are the proxy and upstream blew the timeout budget. A 504 landing at exactly 30 or 60 seconds is a configuration value, not a mystery. Compare the gateway timeout with the application's own.",
     keywords: "timeout upstream slow proxy gateway latency",
   },
   {
@@ -660,7 +660,7 @@ const FIVE_XX: StatusCode[] = [
     name: "Insufficient Storage",
     meaning:
       "The server cannot store the representation needed to complete the request.",
-    use: "WebDAV, or an upload service that is genuinely out of disk. Mostly you want 503 with a Retry-After.",
+    use: "WebDAV, or an upload service that is out of disk. Mostly you want 503 with a Retry-After.",
     flag: "webdav",
     keywords: "disk full storage quota",
   },
@@ -687,7 +687,7 @@ const FIVE_XX: StatusCode[] = [
     name: "Network Authentication Required",
     meaning:
       "You are behind a captive portal that wants you to log in to the network.",
-    use: "you are the intercepting proxy — an origin server must never generate it. The entire point is that a client can tell apart the network hijacking the request and the API saying no.",
+    use: "you are the intercepting proxy. An origin server must never generate it. The entire point is that a client can tell apart the network hijacking the request and the API saying no.",
     keywords: "captive portal wifi hotspot network login intercept",
   },
   {
@@ -704,7 +704,7 @@ const FIVE_XX: StatusCode[] = [
     name: "Unknown Error (Cloudflare)",
     meaning:
       "Cloudflare's catch-all: the origin returned something empty, malformed, or otherwise unintelligible.",
-    use: "you are debugging a Cloudflare-fronted site. It usually means the origin reset the connection or sent an invalid response — check the origin, not Cloudflare.",
+    use: "you are debugging a Cloudflare-fronted site. It usually means the origin reset the connection or sent an invalid response. Check the origin, not Cloudflare.",
     flag: "non-standard",
     keywords: "cloudflare cdn edge origin vendor",
   },
@@ -729,7 +729,7 @@ const FIVE_XX: StatusCode[] = [
     code: "523",
     name: "Origin Is Unreachable (Cloudflare)",
     meaning:
-      "Cloudflare could not route to the origin at all — usually a bad DNS record or a dead IP.",
+      "Cloudflare could not route to the origin at all, usually a bad DNS record or a dead IP.",
     use: "check the DNS record behind the proxied hostname.",
     flag: "non-standard",
     keywords: "cloudflare dns unreachable routing vendor",
@@ -747,7 +747,7 @@ const FIVE_XX: StatusCode[] = [
     code: "525",
     name: "SSL Handshake Failed (Cloudflare)",
     meaning: "The TLS handshake between Cloudflare and the origin failed.",
-    use: "you set Full or Strict SSL mode and the origin's TLS config does not agree — ciphers, versions, or SNI.",
+    use: "you set Full or Strict SSL mode and the origin's TLS config does not agree: ciphers, versions, or SNI.",
     flag: "non-standard",
     keywords: "cloudflare ssl tls handshake full strict vendor",
   },
@@ -764,7 +764,7 @@ const FIVE_XX: StatusCode[] = [
     code: "527",
     name: "Railgun Error (Cloudflare)",
     meaning: "A failure in Cloudflare's retired Railgun transport.",
-    use: "never — the product is gone. Included because it still turns up in old runbooks.",
+    use: "never: the product is gone. Included because it still turns up in old runbooks.",
     flag: "non-standard",
     keywords: "cloudflare railgun retired vendor",
   },
@@ -773,7 +773,7 @@ const FIVE_XX: StatusCode[] = [
     name: "Origin DNS Error (Cloudflare)",
     meaning:
       "Always shown alongside a Cloudflare 1xxx error code; the real cause is in that number, most often a Worker exception or an origin DNS failure.",
-    use: "you see a 530 — go read the 1xxx code on the error page, because the 530 itself tells you nothing.",
+    use: "you see a 530: go read the 1xxx code on the error page, because the 530 itself tells you nothing.",
     flag: "non-standard",
     keywords: "cloudflare worker 1000 1101 dns vendor",
   },
@@ -826,7 +826,7 @@ const faq = [
   },
   {
     q: "What status code should a successful POST return?",
-    a: "201 if it created a resource, with a Location header pointing at the new URL. 202 if it only queued work, with somewhere to poll for the result. 200 if it ran a command and has something to return, and 204 if it ran and there is genuinely nothing to send back. A blanket 200 on every POST throws away information the client could have acted on.",
+    a: "201 if it created a resource, with a Location header pointing at the new URL. 202 if it only queued work, with somewhere to poll for the result. 200 if it ran a command and has something to return, and 204 if it ran and there is nothing to send back. A blanket 200 on every POST throws away information the client could have acted on.",
   },
 ];
 
@@ -867,7 +867,7 @@ const related = [
   {
     href: "/blog/load-balancer-vs-api-gateway/",
     label: "Load balancer vs API gateway",
-    note: "Which box in front of your app is generating that 502, 503, or 504 — and why it matters.",
+    note: "Which box in front of your app is generating that 502, 503, or 504, and why it matters.",
   },
   {
     href: "/blog/rate-limiting-vs-throttling/",
@@ -920,7 +920,7 @@ const anchorId = (key: string): string | undefined => {
   description={PAGE_DESCRIPTION}
   eyebrow="Free tool"
   heading="HTTP Status Codes."
-  intro="Every status code, what it actually means, and when to reach for it — including the vendor codes that only exist in your logs. Type in the box to filter the whole reference."
+  intro="Every status code, what it actually means, and when to reach for it, including the vendor codes that only exist in your logs. Type in the box to filter the whole reference."
   structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
@@ -1054,12 +1054,12 @@ const anchorId = (key: string): string | undefined => {
       data-status-group
       class="mx-auto max-w-5xl px-5 pb-14"
     >
-      <h2 class="display text-2xl uppercase">1xx — informational</h2>
+      <h2 class="display text-2xl uppercase">1xx: informational</h2>
       <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
         <p>
           A 1xx is a preliminary response. The client keeps waiting and a final
           status still arrives on the same request, which is why almost nothing
-          in application code emits one — your server, your proxy, or your HTTP
+          in application code emits one: your server, your proxy, or your HTTP
           library handles all of it.
         </p>
         <p>
@@ -1146,7 +1146,7 @@ const anchorId = (key: string): string | undefined => {
       data-status-group
       class="mx-auto max-w-5xl px-5 pb-14"
     >
-      <h2 class="display text-2xl uppercase">2xx — success</h2>
+      <h2 class="display text-2xl uppercase">2xx: success</h2>
       <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
         <p>
           200 is the default, and defaults are where bugs hide. There are four
@@ -1154,8 +1154,8 @@ const anchorId = (key: string): string | undefined => {
           only cheap way to tell them apart. If a request created something, say
           <strong>201</strong> and send a <span class="mono">Location</span> header
           pointing at it. If it only queued something, say <strong>202</strong> and
-          send somewhere to poll — a 202 with no follow-up URL is a shrug. If there
-          is genuinely nothing to return, say <strong>204</strong>.
+          send somewhere to poll. A 202 with no follow-up URL is a shrug. If there
+          is nothing to return, say <strong>204</strong>.
         </p>
         <p>
           204 has two sharp edges worth memorising. A browser navigating to a
@@ -1284,7 +1284,7 @@ const anchorId = (key: string): string | undefined => {
       data-status-group
       class="mx-auto max-w-5xl px-5 pb-14"
     >
-      <h2 class="display text-2xl uppercase">3xx — redirection</h2>
+      <h2 class="display text-2xl uppercase">3xx: redirection</h2>
       <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
         <p>
           Every redirect question reduces to two axes: is this permanent, and
@@ -1314,8 +1314,8 @@ const anchorId = (key: string): string | undefined => {
             icon: "lucide:git-branch",
             label: "Method kept",
             cells: [
-              "No — POST becomes GET",
-              "No — POST becomes GET",
+              "No, POST becomes GET",
+              "No, POST becomes GET",
               "Yes, required",
               "Yes, required",
             ],
@@ -1345,7 +1345,7 @@ const anchorId = (key: string): string | undefined => {
           pattern that stops a browser refresh from resubmitting a form, and it is
           also the right way to hand a client the result URL of a job it POSTed. <strong
             >304 Not Modified</strong
-          > is not really a redirect at all — it is the successful outcome of a conditional
+          > is not really a redirect at all. It is the successful outcome of a conditional
           request, and it carries validators instead of a body.
         </p>
         <p>
@@ -1434,7 +1434,7 @@ const anchorId = (key: string): string | undefined => {
           redirects <span class="mono">http://example.com/page</span> to https, the
           canonical-host rule redirects that to <span class="mono">www</span>,
           the trailing-slash rule redirects that again, and the old-path map
-          adds a fourth hop. Every hop is a full round trip — DNS may already be
+          adds a fourth hop. Every hop is a full round trip. DNS may already be
           warm, but the TCP and TLS handshakes are not free on a phone on a
           train.
         </p>
@@ -1469,15 +1469,16 @@ const anchorId = (key: string): string | undefined => {
       data-status-group
       class="mx-auto max-w-5xl px-5 pb-14"
     >
-      <h2 class="display text-2xl uppercase">4xx — client error</h2>
+      <h2 class="display text-2xl uppercase">4xx: client error</h2>
       <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
         <p>
           This is where API design actually happens. The useful question is not
-          "what went wrong" but <em>"what should the caller do next?"</em> — and there
-          are only four answers. Retry unchanged and later (429, 425, sometimes 408
-          and 409). Retry with different credentials (401). Fix the request and retry
-          (400, 405, 413, 415, 422). Or stop entirely, because nothing the client
-          does will change the outcome (403, 404, 410, 451).
+          "what went wrong" but <em>"what should the caller do next?"</em>, and
+          there are only four answers. Retry unchanged and later (429, 425,
+          sometimes 408 and 409). Retry with different credentials (401). Fix
+          the request and retry (400, 405, 413, 415, 422). Or stop entirely,
+          because nothing the client does will change the outcome (403, 404,
+          410, 451).
         </p>
         <p>
           Pick the code that answers that question and half of your error
@@ -1531,13 +1532,13 @@ const anchorId = (key: string): string | undefined => {
             >404 vs 410</strong
           >: 404 means "nothing here, no comment on history"; 410 means "it was
           here, I removed it, stop asking". If you have deliberately deleted
-          content and want crawlers to drop it, 410 is the stronger signal — but
-          only use it when the removal is genuinely permanent, because there is
-          no polite way to take it back. <strong>409 vs 412</strong>: 409 is a
-          conflict with the current state that the server detected on its own,
-          412 is a precondition the <em>client</em> attached failing. If your callers
-          send <span class="mono">If-Match</span> with an ETag, 412 is the correct
-          answer and 428 is how you force them to send it in the first place.
+          content and want crawlers to drop it, 410 is the stronger signal, but
+          only use it when the removal is permanent, because there is no polite
+          way to take it back. <strong>409 vs 412</strong>: 409 is a conflict
+          with the current state that the server detected on its own, 412 is a
+          precondition the <em>client</em> attached failing. If your callers send
+          <span class="mono">If-Match</span> with an ETag, 412 is the correct answer
+          and 428 is how you force them to send it in the first place.
         </p>
         <p>
           And on <strong>429</strong>: the code is the easy part. What makes a
@@ -1637,7 +1638,7 @@ const anchorId = (key: string): string | undefined => {
         <p class="mt-3 text-sm leading-relaxed">
           The test is one question: <strong
             >would valid credentials change the answer?</strong
-          > If yes, it is 401 — and it must carry a <span class="mono"
+          > If yes, it is 401, and it must carry a <span class="mono"
             >WWW-Authenticate</span
           > header naming the scheme, which is the requirement almost every API skips.
           That header is what tells a client library to run its refresh flow instead
@@ -1659,7 +1660,7 @@ const anchorId = (key: string): string | undefined => {
       data-status-group
       class="mx-auto max-w-5xl px-5 pb-14"
     >
-      <h2 class="display text-2xl uppercase">5xx — server error</h2>
+      <h2 class="display text-2xl uppercase">5xx: server error</h2>
       <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
         <p>
           A 5xx is a promise that the caller did nothing wrong. That is the
@@ -1669,8 +1670,7 @@ const anchorId = (key: string): string | undefined => {
         </p>
         <p>
           In production the useful split inside 5xx is <em>who generated it</em
-          >. A <strong>500</strong> came from your application — something threw.
-          A
+          >. A <strong>500</strong> came from your application: something threw. A
           <strong>502</strong> means the proxy in front of it got a response it could
           not parse, which usually means your process crashed, refused the connection,
           or died mid-response. A <strong>504</strong> means the proxy waited and
@@ -1760,7 +1760,7 @@ const anchorId = (key: string): string | undefined => {
           500 for validation failures
         </h3>
         <p class="mt-3 text-sm leading-relaxed">
-          Usually not a decision — a consequence. Validation throws, a global
+          Usually not a decision: a consequence. Validation throws, a global
           exception handler catches everything it does not recognise, and every
           bad email address on your signup form becomes a server error. Then the
           on-call rotation learns to ignore the 500 alert, and the one real
@@ -1773,8 +1773,8 @@ const anchorId = (key: string): string | undefined => {
             409. Only the unmapped remainder becomes a 500.
           </li>
           <li>
-            <strong>Alert on 5xx, never on 4xx.</strong> A 4xx rate is a product signal
-            — it tells you a client is broken or your docs are wrong. A 5xx rate is
+            <strong>Alert on 5xx, never on 4xx.</strong> A 4xx rate is a product signal.
+            It tells you a client is broken or your docs are wrong. A 5xx rate is
             a pager.
           </li>
           <li>

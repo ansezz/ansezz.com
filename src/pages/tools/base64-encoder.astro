@@ -13,7 +13,7 @@ const tool = getTool("/tools/base64-encoder/");
 
 const TOOL_NAME = "Base64 Encoder / Decoder";
 const TOOL_DESCRIPTION =
-  "Free base64 encoder and decoder that is UTF-8 safe — emoji and accents round-trip correctly. Supports base64url and file-to-data-URI, all in your browser.";
+  "Free base64 encoder and decoder that is UTF-8 safe. Emoji and accents round-trip correctly. Supports base64url and file-to-data-URI, all in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -49,11 +49,11 @@ const alphabetRows = [
 const faq = [
   {
     q: "Is base64 encryption?",
-    a: "No. Base64 is a reversible encoding with no key — anyone holding the string can decode it, including this page. It exists to move bytes through text-only channels, not to hide them. If you need secrecy, encrypt the data first and treat base64 as the envelope around the ciphertext.",
+    a: "No. Base64 is a reversible encoding with no key. Anyone holding the string can decode it, including this page. It exists to move bytes through text-only channels, not to hide them. If you need secrecy, encrypt the data first and treat base64 as the envelope around the ciphertext.",
   },
   {
     q: "Why does btoa() throw InvalidCharacterError?",
-    a: "Because btoa() is a Latin-1 function: it only accepts code units from U+0000 to U+00FF, so emoji, CJK, and most non-Latin scripts throw. Worse, characters between U+0080 and U+00FF do not throw — é gets encoded as the single byte 0xE9 instead of the UTF-8 pair C3 A9, which decodes to garbage later. The fix is to run the string through TextEncoder first, which is what this tool does.",
+    a: "Because btoa() is a Latin-1 function: it only accepts code units from U+0000 to U+00FF, so emoji, CJK, and most non-Latin scripts throw. Worse, characters between U+0080 and U+00FF do not throw: é gets encoded as the single byte 0xE9 instead of the UTF-8 pair C3 A9, which decodes to garbage later. The fix is to run the string through TextEncoder first, which is what this tool does.",
   },
   {
     q: "How much bigger does base64 make a file?",
@@ -65,11 +65,11 @@ const faq = [
   },
   {
     q: "Does this base64 encoder upload my data?",
-    a: "No. Encoding, decoding, and the file-to-data-URI conversion all run in your browser using TextEncoder, btoa, atob, and FileReader. There is no request and no server involved — open the network tab and watch it stay empty, or load the page once and then go offline.",
+    a: "No. Encoding, decoding, and the file-to-data-URI conversion all run in your browser using TextEncoder, btoa, atob, and FileReader. There is no request and no server involved. Open the network tab and watch it stay empty, or load the page once and then go offline.",
   },
   {
     q: "Can I base64 encode an image or a PDF here?",
-    a: "Yes. Use the file panel — it reads the file with FileReader and returns a complete data: URI you can paste straight into HTML or CSS, without uploading anything. Watch the size warning: past about 100 KB, an inline data URI usually costs more in lost caching than it saves in round trips.",
+    a: "Yes. Use the file panel: it reads the file with FileReader and returns a complete data: URI you can paste straight into HTML or CSS, without uploading anything. Watch the size warning: past about 100 KB, an inline data URI usually costs more in lost caching than it saves in round trips.",
   },
 ];
 
@@ -107,7 +107,7 @@ const copyBtnClass =
 const relatedLinks = [
   {
     href: "/tools/jwt-decoder/",
-    note: "A JWT is three base64url segments — decode the whole token instead of one part at a time.",
+    note: "A JWT is three base64url segments. Decode the whole token instead of one part at a time.",
   },
   {
     href: "/tools/hash-generator/",
@@ -131,7 +131,7 @@ const relatedLinks = [
   description={TOOL_DESCRIPTION}
   eyebrow="Free tool"
   heading="Base64 Encoder / Decoder."
-  intro="Encode and decode base64 without the UTF-8 bugs — emoji and accents round-trip correctly. base64url and file-to-data-URI included. Nothing leaves your browser."
+  intro="Encode and decode base64 without the UTF-8 bugs. Emoji and accents round-trip correctly. base64url and file-to-data-URI included. Nothing leaves your browser."
   structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
@@ -214,7 +214,7 @@ const relatedLinks = [
       </div>
 
       <p class="mono text-[10px] tracking-widest uppercase opacity-60">
-        Type in either box — the direction follows you. Decoding accepts both
+        Type in either box: the direction follows you. Decoding accepts both
         alphabets.
       </p>
     </NeoCard>
@@ -294,7 +294,7 @@ const relatedLinks = [
           >data:</code
         > URI you can paste into HTML or CSS. The file is read with <code
           class="mono font-bold">FileReader</code
-        > in this tab — it is never uploaded.
+        > in this tab: it is never uploaded.
       </p>
       <div>
         <label
@@ -343,9 +343,9 @@ const relatedLinks = [
       <h2 class="display text-2xl uppercase">What base64 actually does</h2>
       <p class="text-base leading-relaxed opacity-90">
         Base64 takes arbitrary bytes and re-spells them using 64 characters that
-        survive any channel that treats data as text. Three bytes — 24 bits — go
+        survive any channel that treats data as text. Three bytes (24 bits) go
         in, four 6-bit groups come out, each mapped to <code
-          class="mono font-bold">A–Z a–z 0–9 + /</code
+          class="mono font-bold">A to Z a to z 0 to 9 + /</code
         >. When the input is not a multiple of three, the tail is padded with
         <code class="mono font-bold">=</code> so the decoder knows where the real
         bytes stop.
@@ -363,7 +363,7 @@ const relatedLinks = [
       <h2 class="display text-2xl uppercase">The 33% tax</h2>
       <p class="text-base leading-relaxed opacity-90">
         Four characters per three bytes means base64 output is always 4/3 the
-        input size — a flat 33% increase, plus up to two padding characters. A 3
+        input size: a flat 33% increase, plus up to two padding characters. A 3
         MB image becomes 4 MB of text. Three places where that bill lands and
         people are surprised:
       </p>
@@ -372,8 +372,8 @@ const relatedLinks = [
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
             ><strong>Over the wire.</strong> Gzip and brotli claw some of it back
-            for text, but base64 of already-compressed data — JPEG, PNG, WebP, zip
-            — compresses badly, so you eat most of the 33%.</span
+            for text, but base64 of already-compressed data (JPEG, PNG, WebP, zip)
+            compresses badly, so you eat most of the 33%.</span
           >
         </li>
         <li class="flex gap-3">
@@ -387,7 +387,7 @@ const relatedLinks = [
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>In an LLM prompt.</strong> Base64 tokenizes terribly — a high-entropy
+            ><strong>In an LLM prompt.</strong> Base64 tokenizes terribly: a high-entropy
             character soup fragments into far more tokens than the underlying bytes
             would suggest. Paste some into the <a
               href="/tools/token-counter/"
@@ -409,8 +409,9 @@ const relatedLinks = [
         guarantee. The <code class="mono font-bold">Authorization: Basic</code> header
         is nothing but base64 of <code class="mono font-bold"
           >username:password</code
-        > — that is exactly why Basic auth is only acceptable over TLS. A JWT payload
-        is base64url too, which is why you can read anyone's claims in the <a
+        >, that is exactly why Basic auth is only acceptable over TLS. A JWT
+        payload is base64url too, which is why you can read anyone's claims in
+        the <a
           href="/tools/jwt-decoder/"
           class="font-bold underline decoration-2 underline-offset-2"
           >JWT decoder</a
@@ -456,7 +457,7 @@ const relatedLinks = [
         that references it. You save a round trip; you pay for it in cacheability.
         Those bytes cannot be cached independently, cannot be served from a CDN edge,
         cannot be revalidated with an ETag, and are re-downloaded with every copy
-        of the HTML or CSS that carries them — and they are 33% bigger while doing
+        of the HTML or CSS that carries them, and they are 33% bigger while doing
         it. The trade only pays off for small, stable, render-blocking assets: a 1
         KB SVG icon, a tiny placeholder, a background pattern. Everything else belongs
         in a separate file behind a long cache lifetime, which is the whole argument
@@ -479,9 +480,8 @@ const relatedLinks = [
         function: it only accepts code units up to U+00FF. Give it <code
           class="mono font-bold">🚀</code
         > and it throws <code class="mono font-bold">InvalidCharacterError</code
-        >. Give it <code class="mono font-bold">é</code> and it does something worse
-        — it quietly emits the single byte <code class="mono font-bold"
-          >0xE9</code
+        >. Give it <code class="mono font-bold">é</code> and it does something worse.
+        It quietly emits the single byte <code class="mono font-bold">0xE9</code
         >, which is Latin-1, not the UTF-8 pair <code class="mono font-bold"
           >C3 A9</code
         >, so the string decodes to mojibake somewhere downstream.
@@ -493,10 +493,10 @@ const relatedLinks = [
           class="mono font-bold">C3 A9</code
         > and <code class="mono font-bold">🚀</code> becomes <code
           class="mono font-bold">F0 9F 9A 80</code
-        > before base64 ever sees them. Decoding reverses it — <code
+        > before base64 ever sees them. Decoding reverses it: <code
           class="mono font-bold">atob</code
         > to a byte array, then <code class="mono font-bold">TextDecoder</code> in
-        fatal mode — so a payload that is not valid UTF-8 raises a real error instead
+        fatal mode, so a payload that is not valid UTF-8 raises a real error instead
         of handing you a string full of replacement characters. Try the Unicode sample
         button and round-trip it both ways.
       </p>

@@ -13,7 +13,7 @@ const tool = getTool("/tools/chmod-calculator/");
 
 const PAGE_TITLE = "Chmod Permissions Calculator";
 const PAGE_DESCRIPTION =
-  "Free chmod permissions calculator. Convert octal like 755 to rwx and back, with setuid, setgid, and sticky bits plus a copy-ready command — in your browser.";
+  "Free chmod permissions calculator. Convert octal like 755 to rwx and back, with setuid, setgid, and sticky bits plus a copy-ready command, in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -75,7 +75,7 @@ const faq = [
   },
   {
     q: "Is chmod 777 ever safe?",
-    a: "Almost never on a server. 777 lets every local account and every process — including a compromised web server — read, modify, and execute the file. If something only works at 777, the real problem is ownership: fix the user or group with chown, then use 750 or 640.",
+    a: "Almost never on a server. 777 lets every local account and every process (including a compromised web server) read, modify, and execute the file. If something only works at 777, the real problem is ownership: fix the user or group with chown, then use 750 or 640.",
   },
   {
     q: "What does the 4 in chmod 4755 do?",
@@ -83,7 +83,7 @@ const faq = [
   },
   {
     q: "Why does my permission string show a capital S or T?",
-    a: "A capital letter means the special bit is set but the matching execute bit is not. rwSr--r-- is setuid with no owner execute; drwxrwxrwT is the sticky bit with no other execute. Lowercase s or t means both bits are on. A capital is usually a mistake — the bit is stored but nothing can use it.",
+    a: "A capital letter means the special bit is set but the matching execute bit is not. rwSr--r-- is setuid with no owner execute; drwxrwxrwT is the sticky bit with no other execute. Lowercase s or t means both bits are on. A capital is usually a mistake. The bit is stored but nothing can use it.",
   },
   {
     q: "How do I chmod a folder and everything inside it?",
@@ -160,7 +160,7 @@ const relatedLinks = [
   description={PAGE_DESCRIPTION}
   eyebrow="Free tool"
   heading="Chmod Permissions Calculator."
-  intro="Tick the boxes or type the number — both directions stay in sync. Includes the setuid, setgid, and sticky bits, with the S/T rendering everyone else gets wrong."
+  intro="Tick the boxes or type the number. Both directions stay in sync. Includes the setuid, setgid, and sticky bits, with the S/T rendering everyone else gets wrong."
   structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-4xl px-5 pb-6">
@@ -169,8 +169,8 @@ const relatedLinks = [
         ▸ Runs offline
       </p>
       <p class="text-sm leading-snug font-bold">
-        Every digit is computed in this tab. No request, no upload, no logging —
-        paste a real path if you want to.
+        Every digit is computed in this tab. No request, no upload, no logging.
+        Paste a real path if you want to.
       </p>
     </StickyNote>
   </section>
@@ -321,7 +321,7 @@ const relatedLinks = [
 
       <div class="border-ink border-t-[2.5px] pt-5">
         <p class="mono mb-3 text-[10px] font-bold tracking-widest uppercase">
-          ▸ Special bits (the optional 4th digit) — now <span
+          ▸ Special bits (the optional 4th digit): now <span
             id="chmod-digit-special">0</span
           >
         </p>
@@ -449,7 +449,7 @@ const relatedLinks = [
           Each digit is a three-bit field: read is 4, write is 2, execute is 1,
           and you add them. So 7 is <code>rwx</code>, 6 is <code>rw-</code>, 5
           is
-          <code>r-x</code>. The three digits are owner, group, others — in that
+          <code>r-x</code>. The three digits are owner, group, others, in that
           order, and the kernel checks them in that order and <em
             >stops at the first class you match</em
           >. That trips people up: if you own a file with mode 077, you get
@@ -460,7 +460,7 @@ const relatedLinks = [
           A fourth digit sits in front for the special bits. This calculator
           treats the checkboxes and the number as one value in two shapes:
           ticking a box ORs a bit into the digit, typing a digit sets the boxes.
-          It also right-aligns short input the way <code>chmod</code> does —
+          It also right-aligns short input the way <code>chmod</code> does:
           <code>chmod 7 file</code> is <code>0007</code>, which grants
           <code>rwx</code> to everyone <em>except</em> the owner and the group. Type
           all three digits.
@@ -504,7 +504,7 @@ const relatedLinks = [
               label: "x (1)",
               cells: [
                 "Run it as a program.",
-                "Traverse it — cd in, and reach anything below.",
+                "Traverse it: cd in, and reach anything below.",
               ],
             },
           ]}
@@ -527,7 +527,7 @@ const relatedLinks = [
         </h2>
         <p class="mt-3 leading-relaxed">
           777 is a symptom, not a fix. It says "I don't know which account needs
-          this, so I'll give it to all of them" — including the web server, the
+          this, so I'll give it to all of them", including the web server, the
           queue worker, and whatever a future attacker lands as. World-writable
           plus world-executable on a deployed application means one file-upload
           bug is a shell, and the audit trail is worthless because every process
@@ -550,14 +550,14 @@ const relatedLinks = [
           at 666 and a new directory at 777, then clears whatever bits the
           process <code>umask</code> names. The common umask of 022 clears group and
           other write, which is where 644 and 755 come from. Set it to 077 and you
-          get 600 and 700 — the right default for anything holding secrets.
+          get 600 and 700, the right default for anything holding secrets.
         </p>
         <p class="mt-3 leading-relaxed">
           umask only ever removes bits, never adds them, which is why a freshly
           written script is never executable and always needs a <code
             >chmod +x</code
           >. It is also per-process and inherited by children, so setting it in
-          your shell profile does nothing for a systemd service — use <code
+          your shell profile does nothing for a systemd service. Use <code
             >UMask=</code
           > in the unit file instead.
         </p>
@@ -572,7 +572,7 @@ const relatedLinks = [
           caller. Setgid (2000) does the same for the group, and on a directory
           it makes new entries inherit that directory's group. The sticky bit
           (1000) on a directory restricts renames and deletes to each entry's
-          owner — <code>/tmp</code> is 1777 for precisely that reason. When the matching
+          owner: <code>/tmp</code> is 1777 for precisely that reason. When the matching
           execute bit is missing the letter goes uppercase: <code>S</code>, <code
             >S</code
           >, <code>T</code>. That is not a special mode, it is a warning sign.
@@ -585,8 +585,8 @@ const relatedLinks = [
           a bug that runs as its owner. Reach for a <code>sudo</code> rule or a file
           capability such as <code>cap_net_bind_service</code> first. One last trap:
           GNU <code>chmod</code> preserves a directory's setuid and setgid bits when
-          you pass three digits — pass four (<code>0755</code>) when you
-          actually want them cleared.
+          you pass three digits. Pass four (<code>0755</code>) when you actually
+          want them cleared.
         </p>
       </div>
     </div>

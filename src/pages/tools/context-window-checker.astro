@@ -113,7 +113,7 @@ const PARTS = [
   {
     id: "history",
     label: "Chat history",
-    note: "Every prior turn you replay — user and assistant both.",
+    note: "Every prior turn you replay, user and assistant both.",
     rows: 4,
     swatch: "bg-yellow",
     placeholder: "Paste the transcript you resend on each turn…",
@@ -143,7 +143,7 @@ const faq = [
   },
   {
     q: "Does the model's answer count against the context window?",
-    a: "Yes. Input tokens and output tokens come out of the same budget on almost every API, which is why this tool makes you reserve tokens for the reply. If your prompt uses 197,000 of a 200,000-token window, the model has 3,000 tokens left to answer with — and you will get a truncated response rather than an error. Some models also cap max output well below the window, so check both numbers.",
+    a: "Yes. Input tokens and output tokens come out of the same budget on almost every API, which is why this tool makes you reserve tokens for the reply. If your prompt uses 197,000 of a 200,000-token window, the model has 3,000 tokens left to answer with, and you will get a truncated response rather than an error. Some models also cap max output well below the window, so check both numbers.",
   },
   {
     q: "What happens if I exceed the context window?",
@@ -151,15 +151,15 @@ const faq = [
   },
   {
     q: "How many tokens should I reserve for output?",
-    a: "Start at 4,000 for a normal answer, 8,000-16,000 if the model writes code or long structured JSON, and 32,000 or more if you have extended thinking or reasoning tokens switched on — reasoning tokens are billed and budgeted as output. Reserve the p95 of what you actually see in logs, not the average. The default here is 4,000 because that covers a couple of pages of prose with room to spare.",
+    a: "Start at 4,000 for a normal answer, 8,000-16,000 if the model writes code or long structured JSON, and 32,000 or more if you have extended thinking or reasoning tokens switched on. Reasoning tokens are billed and budgeted as output. Reserve the p95 of what you actually see in logs, not the average. The default here is 4,000 because that covers a couple of pages of prose with room to spare.",
   },
   {
     q: "Is a 1M token context window actually usable?",
-    a: "Usable, yes. Advisable, rarely. Retrieval accuracy sags for facts buried in the middle of a long context — the 'lost in the middle' effect — so a needle at 60% depth in a 900K-token prompt is meaningfully harder to find than the same needle in a 20K-token prompt. On top of that you pay for every token on every turn, time-to-first-token climbs with prefill, and KV cache memory grows linearly. Big windows are a safety net for the occasional oversized input, not a replacement for retrieval.",
+    a: "Usable, yes. Advisable, rarely. Retrieval accuracy sags for facts buried in the middle of a long context (the 'lost in the middle' effect) so a needle at 60% depth in a 900K-token prompt is meaningfully harder to find than the same needle in a 20K-token prompt. On top of that you pay for every token on every turn, time-to-first-token climbs with prefill, and KV cache memory grows linearly. Big windows are a safety net for the occasional oversized input, not a replacement for retrieval.",
   },
   {
     q: "Is a context window the same as memory?",
-    a: "No. The context window is the working set for one request: everything you resend, every time, priced per call. Memory is state that survives between requests — a database row, a vector store, a summary file. A model with a 1M-token window still remembers nothing once the request returns. If your app needs to recall a preference from last Tuesday, that is a storage problem, and stuffing the transcript back into the window is the expensive way to fake it.",
+    a: "No. The context window is the working set for one request: everything you resend, every time, priced per call. Memory is state that survives between requests: a database row, a vector store, a summary file. A model with a 1M-token window still remembers nothing once the request returns. If your app needs to recall a preference from last Tuesday, that is a storage problem, and stuffing the transcript back into the window is the expensive way to fake it.",
   },
 ];
 
@@ -213,7 +213,7 @@ const relatedLinks = [
   },
   {
     href: "/tools/rag-chunk-splitter/",
-    note: "If the context will not fit, retrieval is the answer — start by sizing the chunks.",
+    note: "If the context will not fit, retrieval is the answer. Start by sizing the chunks.",
   },
   {
     href: "/blog/context-window-vs-memory/",
@@ -234,7 +234,7 @@ const relatedLinks = [
   description={DESCRIPTION}
   eyebrow="Free tool"
   heading="Context Window Checker."
-  intro="Will this prompt fit — and what's left for the answer? Build it out of system prompt, retrieved context, history, and user turn, then see it graded against every window worth caring about."
+  intro="Will this prompt fit, and what's left for the answer? Build it out of system prompt, retrieved context, history, and user turn, then see it graded against every window worth caring about."
   structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
@@ -243,7 +243,7 @@ const relatedLinks = [
         ▸ Estimate, not a tokenizer
       </p>
       <p class="text-sm leading-snug font-bold">
-        Token counts use the ~4 chars/token heuristic — good to roughly ±15% on
+        Token counts use the ~4 chars/token heuristic, good to roughly ±15% on
         prose, worse on code. Window sizes are the advertised limits and they
         change. Never ship within 10% of a ceiling on these numbers alone.
       </p>
@@ -632,9 +632,9 @@ const relatedLinks = [
       <p>
         This is the confusion that costs the most money. The context window is
         the working set for <em>one</em> request: system prompt, tools, retrieved
-        chunks, the transcript you chose to replay, and the new question — all of
-        it uploaded and paid for again on every single call. The model holds none
-        of it afterwards. Return the response, and the state is gone.
+        chunks, the transcript you chose to replay, and the new question, all of it
+        uploaded and paid for again on every single call. The model holds none of
+        it afterwards. Return the response, and the state is gone.
       </p>
       <p>
         Memory is the part that survives: a row in Postgres, a vector store, a
@@ -665,7 +665,7 @@ const relatedLinks = [
           label: "Cost model",
           cells: [
             "Per token, per call, every call",
-            "Storage — effectively free",
+            "Storage: effectively free",
           ],
         },
         {
@@ -695,7 +695,7 @@ const relatedLinks = [
       </h2>
       <p>
         The window is a total, not an inbox. If a model advertises 200,000
-        tokens and your prompt eats 197,000, the reply gets 3,000 — and you will
+        tokens and your prompt eats 197,000, the reply gets 3,000, and you will
         find out by reading a sentence that stops mid-word, not by catching an
         exception. That is why this tool subtracts a reserve before it grades
         anything. Four thousand covers a couple of pages of prose. Raise it hard
@@ -715,18 +715,18 @@ const relatedLinks = [
         Long context degrades in the middle
       </h2>
       <p>
-        Fitting is not the same as working. The <em>lost in the middle</em> effect
-        — measured by Liu et al. in 2023 and still visible in current models — is
-        that recall is strongest for material at the very start and the very end of
-        a long context, and weakest for material buried in the middle. Push a fact
-        to 50-60% depth in a 400K-token prompt and the odds of the model using it
-        correctly drop noticeably compared to the same fact in a 20K-token prompt.
+        Fitting is not the same as working. The <em>lost in the middle</em> effect:
+        measured by Liu et al. in 2023 and still visible in current models. Is that
+        recall is strongest for material at the very start and the very end of a long
+        context, and weakest for material buried in the middle. Push a fact to 50-60%
+        depth in a 400K-token prompt and the odds of the model using it correctly
+        drop noticeably compared to the same fact in a 20K-token prompt.
       </p>
       <p>
         Three things follow. Put the instruction that matters last, right before
         the question, not at the top of a wall of retrieved text. Rank your
         retrieved chunks and cut the tail instead of pasting all fifty "just in
-        case" — irrelevant chunks are not free, they actively dilute attention.
+        case": irrelevant chunks are not free, they actively dilute attention.
         And when a long-context evaluation looks perfect, check whether it was a
         needle-in-a-haystack test, which measures literal lookup, not multi-hop
         reasoning across scattered facts. The second is what your app actually
@@ -741,7 +741,7 @@ const relatedLinks = [
         <li>
           <strong>Tokens, every turn.</strong> A 120K-token context replayed across
           a 20-turn conversation is 2.4M input tokens for one session. Prompt caching
-          is the fix that actually works — a stable prefix (system prompt, tool schemas,
+          is the fix that actually works. A stable prefix (system prompt, tool schemas,
           the document) reads back at a fraction of the input price. It only helps
           if the prefix is byte-identical, so put anything volatile, like a timestamp
           or a per-user greeting, <em>after</em> the cached block, never before it.
@@ -756,7 +756,7 @@ const relatedLinks = [
           <strong>KV cache memory, if you self-host.</strong> The cache grows linearly
           with context length and it is not small. Llama-3-8B with grouped-query attention
           is 32 layers × 8 KV heads × 128 dims × 2 (keys and values) × 2 bytes ≈ 128
-          KB per token. A single 128K-token request is about 16 GB of VRAM — roughly
+          KB per token. A single 128K-token request is about 16 GB of VRAM, roughly
           what the fp16 weights themselves occupy, for one user. That is why your
           throughput collapses when you raise the max context on a shared GPU.
         </li>
@@ -767,20 +767,20 @@ const relatedLinks = [
       </h2>
       <p>
         My rule of thumb: under about 30K tokens and static, paste it and cache
-        it — RAG is not worth the infrastructure. Above that, or if the corpus
+        it. RAG is not worth the infrastructure. Above that, or if the corpus
         changes, or if you have more source material than one window can hold,
         retrieve. Retrieval is not only cheaper, it is usually <em>more</em> accurate,
         because eight well-ranked chunks beat two hundred pages of noise at getting
         the model to cite the right paragraph.
       </p>
       <p>
-        The one case that genuinely justifies a huge window is a single
-        indivisible artefact you must reason over end to end — a full contract,
-        a long transcript, a codebase you are refactoring across files. Chunking
-        those destroys the relationships that make the task work. Everything
-        else is usually a retrieval problem wearing a long-context costume, and
-        the tell is simple: if you cannot say which part of the pasted context
-        answered the question, you pasted too much.
+        The one case that justifies a huge window is a single indivisible
+        artefact you must reason over end to end: a full contract, a long
+        transcript, a codebase you are refactoring across files. Chunking those
+        destroys the relationships that make the task work. Everything else is
+        usually a retrieval problem wearing a long-context costume, and the tell
+        is simple: if you cannot say which part of the pasted context answered
+        the question, you pasted too much.
       </p>
     </div>
   </section>
@@ -880,7 +880,7 @@ const relatedLinks = [
             ▸ Tool
           </p>
           <p class="leading-snug font-bold">
-            Token Counter — count one blob against chars, words, and cost
+            Token Counter: count one blob against chars, words, and cost
           </p>
         </NeoCard>
       </li>
@@ -898,7 +898,7 @@ const relatedLinks = [
             ▸ Tool
           </p>
           <p class="leading-snug font-bold">
-            LLM Cost Calculator — price the window you just filled, per day and
+            LLM Cost Calculator: price the window you just filled, per day and
             per month
           </p>
         </NeoCard>

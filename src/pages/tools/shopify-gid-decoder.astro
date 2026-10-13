@@ -14,7 +14,7 @@ import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 const tool = getTool("/tools/shopify-gid-decoder/");
 
 const PAGE_DESCRIPTION =
-  "Free Shopify GID decoder. Parse gid://shopify/Product/123 into resource type and legacy numeric ID, build GIDs, and decode base64 IDs — all in your browser.";
+  "Free Shopify GID decoder. Parse gid://shopify/Product/123 into resource type and legacy numeric ID, build GIDs, and decode base64 IDs, all in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -51,7 +51,7 @@ const appLd = {
 const faq = [
   {
     q: "How do I get the numeric ID from a Shopify GID?",
-    a: "Take the last path segment: gid://shopify/Product/1234567890 gives 1234567890. In GraphQL you should not parse it yourself — most Admin API objects expose legacyResourceId, which returns that same number as a string. In webhook payloads the numeric id is already the top-level id field, sitting next to admin_graphql_api_id which holds the full GID.",
+    a: "Take the last path segment: gid://shopify/Product/1234567890 gives 1234567890. In GraphQL you should not parse it yourself. Most Admin API objects expose legacyResourceId, which returns that same number as a string. In webhook payloads the numeric id is already the top-level id field, sitting next to admin_graphql_api_id which holds the full GID.",
   },
   {
     q: "What does gid://shopify/Product/1234567890 mean?",
@@ -59,15 +59,15 @@ const faq = [
   },
   {
     q: "Why are some Shopify IDs base64-encoded?",
-    a: "The Storefront API used to return every ID base64-encoded, so gid://shopify/Product/123 arrived as Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0LzEyMw==. Shopify stopped doing that in API version 2022-04, and the Admin API never did it at all. Old code, cached rows and copy-pasted snippets still carry the encoded form, which is why this tool detects and decodes it — do not assume either encoding in your own code.",
+    a: "The Storefront API used to return every ID base64-encoded, so gid://shopify/Product/123 arrived as Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0LzEyMw==. Shopify stopped doing that in API version 2022-04, and the Admin API never did it at all. Old code, cached rows and copy-pasted snippets still carry the encoded form, which is why this tool detects and decodes it. Do not assume either encoding in your own code.",
   },
   {
     q: "Can I build a Shopify GID by hand from a numeric ID?",
-    a: "It usually works and Shopify still tells you not to rely on it. GIDs are opaque: the type name must be exactly right and PascalCase, some resources need a query parameter (an InventoryLevel GID carries ?inventory_item_id=...), and some IDs are not numeric at all — a Storefront cart ID is an opaque string. Build them here to debug, and in production read the GID from the API.",
+    a: "It usually works and Shopify still tells you not to rely on it. GIDs are opaque: the type name must be exactly right and PascalCase, some resources need a query parameter (an InventoryLevel GID carries ?inventory_item_id=...), and some IDs are not numeric at all. A Storefront cart ID is an opaque string. Build them here to debug, and in production read the GID from the API.",
   },
   {
     q: "Does this Shopify GID decoder send my IDs anywhere?",
-    a: "No. Parsing, base64 decoding and the bulk conversion all run in your browser with plain string operations, atob and TextDecoder. There is no API call, no logging and no storage — load the page, go offline, and it still works. GIDs are not secrets, but customer and order IDs still do not belong in a random web form.",
+    a: "No. Parsing, base64 decoding and the bulk conversion all run in your browser with plain string operations, atob and TextDecoder. There is no API call, no logging and no storage. Load the page, go offline, and it still works. GIDs are not secrets, but customer and order IDs still do not belong in a random web form.",
   },
   {
     q: "What is admin_graphql_api_id in a Shopify webhook?",
@@ -181,8 +181,8 @@ const idRows = [
   {
     label: "Safe to assemble yourself",
     cells: [
-      "n/a — it is just an integer",
-      "No — treat it as opaque, read it from the API",
+      "n/a: it is just an integer",
+      "No, treat it as opaque, read it from the API",
     ],
   },
 ];
@@ -217,7 +217,7 @@ const RELATED = [
     kind: "Tool",
     title: "Shopify HMAC Verifier",
     blurb:
-      "The other half of webhook handling — check the signature before you trust the IDs inside the payload.",
+      "The other half of webhook handling. Check the signature before you trust the IDs inside the payload.",
     tone: "purple" as const,
   },
 ];
@@ -258,8 +258,8 @@ const relatedLinks = [
       </p>
       <p class="text-sm leading-snug font-bold">
         A GID is meant to be opaque. This tool takes it apart because you are
-        debugging — production code should read GIDs from the API, not build
-        them with string concatenation. Nothing you paste leaves the page.
+        debugging. Production code should read GIDs from the API, not build them
+        with string concatenation. Nothing you paste leaves the page.
       </p>
     </StickyNote>
   </section>
@@ -417,7 +417,7 @@ const relatedLinks = [
       </p>
       <p class="text-xs leading-snug opacity-70">
         Numeric ID in, GID out. The query field is for the parameters a few
-        resources need — <code>namespace=custom&amp;key=fit_guide</code> for a metafield,
+        resources need: <code>namespace=custom&amp;key=fit_guide</code> for a metafield,
         <code>inventory_item_id=445566</code> for an inventory level.
       </p>
       <div class="grid gap-4 sm:grid-cols-[1fr_1fr_1fr]">
@@ -537,7 +537,7 @@ const relatedLinks = [
         ▸ Bulk convert
       </p>
       <p class="text-xs leading-snug opacity-80">
-        One value per line — GIDs, base64 GIDs, admin URLs and bare numbers can
+        One value per line: GIDs, base64 GIDs, admin URLs and bare numbers can
         be mixed. Lines that fail come back blank so row order still matches
         your spreadsheet, and the count below names what broke.
       </p>
@@ -650,7 +650,7 @@ const relatedLinks = [
       type, and can be handed to <code>node(id:)</code> or
       <code>nodes(ids: [...])</code> to fetch anything without knowing up front what
       it is. That is also why Apollo and urql can normalise a Shopify response without
-      configuration — the <code>id</code> field is already globally unique.
+      configuration. The <code>id</code> field is already globally unique.
     </p>
 
     <h2 class="display mt-10 text-2xl uppercase">
@@ -664,7 +664,7 @@ const relatedLinks = [
     <ComparisonTable columns={idColumns} rows={idRows} class="mt-5 text-sm" />
     <p class="mt-4 text-base leading-relaxed opacity-90">
       The places it bites: <strong>webhook payloads</strong> are REST-shaped, so
-      <code>id</code> is the number — but Shopify also ships
+      <code>id</code> is the number, but Shopify also ships
       <code>admin_graphql_api_id</code> in the same object, so reach for that instead
       of concatenating. <strong>Liquid</strong> gives you
       <code>product.id</code> as an integer. <strong>Admin URLs</strong> are all numeric,
@@ -672,8 +672,8 @@ const relatedLinks = [
       <strong>CSV and report exports</strong> that include an Id column give you the
       number. And any ERP, 3PL or legacy database you integrated with in 2019 has
       a column full of integers. Going the other way, the GraphQL field you want is
-      <code>legacyResourceId</code> — it returns the numeric ID as a string, and it
-      means you never parse a GID yourself.
+      <code>legacyResourceId</code>: it returns the numeric ID as a string, and
+      it means you never parse a GID yourself.
     </p>
 
     <h2 class="display mt-10 text-2xl uppercase">
@@ -684,7 +684,7 @@ const relatedLinks = [
       <code>gid://shopify/Product/1234567890</code> came back as
       <code>Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0LzEyMzQ1Njc4OTA=</code>. The Admin API
       never did. Shopify dropped the encoding in API version 2022-04, and both
-      forms are still accepted as input — which is a friendly API and a nasty
+      forms are still accepted as input, which is a friendly API and a nasty
       source of bugs.
     </p>
     <p class="mt-3 text-base leading-relaxed opacity-90">
@@ -700,7 +700,7 @@ const relatedLinks = [
     </p>
 
     <h2 class="display mt-10 text-2xl uppercase">
-      A GID is opaque — including the one this tool just built you
+      A GID is opaque, including the one this tool just built you
     </h2>
     <p class="mt-3 text-base leading-relaxed opacity-90">
       Shopify's position is that a GID is an opaque token: read it from a
@@ -711,12 +711,12 @@ const relatedLinks = [
     </p>
     <p class="mt-3 text-base leading-relaxed opacity-90">
       Three concrete reasons it breaks. The type name has to be exactly right
-      and exactly PascalCase — <code>gid://shopify/product/1</code> is not a typo
-      the API forgives, and <code>MediaImage</code>, <code>ProductImage</code> and
+      and exactly PascalCase: <code>gid://shopify/product/1</code> is not a typo the
+      API forgives, and <code>MediaImage</code>, <code>ProductImage</code> and
       <code>Image</code> are three different things. Some resources need query parameters
       as part of the identifier: an inventory level is the pair of a location and
       an inventory item, so its GID carries
-      <code>?inventory_item_id=…</code>. And some IDs are not numbers at all — a
+      <code>?inventory_item_id=…</code>. And some IDs are not numbers at all. A
       Storefront cart ID is an opaque token, so any code doing
       <code>"gid://shopify/Cart/" + parseInt(x)</code> is already broken. When a bulk
       migration really does force your hand, build the strings, then validate them
@@ -730,13 +730,13 @@ const relatedLinks = [
       <code>gid://</code> is cut at the first <code>?</code>, the path must be
       exactly three segments, and the query is read with
       <code>URLSearchParams</code> so repeated and empty values survive. Anything
-      that fails names the reason — one slash instead of two, a stray fragment, a
-      space in the middle, four segments because a URL got pasted in. Inputs that
-      are not GIDs are tried in order: a Shopify admin URL (the last
+      that fails names the reason: one slash instead of two, a stray fragment, a space
+      in the middle, four segments because a URL got pasted in. Inputs that are not
+      GIDs are tried in order: a Shopify admin URL (the last
       <code>/segment/12345</code> pair wins, so
       <code>/products/1/variants/2</code> resolves to the variant), a bare integer,
-      then base64. The notes panel flags the things that parse but still look wrong
-      — a non-<code>shopify</code> namespace, a lowercase type, a leading zero, an
+      then base64. The notes panel flags the things that parse but still look wrong.
+      A non-<code>shopify</code> namespace, a lowercase type, a leading zero, an
       <code>InventoryLevel</code> missing its parameter. All of it runs locally; the
       page works with the network unplugged.
     </p>

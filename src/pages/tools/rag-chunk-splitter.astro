@@ -18,7 +18,7 @@ const breadcrumbLd = breadcrumbList([
 ]);
 
 const DESCRIPTION =
-  "Free RAG chunk splitter. Split text into retrieval chunks by tokens or characters — fixed, sentence, paragraph, or markdown-heading aware — in your browser.";
+  "Free RAG chunk splitter. Split text into retrieval chunks by tokens or characters (fixed, sentence, paragraph, or markdown-heading aware) in your browser.";
 
 // Starting points I actually use, rather than whatever the library default is.
 const PRESETS = [
@@ -59,7 +59,7 @@ const PRESETS = [
 const faq = [
   {
     q: "What is the best chunk size for RAG?",
-    a: "There is no universal number, but 512–1024 tokens with 10–15% overlap is a sane starting point for technical documentation, and it is what I reach for first. Go smaller (256–384) when your corpus is FAQ-style and answers are one or two sentences, because precision matters more than context. Go larger (1024–1536) when answers need surrounding narrative to make sense. Then measure retrieval recall on a real question set instead of guessing again.",
+    a: "There is no universal number, but 512 to 1024 tokens with 10 to 15% overlap is a sane starting point for technical documentation, and it is what I reach for first. Go smaller (256 to 384) when your corpus is FAQ-style and answers are one or two sentences, because precision matters more than context. Go larger (1024 to 1536) when answers need surrounding narrative to make sense. Then measure retrieval recall on a real question set instead of guessing again.",
   },
   {
     q: "How much overlap should RAG chunks have?",
@@ -71,11 +71,11 @@ const faq = [
   },
   {
     q: "What is the difference between fixed-size and semantic chunking?",
-    a: "Fixed-size chunking counts characters or tokens and cuts when the counter hits the limit, wherever that lands — often mid-sentence, mid-table, or between a code block and the paragraph explaining it. Structure-aware chunking cuts on boundaries the document already has: sentences, paragraphs, or markdown headings. Semantic chunking goes one step further and cuts where the embedding of consecutive sentences drifts apart. This tool covers the first two, which is where most of the win is.",
+    a: "Fixed-size chunking counts characters or tokens and cuts when the counter hits the limit, wherever that lands, often mid-sentence, mid-table, or between a code block and the paragraph explaining it. Structure-aware chunking cuts on boundaries the document already has: sentences, paragraphs, or markdown headings. Semantic chunking goes one step further and cuts where the embedding of consecutive sentences drifts apart. This tool covers the first two, which is where most of the win is.",
   },
   {
     q: "How do I chunk markdown documents for RAG?",
-    a: "Split on heading boundaries first so each chunk covers one topic, keep the heading line with its body, and only fall back to paragraph or sentence packing inside a section that is still too big. When one section spills into several chunks, re-inject the heading at the top of each continuation chunk — otherwise chunk three of the 'Rate limits' section reads like it belongs to nothing. The markdown mode here does exactly that, and it ignores headings inside fenced code blocks.",
+    a: "Split on heading boundaries first so each chunk covers one topic, keep the heading line with its body, and only fall back to paragraph or sentence packing inside a section that is still too big. When one section spills into several chunks, re-inject the heading at the top of each continuation chunk. Otherwise chunk three of the 'Rate limits' section reads like it belongs to nothing. The markdown mode here does exactly that, and it ignores headings inside fenced code blocks.",
   },
   {
     q: "Does this chunk splitter send my text anywhere?",
@@ -306,7 +306,7 @@ const relatedLinks = [
             class={`${inputClass} w-full sm:max-w-[200px]`}
           />
           <p class={hintClass}>
-            ▸ Varies by provider — roughly $0.02 to $0.13 per million tokens.
+            ▸ Varies by provider, roughly $0.02 to $0.13 per million tokens.
             Check the current price page.
           </p>
         </div>
@@ -488,12 +488,12 @@ const relatedLinks = [
   <section class="mx-auto max-w-3xl px-5 pb-14">
     <div class="text-ink/90 space-y-4 text-base leading-relaxed">
       <h2 class="display text-2xl uppercase">
-        Chunk size is the highest-leverage knob in RAG
+        Chunk size is the biggest knob in RAG
       </h2>
       <p>
         Almost every RAG debugging session I get pulled into starts at the wrong
         end of the pipeline. Someone is swapping embedding models, bolting on a
-        reranker, or arguing about hybrid search — and all of those operate on
+        reranker, or arguing about hybrid search, and all of those operate on
         whatever the splitter already handed them. If the answer got cut in half
         at ingestion time, no amount of retrieval cleverness reassembles it.
       </p>
@@ -501,8 +501,8 @@ const relatedLinks = [
         Chunking happens once, upstream of everything, and every query pays for
         it forever. It is also the cheapest thing in the stack to change: adjust
         the splitter, re-embed, done. That is why it is the first thing I touch.
-        My default for technical documentation is 512–1024 tokens with 10–15%
-        overlap on real sentence or paragraph boundaries — then I measure
+        My default for technical documentation is 512 to 1024 tokens with 10 to
+        15% overlap on real sentence or paragraph boundaries, then I measure
         retrieval recall against an actual question set instead of guessing
         twice.
       </p>
@@ -523,8 +523,8 @@ const relatedLinks = [
     <ComparisonTable
       class="mt-6"
       columns={[
-        { label: "Small (128–384)", tone: "cyan" },
-        { label: "Medium (512–1024)", tone: "yellow" },
+        { label: "Small (128 to 384)", tone: "cyan" },
+        { label: "Medium (512 to 1024)", tone: "yellow" },
         { label: "Large (1536+)", tone: "pink" },
       ]}
       rows={[
@@ -547,7 +547,7 @@ const relatedLinks = [
         {
           label: "Context sent to the LLM",
           cells: [
-            "Fragmentary — needs top-10",
+            "Fragmentary: needs top-10",
             "Usually self-contained",
             "Padded with irrelevant text",
           ],
@@ -582,7 +582,7 @@ const relatedLinks = [
         Overlap exists for exactly one reason: a fixed-size window cuts blind,
         so you duplicate the seam to make sure a sentence straddling the cut
         survives in at least one chunk. That is a real problem and overlap is a
-        real fix — for fixed-size splitting.
+        real fix, for fixed-size splitting.
       </p>
       <p>
         The moment your splitter respects sentence or paragraph boundaries, most
@@ -604,7 +604,7 @@ const relatedLinks = [
         An embedding model compresses the whole chunk into one vector. Feed it a
         fragment that ends "…therefore the migration must run before" and it
         produces a vector for a statement that has no meaning. That vector does
-        not merely fail to retrieve — it pollutes the index, because a
+        not merely fail to retrieve. It pollutes the index, because a
         semantically incoherent chunk lands somewhere near everything and near
         nothing, and it will surface for queries it has no business answering.
       </p>
@@ -628,7 +628,7 @@ const relatedLinks = [
         <code class={codeClass}>##</code>, or <code class={codeClass}>###</code>
         and keeps the heading attached to its body. When a section is still too big
         and has to spill into several chunks, the heading is re-injected at the top
-        of each continuation chunk — otherwise chunk three of "Rate limits" retrieves
+        of each continuation chunk. Otherwise chunk three of "Rate limits" retrieves
         as an orphan paragraph belonging to nothing. Headings inside fenced code blocks
         are ignored, because
         <code class={codeClass}>#!/bin/sh</code> is not a section.
@@ -637,7 +637,7 @@ const relatedLinks = [
         For source code, apply the same principle with different boundaries:
         split on function, class, or module, never mid-body, and carry the
         imports or the class signature into each chunk as context. For HTML and
-        PDFs, strip to structure first — a splitter fed raw PDF text extraction
+        PDFs, strip to structure first. A splitter fed raw PDF text extraction
         is splitting page furniture as often as it is splitting content.
       </p>
 
@@ -654,8 +654,8 @@ const relatedLinks = [
           then greedily pack units until the next one would blow the budget. Overlap
           is built by walking backwards over complete units, so you never get half
           a sentence of overlap. A unit that is larger than the target on its own
-          is recursively broken down — paragraph to sentences, sentence to a hard
-          window — which is the only point where a mid-sentence cut can happen.
+          is recursively broken down (paragraph to sentences, sentence to a hard window)
+          which is the only point where a mid-sentence cut can happen.
         </li>
         <li>
           <strong>Markdown</strong> sections each pack independently. That means a
@@ -679,7 +679,7 @@ const relatedLinks = [
         flagged, because that is the input ceiling on most current embedding
         models and anything past it gets silently truncated by the API rather
         than rejected. And an overlap greater than or equal to the chunk size is
-        the classic infinite-loop footgun in hand-rolled splitters — this one
+        the classic infinite-loop footgun in hand-rolled splitters. This one
         clamps it, warns you, and stops after a hard chunk ceiling instead of
         locking up your tab.
       </p>
@@ -726,7 +726,7 @@ const relatedLinks = [
             ▸ Blog
           </p>
           <p class="leading-snug font-bold">
-            7 RAG mistakes in production — naive chunking is number one
+            7 RAG mistakes in production. Naive chunking is number one
           </p>
         </NeoCard>
       </li>
@@ -744,7 +744,7 @@ const relatedLinks = [
             ▸ Blog
           </p>
           <p class="leading-snug font-bold">
-            Why your RAG is failing — and it usually isn't the model
+            Why your RAG is failing, and it usually isn't the model
           </p>
         </NeoCard>
       </li>

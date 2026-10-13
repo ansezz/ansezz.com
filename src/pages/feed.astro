@@ -60,10 +60,10 @@ const latest = (await getCollection("blog", ({ data }) => !data.draft))
 
 <Page
   title="Feed"
-  description={`Follow ${SITE.SHORT_TITLE} — RSS, JSON Feed, per-topic feeds, and every social profile in one place. No tracking widgets.`}
+  description={`Follow ${SITE.SHORT_TITLE}: RSS, JSON Feed, per-topic feeds, and every social profile in one place. No tracking widgets.`}
   eyebrow="Follow"
   heading="Every way to follow along."
-  intro="Subscribe by feed, or find me wherever you already read. No embedded timelines, no third-party trackers — just links."
+  intro="Subscribe by feed, or find me wherever you already read. No embedded timelines, no third-party trackers, just links."
   structuredData={feedBreadcrumbLd}
 >
   <div class="mx-auto max-w-4xl space-y-14 px-5 pb-16">
@@ -74,7 +74,7 @@ const latest = (await getCollection("blog", ({ data }) => !data.draft))
       <p
         class="mono mb-5 text-[11px] font-bold tracking-widest uppercase opacity-60"
       >
-        ▸ Push, not pull — new posts come to you
+        ▸ Push, not pull: new posts come to you
       </p>
       <ul class="grid gap-4 sm:grid-cols-3">
         {
@@ -222,7 +222,7 @@ const latest = (await getCollection("blog", ({ data }) => !data.draft))
           ▸ Prefer the long form?
         </p>
         <p class="text-base leading-snug md:text-lg">
-          Bite-sized takes on social. Full essays —{" "}
+          Bite-sized takes on social. Full essays:{" "}
           <a
             href="/blog/"
             class="decoration-pink hover:bg-yellow underline decoration-[3px] underline-offset-4"

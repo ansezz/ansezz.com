@@ -559,3 +559,22 @@ article.prose tbody th:last-child {
     }
   }
 }
+
+/* Tap targets: chip and option buttons on tool pages stay at least 40px tall
+   at every viewport width, not just on touch breakpoints. Icon squares
+   (h-9/h-10) and code-block copy buttons keep their own sizing. */
+body:has([data-tool-meta])
+  main
+  :is(button, a.rounded-full)[class*="border-"]:not(
+    .code-copy-btn,
+    .h-9,
+    .h-10
+  ) {
+  min-height: 40px;
+}
+body:has([data-tool-meta])
+  main
+  a.rounded-full[class*="border-"]:not(.h-9, .h-10) {
+  display: inline-flex;
+  align-items: center;
+}

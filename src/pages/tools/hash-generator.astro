@@ -27,7 +27,7 @@ const algorithms = [
   {
     algo: "SHA-1",
     bits: 160,
-    note: "Collision-broken. Checksums and dedupe only — never signatures.",
+    note: "Collision-broken. Checksums and dedupe only, never signatures.",
   },
   {
     algo: "SHA-256",
@@ -37,7 +37,7 @@ const algorithms = [
   {
     algo: "SHA-384",
     bits: 384,
-    note: "SHA-512 truncated — immune to length-extension. Used by SRI and TLS.",
+    note: "SHA-512 truncated: immune to length-extension. Used by SRI and TLS.",
   },
   {
     algo: "SHA-512",
@@ -65,13 +65,13 @@ const comparisonRows = [
   {
     icon: "lucide:undo-2",
     label: "Reversible?",
-    cells: ["No — one-way", "Yes, trivially", "Yes, with the key"],
+    cells: ["No, one-way", "Yes, trivially", "Yes, with the key"],
   },
   { icon: "lucide:key", label: "Needs a key", cells: [false, false, true] },
   {
     icon: "lucide:ruler",
     label: "Output size",
-    cells: ["Fixed (160–512 bits)", "Grows with input", "Grows with input"],
+    cells: ["Fixed (160 to 512 bits)", "Grows with input", "Grows with input"],
   },
   {
     icon: "lucide:target",
@@ -88,7 +88,7 @@ const comparisonRows = [
 const faq = [
   {
     q: "Is this SHA hash generator safe for sensitive data?",
-    a: "Yes. Your input is never sent anywhere — hashing runs locally through crypto.subtle.digest(), the browser's own Web Crypto implementation. There is no server call, no analytics, and no logging. Open DevTools and watch the network tab stay empty while you type.",
+    a: "Yes. Your input is never sent anywhere. Hashing runs locally through crypto.subtle.digest(), the browser's own Web Crypto implementation. There is no server call, no analytics, and no logging. Open DevTools and watch the network tab stay empty while you type.",
   },
   {
     q: "Why is there no MD5 option?",
@@ -100,7 +100,7 @@ const faq = [
   },
   {
     q: "Should I use SHA-256 to store passwords?",
-    a: "No. SHA-256 is designed to be fast, and a single commodity GPU tests billions of candidates per second against it. Use a deliberately slow, memory-hard password hash instead — argon2id first, then scrypt or bcrypt — with a unique salt per user and a work factor you raise as hardware improves. That is Hash::make() in Laravel, password_hash() in PHP, and the argon2 or bcrypt packages in Node.",
+    a: "No. SHA-256 is designed to be fast, and a single commodity GPU tests billions of candidates per second against it. Use a deliberately slow, memory-hard password hash instead (argon2id first, then scrypt or bcrypt) with a unique salt per user and a work factor you raise as hardware improves. That is Hash::make() in Laravel, password_hash() in PHP, and the argon2 or bcrypt packages in Node.",
   },
   {
     q: "What is the difference between SHA-256 and SHA-512?",
@@ -112,7 +112,7 @@ const faq = [
   },
   {
     q: "How do I verify a file checksum with this tool?",
-    a: "Pick the file with the file input, wait for the digest, then compare the SHA-256 row against the checksum the publisher published — hex comparison is case-insensitive, so only the characters matter. The file is read locally with File.arrayBuffer(), so nothing is uploaded. Remember that a matching checksum only proves your copy matches the value you were shown; if the download mirror and the checksum page were both compromised, they agree and you learn nothing, which is why distributions sign their checksum file with GPG.",
+    a: "Pick the file with the file input, wait for the digest, then compare the SHA-256 row against the checksum the publisher published. Hex comparison is case-insensitive, so only the characters matter. The file is read locally with File.arrayBuffer(), so nothing is uploaded. Remember that a matching checksum only proves your copy matches the value you were shown; if the download mirror and the checksum page were both compromised, they agree and you learn nothing, which is why distributions sign their checksum file with GPG.",
   },
 ];
 
@@ -157,7 +157,7 @@ const related = [
     kind: "Tool",
     title: "Base64 Encoder",
     blurb:
-      "The other half of the hex/base64 toggle — encode and decode text and files without a round trip to a server.",
+      "The other half of the hex/base64 toggle. Encode and decode text and files without a round trip to a server.",
     tone: "yellow" as const,
   },
   {
@@ -165,7 +165,7 @@ const related = [
     kind: "Tool",
     title: "JWT Decoder",
     blurb:
-      "Read a token's header and payload. Its signature is usually HMAC-SHA-256 — the same hash family, with a key.",
+      "Read a token's header and payload. Its signature is usually HMAC-SHA-256, the same hash family, with a key.",
     tone: "purple" as const,
   },
   {
@@ -218,7 +218,7 @@ const relatedLinks = [
   <section class="mx-auto max-w-4xl px-5 pb-6">
     <StickyNote tone="yellow" tilt={-1.5} class="max-w-md">
       <p class="mono mb-1 text-[10px] font-bold tracking-widest uppercase">
-        ▸ No MD5 — on purpose
+        ▸ No MD5: on purpose
       </p>
       <p class="text-sm leading-snug font-bold">
         The Web Crypto API does not implement MD5, because MD5 collisions take
@@ -435,13 +435,13 @@ const relatedLinks = [
       A hash is a one-way fingerprint. Feed SHA-256 a single byte, a novel, or a
       4 GB disk image and you get exactly 256 bits back. Flip one bit of input
       and roughly half the output bits change. There is no key, and there is no
-      way back — the input is almost always longer than the digest, so the
+      way back. The input is almost always longer than the digest, so the
       information is simply not in there anymore.
     </p>
     <p class="mt-4 text-base leading-relaxed">
-      Encoding — base64, hex, URL-escaping — is reversible by design and holds
-      no secret at all; it exists to move bytes through channels that only
-      accept text. Encryption is reversible with a key; it exists to keep bytes
+      Encoding (base64, hex, URL-escaping) is reversible by design and holds no
+      secret at all; it exists to move bytes through channels that only accept
+      text. Encryption is reversible with a key; it exists to keep bytes
       private. The three get conflated constantly, usually in the sentence "how
       do I decrypt this hash".
     </p>
@@ -461,21 +461,21 @@ const relatedLinks = [
     </h2>
     <p class="text-base leading-relaxed">
       Text goes through <code class="mono font-bold">TextEncoder</code>, which
-      emits UTF-8 bytes — so an emoji or an accented character is hashed as its
+      emits UTF-8 bytes, so an emoji or an accented character is hashed as its
       UTF-8 encoding, exactly the way <code class="mono font-bold">shasum</code>
       would treat the same file. A file is read with <code
         class="mono font-bold">File.arrayBuffer()</code
       > and handed to <code class="mono font-bold">crypto.subtle.digest()</code>
       untouched: no re-encoding, no line-ending normalisation. Both paths hit the
-      browser's native implementation — the same code that verifies TLS certificates
-      — not a JavaScript reimplementation of the algorithm.
+      browser's native implementation (the same code that verifies TLS certificates)
+      not a JavaScript reimplementation of the algorithm.
     </p>
     <p class="mt-4 text-base leading-relaxed">
       Two consequences worth knowing.
       <code class="mono font-bold">digest()</code> returns a promise, so results arrive
       asynchronously and a stale run is discarded if you keep typing. And <code
         class="mono font-bold">crypto.subtle</code
-      > only exists in a secure context — HTTPS or localhost — so on plain HTTP this
+      > only exists in a secure context (HTTPS or localhost) so on plain HTTP this
       page tells you instead of quietly producing nothing.
     </p>
     <p class="mt-4 text-base leading-relaxed">
@@ -492,8 +492,8 @@ const relatedLinks = [
       SHA-1 is still on this page because "broken" is not one thing. The 2017
       SHAttered result produced two different PDFs with the same SHA-1 digest;
       by 2020 a chosen-prefix collision was demonstrated for a five-figure cloud
-      bill. Collisions are practical. Preimages — given a digest, find an input
-      that produces it — are not, and are not close.
+      bill. Collisions are practical. Preimages (given a digest, find an input
+      that produces it) are not, and are not close.
     </p>
     <p class="mt-4 text-base leading-relaxed">
       So the rule is about who controls the input. If an attacker can influence
@@ -501,8 +501,8 @@ const relatedLinks = [
       out: TLS certificates, code signing, document signing, anything wearing a
       "verified" badge. If you are hashing your own artefacts for a cache key, a
       dedupe check, or bit-rot detection, SHA-1 is fine and fast. Git is the
-      canonical example — it uses SHA-1, shipped collision detection in 2.13,
-      and has been migrating to SHA-256 ever since.
+      canonical example. It uses SHA-1, shipped collision detection in 2.13, and
+      has been migrating to SHA-256 ever since.
     </p>
 
     <h2 class="display mt-12 mb-4 text-2xl uppercase">
@@ -516,22 +516,22 @@ const relatedLinks = [
     <p class="mt-4 text-base leading-relaxed">
       Salting is necessary but not sufficient. A unique random salt per user
       kills rainbow tables and stops two people with the same password sharing a
-      digest — but it does not make any individual guess more expensive. What
+      digest, but it does not make any individual guess more expensive. What
       does that is a purpose-built key derivation function with a tunable cost:
       argon2id (memory-hard, first choice), then scrypt or bcrypt. You raise the
       cost factor as hardware gets cheaper.
       <code class="mono font-bold">Hash::make()</code> in Laravel,
       <code class="mono font-bold">password_hash()</code> in PHP, the
       <code class="mono font-bold">argon2</code> or
-      <code class="mono font-bold">bcrypt</code> packages in Node — all of them already
+      <code class="mono font-bold">bcrypt</code> packages in Node, all of them already
       do this correctly. Do not reach past them for a raw SHA call.
     </p>
     <p class="mt-4 text-base leading-relaxed">
       Same class of mistake: do not authenticate a message with
       <code class="mono font-bold">sha256(secret + message)</code>. SHA-1 and
-      SHA-256 are Merkle–Damgård constructions and leak enough internal state
+      SHA-256 are Merkle-Damgård constructions and leak enough internal state
       for a length-extension attack, letting someone append data and forge a
-      valid tag without ever knowing the secret. Use HMAC-SHA-256 — or SHA-384,
+      valid tag without ever knowing the secret. Use HMAC-SHA-256, or SHA-384,
       which is truncated and therefore not extendable.
     </p>
 
@@ -540,7 +540,7 @@ const relatedLinks = [
     </h2>
     <p class="mb-6 text-base leading-relaxed">
       Drop the file into the box above and read the SHA-256 row, or do it from a
-      terminal and compare — hex comparison is case-insensitive, so only the
+      terminal and compare. Hex comparison is case-insensitive, so only the
       characters matter:
     </p>
     <CodeBlock code={checksumSnippet} lang="bash" filename="checksum" />

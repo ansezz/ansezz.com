@@ -486,7 +486,7 @@ const relatedLinks = [
       <p class="text-base leading-relaxed opacity-90">
         That gap is hardware, not margin games. Your prompt is processed in one
         parallel prefill pass, while output emerges one token at a time, each
-        needing a full forward pass — a sequential, memory-bandwidth-bound loop.
+        needing a full forward pass: a sequential, memory-bandwidth-bound loop.
         So classification, extraction and routing are cheap per request, while
         drafting and code generation are not. At a 5× ratio, 200 extra output
         tokens cost exactly what 1,000 extra input tokens cost.
@@ -564,8 +564,8 @@ const relatedLinks = [
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
             ><strong>Code.</strong> Indentation, braces, punctuation and camelCase
-            splits push you nearer 2.5–3 characters per token, so a prose-tuned estimate
-            undercounts a diff.</span
+            splits push you nearer 2.5 to 3 characters per token, so a prose-tuned
+            estimate undercounts a diff.</span
           >
         </li>
         <li class="flex gap-3">
@@ -587,7 +587,7 @@ const relatedLinks = [
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
             ><strong>Reasoning tokens.</strong> Billed as output whether or not the
-            API hands the text back to you — the line item that surprises people on
+            API hands the text back to you, the line item that surprises people on
             thinking models.</span
           >
         </li>
@@ -630,7 +630,7 @@ const relatedLinks = [
       </h2>
       <p class="text-base leading-relaxed opacity-90">
         The single biggest surprise on a real invoice: an agent does not make N
-        cheap calls — it re-sends the entire conversation every turn. Each tool
+        cheap calls. It re-sends the entire conversation every turn. Each tool
         result is appended, and the whole transcript, system prompt and tool
         definitions included, goes back over the wire next turn. Input cost
         grows quadratically with turn count.
@@ -708,7 +708,7 @@ const relatedLinks = [
             Context Window Checker
           </p>
           <p class="mt-2 text-sm leading-snug opacity-90">
-            Before you cost a prompt, check it still fits — and what the
+            Before you cost a prompt, check it still fits, and what the
             long-context tier does to the price.
           </p>
         </NeoCard>

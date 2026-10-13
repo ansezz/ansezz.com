@@ -22,7 +22,7 @@ const breadcrumbLd = breadcrumbList([
 ]);
 
 const DESCRIPTION =
-  "Free data transfer time calculator: how long a file takes to move at a given bandwidth. Bits vs bytes, GB vs GiB, real throughput — all in your browser.";
+  "Free data transfer time calculator: how long a file takes to move at a given bandwidth. Bits vs bytes, GB vs GiB, real throughput, all in your browser.";
 
 // Link rates people actually run into, with the efficiency I'd assume for each.
 const PRESETS = [
@@ -52,7 +52,7 @@ const PRESETS = [
   },
   {
     label: "5G mobile",
-    note: "Wildly variable — assume the low end",
+    note: "Wildly variable: assume the low end",
     rateLabel: "200 Mbps",
     speed: "200",
     unit: "Mbps",
@@ -75,7 +75,7 @@ const faq = [
   },
   {
     q: "Is 100 Mbps the same as 100 MB/s?",
-    a: "No — 100 Mbps is 12.5 MB/s. Mbps is megabits per second, MB/s is megabytes per second, and one byte is eight bits. Divide any bits-per-second figure by 8 to get bytes per second. This one conversion is behind most complaints that a connection runs eight times slower than advertised.",
+    a: "No, 100 Mbps is 12.5 MB/s. Mbps is megabits per second, MB/s is megabytes per second, and one byte is eight bits. Divide any bits-per-second figure by 8 to get bytes per second. This one conversion is behind most complaints that a connection runs eight times slower than advertised.",
   },
   {
     q: "Why is my download slower than the speed I pay for?",
@@ -87,7 +87,7 @@ const faq = [
   },
   {
     q: "What efficiency percentage should I use?",
-    a: "90-95% for a wired LAN or same-region cloud traffic, 85% for a healthy wired WAN, 60-70% for Wi-Fi or 5G, and 40-60% for a single TCP stream between continents. Parallel transfers — S3 multipart, rclone with several transfers, a few concurrent rsync jobs — push a long-haul link back toward 85-90%, because they route around the per-connection window ceiling.",
+    a: "90-95% for a wired LAN or same-region cloud traffic, 85% for a healthy wired WAN, 60-70% for Wi-Fi or 5G, and 40-60% for a single TCP stream between continents. Parallel transfers (S3 multipart, rclone with several transfers, a few concurrent rsync jobs) push a long-haul link back toward 85-90%, because they route around the per-connection window ceiling.",
   },
   {
     q: "Does this calculator upload my file or send my numbers anywhere?",
@@ -144,7 +144,7 @@ const relatedLinks = [
   },
   {
     href: "/tools/percentile-calculator/",
-    note: "Transfer time lands in your tail latency — check where.",
+    note: "Transfer time lands in your tail latency. Check where.",
   },
   {
     href: "/blog/bandwidth-vs-throughput/",
@@ -165,7 +165,7 @@ const relatedLinks = [
   description={DESCRIPTION}
   eyebrow="Free tool"
   heading="Data Transfer Time Calculator."
-  intro="How long does it take to move X at Y bandwidth? Enter a size and a link rate, pick a base, and get a real answer — with the overhead that line-rate maths always forgets."
+  intro="How long does it take to move X at Y bandwidth? Enter a size and a link rate, pick a base, and get a real answer, with the overhead that line-rate maths always forgets."
   structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
@@ -175,7 +175,7 @@ const relatedLinks = [
       </p>
       <p class="text-sm leading-snug font-bold">
         Link speed is bits. File size is bytes. The factor of 8 between them is
-        where most transfer estimates go wrong — this tool keeps them apart.
+        where most transfer estimates go wrong. This tool keeps them apart.
       </p>
     </StickyNote>
   </section>
@@ -225,9 +225,9 @@ const relatedLinks = [
             class={`${selectClass} w-full min-w-0`}
           >
             <option value="decimal" selected>
-              Decimal (SI) — 1 kB = 1,000 bytes
+              Decimal (SI): 1 kB = 1,000 bytes
             </option>
-            <option value="binary"> Binary (IEC) — 1 KiB = 1,024 bytes </option>
+            <option value="binary"> Binary (IEC): 1 KiB = 1,024 bytes </option>
           </select>
           <p class={hintClass}>
             ▸ Cloud bills and drive labels are decimal. <code class={codeClass}
@@ -448,7 +448,7 @@ const relatedLinks = [
       <p>
         Link speeds are sold in bits per second. Files are measured in bytes.
         One byte is eight bits, so a 100 Mbps line moves at most 12.5 MB/s, and
-        a 1 GB file needs at least 80 seconds on it — not 10. Nearly every "why
+        a 1 GB file needs at least 80 seconds on it, not 10. Nearly every "why
         is my transfer so slow" thread starts and ends right here.
       </p>
       <p>
@@ -464,7 +464,7 @@ const relatedLinks = [
       </p>
 
       <h2 class="display pt-4 text-2xl uppercase">
-        1000 or 1024 — pick one and say which
+        1000 or 1024: pick one and say which
       </h2>
       <p>
         A "1 TB" drive holds 1,000,000,000,000 bytes. The same drive shows up as
@@ -479,7 +479,7 @@ const relatedLinks = [
           class={codeClass}>ls -lh</code
         >, <code class={codeClass}>du -h</code>, and Windows Explorer mean, even
         when the label quietly drops the "i". Match whichever source you read
-        the size from — not the one that gives you the answer you were hoping
+        the size from, not the one that gives you the answer you were hoping
         for. The exact byte count is printed with every result so you can sanity
         check it.
       </p>
@@ -495,7 +495,7 @@ const relatedLinks = [
       <ul class="marker:text-pink list-disc space-y-3 pl-5">
         <li>
           <strong>Framing overhead.</strong> A standard 1500-byte Ethernet frame carries
-          1460 bytes of TCP payload — 20 bytes of IP header, 20 of TCP header, plus
+          1460 bytes of TCP payload: 20 bytes of IP header, 20 of TCP header, plus
           38 bytes of Ethernet framing and inter-frame gap on the wire. That is roughly
           5-6% gone before anything goes wrong, and TLS record overhead takes a little
           more.
@@ -525,7 +525,7 @@ const relatedLinks = [
       <p>
         Rules of thumb I use: 90-95% for wired LAN and same-region cloud, 85%
         for a healthy wired WAN, 60-70% for Wi-Fi and mobile, 40-60% for a
-        single TCP stream between continents — and back up toward 90% if you
+        single TCP stream between continents, and back up toward 90% if you
         parallelise the transfer.
       </p>
 
@@ -591,16 +591,16 @@ const relatedLinks = [
     <div class="text-ink/90 mt-6 space-y-4 text-base leading-relaxed">
       <p>
         This calculator sizes the transfer. It cannot tell you whether the fix
-        is a fatter pipe, more parallel streams, or a shorter path — that
-        depends on which of the three is actually binding. Useful test: if
-        raising the efficiency percentage alone gets you to a duration you would
-        accept, your problem is protocol and tuning, not capacity, and buying
-        more bandwidth is money set on fire.
+        is a fatter pipe, more parallel streams, or a shorter path, that depends
+        on which of the three is actually binding. Useful test: if raising the
+        efficiency percentage alone gets you to a duration you would accept,
+        your problem is protocol and tuning, not capacity, and buying more
+        bandwidth is money set on fire.
       </p>
 
       <h2 class="display pt-4 text-2xl uppercase">When this estimate lies</h2>
       <p>
-        Skip it when the payload compresses — a Postgres dump over <code
+        Skip it when the payload compresses. A Postgres dump over <code
           class={codeClass}>ssh -C</code
         > moves several times faster than its on-disk size suggests. Skip it when
         the job is millions of small files, because you are bound by per-file syscalls
@@ -706,7 +706,7 @@ const relatedLinks = [
             ▸ Tool
           </p>
           <p class="leading-snug font-bold">
-            Cron Explainer — schedule the window you just sized
+            Cron Explainer: schedule the window you just sized
           </p>
         </NeoCard>
       </li>

@@ -49,11 +49,11 @@ const appLd = {
 const faq = [
   {
     q: "Does this JSON to TypeScript converter upload my data?",
-    a: "No. Parsing, inference and code generation all run in your browser — there is no request, no logging and nothing stored. That matters here more than for most tools, because the JSON people paste into a type generator is usually a real API response with real customer records in it.",
+    a: "No. Parsing, inference and code generation all run in your browser. There is no request, no logging and nothing stored. That matters here more than for most tools, because the JSON people paste into a type generator is usually a real API response with real customer records in it.",
   },
   {
     q: "Why are some fields marked optional in the generated interface?",
-    a: "A key is optional when it appeared in some merged object samples but not all of them. That only happens when you paste an array of objects, or when the same nested shape shows up more than once with different keys. Paste one object and nothing can be optional — the tool has no evidence either way, so every key comes out required.",
+    a: "A key is optional when it appeared in some merged object samples but not all of them. That only happens when you paste an array of objects, or when the same nested shape shows up more than once with different keys. Paste one object and nothing can be optional. The tool has no evidence either way, so every key comes out required.",
   },
   {
     q: "How do I generate a Zod schema from JSON?",
@@ -61,7 +61,7 @@ const faq = [
   },
   {
     q: "Is the output Zod v4 or Zod v3 syntax?",
-    a: "Zod v4. String formats are the top-level functions — z.email(), z.url(), z.uuid(), z.iso.datetime() — integers are z.int(), and records are z.record(z.string(), z.unknown()) with both a key and a value schema. The v3 method chains like z.string().url() still run in v4 but are deprecated, and z.record() with one argument is a v4 type error.",
+    a: "Zod v4. String formats are the top-level functions (z.email(), z.url(), z.uuid(), z.iso.datetime()) integers are z.int(), and records are z.record(z.string(), z.unknown()) with both a key and a value schema. The v3 method chains like z.string().url() still run in v4 but are deprecated, and z.record() with one argument is a v4 type error.",
   },
   {
     q: "Should I use generated types in production?",
@@ -69,7 +69,7 @@ const faq = [
   },
   {
     q: "How does the tool handle null values in JSON?",
-    a: "When a field was sometimes null and sometimes a value, null becomes a modifier rather than a union member: string | null in TypeScript, .nullable() in Zod. When a field was null in every sample, you get the literal null type and z.null(), and the stats line flags it as always null. That is the honest answer — the sample proves nothing else about that key — and the compile error the first time you assign to it is the point.",
+    a: "When a field was sometimes null and sometimes a value, null becomes a modifier rather than a union member: string | null in TypeScript, .nullable() in Zod. When a field was null in every sample, you get the literal null type and z.null(), and the stats line flags it as always null. That is the honest answer (the sample proves nothing else about that key) and the compile error the first time you assign to it is the point.",
   },
 ];
 
@@ -167,9 +167,9 @@ const SAMPLES: { label: string; value: unknown }[] = [
 const DEFAULT_JSON = JSON.stringify(SAMPLES[0].value, null, 2);
 
 const MISSING_STYLES = [
-  { value: "optional", label: "key?: T — optional" },
-  { value: "nullable", label: "key: T | null — nullable" },
-  { value: "both", label: "key?: T | null — both" },
+  { value: "optional", label: "key?: T: optional" },
+  { value: "nullable", label: "key: T | null: nullable" },
+  { value: "both", label: "key?: T | null: both" },
 ];
 
 const zodColumns = [
@@ -259,7 +259,7 @@ const relatedLinks = [
       </p>
       <p class="text-sm leading-snug font-bold">
         A single payload cannot show you which keys are optional or which fields
-        vary. Paste an <strong>array of real responses</strong> — the tool merges
+        vary. Paste an <strong>array of real responses</strong>: the tool merges
         them and marks every key that went missing. Nothing is uploaded.
       </p>
     </StickyNote>
@@ -565,16 +565,17 @@ const relatedLinks = [
       >.
     </p>
     <p class="mt-3 text-base leading-relaxed opacity-90">
-      Strings are then probed for shapes worth validating — UUID, email, http(s)
+      Strings are then probed for shapes worth validating: UUID, email, http(s)
       URL, <code>YYYY-MM-DD</code>, and ISO-8601 datetimes. Timezone handling is
       deliberately literal: a trailing <code>Z</code> emits
       <code>z.iso.datetime()</code>, a numeric offset emits
       <code>z.iso.datetime(&#123; offset: true &#125;)</code>, and no timezone
       at all emits <code>z.iso.datetime(&#123; local: true &#125;)</code>,
       because the default form rejects the other two. If one field mixes
-      formats, the detector gives up and emits a plain <code>z.string()</code> — dropping
-      to a looser type is never wrong, and a field with three date formats in it is
-      a data problem you want to see, not paper over. Numbers get
+      formats, the detector gives up and emits a plain <code>z.string()</code>:
+      dropping to a looser type is never wrong, and a field with three date
+      formats in it is a data problem you want to see, not paper over. Numbers
+      get
       <code>z.int()</code> only when every sample was a whole number.
     </p>
 
@@ -597,8 +598,8 @@ const relatedLinks = [
       in an array, and paste that. The merge does the work: keys that vary get
       the <code>?</code>, fields that vary get a union, and you find out in ten
       seconds that a field you thought was <code>string</code> is
-      <code>string | number</code> in production. Same trick for a paginated endpoint
-      — paste the page of results, not one item.
+      <code>string | number</code> in production. Same trick for a paginated endpoint.
+      Paste the page of results, not one item.
     </p>
 
     <h2 class="display mt-10 text-2xl uppercase">Parse, don't validate</h2>
@@ -618,7 +619,7 @@ const relatedLinks = [
       the boundary with a path telling you which field was wrong, or hands back a
       value the type system and the runtime agree on. The
       <code>z.infer</code> line at the bottom of the output exists so the type is
-      derived from the schema — write both by hand and they drift within a sprint.
+      derived from the schema. Write both by hand and they drift within a sprint.
     </p>
 
     <h2 class="display mt-10 text-2xl uppercase">
@@ -630,7 +631,7 @@ const relatedLinks = [
       webhook bodies, queue messages, config files, environment variables, and
       the JSON an LLM produces for a tool call. Those are the places where the
       shape can be wrong at 3am. Inside your own module, between two functions
-      you wrote, the compile-time type is enough — re-validating there is
+      you wrote, the compile-time type is enough. Re-validating there is
       ceremony that buys nothing.
     </p>
     <p class="mt-3 text-base leading-relaxed opacity-90">
@@ -646,7 +647,7 @@ const relatedLinks = [
     <p class="mt-3 text-base leading-relaxed opacity-90">
       Most generators on the web still emit Zod 3. The v3 method chains mostly
       keep working in v4, but they are deprecated, they are not tree-shakable,
-      and one of them is now an outright type error —
+      and one of them is now an outright type error:
       <code>z.record()</code> requires a key schema as well as a value schema. Here
       is the mapping this tool emits:
     </p>
@@ -680,8 +681,8 @@ const relatedLinks = [
         <strong>Big integers.</strong> JSON numbers are IEEE-754 doubles. A 64-bit
         id past 2^53 has already lost precision by the time
         <code>JSON.parse</code> returns, and <code>z.int()</code> only asserts the
-        safe-integer range — it cannot recover what the parse threw away. Ask the
-        API for a string.
+        safe-integer range. It cannot recover what the parse threw away. Ask the API
+        for a string.
       </li>
       <li>
         <strong>Optional and nullable are different bugs.</strong> A missing key and
@@ -691,8 +692,8 @@ const relatedLinks = [
       <li>
         <strong>Semantics never survive.</strong>
         <code>z.email()</code> checks a shape, not a mailbox. A number field that
-        must be positive, a string with a max length, two fields that have to agree
-        — all of that is
+        must be positive, a string with a max length, two fields that have to agree,
+        all of that is
         <code>.min()</code>, <code>.max()</code> and <code>.refine()</code> you add
         by hand.
       </li>
@@ -700,10 +701,10 @@ const relatedLinks = [
         <strong>Empty containers say nothing.</strong>
         <code>[]</code> becomes
         <code>unknown[]</code> and <code>&#123;&#125;</code> becomes
-        <code>Record&lt;string, unknown&gt;</code>, because that is genuinely
-        all the sample proves. Same for a key that was <code>null</code> every time:
-        you get the <code>null</code> type and a chip in the stats line saying so.
-        Go find a payload where they aren't empty.
+        <code>Record&lt;string, unknown&gt;</code>, because that is really all
+        the sample proves. Same for a key that was <code>null</code> every time: you
+        get the <code>null</code> type and a chip in the stats line saying so. Go
+        find a payload where they aren't empty.
       </li>
     </ul>
   </section>
