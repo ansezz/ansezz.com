@@ -22,7 +22,7 @@ const breadcrumbLd = breadcrumbList([
 ]);
 
 const DESCRIPTION =
-  "Free latency percentile calculator. Paste response times to get p50, p90, p95, p99 and p99.9, a histogram, and a sample-size check — all in your browser.";
+  "Free latency percentile calculator. Paste response times to get p50, p90, p95, p99 and p99.9, a histogram, and a sample-size check, all in your browser.";
 
 // P(every one of N dependencies is inside its p99) = 0.99^N. Computed here so
 // the numbers in the prose can never drift from the numbers in the table.
@@ -56,11 +56,11 @@ const faq = [
   },
   {
     q: "Can I average p99 across servers or time buckets?",
-    a: "No, and it is the most common dashboard bug in the industry. The mean of ten shard p99s is not the fleet p99: if one shard is on fire, averaging dilutes it, and if traffic is uneven the arithmetic is weighted wrong from the start. The same applies to averaging a per-minute p99 over an hour. Merge the raw samples instead, or use a structure built to merge — HdrHistogram, Prometheus histogram buckets via histogram_quantile, t-digest, or DDSketch.",
+    a: "No, and it is the most common dashboard bug in the industry. The mean of ten shard p99s is not the fleet p99: if one shard is on fire, averaging dilutes it, and if traffic is uneven the arithmetic is weighted wrong from the start. The same applies to averaging a per-minute p99 over an hour. Merge the raw samples instead, or use a structure built to merge: HdrHistogram, Prometheus histogram buckets via histogram_quantile, t-digest, or DDSketch.",
   },
   {
     q: "Should I use nearest-rank or linear interpolation?",
-    a: "Nearest-rank when you want a number some real request actually produced, which covers most SLO and alerting work — you can go find that request in your traces. Linear interpolation when you need to match numpy, pandas, Excel, or a monitoring backend, because R-7 is what they default to. Above a few thousand samples the two agree to within noise; below a hundred they can differ sharply, which is exactly the regime where neither deserves your trust.",
+    a: "Nearest-rank when you want a number some real request actually produced, which covers most SLO and alerting work. You can go find that request in your traces. Linear interpolation when you need to match numpy, pandas, Excel, or a monitoring backend, because R-7 is what they default to. Above a few thousand samples the two agree to within noise; below a hundred they can differ sharply, which is exactly the regime where neither deserves your trust.",
   },
   {
     q: "Does this percentile calculator upload my data?",
@@ -171,7 +171,7 @@ const relatedLinks = [
             ▸ One per line, or separated by commas, spaces or tabs. Unit
             suffixes like <code class={codeClass}>ms</code> are stripped; anything
             that isn't a number is skipped and counted. Commas always split values,
-            so strip thousands separators before pasting — <code
+            so strip thousands separators before pasting: <code
               class={codeClass}>1,204</code
             > reads as two numbers.
           </p>
@@ -260,7 +260,7 @@ const relatedLinks = [
           </div>
         </div>
         <p class={hintClass}>
-          ▸ The unit is a label only — no conversion is applied. Paste values
+          ▸ The unit is a label only. No conversion is applied. Paste values
           that are already in one unit.
         </p>
       </NeoCard>
@@ -276,7 +276,7 @@ const relatedLinks = [
             id="percentile-calculator-empty"
             class="text-sm leading-snug font-bold"
           >
-            Paste response times above — one per line, or comma separated.
+            Paste response times above: one per line, or comma separated.
           </p>
 
           <dl id="percentile-calculator-stats" hidden class="space-y-2.5">
@@ -451,7 +451,7 @@ const relatedLinks = [
       <div
         id="percentile-calculator-plot"
         role="img"
-        aria-label="Histogram — no data yet"
+        aria-label="Histogram: no data yet"
         class="border-ink bg-bg-alt relative h-44 overflow-hidden rounded-[4px] border-[3px]"
       >
         <div
@@ -511,13 +511,13 @@ const relatedLinks = [
       <h2 class="display text-2xl uppercase">Why the mean hides the tail</h2>
       <p>
         Take 1,000 requests. 990 finish in 40 ms, ten take four seconds. The
-        mean is 79.6 ms — a number nothing in that sample came close to, and one
+        mean is 79.6 ms: a number nothing in that sample came close to, and one
         that looks perfectly healthy on a dashboard. The p99 is 4,000 ms. Ten
         people sat and waited, and the average quietly absorbed them.
       </p>
       <p>
         Latency distributions are right-skewed by construction. They have a hard
-        floor (you cannot respond in negative time) and no ceiling at all — a
+        floor (you cannot respond in negative time) and no ceiling at all. A
         retry, a cold cache, a GC pause, a lock, a DNS timeout. Every statistic
         that assumes symmetry describes a shape your data does not have. That
         includes standard deviation, which is why this tool prints it but does
@@ -526,7 +526,7 @@ const relatedLinks = [
       <p>
         You can see the skew in the histogram above. On a linear axis a single
         two-second request stretches the range so far that 90% of your sample
-        collapses into the first bar — which is honest, but not readable. Switch
+        collapses into the first bar, which is honest, but not readable. Switch
         the x axis to log and the tail spreads out into something you can
         actually inspect. That is the same reason latency dashboards and
         HdrHistogram bucket logarithmically rather than uniformly.
@@ -538,7 +538,7 @@ const relatedLinks = [
       <p>
         "Only 1% of requests" sounds like a rounding error until you count per
         user instead of per request. A page that fires 50 API calls is only fast
-        if all 50 are fast, and the odds of that are 0.99 to the 50th — about
+        if all 50 are fast, and the odds of that are 0.99 to the 50th, about
         61%. Four users in ten hit the slow tail on a single page load. The
         percentile that covers 1% of your traffic covers something closer to 39%
         of your sessions.
@@ -595,10 +595,10 @@ const relatedLinks = [
         </table>
       </div>
       <p>
-        At a fan-out of 100 — not unusual for a microservice request graph — a
-        p99 that everybody signed off on becomes the common case. This is the
-        real argument for hedged requests, hard per-dependency timeouts, and
-        deleting calls from the critical path rather than optimising them.
+        At a fan-out of 100 (not unusual for a microservice request graph) a p99
+        that everybody signed off on becomes the common case. This is the real
+        argument for hedged requests, hard per-dependency timeouts, and deleting
+        calls from the critical path rather than optimising them.
       </p>
 
       <h2 class="display pt-4 text-2xl uppercase">
@@ -615,7 +615,7 @@ const relatedLinks = [
       </p>
       <p>
         The fix is to merge the underlying data, not the summaries. That means
-        keeping raw samples, or keeping something mergeable — HdrHistogram,
+        keeping raw samples, or keeping something mergeable: HdrHistogram,
         Prometheus histogram buckets summed and then run through <code
           class={codeClass}>histogram_quantile</code
         >, t-digest, or DDSketch. If your dashboard shows an average of p99s, it
@@ -638,7 +638,7 @@ const relatedLinks = [
       <p>
         They diverge most exactly where percentiles are already shaky: small
         samples. On four values, nearest-rank p50 is the second value while
-        linear p50 is the average of the second and third — the textbook median.
+        linear p50 is the average of the second and third, the textbook median.
         That is why the summary panel reports a true median separately from the
         p50 row, and why both columns are shown side by side rather than hidden
         behind a toggle. Standard deviation here uses the n−1 denominator, and
@@ -651,7 +651,7 @@ const relatedLinks = [
         "p99 under 300 ms" is a snapshot, not an objective. An SLO is a
         threshold, a compliance target and a window: 99% of requests complete in
         under 300 ms, measured over 28 rolling days. That phrasing buys you an
-        error budget — 1% of requests, and when it is spent you stop shipping
+        error budget: 1% of requests, and when it is spent you stop shipping
         features and go fix latency. It also sidesteps the averaging trap,
         because "fraction of requests under 300 ms" is a ratio of counts, and
         counts add up across shards and time buckets. Percentiles cannot be
@@ -665,7 +665,7 @@ const relatedLinks = [
         streaming quantile structures instead, because you cannot hold every
         request in memory and you need percentiles that merge across instances.
         And no percentile of a five-minute window tells you anything about a
-        system whose traffic pattern changes hourly — sample the period you
+        system whose traffic pattern changes hourly. Sample the period you
         actually care about, or you are measuring the wrong distribution
         precisely.
       </p>
@@ -706,7 +706,7 @@ const relatedLinks = [
           cells: [
             "Only weighted by request count",
             "No",
-            "No — merge raw data instead",
+            "No, merge raw data instead",
           ],
         },
         {
@@ -815,7 +815,7 @@ const relatedLinks = [
             ▸ Tool
           </p>
           <p class="leading-snug font-bold">
-            Capacity Calculator — size the servers behind that latency
+            Capacity Calculator: size the servers behind that latency
           </p>
         </NeoCard>
       </li>

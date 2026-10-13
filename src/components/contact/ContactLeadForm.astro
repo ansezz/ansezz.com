@@ -38,13 +38,14 @@ const { prefillId, prefillLabel } = Astro.props;
     <Icon name="lucide:package" class="mt-0.5 h-4 w-4 shrink-0" />
     <p class="text-sm leading-snug font-bold">
       You picked{" "}
-      <span id="contact-package-label">{prefillLabel ?? "…"}</span>
-      {" "}
-      — I'll scope the intro around that package.
+      <span id="contact-package-label">{prefillLabel ?? "…"}</span>. I'll scope
+      the intro around that package.
     </p>
   </div>
   <label class="block">
-    <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
+    <span
+      class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase"
+    >
       Package
     </span>
     <select
@@ -64,7 +65,9 @@ const { prefillId, prefillLabel } = Astro.props;
   </label>
   <div class="grid gap-4 sm:grid-cols-2">
     <label class="block">
-      <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
+      <span
+        class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase"
+      >
         Name
       </span>
       <input
@@ -76,7 +79,9 @@ const { prefillId, prefillLabel } = Astro.props;
       />
     </label>
     <label class="block">
-      <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
+      <span
+        class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase"
+      >
         Email
       </span>
       <input
@@ -89,7 +94,9 @@ const { prefillId, prefillLabel } = Astro.props;
     </label>
   </div>
   <label class="block">
-    <span class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase">
+    <span
+      class="mono mb-1.5 block text-[11px] font-bold tracking-widest uppercase"
+    >
       What do you need built?
     </span>
     <textarea
@@ -98,7 +105,7 @@ const { prefillId, prefillLabel } = Astro.props;
       required
       placeholder="Scope, rough timeline, link to the product if it exists."
       class="border-ink bg-paper shadow-neo-xs focus:shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] px-3 py-2.5 font-medium focus:outline-none"
-    />
+    ></textarea>
   </label>
   <div class="flex flex-wrap items-center gap-3">
     <button
@@ -113,6 +120,7 @@ const { prefillId, prefillLabel } = Astro.props;
       class="text-sm font-bold"
       role="status"
       aria-live="polite"
-    />
+    >
+    </p>
   </div>
 </form>

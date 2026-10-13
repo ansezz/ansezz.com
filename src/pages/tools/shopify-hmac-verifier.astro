@@ -76,7 +76,7 @@ const causes = [
   {
     icon: "lucide:file-json-2",
     title: "The body was parsed and re-serialised",
-    body: "express.json(), await request.json(), json_encode($request->all()) — all of them hand you a new string. Key order, spacing, number formatting and unicode escaping can all shift. Hash the bytes you received, not a reconstruction of them.",
+    body: "express.json(), await request.json(), json_encode($request->all()), all of them hand you a new string. Key order, spacing, number formatting and unicode escaping can all shift. Hash the bytes you received, not a reconstruction of them.",
   },
   {
     icon: "lucide:key-round",
@@ -96,7 +96,7 @@ const causes = [
   {
     icon: "lucide:store",
     title: "Different app, different store",
-    body: "The delivery came from a webhook subscription owned by another app — staging versus production is the classic — so you are verifying a real signature against a secret that never produced it.",
+    body: "The delivery came from a webhook subscription owned by another app (staging versus production is the classic) so you are verifying a real signature against a secret that never produced it.",
   },
   {
     icon: "lucide:link-2",
@@ -108,7 +108,7 @@ const causes = [
 const faq = [
   {
     q: "Why does my Shopify webhook HMAC verification always fail?",
-    a: "Nine times out of ten the body was parsed before you hashed it. A JSON parser plus a serialiser is not an identity function — key order, whitespace, number formatting and unicode escaping can all change — so the reconstructed string hashes to something else. Capture the raw bytes before any body parser runs and hash those. The remaining failures are usually the wrong secret or a stray trailing newline picked up while copying the payload.",
+    a: "Nine times out of ten the body was parsed before you hashed it. A JSON parser plus a serialiser is not an identity function (key order, whitespace, number formatting and unicode escaping can all change) so the reconstructed string hashes to something else. Capture the raw bytes before any body parser runs and hash those. The remaining failures are usually the wrong secret or a stray trailing newline picked up while copying the payload.",
   },
   {
     q: "Which secret does Shopify use to sign webhooks?",
@@ -120,7 +120,7 @@ const faq = [
   },
   {
     q: "Is it safe to paste my Shopify client secret into this tool?",
-    a: "The page never transmits it: the secret goes into a password field, is read straight into crypto.subtle.importKey, and is never stored, logged or sent anywhere — you can watch the network tab stay empty. That said, pasting a production secret into any web page is a judgement call, and browser extensions can read the DOM of pages you visit. Use a development app's secret where you can, and rotate anything you are unsure about.",
+    a: "The page never transmits it: the secret goes into a password field, is read straight into crypto.subtle.importKey, and is never stored, logged or sent anywhere. You can watch the network tab stay empty. That said, pasting a production secret into any web page is a judgement call, and browser extensions can read the DOM of pages you visit. Use a development app's secret where you can, and rotate anything you are unsure about.",
   },
   {
     q: "How do I stop a Shopify webhook being processed twice?",
@@ -221,7 +221,7 @@ const related = [
     kind: "Article",
     title: "Agentic commerce on Shopify",
     blurb:
-      "Where webhooks sit when an agent, not a human, is driving the checkout — and why authenticity checks stop being optional.",
+      "Where webhooks sit when an agent, not a human, is driving the checkout, and why authenticity checks stop being optional.",
     tone: "yellow" as const,
   },
   {
@@ -237,7 +237,7 @@ const related = [
     kind: "Tool",
     title: "SHA Hash Generator",
     blurb:
-      "The unkeyed version of what happens here — SHA-1 through SHA-512 for text or a file, in hex or base64.",
+      "The unkeyed version of what happens here: SHA-1 through SHA-512 for text or a file, in hex or base64.",
     tone: "green" as const,
   },
   {
@@ -286,8 +286,8 @@ const relatedLinks = [
       </p>
       <p class="text-sm leading-snug font-bold">
         HMAC signs the exact bytes Shopify sent. Pretty-printed, re-serialised
-        or newline-padded JSON is a different message and will always fail —
-        even when the data is identical.
+        or newline-padded JSON is a different message and will always fail, even
+        when the data is identical.
       </p>
     </StickyNote>
   </section>
@@ -324,7 +324,7 @@ const relatedLinks = [
           id="shmac-body"
           rows="7"
           spellcheck="false"
-          placeholder="Paste the body exactly as it arrived — no reformatting, no trailing newline…"
+          placeholder="Paste the body exactly as it arrived. No reformatting, no trailing newline…"
           class="border-ink bg-paper shadow-neo-sm w-full resize-y rounded-[4px] border-[3px] p-3 font-mono text-sm focus:outline-none"
         ></textarea>
         <div class="flex flex-wrap gap-2">
@@ -434,7 +434,7 @@ const relatedLinks = [
           />
           The secret stays in this tab. It is read into <code
             class="mono font-bold">crypto.subtle.importKey</code
-          > and never stored, never logged, never sent. Even so — pasting a production
+          > and never stored, never logged, never sent. Even so: pasting a production
           secret into any web page is a call you should make deliberately. Prefer
           a development app's secret, and rotate anything you are unsure about.
         </p>
@@ -593,7 +593,7 @@ const relatedLinks = [
     <p class="mt-4 text-base leading-relaxed">
       That matters more than it sounds. A webhook endpoint is a public URL that
       accepts POSTs from anyone. Without verification, "order paid" is a claim
-      any stranger with curl can make about any order — an unauthenticated write
+      any stranger with curl can make about any order. An unauthenticated write
       API wearing a webhook costume, happy to fulfil orders, grant entitlements
       and trigger refunds for whoever guessed the URL. Verify first, parse
       second, act third, and answer a bad signature with
@@ -607,8 +607,8 @@ const relatedLinks = [
         >crypto.subtle.importKey</code
       > as a non-extractable HMAC key, and <code class="mono font-bold"
         >crypto.subtle.sign</code
-      > produces the digest. That is the browser's native crypto — the same code path
-      that validates TLS — not a JavaScript reimplementation of SHA-256.
+      > produces the digest. That is the browser's native crypto (the same code path
+      that validates TLS) not a JavaScript reimplementation of SHA-256.
     </p>
 
     <h2 class="display mt-12 mb-4 text-2xl uppercase">
@@ -635,7 +635,7 @@ const relatedLinks = [
       Remix and React Router have a subtler version of the same trap: a request
       body is a stream you can read exactly once. Call <code
         class="mono font-bold">await request.text()</code
-      >, verify that string, then parse it yourself — call <code
+      >, verify that string, then parse it yourself. Call <code
         class="mono font-bold">request.json()</code
       > first and there is nothing left to hash. Shopify's own Remix template hides
       all of this behind <code class="mono font-bold"
@@ -643,9 +643,9 @@ const relatedLinks = [
       >, which is the right thing to use when you have it.
     </p>
     <p class="mt-4 text-base leading-relaxed">
-      Laravel is friendlier — <code class="mono font-bold"
+      Laravel is friendlier: <code class="mono font-bold"
         >$request->getContent()</code
-      > returns the untouched body — but two things still bite. Reaching for <code
+      > returns the untouched body, but two things still bite. Reaching for <code
         class="mono font-bold">json_encode($request->all())</code
       > because it "looks the same" produces a different string, and forgetting to
       exempt the route from CSRF verification gets you a 419 before your middleware
@@ -667,7 +667,7 @@ const relatedLinks = [
       it finds a differing byte, so a guess that shares the first ten characters takes
       measurably longer to reject than one that differs immediately. With enough requests
       to average out network noise, that leak lets an attacker rebuild the correct
-      digest one character at a time — on the order of 44 × 64 attempts instead of
+      digest one character at a time. On the order of 44 × 64 attempts instead of
       2^256.
     </p>
     <p class="mt-4 text-base leading-relaxed">
@@ -680,7 +680,7 @@ const relatedLinks = [
       <code class="mono font-bold">hash_equals()</code> does in PHP,
       <code class="mono font-bold">crypto.timingSafeEqual()</code> in Node, and
       <code class="mono font-bold">hmac.compare_digest()</code> in Python. This page
-      runs the same loop — and then, separately, tells you where the two digests first
+      runs the same loop, and then, separately, tells you where the two digests first
       diverge. That readout would be inexcusable on a live endpoint; here you are
       the only person on both ends of the timer, and finding the difference is the
       entire point.
@@ -691,7 +691,7 @@ const relatedLinks = [
     </h2>
     <p class="text-base leading-relaxed">
       HMAC proves authenticity and integrity. It says nothing about freshness. A
-      valid webhook captured off the wire — or replayed out of your own logs —
+      valid webhook captured off the wire (or replayed out of your own logs)
       verifies perfectly the second time, and the hundredth. Shopify delivers
       at-least-once and retries failures over roughly 48 hours, so duplicates
       are not a hypothetical attack scenario. They are Tuesday.
@@ -700,12 +700,12 @@ const relatedLinks = [
       Two habits close the gap. Treat
       <code class="mono font-bold">X-Shopify-Webhook-Id</code> as an idempotency key:
       store it behind a unique index, and if the insert conflicts, return 200 and
-      do nothing else — retries of the same delivery reuse that id. And reject stale
+      do nothing else. Retries of the same delivery reuse that id. And reject stale
       payloads by checking
       <code class="mono font-bold">X-Shopify-Triggered-At</code> against a window
       you pick, a few minutes wide, which caps how long a captured request stays useful
       to anyone who copied it. Budget your response while you are there: Shopify wants
-      an acknowledgement within five seconds, so verify, enqueue, reply — never do
+      an acknowledgement within five seconds, so verify, enqueue, reply, never do
       the work on the request thread.
     </p>
     <p class="mt-4 text-base leading-relaxed">

@@ -13,7 +13,7 @@ import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
 const tool = getTool("/tools/epoch-converter/");
 
 const PAGE_DESCRIPTION =
-  "Free epoch converter. Turn a Unix timestamp into UTC, local, ISO 8601 and RFC 2822 — or a date back into epoch seconds. Auto-detects ms, runs in your browser.";
+  "Free epoch converter. Turn a Unix timestamp into UTC, local, ISO 8601 and RFC 2822, or a date back into epoch seconds. Auto-detects ms, runs in your browser.";
 
 const breadcrumbLd = breadcrumbList([
   { name: "Home", url: SITE.URL },
@@ -37,7 +37,7 @@ const presets = [
   {
     kind: "y2038",
     label: "2038 boundary",
-    hint: "2147483647 — the last second a signed 32-bit time_t can hold",
+    hint: "2147483647: the last second a signed 32-bit time_t can hold",
   },
   { kind: "zero", label: "Epoch 0", hint: "1970-01-01T00:00:00Z" },
 ];
@@ -61,7 +61,7 @@ const faq = [
   },
   {
     q: "Does this epoch converter handle milliseconds and microseconds?",
-    a: "Yes — seconds, milliseconds, microseconds and nanoseconds, detected from the magnitude of the number or forced with the unit dropdown. Microsecond and nanosecond inputs are converted to a JavaScript Date, which only stores whole milliseconds, so sub-millisecond precision is shown in the normalised row but not in the formatted dates.",
+    a: "Yes, seconds, milliseconds, microseconds and nanoseconds, detected from the magnitude of the number or forced with the unit dropdown. Microsecond and nanosecond inputs are converted to a JavaScript Date, which only stores whole milliseconds, so sub-millisecond precision is shown in the normalised row but not in the formatted dates.",
   },
   {
     q: "What is the 2038 problem and does it still affect me?",
@@ -77,7 +77,7 @@ const faq = [
   },
   {
     q: "Is my timestamp data sent to a server?",
-    a: "No. Every conversion on this page runs in your browser using the built-in Date and Intl APIs. There is no request, no logging, and no analytics on the values you type. You can open devtools, watch the network tab, and confirm it — or disconnect from the internet and the page still works.",
+    a: "No. Every conversion on this page runs in your browser using the built-in Date and Intl APIs. There is no request, no logging, and no analytics on the values you type. You can open devtools, watch the network tab, and confirm it, or disconnect from the internet and the page still works.",
   },
 ];
 
@@ -125,7 +125,7 @@ const relatedLinks = [
   },
   {
     href: "/tools/uuid-generator/",
-    note: "UUIDv7 embeds a timestamp — useful when you want sortable ids.",
+    note: "UUIDv7 embeds a timestamp: useful when you want sortable ids.",
   },
   {
     href: "/blog/logging-vs-monitoring/",
@@ -141,7 +141,7 @@ const relatedLinks = [
   description={PAGE_DESCRIPTION}
   eyebrow="Free tool"
   heading="Epoch Converter."
-  intro="Paste a Unix timestamp and read it back as UTC, your local time, ISO 8601, RFC 2822 and plain English — or go the other way and turn a date into epoch seconds. Nothing leaves your browser."
+  intro="Paste a Unix timestamp and read it back as UTC, your local time, ISO 8601, RFC 2822 and plain English, or go the other way and turn a date into epoch seconds. Nothing leaves your browser."
   structuredData={[breadcrumbLd, appLd, faqLd]}
 >
   <section class="mx-auto max-w-5xl px-5 pb-6">
@@ -452,7 +452,7 @@ const relatedLinks = [
   <!-- Explainer -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
     <h2 class="display mb-4 text-2xl uppercase">
-      Seconds or milliseconds — the bug that eats a sprint
+      Seconds or milliseconds: the bug that eats a sprint
     </h2>
     <div class="space-y-4 text-base leading-relaxed">
       <p>
@@ -479,7 +479,7 @@ const relatedLinks = [
         <code class="mono">expiresAtMs</code>, not
         <code class="mono">expiresAt</code>. Put the unit in the column name,
         the JSON key, and the function signature. This converter counts digits
-        for you, but a digit count is a guess — your schema shouldn't need one.
+        for you, but a digit count is a guess. Your schema shouldn't need one.
       </p>
     </div>
 
@@ -514,14 +514,14 @@ const relatedLinks = [
     <div class="space-y-4 text-base leading-relaxed">
       <p>
         Historic C implementations typed <code class="mono">time_t</code> as a signed
-        32-bit integer. The largest value it holds is 2,147,483,647 — which as a Unix
+        32-bit integer. The largest value it holds is 2,147,483,647, which as a Unix
         timestamp is 03:14:07 UTC on 19 January 2038. Add one second and the sign
         bit flips: the value becomes −2,147,483,648 and the date reads 13 December
         1901. Nothing crashes. Sorting inverts, TTLs go negative, and cache entries
         look infinitely stale.
       </p>
       <p>
-        Y2K was a display problem — two digits instead of four. This is an
+        Y2K was a display problem: two digits instead of four. This is an
         arithmetic one, which makes it harder to paper over. 64-bit builds of
         Linux, macOS and Windows already use a 64-bit
         <code class="mono">time_t</code> and are fine for the next 292 billion years.
@@ -541,15 +541,15 @@ const relatedLinks = [
     </div>
 
     <h2 class="display mt-12 mb-4 text-2xl uppercase">
-      Store UTC, render local — never the reverse
+      Store UTC, render local, never the reverse
     </h2>
     <div class="space-y-4 text-base leading-relaxed">
       <p>
         A Unix timestamp has no timezone. That is its best property: it names an
         instant, and the timezone is purely a rendering decision made at the
         edge. Store epoch integers or <code class="mono">timestamptz</code>, and
-        convert once, in the UI, using the viewer's IANA zone — which is what
-        the "your local time" row above does with
+        convert once, in the UI, using the viewer's IANA zone, which is what the
+        "your local time" row above does with
         <code class="mono"
           >Intl.DateTimeFormat().resolvedOptions().timeZone</code
         >.
@@ -561,7 +561,7 @@ const relatedLinks = [
         ambiguous, and no amount of parsing fixes a value that was never unique.
         There is one exception worth knowing: for <em>future</em> events where a human
         picked the wall-clock time ("stand-up at 09:00 in Paris"), store the local
-        time plus the IANA zone id — not the UTC instant and not a fixed <code
+        time plus the IANA zone id, not the UTC instant and not a fixed <code
           class="mono">+01:00</code
         > offset. Governments move DST rules, and when they do, the meeting should
         follow the clock, not the physics.
@@ -576,7 +576,7 @@ const relatedLinks = [
         POSIX defines a timestamp as <code class="mono"
           >days_since_epoch × 86400 + seconds_of_day</code
         >. Every day is exactly 86,400 seconds, which means Unix time is not a
-        count of physical seconds elapsed — 27 leap seconds have been inserted
+        count of physical seconds elapsed. 27 leap seconds have been inserted
         into UTC since 1972 and Unix time contains none of them. During a leap
         second a system either repeats a timestamp or, more commonly now, smears
         the extra second across a 24-hour window (Google and AWS both do this on
@@ -585,8 +585,8 @@ const relatedLinks = [
       <p>
         The practical consequence: subtracting two epoch timestamps gives you
         calendar elapsed time, not true elapsed time, and it can go backwards
-        when NTP steps the clock. If you are measuring a duration — request
-        latency, a timeout, a rate-limit window — use a monotonic clock:
+        when NTP steps the clock. If you are measuring a duration (request
+        latency, a timeout, a rate-limit window) use a monotonic clock:
         <code class="mono">performance.now()</code>,
         <code class="mono">CLOCK_MONOTONIC</code>, or
         <code class="mono">time.monotonic()</code>. Save epoch timestamps for
@@ -608,7 +608,7 @@ const relatedLinks = [
         rather than locale-dependent. Two limits are worth knowing: a JavaScript <code
           class="mono">Date</code
         > tops out at ±8.64e15 ms (about ±273,790 years around 1970), and it stores
-        whole milliseconds — so microsecond and nanosecond input keeps its precision
+        whole milliseconds, so microsecond and nanosecond input keeps its precision
         in the normalised row but not in the formatted dates. No request is made at
         any point; unplug the network and the page still converts.
       </p>
@@ -649,7 +649,7 @@ const relatedLinks = [
           </p>
           <p class="heading text-base uppercase">Cron Explainer</p>
           <p class="mt-2 text-sm opacity-80">
-            The other half of scheduling — read a 5-field cron expression in
+            The other half of scheduling. Read a 5-field cron expression in
             plain English.
           </p>
         </NeoCard>
@@ -668,7 +668,7 @@ const relatedLinks = [
           <p class="heading text-base uppercase">JWT Decoder</p>
           <p class="mt-2 text-sm opacity-80">
             <code class="mono">exp</code>, <code class="mono">iat</code> and
-            <code class="mono">nbf</code> are epoch seconds — decode a token and see
+            <code class="mono">nbf</code> are epoch seconds: decode a token and see
             them as dates.
           </p>
         </NeoCard>

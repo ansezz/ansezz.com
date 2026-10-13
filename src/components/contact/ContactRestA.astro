@@ -17,14 +17,14 @@ const flow = [
     title: "15-min intro call",
     icon: "lucide:phone-call",
     tone: "pink" as const,
-    body: "Free. We see if it's a fit — scope, stack, stakes, my honest take on whether I'm the right person.",
+    body: "Free. We see if it's a fit: scope, stack, stakes, my honest take on whether I'm the right person.",
   },
   {
     step: "03",
     title: "Scoped proposal",
     icon: "lucide:clipboard-list",
     tone: "cyan" as const,
-    body: "Within 48h: phased plan, milestones, deliverables, fixed price or weekly retainer — your pick.",
+    body: "Within 48h: phased plan, milestones, deliverables, fixed price or weekly retainer. Your pick.",
   },
 ];
 ---
@@ -102,17 +102,15 @@ const flow = [
             <h3 class="heading text-xl leading-tight uppercase">{s.title}</h3>
             <p class="text-sm leading-snug opacity-90">{s.body}</p>
             <ul class="mt-1 space-y-1.5 text-sm">
-              {
-                s.bullets.map((b) => (
-                  <li class="flex items-start gap-2">
-                    <Icon
-                      name="lucide:check"
-                      class="mt-1 h-4 w-4 shrink-0 opacity-80"
-                    />
-                    <span>{b}</span>
-                  </li>
-                ))
-              }
+              {s.bullets.map((b) => (
+                <li class="flex items-start gap-2">
+                  <Icon
+                    name="lucide:check"
+                    class="mt-1 h-4 w-4 shrink-0 opacity-80"
+                  />
+                  <span>{b}</span>
+                </li>
+              ))}
             </ul>
           </NeoCard>
         </li>

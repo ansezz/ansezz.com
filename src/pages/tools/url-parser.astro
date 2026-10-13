@@ -48,19 +48,19 @@ const appLd = {
 const faq = [
   {
     q: "What is the difference between encodeURI and encodeURIComponent?",
-    a: "encodeURI escapes a whole URL and deliberately leaves the delimiters / ? & = # : intact so the result still parses as a URL. encodeURIComponent escapes those delimiters too, because it is meant for one piece that sits inside a URL — a path segment or a query value. Use encodeURIComponent on values, encodeURI on a complete URL, and ideally neither: build the URL with URL and URLSearchParams instead.",
+    a: "encodeURI escapes a whole URL and deliberately leaves the delimiters / ? & = # : intact so the result still parses as a URL. encodeURIComponent escapes those delimiters too, because it is meant for one piece that sits inside a URL: a path segment or a query value. Use encodeURIComponent on values, encodeURI on a complete URL, and ideally neither: build the URL with URL and URLSearchParams instead.",
   },
   {
     q: "Why does my URL show a + instead of a space?",
-    a: "The + comes from application/x-www-form-urlencoded, the form serialization that applies to query strings. URLSearchParams uses it, so a value of “a b” is written as “a+b”. It only applies to the query — inside a path a + is a literal plus character, and decodeURIComponent will never turn a + back into a space.",
+    a: "The + comes from application/x-www-form-urlencoded, the form serialization that applies to query strings. URLSearchParams uses it, so a value of “a b” is written as “a+b”. It only applies to the query. Inside a path a + is a literal plus character, and decodeURIComponent will never turn a + back into a space.",
   },
   {
     q: "Does this URL parser send my URL anywhere?",
-    a: "No. Parsing, query editing and encoding all run in your browser using the built-in URL, URLSearchParams and encodeURIComponent APIs. There is no network call, no logging of your input, and nothing is stored. Signed URLs and session tokens still deserve care everywhere — they belong out of logs and chat threads, not just out of online tools.",
+    a: "No. Parsing, query editing and encoding all run in your browser using the built-in URL, URLSearchParams and encodeURIComponent APIs. There is no network call, no logging of your input, and nothing is stored. Signed URLs and session tokens still deserve care everywhere. They belong out of logs and chat threads, not just out of online tools.",
   },
   {
     q: "How do repeated query parameters like ?tag=a&tag=b work?",
-    a: "They are valid, and no standard defines what they mean. In JavaScript, URLSearchParams.get returns the first value and getAll returns every value. PHP keeps the last one, Go's Query().Get returns the first, and Express hands you an array — so the same URL can mean three different things depending on which backend receives it.",
+    a: "They are valid, and no standard defines what they mean. In JavaScript, URLSearchParams.get returns the first value and getAll returns every value. PHP keeps the last one, Go's Query().Get returns the first, and Express hands you an array, so the same URL can mean three different things depending on which backend receives it.",
   },
   {
     q: "What is the maximum length of a URL?",
@@ -68,7 +68,7 @@ const faq = [
   },
   {
     q: "Why does the URL constructor say “Invalid URL”?",
-    a: "new URL() only accepts an absolute URL, so “example.com/path” and “/path?a=1” both throw unless you pass a base — add a scheme like https:// and they parse. The other common causes are a raw space or another forbidden character in the host, and an empty host after the //. This tool catches the error and names the case instead of throwing.",
+    a: "new URL() only accepts an absolute URL, so “example.com/path” and “/path?a=1” both throw unless you pass a base. Add a scheme like https:// and they parse. The other common causes are a raw space or another forbidden character in the host, and an empty host after the //. This tool catches the error and names the case instead of throwing.",
   },
 ];
 
@@ -97,11 +97,11 @@ const PARTS: { key: string; label: string; note?: string }[] = [
   {
     key: "origin",
     label: "origin",
-    note: "scheme + host + port — the CORS unit",
+    note: "scheme + host + port, the CORS unit",
   },
   { key: "protocol", label: "protocol", note: "includes the colon" },
-  { key: "username", label: "username", note: "userinfo — deprecated" },
-  { key: "password", label: "password", note: "userinfo — deprecated" },
+  { key: "username", label: "username", note: "userinfo: deprecated" },
+  { key: "password", label: "password", note: "userinfo: deprecated" },
   { key: "host", label: "host", note: "hostname + port" },
   { key: "hostname", label: "hostname", note: "no port, punycoded if IDN" },
   { key: "port", label: "port", note: "empty when it is the scheme default" },
@@ -205,9 +205,9 @@ const relatedLinks = [
       </p>
       <p class="text-sm leading-snug font-bold">
         This uses the browser's own URL parser, so it lowercases the host,
-        punycodes IDNs, drops default ports and resolves <code>..</code> — the parsed
-        href can differ from what you pasted. That is the wire format, not a bug.
-        Nothing is uploaded.
+        punycodes IDNs, drops default ports and resolves <code>..</code>: the
+        parsed href can differ from what you pasted. That is the wire format,
+        not a bug. Nothing is uploaded.
       </p>
     </StickyNote>
   </section>
@@ -486,20 +486,20 @@ const relatedLinks = [
         class="border-ink space-y-1.5 border-t-[2.5px] pt-3 text-xs leading-snug"
       >
         <li>
-          <code>encodeURIComponent</code> — one value going <em>into</em> a URL: a
+          <code>encodeURIComponent</code>: one value going <em>into</em> a URL: a
           query value, a path segment, a redirect target. Escapes
           <code>/ ? &amp; = # : @ + $ , ;</code>.
         </li>
         <li>
-          <code>encodeURI</code> — a whole URL you assembled yourself. Leaves the
+          <code>encodeURI</code>: a whole URL you assembled yourself. Leaves the
           delimiters alone so it still parses.
         </li>
         <li>
-          <code>decodeURIComponent</code> — reading one value back out. Does
+          <code>decodeURIComponent</code>: reading one value back out. Does
           <strong>not</strong> turn <code>+</code> into a space.
         </li>
         <li>
-          <code>decodeURI</code> — reading a whole URL back. Leaves
+          <code>decodeURI</code>: reading a whole URL back. Leaves
           <code>%2F</code>, <code>%26</code>, <code>%3F</code> encoded on purpose,
           because decoding them would change the URL's structure.
         </li>
@@ -513,9 +513,9 @@ const relatedLinks = [
     <h2 class="display text-2xl uppercase">What the parser actually does</h2>
     <p class="mt-3 text-base leading-relaxed opacity-90">
       Everything above runs through the same WHATWG URL parser your address bar
-      uses — <code>new URL(input)</code> — so what you see is what a browser will
-      really send, not a regex approximation. That matters, because the parser normalizes
-      as it goes: the scheme and host get lowercased,
+      uses (<code>new URL(input)</code>) so what you see is what a browser will
+      really send, not a regex approximation. That matters, because the parser
+      normalizes as it goes: the scheme and host get lowercased,
       <code>bücher.de</code> becomes <code>xn--bcher-kva.de</code>,
       <code>:443</code> disappears from an <code>https</code> URL because it is the
       default port, <code>/a/b/../c</code> collapses to <code>/a/c</code>, and
@@ -525,7 +525,7 @@ const relatedLinks = [
     </p>
     <p class="mt-3 text-base leading-relaxed opacity-90">
       Two things it does not do. It does not check that the host resolves or
-      that the path exists. And it is not a validator —
+      that the path exists. And it is not a validator:
       <code>javascript:alert(1)</code> and <code>data:text/html,…</code> parse perfectly.
       Before you render a user-supplied URL into an
       <code>href</code>, allowlist <code>url.protocol</code> against
@@ -552,8 +552,8 @@ const relatedLinks = [
       <code>/checkout?next=/a?b=1&amp;c=2</code>, so the server reads
       <code>next=/a?b=1</code> and a bonus parameter <code>c=2</code>. A
       <code>#</code> in the value is worse: the fragment is never sent, so everything
-      after it silently vanishes before the request leaves the browser. Rule of thumb
-      — value in, <code>encodeURIComponent</code>; whole URL, <code
+      after it silently vanishes before the request leaves the browser. Rule of thumb:
+      value in, <code>encodeURIComponent</code>; whole URL, <code
         >encodeURI</code
       >; and if you can, skip both and let
       <code>URL</code> plus <code>URLSearchParams</code> do the escaping.
@@ -580,7 +580,7 @@ const relatedLinks = [
         >URLSearchParams</code
       >, which applies form rules in both directions. And a literal plus in a
       value has to travel as
-      <code>%2B</code> — which is exactly what the parameter table above emits.
+      <code>%2B</code>, which is exactly what the parameter table above emits.
     </p>
 
     <h2 class="display mt-10 text-2xl uppercase">
@@ -621,7 +621,7 @@ const relatedLinks = [
       share, under 8,000 for anything a server will parse, and move the payload
       into a POST body past that. Remember too that every byte of a query string
       lands in access logs, browser history and the <code>Referer</code> header of
-      outbound links — which is why session tokens and signed URLs do not belong there.
+      outbound links, which is why session tokens and signed URLs do not belong there.
     </p>
   </section>
 

@@ -52,7 +52,7 @@ const WEB: PortRow[] = [
     port: "80",
     proto: "TCP",
     service: "HTTP",
-    note: "Plaintext. Its only honest job now is a 301 to 443 — an API that still serves real responses here is handing bearer tokens to whoever owns the café Wi-Fi.",
+    note: "Plaintext. Its only honest job now is a 301 to 443. An API that still serves real responses here is handing bearer tokens to whoever owns the café Wi-Fi.",
     keywords: "http web plaintext redirect nginx apache",
   },
   {
@@ -73,7 +73,7 @@ const WEB: PortRow[] = [
     port: "8443",
     proto: "TCP",
     service: "HTTPS alternate",
-    note: "The TLS twin of 8080. Unprivileged, so a JVM or an ingress controller can bind it without root — which is exactly why it exists.",
+    note: "The TLS twin of 8080. Unprivileged, so a JVM or an ingress controller can bind it without root, which is exactly why it exists.",
     keywords: "https tls alternate ingress tomcat appliance",
   },
   {
@@ -105,7 +105,7 @@ const DATABASES: PortRow[] = [
     port: "3306",
     proto: "TCP",
     service: "MySQL · MariaDB",
-    note: "The classic protocol. Exposed to the internet it gets credential-stuffed continuously — bind it to a private address and let the app reach it inside the VPC.",
+    note: "The classic protocol. Exposed to the internet it gets credential-stuffed continuously. Bind it to a private address and let the app reach it inside the VPC.",
     flag: "never-public",
     keywords: "mysql mariadb percona sql database rds",
   },
@@ -129,7 +129,7 @@ const DATABASES: PortRow[] = [
     port: "6432",
     proto: "TCP",
     service: "PgBouncer",
-    note: "The pooler that fronts 5432. Past a few hundred clients your app should talk to this instead — and remember transaction mode breaks session state and server-side prepared statements.",
+    note: "The pooler that fronts 5432. Past a few hundred clients your app should talk to this instead, and remember transaction mode breaks session state and server-side prepared statements.",
     keywords: "pgbouncer pooler postgres connection pool pgcat",
   },
   {
@@ -159,7 +159,7 @@ const DATABASES: PortRow[] = [
     port: "27017",
     proto: "TCP",
     service: "MongoDB",
-    note: "Binds localhost by default since 3.6 — the ransom-note era came from builds that did not. Verify with ss rather than trusting whatever your distro packaged.",
+    note: "Binds localhost by default since 3.6: the ransom-note era came from builds that did not. Verify with ss rather than trusting whatever your distro packaged.",
     flag: "never-public",
     keywords: "mongo mongodb nosql document atlas",
   },
@@ -203,7 +203,7 @@ const DATABASES: PortRow[] = [
     port: "6333 · 6334",
     proto: "TCP",
     service: "Qdrant REST · gRPC",
-    note: "Vector store. The API key is opt-in, so an unset key means anyone who reaches 6333 can read — and quietly rewrite — your embeddings.",
+    note: "Vector store. The API key is opt-in, so an unset key means anyone who reaches 6333 can read (and quietly rewrite) your embeddings.",
     keywords: "qdrant vector embeddings rag similarity search",
   },
   {
@@ -235,14 +235,14 @@ const CACHES: PortRow[] = [
     port: "16379",
     proto: "TCP",
     service: "Redis cluster bus",
-    note: "Always the data port plus 10000. Open 6379 between nodes but not 16379 and the cluster never finishes forming — the classic first-cluster bug.",
+    note: "Always the data port plus 10000. Open 6379 between nodes but not 16379 and the cluster never finishes forming, the classic first-cluster bug.",
     keywords: "redis cluster bus gossip shard slots",
   },
   {
     port: "11211",
     proto: "TCP/UDP",
     service: "Memcached",
-    note: "No authentication in the default build. Its UDP listener drove the 1.3 Tbps amplification attacks of 2018 and now ships disabled — check anything older than that.",
+    note: "No authentication in the default build. Its UDP listener drove the 1.3 Tbps amplification attacks of 2018 and now ships disabled. Check anything older than that.",
     flag: "never-public",
     keywords: "memcached cache amplification ddos udp",
   },
@@ -250,7 +250,7 @@ const CACHES: PortRow[] = [
     port: "5672 · 5671",
     proto: "TCP",
     service: "RabbitMQ AMQP · AMQPS",
-    note: "5671 is the TLS listener. Publisher confirms and consumer acks are what make delivery reliable — an open port only proves the socket works.",
+    note: "5671 is the TLS listener. Publisher confirms and consumer acks are what make delivery reliable. An open port only proves the socket works.",
     keywords: "rabbitmq amqp queue broker messaging celery",
   },
   {
@@ -272,7 +272,7 @@ const CACHES: PortRow[] = [
     port: "25672 · 4369",
     proto: "TCP",
     service: "Erlang distribution · epmd",
-    note: "Cluster traffic and the Erlang port mapper. A reachable epmd plus a guessable cookie is remote code execution on the node — keep both cluster-internal.",
+    note: "Cluster traffic and the Erlang port mapper. A reachable epmd plus a guessable cookie is remote code execution on the node. Keep both cluster-internal.",
     flag: "never-public",
     keywords: "rabbitmq erlang epmd cookie cluster elixir beam",
   },
@@ -287,7 +287,7 @@ const CACHES: PortRow[] = [
     port: "9093",
     proto: "TCP",
     service: "Kafka TLS · KRaft controller",
-    note: "Kafka's second listener by convention, and the KRaft controller quorum port. Also Alertmanager's default — do not put both on one host without thinking about it.",
+    note: "Kafka's second listener by convention, and the KRaft controller quorum port. Also Alertmanager's default: do not put both on one host without thinking about it.",
     keywords: "kafka kraft controller tls sasl listener",
   },
   {
@@ -326,7 +326,7 @@ const CONTAINERS: PortRow[] = [
     port: "2376",
     proto: "TCP",
     service: "Docker daemon (TLS)",
-    note: "The same API with mutual TLS. Correct if you genuinely need remote access — but DOCKER_HOST=ssh://host is simpler and has one fewer certificate to expire.",
+    note: "The same API with mutual TLS. Correct if you need remote access, but DOCKER_HOST=ssh://host is simpler and has one fewer certificate to expire.",
     keywords: "docker tls remote daemon context mtls",
   },
   {
@@ -361,7 +361,7 @@ const CONTAINERS: PortRow[] = [
     port: "10250",
     proto: "TCP",
     service: "kubelet API",
-    note: "Logs and exec for every pod on that node. Left with anonymous auth enabled it has been a full cluster takeover more than once — control plane and node-internal only.",
+    note: "Logs and exec for every pod on that node. Left with anonymous auth enabled it has been a full cluster takeover more than once. Control plane and node-internal only.",
     flag: "never-public",
     keywords: "kubelet kubernetes exec logs node metrics anonymous",
   },
@@ -381,10 +381,10 @@ const CONTAINERS: PortRow[] = [
     keywords: "etcd kubernetes secrets quorum raft backup",
   },
   {
-    port: "30000–32767",
+    port: "30000 to 32767",
     proto: "TCP/UDP",
     service: "Kubernetes NodePort range",
-    note: "Every NodePort service opens its port on every node. Fine for a demo, a liability in a cluster with public node IPs — use an ingress or a LoadBalancer.",
+    note: "Every NodePort service opens its port on every node. Fine for a demo, a liability in a cluster with public node IPs. Use an ingress or a LoadBalancer.",
     keywords: "nodeport kubernetes service range externaltrafficpolicy",
   },
   {
@@ -408,7 +408,7 @@ const OBSERVABILITY: PortRow[] = [
     port: "9090",
     proto: "TCP",
     service: "Prometheus",
-    note: "UI and query API on one port, unauthenticated by design — it expects a proxy in front. Your metrics are an org chart and a topology map for anyone who reads them.",
+    note: "UI and query API on one port, unauthenticated by design. It expects a proxy in front. Your metrics are an org chart and a topology map for anyone who reads them.",
     flag: "never-public",
     keywords: "prometheus metrics promql tsdb scrape monitoring",
   },
@@ -451,7 +451,7 @@ const OBSERVABILITY: PortRow[] = [
     port: "3200",
     proto: "TCP",
     service: "Tempo",
-    note: "The query API for traces. Ingest is separate and usually OTLP on 4317 or 4318 — that is the half people forget to open.",
+    note: "The query API for traces. Ingest is separate and usually OTLP on 4317 or 4318, that is the half people forget to open.",
     keywords: "tempo traces grafana tracing spans",
   },
   {
@@ -486,7 +486,7 @@ const OBSERVABILITY: PortRow[] = [
     port: "24224",
     proto: "TCP/UDP",
     service: "Fluentd · Fluent Bit forward",
-    note: "The forward protocol between log agents and aggregators. Docker's fluentd log driver targets it — and blocks the container when the aggregator is down.",
+    note: "The forward protocol between log agents and aggregators. Docker's fluentd log driver targets it, and blocks the container when the aggregator is down.",
     keywords: "fluentd fluentbit forward logs docker driver",
   },
   {
@@ -500,7 +500,7 @@ const OBSERVABILITY: PortRow[] = [
     port: "514",
     proto: "UDP",
     service: "syslog",
-    note: "Unauthenticated, unencrypted and lossy — anyone who can reach it can forge log lines. Use 6514 for syslog over TLS when the data has to be trustworthy.",
+    note: "Unauthenticated, unencrypted and lossy: anyone who can reach it can forge log lines. Use 6514 for syslog over TLS when the data has to be trustworthy.",
     flag: "legacy",
     keywords: "syslog rsyslog syslog-ng logs udp facility",
   },
@@ -525,7 +525,7 @@ const MAIL: PortRow[] = [
     port: "465",
     proto: "TCP",
     service: "SMTPS (implicit TLS)",
-    note: "Deprecated for a decade, then formally recommended again by RFC 8314. TLS from the first byte with nothing to downgrade — prefer it when the provider offers both.",
+    note: "Deprecated for a decade, then formally recommended again by RFC 8314. TLS from the first byte with nothing to downgrade. Prefer it when the provider offers both.",
     keywords: "smtps implicit tls 465 mail ssl",
   },
   {
@@ -546,7 +546,7 @@ const MAIL: PortRow[] = [
     port: "110 · 995",
     proto: "TCP",
     service: "POP3 · POP3S",
-    note: "POP3 downloads and forgets. If something still needs it, give it 995 — plaintext 110 hands credentials to the network on every poll.",
+    note: "POP3 downloads and forgets. If something still needs it, give it 995. Plaintext 110 hands credentials to the network on every poll.",
     flag: "legacy",
     keywords: "pop3 pop3s mail download legacy",
   },
@@ -580,7 +580,7 @@ const REMOTE: PortRow[] = [
     port: "5900",
     proto: "TCP",
     service: "VNC",
-    note: "5900 plus the display number, so :1 is 5901. The protocol's own password is capped at eight characters — tunnel it over SSH instead of trusting it.",
+    note: "5900 plus the display number, so :1 is 5901. The protocol's own password is capped at eight characters. Tunnel it over SSH instead of trusting it.",
     flag: "never-public",
     keywords: "vnc remote desktop screen sharing display",
   },
@@ -619,7 +619,7 @@ const REMOTE: PortRow[] = [
     port: "21 · 20",
     proto: "TCP",
     service: "FTP control · data",
-    note: "Credentials in the clear, plus a second connection on a port negotiated at runtime — the reason FTP and NAT never got along. Use SFTP over 22.",
+    note: "Credentials in the clear, plus a second connection on a port negotiated at runtime, the reason FTP and NAT never got along. Use SFTP over 22.",
     flag: "legacy",
     keywords: "ftp passive active data transfer vsftpd",
   },
@@ -643,7 +643,7 @@ const REMOTE: PortRow[] = [
     port: "5985 · 5986",
     proto: "TCP",
     service: "WinRM HTTP · HTTPS",
-    note: "How Ansible and PowerShell Remoting drive Windows hosts. 5985 is called HTTP but the payload is usually encrypted at the protocol layer — which is not the same as TLS.",
+    note: "How Ansible and PowerShell Remoting drive Windows hosts. 5985 is called HTTP but the payload is usually encrypted at the protocol layer, which is not the same as TLS.",
     keywords: "winrm powershell ansible windows remoting kerberos",
   },
 ];
@@ -674,7 +674,7 @@ const NETWORK: PortRow[] = [
     port: "123",
     proto: "UDP",
     service: "NTP",
-    note: "Clock sync — and clock skew is what quietly breaks TLS handshakes, JWT validation and TOTP codes. Historic amplification vector; modern configs disable the query that caused it.",
+    note: "Clock sync, and clock skew is what quietly breaks TLS handshakes, JWT validation and TOTP codes. Historic amplification vector; modern configs disable the query that caused it.",
     keywords: "ntp time clock skew chrony amplification drift",
   },
   {
@@ -695,7 +695,7 @@ const NETWORK: PortRow[] = [
     port: "88",
     proto: "TCP/UDP",
     service: "Kerberos",
-    note: "Ticket granting. It is also why clock skew beyond five minutes locks an entire domain out of everything — see NTP above.",
+    note: "Ticket granting. It is also why clock skew beyond five minutes locks an entire domain out of everything. See NTP above.",
     keywords: "kerberos kdc ticket active directory spn",
   },
   {
@@ -716,14 +716,14 @@ const NETWORK: PortRow[] = [
     port: "8200 · 8201",
     proto: "TCP",
     service: "Vault API · cluster",
-    note: "8200 is the API and UI, 8201 replication between nodes. The unseal keys are the real perimeter here — the port is just where the conversation happens.",
+    note: "8200 is the API and UI, 8201 replication between nodes. The unseal keys are the real perimeter here. The port is just where the conversation happens.",
     keywords: "vault hashicorp secrets unseal kv transit",
   },
   {
     port: "5060 · 5061",
     proto: "TCP/UDP",
     service: "SIP · SIP over TLS",
-    note: "An open 5060 gets brute-forced for toll fraud within hours. Media does not ride SIP either — RTP takes its own UDP range, typically 10000–20000.",
+    note: "An open 5060 gets brute-forced for toll fraud within hours. Media does not ride SIP either. RTP takes its own UDP range, typically 10000 to 20000.",
     flag: "never-public",
     keywords: "sip voip asterisk freeswitch rtp toll fraud pbx",
   },
@@ -748,7 +748,7 @@ const DEV: PortRow[] = [
     port: "3000",
     proto: "TCP",
     service: "Node.js dev servers",
-    note: "Next.js, Express, NestJS, Rails, Create React App — and Grafana. Next increments to 3001 when 3000 is busy, which is why your OAuth callback URL suddenly stopped matching.",
+    note: "Next.js, Express, NestJS, Rails, Create React App, and Grafana. Next increments to 3001 when 3000 is busy, which is why your OAuth callback URL suddenly stopped matching.",
     flag: "local",
     keywords: "node next express nest rails react dev server localhost",
   },
@@ -756,7 +756,7 @@ const DEV: PortRow[] = [
     port: "3001",
     proto: "TCP",
     service: "Second app or API",
-    note: "Where the API goes once the front end has claimed 3000. Nothing standard about it — it is just the number everyone reaches for second.",
+    note: "Where the API goes once the front end has claimed 3000. Nothing standard about it: it is just the number everyone reaches for second.",
     flag: "local",
     keywords: "api second app dev proxy localhost",
   },
@@ -788,7 +788,7 @@ const DEV: PortRow[] = [
     port: "8000",
     proto: "TCP",
     service: "Python · PHP dev servers",
-    note: "Django runserver, uvicorn, FastAPI, php -S, python -m http.server, Chroma. Wildly overloaded — check what is already bound before blaming your framework.",
+    note: "Django runserver, uvicorn, FastAPI, php -S, python -m http.server, Chroma. Wildly overloaded: check what is already bound before blaming your framework.",
     flag: "local",
     keywords: "django fastapi uvicorn php laravel chroma http.server",
   },
@@ -804,7 +804,7 @@ const DEV: PortRow[] = [
     port: "9000",
     proto: "TCP",
     service: "php-fpm (FastCGI)",
-    note: "Not HTTP — a browser aimed at it gets nothing, because only a FastCGI client speaks the protocol. Prefer the Unix socket; an exposed 9000 is remote code execution.",
+    note: "Not HTTP: a browser aimed at it gets nothing, because only a FastCGI client speaks the protocol. Prefer the Unix socket; an exposed 9000 is remote code execution.",
     flag: "never-public",
     keywords: "php-fpm fastcgi nginx laravel socket minio portainer sonarqube",
   },
@@ -844,7 +844,7 @@ const DEV: PortRow[] = [
     port: "7860 · 8501",
     proto: "TCP",
     service: "Gradio · Streamlit",
-    note: "The two default demo-app ports of the ML world. Gradio's share links tunnel through a public relay — understand what that means before using one at work.",
+    note: "The two default demo-app ports of the ML world. Gradio's share links tunnel through a public relay. Understand what that means before using one at work.",
     flag: "local",
     keywords: "gradio streamlit demo ml app huggingface",
   },
@@ -925,19 +925,19 @@ sudo traceroute -T -p 443 api.example.com`;
 const faq = [
   {
     q: "What port does PostgreSQL use?",
-    a: "5432/TCP, and MySQL or MariaDB use 3306/TCP. Those are defaults rather than requirements — a PgBouncer pooler usually answers on 6432, and any of them can be moved in config. If the port is open but the connection is still rejected, that is Postgres working correctly: listen_addresses and pg_hba.conf are separate gates and both have to allow you.",
+    a: "5432/TCP, and MySQL or MariaDB use 3306/TCP. Those are defaults rather than requirements. A PgBouncer pooler usually answers on 6432, and any of them can be moved in config. If the port is open but the connection is still rejected, that is Postgres working correctly: listen_addresses and pg_hba.conf are separate gates and both have to allow you.",
   },
   {
     q: "Why do I need root to bind to port 80?",
-    a: "On Unix, ports below 1024 are privileged: only root, or a process holding the CAP_NET_BIND_SERVICE capability, is allowed to bind them. The rule exists so that any user on a shared machine cannot impersonate a system service. You do not have to run as root to get there — grant AmbientCapabilities=CAP_NET_BIND_SERVICE in the systemd unit, lower net.ipv4.ip_unprivileged_port_start on Linux, or bind 8080 and let a reverse proxy or a port mapping own 80.",
+    a: "On Unix, ports below 1024 are privileged: only root, or a process holding the CAP_NET_BIND_SERVICE capability, is allowed to bind them. The rule exists so that any user on a shared machine cannot impersonate a system service. You do not have to run as root to get there. Grant AmbientCapabilities=CAP_NET_BIND_SERVICE in the systemd unit, lower net.ipv4.ip_unprivileged_port_start on Linux, or bind 8080 and let a reverse proxy or a port mapping own 80.",
   },
   {
     q: "How do I find out which process is using a port?",
-    a: "On Linux, ss -tulpn lists every listening socket with its process, though you need sudo to see processes you do not own. On macOS the equivalent is lsof -nP -iTCP:8080 -sTCP:LISTEN. On Windows, netstat -ano | findstr :3000 gives you a PID to look up with tasklist. If nothing shows up, the listener is probably inside a container — docker port tells you what was actually published and on which interface.",
+    a: "On Linux, ss -tulpn lists every listening socket with its process, though you need sudo to see processes you do not own. On macOS the equivalent is lsof -nP -iTCP:8080 -sTCP:LISTEN. On Windows, netstat -ano | findstr :3000 gives you a PID to look up with tasklist. If nothing shows up, the listener is probably inside a container. Docker port tells you what was actually published and on which interface.",
   },
   {
     q: "What is the difference between connection refused and connection timed out?",
-    a: "Refused means a TCP RST came back: your packet reached the host and either nothing was listening on that port or a firewall explicitly rejected it. Timed out means nothing came back at all, so packets are being dropped somewhere — a security group, a DROP rule, the wrong IP, or a missing route. Refused points at the service, timed out points at the network in between.",
+    a: "Refused means a TCP RST came back: your packet reached the host and either nothing was listening on that port or a firewall explicitly rejected it. Timed out means nothing came back at all, so packets are being dropped somewhere. A security group, a DROP rule, the wrong IP, or a missing route. Refused points at the service, timed out points at the network in between.",
   },
   {
     q: "Is it safe to expose Redis or the Docker socket to the internet?",
@@ -945,7 +945,7 @@ const faq = [
   },
   {
     q: "What is the ephemeral port range?",
-    a: "It is the pool the kernel draws from for the source port of outbound connections. IANA suggests 49152–65535, Linux defaults to 32768–60999 via net.ipv4.ip_local_port_range, and Windows uses the IANA range. It starts to matter when a busy proxy or NAT gateway exhausts the pool and connections fail with “cannot assign requested address” — the fixes are widening the range, reusing TIME_WAIT sockets, or spreading traffic over more source addresses.",
+    a: "It is the pool the kernel draws from for the source port of outbound connections. IANA suggests 49152 to 65535, Linux defaults to 32768 to 60999 via net.ipv4.ip_local_port_range, and Windows uses the IANA range. It starts to matter when a busy proxy or NAT gateway exhausts the pool and connections fail with “cannot assign requested address”. The fixes are widening the range, reusing TIME_WAIT sockets, or spreading traffic over more source addresses.",
   },
 ];
 
@@ -979,7 +979,7 @@ const related = [
   {
     href: "/blog/docker-vs-kubernetes/",
     label: "Docker vs Kubernetes",
-    note: "Where 2375, 6443, 10250 and 2379 come from — and which of them you are actually responsible for.",
+    note: "Where 2375, 6443, 10250 and 2379 come from, and which of them you are actually responsible for.",
   },
   {
     href: "/blog/container-vs-pod/",
@@ -1177,7 +1177,7 @@ const anchorId = (key: string): string | undefined => {
         <p>
           Two of these carry almost all of your traffic, and the rest exist
           because 80 and 443 are privileged. Anything that cannot bind below
-          1024 — a JVM, a Node process, a container running as a non-root user —
+          1024 (a JVM, a Node process, a container running as a non-root user)
           picks 8080 or 8443 and lets a proxy or a port mapping do the
           translation. That is the entire reason those numbers are so crowded.
         </p>
@@ -1271,7 +1271,7 @@ const anchorId = (key: string): string | undefined => {
         <p>
           Nothing in this table belongs on a public address. Databases are the
           most reliably profitable thing to find open, so they are scanned
-          constantly — and the default configuration of most of them assumes it
+          constantly, and the default configuration of most of them assumes it
           is sitting on a trusted network, because in 1998 it was.
         </p>
         <p>
@@ -1459,8 +1459,8 @@ const anchorId = (key: string): string | undefined => {
         </p>
         <p>
           The other trap is the overlay network. Container-to-container traffic
-          between hosts rides <strong>UDP</strong> — 4789 for VXLAN, 8472 for flannel
-          and k3s — and a security group that only allows TCP produces the worst kind
+          between hosts rides <strong>UDP</strong> (4789 for VXLAN, 8472 for flannel
+          and k3s) and a security group that only allows TCP produces the worst kind
           of outage: everything reports healthy, and nothing can talk to anything
           on another node.
         </p>
@@ -1550,7 +1550,7 @@ const anchorId = (key: string): string | undefined => {
           handles identity. That assumption is load-bearing: an open Prometheus
           hands over your internal hostnames, your service topology and your
           traffic patterns, and an open Loki hands over whatever your
-          application logs — which, if anyone was careless, includes tokens.
+          application logs, which, if anyone was careless, includes tokens.
         </p>
         <p>
           The numbers also collide more than anywhere else. 3000 is Grafana and
@@ -1647,8 +1647,8 @@ const anchorId = (key: string): string | undefined => {
         <p>
           If mail works on your laptop and silently fails on the VM, you are
           almost certainly submitting on 25 and being dropped by the provider's
-          egress policy. Switch to 587 or 465, or 2525 if both are filtered —
-          and never treat a successful TCP connect as proof that a message was
+          egress policy. Switch to 587 or 465, or 2525 if both are filtered, and
+          never treat a successful TCP connect as proof that a message was
           accepted.
         </p>
       </div>
@@ -1729,7 +1729,7 @@ const anchorId = (key: string): string | undefined => {
       <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
         <p>
           One of these is fine on a public address if you configure it properly,
-          and it is 22. The rest — RDP, VNC, SMB, Telnet, FTP — belong behind a
+          and it is 22. The rest (RDP, VNC, SMB, Telnet, FTP) belong behind a
           VPN, a bastion, or an identity-aware proxy. RDP in particular is the
           most common initial access vector in ransomware incident reports, year
           after year.
@@ -1824,7 +1824,7 @@ const anchorId = (key: string): string | undefined => {
         <p>
           These are the services that make everything else findable, and they
           are almost all UDP-first, which changes how they fail. A dropped UDP
-          packet produces a timeout and a retry, not an error — so a broken DNS
+          packet produces a timeout and a retry, not an error, so a broken DNS
           or NTP path shows up as “the app is slow sometimes” rather than
           anything that looks like a network fault.
         </p>
@@ -1913,7 +1913,7 @@ const anchorId = (key: string): string | undefined => {
       <h2 class="display text-2xl uppercase">Dev servers & local ports</h2>
       <div class="mt-3 max-w-3xl space-y-3 leading-relaxed">
         <p>
-          None of these are standardised — they are conventions that stuck, and
+          None of these are standardised. They are conventions that stuck, and
           they collide constantly. 3000 is Next.js and Grafana. 5000 is Flask
           and a Docker registry and, on any recent Mac, AirPlay Receiver. 9000
           is php-fpm and MinIO and Portainer and ClickHouse's native protocol.
@@ -1923,8 +1923,8 @@ const anchorId = (key: string): string | undefined => {
         <p>
           The rule that keeps this table harmless: dev servers bind
           <span class="mono">127.0.0.1</span> and stay there. The moment one binds
-          <span class="mono">0.0.0.0</span> on a café network — a Jupyter notebook,
-          an Ollama instance, a Node process with the inspector attached — it is an
+          <span class="mono">0.0.0.0</span> on a café network (a Jupyter notebook,
+          an Ollama instance, a Node process with the inspector attached) it is an
           unauthenticated remote shell with a friendly UI.
         </p>
       </div>
@@ -2013,23 +2013,23 @@ const anchorId = (key: string): string | undefined => {
       </p>
       <ul class="space-y-3">
         <li>
-          <strong>0–1023, well-known.</strong> Assigned by IANA, and privileged on
-          every Unix: binding one requires root or the CAP_NET_BIND_SERVICE capability.
+          <strong>0 to 1023, well-known.</strong> Assigned by IANA, and privileged
+          on every Unix: binding one requires root or the CAP_NET_BIND_SERVICE capability.
           The rule dates to multi-user machines, where the point was stopping an ordinary
           user from standing up a fake telnet or SMTP daemon on the port everyone
           trusted.
         </li>
         <li>
-          <strong>1024–49151, registered.</strong> IANA keeps a list, but registration
+          <strong>1024 to 49151, registered.</strong> IANA keeps a list, but registration
           is a filing, not a reservation. Nothing stops you binding 3306 with something
           that is not MySQL, and plenty of software squats on numbers it never registered.
           Treat every entry here as a strong convention rather than a guarantee.
         </li>
         <li>
-          <strong>49152–65535, dynamic and private.</strong> Officially the ephemeral
-          range — the pool the kernel picks from for the source port of an outbound
-          connection. In practice Linux ignores IANA and defaults to 32768–60999 (net.ipv4.ip_local_port_range);
-          Windows uses the IANA range.
+          <strong>49152 to 65535, dynamic and private.</strong> Officially the ephemeral
+          range: the pool the kernel picks from for the source port of an outbound
+          connection. In practice Linux ignores IANA and defaults to 32768 to 60999
+          (net.ipv4.ip_local_port_range); Windows uses the IANA range.
         </li>
       </ul>
       <p>
@@ -2040,8 +2040,8 @@ const anchorId = (key: string): string | undefined => {
         <span class="mono">net.ipv4.ip_unprivileged_port_start</span> if you would
         rather change the policy than the process. Or do what almost everyone does:
         bind 8080 and let nginx, a load balancer, or a container port mapping own
-        80 and 443. Inside a container the question mostly disappears — the process
-        is root in its own namespace and gets NET_BIND_SERVICE by default — but rootless
+        80 and 443. Inside a container the question mostly disappears (the process
+        is root in its own namespace and gets NET_BIND_SERVICE by default) but rootless
         Docker and Podman run into the host's rule again when they try to publish
         a port under 1024.
       </p>
@@ -2049,7 +2049,7 @@ const anchorId = (key: string): string | undefined => {
         Two more facts worth having. A listening socket is unique per protocol,
         address and port, not per port alone: TCP/53 and UDP/53 are different
         sockets, and two processes can both bind 8080 on different addresses.
-        And ephemeral exhaustion is real — a busy NAT gateway or forward proxy
+        And ephemeral exhaustion is real. A busy NAT gateway or forward proxy
         runs out of source ports and starts failing with “cannot assign
         requested address”, which reads like a bug in your code and is not.
       </p>
@@ -2074,37 +2074,37 @@ const anchorId = (key: string): string | undefined => {
       </p>
       <ul class="mt-3 space-y-2.5 text-sm leading-relaxed">
         <li>
-          <strong>2375 — Docker daemon.</strong> No authentication at all. A single
+          <strong>2375: Docker daemon.</strong> No authentication at all. A single
           request starts a privileged container with the host filesystem mounted,
           which is root. This is the fastest full compromise on the list.
         </li>
         <li>
-          <strong>6379 — Redis.</strong> Before Redis 6 there was no user model, and
+          <strong>6379: Redis.</strong> Before Redis 6 there was no user model, and
           protected mode only helps when you have not overridden the bind address.
           The classic exploit does not even need a bug: point the dump file at an
           SSH authorized_keys file, write a key as a value, SAVE, log in.
         </li>
         <li>
-          <strong>9200 — Elasticsearch.</strong> An unauthenticated REST API over
-          the whole index. This is where the “hacker leaves a ransom note in your
-          database” stories come from.
+          <strong>9200: Elasticsearch.</strong> An unauthenticated REST API over the
+          whole index. This is where the “hacker leaves a ransom note in your database”
+          stories come from.
         </li>
         <li>
-          <strong>27017 — MongoDB.</strong> Same story, same decade. Newer builds
-          bind loopback by default, which is why the incidents thinned out rather
-          than stopped.
+          <strong>27017: MongoDB.</strong> Same story, same decade. Newer builds bind
+          loopback by default, which is why the incidents thinned out rather than
+          stopped.
         </li>
         <li>
-          <strong>10250 and 2379 — kubelet and etcd.</strong> Exec into any pod, or
+          <strong>10250 and 2379: kubelet and etcd.</strong> Exec into any pod, or
           read every Secret in the cluster. Both have been the root cause of published
           breaches.
         </li>
         <li>
-          <strong>3389 — RDP.</strong> The single most common ransomware entry point.
+          <strong>3389: RDP.</strong> The single most common ransomware entry point.
           Credential stuffing does not need an exploit.
         </li>
         <li>
-          <strong>5060 — SIP.</strong> Brute-forced within hours for toll fraud, which
+          <strong>5060: SIP.</strong> Brute-forced within hours for toll fraud, which
           bills in real money while you sleep.
         </li>
       </ul>
@@ -2117,18 +2117,18 @@ const anchorId = (key: string): string | undefined => {
       <p>
         Publishing a port with <span class="mono">-p 6379:6379</span> binds 0.0.0.0,
         not localhost. Worse, Docker writes its own iptables rules into the DOCKER
-        chain, and those are evaluated before the rules UFW manages — so <span
+        chain, and those are evaluated before the rules UFW manages, so <span
           class="mono">ufw deny 6379</span
         > can be sitting there looking correct while the container is happily reachable
         from the internet. People discover this after the fact, in logs.
       </p>
       <p>
         The fix is one prefix: <span class="mono">-p 127.0.0.1:6379:6379</span>
-        publishes to loopback only. For anything that genuinely needs to be reachable
-        from another host, put the rule in the DOCKER-USER chain, which is evaluated
-        first and is the officially supported hook. And if you only need it from your
-        laptop, do not publish it at all — <span class="mono">docker exec</span> or
-        an SSH tunnel gets you there without opening anything.
+        publishes to loopback only. For anything that needs to be reachable from another
+        host, put the rule in the DOCKER-USER chain, which is evaluated first and
+        is the officially supported hook. And if you only need it from your laptop,
+        do not publish it at all: <span class="mono">docker exec</span> or an SSH
+        tunnel gets you there without opening anything.
       </p>
       <h3 class="heading text-xl uppercase">What to do instead</h3>
       <p>
@@ -2136,7 +2136,7 @@ const anchorId = (key: string): string | undefined => {
         and make the exception the thing you have to justify. Reach internal services
         through an SSH tunnel or a VPN rather than a firewall rule you will forget
         to remove. If something truly has to be public, put an authenticating proxy
-        in front of it — not a password field bolted onto an admin UI that was never
+        in front of it, not a password field bolted onto an admin UI that was never
         designed to face the internet. Then verify from outside: run a scan against
         your own public address and read the result, because your firewall config
         is a description of intent and the scan is the truth.
@@ -2168,10 +2168,10 @@ const anchorId = (key: string): string | undefined => {
         Read the <em>address</em> column, not just the port.
         <span class="mono">127.0.0.1:5432</span> is loopback only.
         <span class="mono">0.0.0.0:5432</span> is every IPv4 interface including the
-        public one. <span class="mono">[::]:5432</span> is every IPv6 interface —
-        and on most Linux systems that covers IPv4 too, via mapped addresses, which
-        is a detail that has surprised a lot of people who thought they were bound
-        to v6 only.
+        public one. <span class="mono">[::]:5432</span> is every IPv6 interface, and
+        on most Linux systems that covers IPv4 too, via mapped addresses, which is
+        a detail that has surprised a lot of people who thought they were bound to
+        v6 only.
       </p>
     </div>
     <div class="mt-8">
@@ -2184,7 +2184,7 @@ const anchorId = (key: string): string | undefined => {
     <div class="mt-8 space-y-4 leading-relaxed">
       <p>
         The container case has its own classic failure: the port mapping is
-        correct, the container is running, and connections still fail — because
+        correct, the container is running, and connections still fail, because
         the process inside bound <span class="mono">127.0.0.1</span> instead of
         <span class="mono">0.0.0.0</span>. Inside a container, loopback means
         the container's own loopback, so the mapping has nothing to forward to.
@@ -2200,7 +2200,7 @@ const anchorId = (key: string): string | undefined => {
   <!-- Refused vs timed out -->
   <section class="mx-auto max-w-3xl px-5 pb-16">
     <h2 class="display text-2xl uppercase">
-      Refused vs timed out — the free diagnosis
+      Refused vs timed out: the free diagnosis
     </h2>
     <div class="mt-4 space-y-4 leading-relaxed">
       <p>
@@ -2229,7 +2229,7 @@ const anchorId = (key: string): string | undefined => {
         {
           label: "How long it took",
           cells: [
-            "Instant — one round trip.",
+            "Instant: one round trip.",
             "Seconds, until your connect timeout fires.",
           ],
         },
@@ -2261,7 +2261,7 @@ const anchorId = (key: string): string | undefined => {
       <p>
         There are two more states worth naming. <strong
           >Connects, then hangs</strong
-        > means the TCP handshake worked and the protocols disagree — you spoke HTTP
+        > means the TCP handshake worked and the protocols disagree. You spoke HTTP
         to php-fpm on 9000, or plaintext to a TLS-only listener, and both sides are
         now waiting for the other to say something. <strong
           >Connection reset by peer</strong
@@ -2275,8 +2275,8 @@ const anchorId = (key: string): string | undefined => {
         habit, so silence means either “nothing is there” or “it is fine and the
         service simply had nothing to say”. Tools like
         <span class="mono">nc -vzu</span> are guessing. Test UDP services with a real
-        client — <span class="mono">dig @host</span> for DNS,
-        <span class="mono">ntpdate -q</span> for NTP — not a port probe.
+        client: <span class="mono">dig @host</span> for DNS,
+        <span class="mono">ntpdate -q</span> for NTP, not a port probe.
       </p>
       <p>
         And if the error is “could not resolve host”, stop looking at ports

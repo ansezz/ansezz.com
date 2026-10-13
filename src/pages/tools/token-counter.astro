@@ -316,7 +316,7 @@ const relatedLinks = [
           class="mono font-bold">" hello"</code
         > are different entries and gluing strings together can change the count.
         And modern tokenizers are byte-level, so there is no unknown-token failure
-        case — everything encodes, some things just encode expensively.
+        case. Everything encodes, some things just encode expensively.
       </p>
     </div>
 
@@ -332,7 +332,7 @@ const relatedLinks = [
         <li class="flex gap-3">
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
-            ><strong>Code.</strong> Identifiers are not vocabulary entries — <code
+            ><strong>Code.</strong> Identifiers are not vocabulary entries: <code
               class="mono font-bold">getUserById</code
             > splits into several fragments, and every bracket, operator, and dot
             is a token of its own. Real source usually lands nearer three characters
@@ -360,7 +360,7 @@ const relatedLinks = [
           <span aria-hidden="true" class="font-bold">▸</span>
           <span
             ><strong>High-entropy strings.</strong> UUIDs, hashes, base64 blobs, minified
-            bundles. There are no useful merges to find, so they shatter — a single
+            bundles. There are no useful merges to find, so they shatter. A single
             UUID can cost more than a dozen tokens.</span
           >
         </li>
@@ -383,8 +383,8 @@ const relatedLinks = [
       </h2>
       <p class="text-base leading-relaxed opacity-90">
         There is no universal token. Every model family ships its own tokenizer,
-        and a bigger vocabulary means fewer tokens for the same string — which
-        is why the same paragraph can differ by a double-digit percentage across
+        and a bigger vocabulary means fewer tokens for the same string, which is
+        why the same paragraph can differ by a double-digit percentage across
         providers, and by much more if it is not English. OpenAI publishes
         <code class="mono font-bold">tiktoken</code> (<code
           class="mono font-bold">cl100k_base</code
@@ -414,8 +414,8 @@ const relatedLinks = [
         measured in characters. Pricing is per million input and output tokens,
         with output typically several times the price of input. The context
         window is a token budget shared by the system prompt, tool definitions,
-        retrieved chunks, conversation history, the user turn, and the reply —
-        so every token you spend on context is one the model cannot spend on an
+        retrieved chunks, conversation history, the user turn, and the reply, so
+        every token you spend on context is one the model cannot spend on an
         answer. Prompt caching, embedding limits, and rate limits are all
         measured the same way.
       </p>

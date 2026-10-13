@@ -41,16 +41,13 @@ const dialectRows = [
   {
     icon: "lucide:layers",
     label: "Fields",
-    cells: [
-      "5 — minute to day-of-week",
-      "6 or 7 — seconds first, optional year",
-    ],
+    cells: ["5: minute to day-of-week", "6 or 7: seconds first, optional year"],
   },
   { icon: "lucide:timer", label: "Seconds field", cells: [false, true] },
   {
     icon: "lucide:calendar",
     label: "Day-of-week numbers",
-    cells: ["0–7, both 0 and 7 are Sunday", "1–7, 1 is Sunday"],
+    cells: ["0 to 7, both 0 and 7 are Sunday", "1 to 7, 1 is Sunday"],
   },
   {
     icon: "lucide:help-circle",
@@ -73,15 +70,15 @@ const dialectRows = [
 const faq = [
   {
     q: "What does 0 2 * * * mean in cron?",
-    a: "It runs once a day at 02:00 — minute 0, hour 2, every day-of-month, every month, every day-of-week. That is the expression loaded in the box above. It is also the worst hour to pick on a server that observes daylight saving, because 02:00 local is exactly the time that gets skipped or repeated twice a year.",
+    a: "It runs once a day at 02:00: minute 0, hour 2, every day-of-month, every month, every day-of-week. That is the expression loaded in the box above. It is also the worst hour to pick on a server that observes daylight saving, because 02:00 local is exactly the time that gets skipped or repeated twice a year.",
   },
   {
     q: "Why did my cron job run on the wrong day?",
-    a: "Almost always the day-of-month versus day-of-week trap. When both of those fields are restricted, cron runs the job if either one matches, not both — so 0 0 13 * 5 fires on the 13th of every month and on every Friday, roughly sixty times a year, instead of on Friday the 13th. Leave one of the two fields as * and the usual AND behaviour comes back.",
+    a: "Almost always the day-of-month versus day-of-week trap. When both of those fields are restricted, cron runs the job if either one matches, not both, so 0 0 13 * 5 fires on the 13th of every month and on every Friday, roughly sixty times a year, instead of on Friday the 13th. Leave one of the two fields as * and the usual AND behaviour comes back.",
   },
   {
     q: "Does */7 * * * * run every 7 minutes?",
-    a: "No. A step expands to a set within the field, so */7 means minutes 0, 7, 14, 21, 28, 35, 42, 49 and 56, and then the hour rolls over and the count restarts at zero. The last gap is four minutes, not seven. Steps only give an even interval when they divide the field evenly — for minutes that means 2, 3, 4, 5, 6, 10, 12, 15, 20 or 30.",
+    a: "No. A step expands to a set within the field, so */7 means minutes 0, 7, 14, 21, 28, 35, 42, 49 and 56, and then the hour rolls over and the count restarts at zero. The last gap is four minutes, not seven. Steps only give an even interval when they divide the field evenly. For minutes that means 2, 3, 4, 5, 6, 10, 12, 15, 20 or 30.",
   },
   {
     q: "What timezone do cron jobs run in?",
@@ -89,7 +86,7 @@ const faq = [
   },
   {
     q: "Why does my cron job work in the terminal but not in cron?",
-    a: "Environment. Cron hands a job a nearly empty environment with a minimal PATH — often just /usr/bin:/bin — no shell profile, and none of the variables your interactive login sets, so a command that resolves fine for you comes back 'not found'. Use absolute paths for every binary, and remember that % is special inside a crontab command: it is turned into a newline unless you escape it as \\%, which is why date +%Y silently breaks.",
+    a: "Environment. Cron hands a job a nearly empty environment with a minimal PATH (often just /usr/bin:/bin) no shell profile, and none of the variables your interactive login sets, so a command that resolves fine for you comes back 'not found'. Use absolute paths for every binary, and remember that % is special inside a crontab command: it is turned into a newline unless you escape it as \\%, which is why date +%Y silently breaks.",
   },
   {
     q: "Does this cron explainer support @daily, seconds, or Quartz syntax?",
@@ -161,7 +158,7 @@ const related = [
     kind: "Article",
     title: "Scaling with RabbitMQ",
     blurb:
-      "Retries, fan-out and back pressure — the things a crontab cannot give you when scheduled work outgrows one box.",
+      "Retries, fan-out and back pressure: the things a crontab cannot give you when scheduled work outgrows one box.",
     tone: "pink" as const,
   },
 ];
@@ -301,9 +298,11 @@ const relatedLinks = [
     <div class="space-y-4">
       <h2 class="display text-2xl uppercase">The five fields, left to right</h2>
       <p class="text-base leading-relaxed opacity-90">
-        Minute (0–59), hour (0–23), day-of-month (1–31), month (1–12),
-        day-of-week (0–7). Sunday is both <code class="mono font-bold">0</code> and
-        <code class="mono font-bold">7</code> — a Vixie-era compromise that still
+        Minute (0 to 59), hour (0 to 23), day-of-month (1 to 31), month (1 to
+        12), day-of-week (0 to 7). Sunday is both <code class="mono font-bold"
+          >0</code
+        > and
+        <code class="mono font-bold">7</code>: a Vixie-era compromise that still
         catches anyone assuming <code class="mono font-bold">7</code> means Saturday.
         Each field takes a star, a value, a range
         <code class="mono font-bold">a-b</code>, a list
@@ -315,7 +314,7 @@ const relatedLinks = [
         Three-letter names like <code class="mono font-bold">JAN</code> and
         <code class="mono font-bold">MON</code> work for month and day-of-week, but
         classic <code class="mono font-bold">crontab(5)</code> forbids ranges and
-        lists of names — <code class="mono font-bold">MON-FRI</code> is a portability
+        lists of names: <code class="mono font-bold">MON-FRI</code> is a portability
         gamble. Use numbers. The readout above walks the expression left to right,
         token by token.
       </p>
@@ -333,7 +332,7 @@ const relatedLinks = [
       <p class="text-base leading-relaxed opacity-90">
         So <code class="mono font-bold">0 0 13 * 5</code> is not "midnight on Friday
         the 13th". It is midnight on the 13th of every month
-        <em>plus</em> midnight every Friday — roughly sixty runs a year, not one or
+        <em>plus</em> midnight every Friday, roughly sixty runs a year, not one or
         two. Leave one of the two day fields as
         <code class="mono font-bold">*</code> and normal AND behaviour returns. Vixie-derived
         crons test "restricted" by looking for a literal leading asterisk, so <code
@@ -347,7 +346,7 @@ const relatedLinks = [
       <h2 class="display text-2xl uppercase">*/7 is not "every 7 minutes"</h2>
       <p class="text-base leading-relaxed opacity-90">
         A step is a set, not an interval. <code class="mono font-bold">*/7</code
-        > in the minute field expands to 0, 7, 14, 21, 28, 35, 42, 49, 56 — then the
+        > in the minute field expands to 0, 7, 14, 21, 28, 35, 42, 49, 56, then the
         hour rolls over and the count restarts, so the gap between :56 and the next
         :00 is four minutes.
       </p>
@@ -355,9 +354,9 @@ const relatedLinks = [
         Day-of-month is worse: the field length changes underneath you.
         <code class="mono font-bold">*/2</code> means 1, 3, 5 … 31 and restarts at
         1 every month, so a 31-day month hands you runs on two consecutive days. Only
-        steps that divide their field evenly give a true interval — for minutes, 2,
+        steps that divide their field evenly give a true interval. For minutes, 2,
         3, 4, 5, 6, 10, 12, 15, 20 and 30. If you need a real interval, use a scheduler
-        that has one — systemd's
+        that has one: systemd's
         <code class="mono font-bold">OnUnitActiveSec=</code>, or
         <code class="mono font-bold">@every 1h30m</code> in Go's robfig/cron.
       </p>
@@ -380,8 +379,8 @@ const relatedLinks = [
         fall-back it happens twice. Vixie and cronie special-case shifts under
         three hours for fixed-time jobs: skipped runs fire once right after the
         jump, nothing repeats. Jobs running more often than hourly get no such
-        help — <code class="mono font-bold">*/5</code> follows the wall clock, so
-        you collect a bonus hour of runs every autumn. Run schedulers in UTC, convert
+        help: <code class="mono font-bold">*/5</code> follows the wall clock, so you
+        collect a bonus hour of runs every autumn. Run schedulers in UTC, convert
         at the edges with an <a
           href="/tools/epoch-converter/"
           class="font-bold underline decoration-2 underline-offset-2"
@@ -433,7 +432,7 @@ const relatedLinks = [
         <code class="mono font-bold">concurrencyPolicy: Forbid</code> on a Kubernetes
         CronJob, or a systemd service unit, which cannot run two instances at once.
         Once a job is routinely long enough to overlap, put the work behind a queue
-        instead — the argument in <a
+        instead. The argument in <a
           href="/blog/message-queues-document-processing/"
           class="font-bold underline decoration-2 underline-offset-2"
           >message queues for document processing</a
@@ -461,7 +460,7 @@ const relatedLinks = [
         <code class="mono font-bold">@Scheduled</code>, node-cron and Go's
         robfig/cron with <code class="mono font-bold">WithSeconds()</code> put a seconds
         field first, so a six-field expression pasted into a Linux crontab shifts
-        every field one place and gets rejected — and a five-field expression pasted
+        every field one place and gets rejected, and a five-field expression pasted
         into Quartz quietly becomes a seconds schedule. Kubernetes CronJob stays five-field;
         one minute is its floor.
       </p>
