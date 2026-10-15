@@ -30,7 +30,7 @@ export async function GET(context) {
   ).sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
 
   return rss({
-    title: `${SITE.TITLE} — ${CATEGORY_LABEL[category] ?? category}`,
+    title: `${SITE.TITLE} | ${CATEGORY_LABEL[category] ?? category}`,
     description: `${CATEGORY_LABEL[category] ?? category} posts from ${SITE.TITLE}.`,
     site: context.site,
     items: posts.map((post) => {

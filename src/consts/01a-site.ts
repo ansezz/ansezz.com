@@ -10,7 +10,7 @@ export const YEARS_REMOTE = currentYear - REMOTE_SINCE;
 
 export const SITE = {
   URL: "https://ansezz.com",
-  TITLE: "Anass Ez-zouaine — Backend, AI & Shopify Engineer",
+  TITLE: "Anass Ez-zouaine | Backend, AI & Shopify Engineer",
   SHORT_TITLE: "ansezz",
   DESCRIPTION: `Senior backend, software architect, and AI engineer. ${YEARS_EXPERIENCE}+ years shipping Laravel SaaS, Shopify Plus apps, and AI features (Claude, MCP, RAG). Remote-first.`,
   EMAIL: "me@ansezz.com",
