@@ -1,0 +1,141 @@
+---
+title: "Your Laravel queue workers may be skipping your read replicas"
+description: "With sticky read/write connections, one job that writes can push every later job in the same worker onto the primary database. Laravel 13.36 adds an opt-in reset. Here is how it works and when to turn it on."
+publishDate: 2026-10-15
+category: laravel
+tags: [laravel, databases, performance, scaling]
+featured: false
+draft: true
+heroImage:
+  url: "/blog/laravel-sticky-connections-queue-workers/hero.webp"
+  alt: "Comic pop-art queue worker robot carrying job boxes past two empty read replica servers and straight to one overloaded primary database"
+---
+
+You added read replicas so the primary database could rest. Then you look at the metrics and the primary is still doing most of the reads. If you run queue workers with `sticky` turned on, the workers may be the reason.
+
+<Summary>
+- With `sticky` on, a write sends later reads on that connection to the write (primary) database.
+- A queue worker is one long process, so one job that writes can pin the reads of every later job in that worker to the primary.
+- Laravel 13.36 adds `Worker::$flushStickyConnections`, an opt-in reset before each job.
+- Turn it on unless a job depends on reading what an earlier, unrelated job wrote in the same worker.
+</Summary>
+
+## What `sticky` does
+
+Laravel lets you split a database connection into a `read` side and a `write` side. Selects go to the read hosts, and inserts, updates and deletes go to the write host ([Laravel docs](https://laravel.com/docs/13.x/database#read-and-write-connections)).
+
+Replicas lag a little behind the primary. So if you write a row and read it back right away from a replica, it may not be there yet. The `sticky` option fixes that. The docs describe it this way: if a write has run "during the current request cycle", any further reads use the write connection, so you can read back what you just wrote ([Laravel docs](https://laravel.com/docs/13.x/database#the-sticky-option)).
+
+```php
+'mysql' => [
+    'driver' => 'mysql',
+    'read' => ['host' => ['10.0.0.11', '10.0.0.12']],
+    'write' => ['host' => ['10.0.0.10']],
+    'sticky' => true,
+    // ...
+],
+```
+
+In a web request this is a good trade. The request ends, the process state resets, and the next request starts on the replicas again.
+
+## Why queue workers are different
+
+A queue worker does not end after one job. `php artisan queue:work` boots once and keeps running jobs until it is restarted. There is no "request cycle" boundary between jobs.
+
+The Laravel News write-up of the release puts it plainly: "a single job that writes can send the reads of every later job in that worker to the write connection" ([Laravel News](https://laravel-news.com/laravel-13-36-0)).
+
+The pull request that added the fix gives a concrete picture. For a worker with a high memory limit, one job that writes "could mean for the next 10,000 jobs it uses the write connection", or until the next deploy restarts the worker, "which means we actually lose the benefit of having replicas" ([PR #61915](https://github.com/laravel/framework/pull/61915)).
+
+<Figure
+  src="/blog/laravel-sticky-connections-queue-workers/inline-1.webp"
+  alt="Comic pop-art timeline: a worker runs job 1 which writes, then jobs 2, 3 and 4 all walk to the primary database while the replicas sit idle"
+  caption="One write early in the worker's life, and every later read goes to the primary."
+/>
+
+Most job workloads write something. So in practice, almost every long-running worker ends up reading from the primary.
+
+## The fix in Laravel 13.36
+
+Laravel v13.36.0 was released on October 13, 2026 ([GitHub release](https://github.com/laravel/framework/releases/tag/v13.36.0)). It includes a new static flag on the queue worker, merged on October 7 ([PR #61915](https://github.com/laravel/framework/pull/61915)):
+
+```php
+use Illuminate\Queue\Worker;
+
+// AppServiceProvider::boot()
+Worker::$flushStickyConnections = true;
+```
+
+With the flag on, the worker resets the sticky state before each job. Each job starts on the replicas, and only switches to the primary for reads after it writes something itself.
+
+It is off by default. The reason given is that "a job could depend on reading what an earlier job in the same worker wrote" ([Laravel News](https://laravel-news.com/laravel-13-36-0)). The PR author suggests it could become the default in Laravel 14, but did not want to break existing apps in a minor release ([PR #61915](https://github.com/laravel/framework/pull/61915)).
+
+<BeforeAfter beforeLabel="Flag off (default)" afterLabel="Flag on">
+  <div slot="before">
+
+Job 1 writes. Jobs 2 to N in that worker read from the primary until the worker restarts.
+
+  </div>
+  <div slot="after">
+
+Job 1 writes. Job 2 starts fresh on the replicas. It only reads from the primary after its own first write.
+
+  </div>
+</BeforeAfter>
+
+## Should you turn it on?
+
+Ask one question: does any job read data that a different job wrote moments before, and only works because both ran in the same worker?
+
+If the answer is yes, that is a hidden dependency. The PR author makes the same point: if jobs depend on other jobs, "they should be a chain or a batch, not quietly relying on whichever worker process happened to pop them" ([PR #61915](https://github.com/laravel/framework/pull/61915)). With several workers, the second job can already land on a different process, so the dependency is fragile today.
+
+If the answer is no, turning the flag on is a small change with a clear upside: your workers start using the replicas you already pay for.
+
+A simple rollout:
+
+1. Upgrade to Laravel 13.36 or later.
+2. Add the flag in `AppServiceProvider::boot()`.
+3. Deploy, then restart your workers so they pick up the change (`php artisan queue:restart`).
+4. Watch read traffic on the primary and on the replicas. Reads should move toward the replicas.
+5. Watch failed jobs for "model not found" style errors. Those point to a job reading a replica before replication caught up.
+
+<Figure
+  src="/blog/laravel-sticky-connections-queue-workers/inline-2.webp"
+  alt="Comic pop-art dashboard: two bar charts, primary database reads dropping and replica reads rising after a switch labeled flush sticky is flipped"
+  caption="What you want to see after the change: read load moving off the primary."
+/>
+
+## Watch for replica lag
+
+The flag does not remove replica lag. It only stops one job's write from deciding where the next job reads.
+
+If a job is dispatched right after a web request writes a row, and the job reads that row from a replica, it can still miss it. That was true before this change for the first job in a fresh worker, too. For those jobs, read from the write connection on purpose, for example with `Model::onWriteConnection()` ([API docs](https://api.laravel.com/docs/13.x/Illuminate/Database/Eloquent/Model.html)), or dispatch the job with `afterCommit()` so it only runs once the transaction is committed ([Laravel docs](https://laravel.com/docs/13.x/queues#jobs-and-database-transactions)).
+
+## Other queue fixes in the same release
+
+The same release has a few more changes for people running workers ([Laravel News](https://laravel-news.com/laravel-13-36-0), [GitHub release](https://github.com/laravel/framework/releases/tag/v13.36.0)):
+
+| Change | What it means |
+| --- | --- |
+| `#[DeleteWhenMissingModels]` and `#[FailOnTimeout]` now work on queued mailables | A mail for a deleted model is dropped instead of failing, and a timed out mail is not retried and sent twice. |
+| Redis queue notification pushes are batched | Fewer round trips to Redis when pushing many notifications. |
+| PgBouncer SSL EOF errors count as lost connections | Laravel can reconnect instead of failing the job. |
+| Mercure broadcasts run synchronously by default | Set `MERCURE_ASYNC=true` to queue them again. |
+
+<Takeaway>
+- `sticky` is built for request cycles, and a queue worker has no request cycle between jobs.
+- One writing job can pin a worker's reads to the primary until the worker restarts.
+- Laravel 13.36 adds `Worker::$flushStickyConnections = true` to reset that before each job.
+- If a job depends on another job's write, make it a chain or a batch, then turn the flag on.
+- Measure read traffic on the primary before and after.
+</Takeaway>
+
+Have you checked where your workers actually read from?
+
+## Sources
+
+- [Laravel 13.36 release notes, Laravel News](https://laravel-news.com/laravel-13-36-0)
+- [laravel/framework v13.36.0 release](https://github.com/laravel/framework/releases/tag/v13.36.0)
+- [PR #61915: Allow queue workers to flush sticky connections between jobs](https://github.com/laravel/framework/pull/61915)
+- [Laravel 13.x docs: read and write connections, the sticky option](https://laravel.com/docs/13.x/database#read-and-write-connections)
+- [Laravel 13.x docs: jobs and database transactions](https://laravel.com/docs/13.x/queues#jobs-and-database-transactions)
+- [Laravel API: Eloquent Model::onWriteConnection](https://api.laravel.com/docs/13.x/Illuminate/Database/Eloquent/Model.html)
