@@ -66,7 +66,7 @@ const relatedTags: BlogTag[] = [...(entry?.related ?? [])];
 
 const collectionLd = collectionPage({
   url: new URL(`/blog/tag/${slug}/`, SITE.URL).href,
-  title: `${entry?.label ?? tag} — posts`,
+  title: `${entry?.label ?? tag} | posts`,
   description: entry?.description ?? `Posts tagged ${label}.`,
   items: all.map((p) => ({
     url: `/blog/${p.id}/`,
@@ -79,7 +79,7 @@ const collectionLd = collectionPage({
 ---
 
 <Page
-  title={`${entry?.label ?? tag} — ${all.length} ${all.length === 1 ? "post" : "posts"}`}
+  title={`${entry?.label ?? tag} | ${all.length} ${all.length === 1 ? "post" : "posts"}`}
   description={entry?.description ?? `${all.length} posts tagged ${label}.`}
   eyebrow={`Tag · ${label}`}
   heading={`${entry?.label ?? tag}.`}
