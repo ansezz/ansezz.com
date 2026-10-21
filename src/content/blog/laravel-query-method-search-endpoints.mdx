@@ -1,0 +1,161 @@
+---
+title: "Stop sending your Laravel search filters as POST"
+description: "Laravel 13.35 adds Route::query(), so a search endpoint can take a JSON body and still say it is read only. Here is why I would move internal search endpoints to QUERY now, and the three things to check first."
+publishDate: 2026-10-21
+category: laravel
+tags: [laravel, api-design, networking, security]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/laravel-query-method-search-endpoints/hero.webp"
+  alt: "Comic pop-art HTTP request envelope stamped QUERY flying past a crossed out POST stamp toward a search endpoint"
+---
+
+Every Laravel app with a serious search screen ends up with the same route: `Route::post('/products/search', ...)`. The filters are too big or too nested for a query string, and GET with a body is not something you can count on. So we use POST, and every tool between the client and the app now thinks that request changes data.
+
+Laravel 13.35 gives you another option.
+
+<Summary>
+- Laravel 13.35.0 adds `Route::query()` for the HTTP QUERY method ([PR #61797](https://github.com/laravel/framework/pull/61797)).
+- QUERY is a safe, idempotent method that carries a request body. The spec is an IETF HTTP working group draft.
+- My claim: for search and filter endpoints you control on both ends, switch from POST to QUERY now, even before CDNs cache it.
+- Check three things first: CSRF on `web` routes, `Route::any()` routes, and your CORS allowed methods.
+</Summary>
+
+## What changed
+
+[Laravel v13.35.0](https://github.com/laravel/framework/releases/tag/v13.35.0), released on 6 October 2026, includes "Add QUERY route method support". The PR adds a `query()` method to the router and the `Route` facade, and adds `QUERY` to `Router::$verbs`:
+
+```php
+// src/Illuminate/Routing/Router.php, v13.35.0
+public static $verbs = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY'];
+```
+
+The testing helpers `query()` and `queryJson()` landed earlier in 13.x ([PR #60662](https://github.com/laravel/framework/pull/60662)), so you can test these routes the same way you test the others.
+
+## What QUERY means
+
+The [HTTP QUERY method draft](https://datatracker.ietf.org/doc/draft-ietf-httpbis-safe-method-w-body/) describes a method that is safe and idempotent like GET, but sends its query in the request body like POST. It is still a draft, so treat the details as subject to change.
+
+That one property matters more than it sounds. POST tells retries, proxies, logs, and other developers "this may change something". A search does not change anything. With POST you are sending a message that is false, and every layer has to be told about it by hand.
+
+<Figure
+  src="/blog/laravel-query-method-search-endpoints/inline-1.webp"
+  alt="Comic panel comparing a POST envelope with a warning sign and a QUERY envelope with a magnifying glass"
+  caption="Same body, different promise: POST may change data, QUERY only reads."
+/>
+
+## The route
+
+Moving an endpoint is small. Before:
+
+```php
+Route::post('/products/search', SearchProductsController::class);
+```
+
+After, on Laravel 13.35 or later:
+
+```php
+use App\Http\Controllers\SearchProductsController;
+use Illuminate\Support\Facades\Route;
+
+Route::query('/products/search', SearchProductsController::class);
+```
+
+The controller does not change. `$request->input()` reads the JSON body as it does for POST, and `$request->query()` still reads the query string. The framework's own tests cover both: a JSON body read with `input('filters.name')`, and a query string mixed with body data.
+
+```php
+namespace App\Http\Controllers;
+
+use App\Models\Product;
+use Illuminate\Http\Request;
+
+class SearchProductsController
+{
+    public function __invoke(Request $request)
+    {
+        $validated = $request->validate([
+            'filters.brand' => ['array'],
+            'filters.brand.*' => ['string'],
+            'filters.price_max' => ['nullable', 'numeric'],
+        ]);
+
+        return Product::query()
+            ->when($validated['filters']['brand'] ?? null, fn ($q, $brands) => $q->whereIn('brand', $brands))
+            ->when($validated['filters']['price_max'] ?? null, fn ($q, $max) => $q->where('price', '<=', $max))
+            ->paginate(25);
+    }
+}
+```
+
+And the test:
+
+```php
+public function test_search_filters_by_brand(): void
+{
+    Product::factory()->create(['brand' => 'acme']);
+    Product::factory()->create(['brand' => 'other']);
+
+    $this->queryJson('/api/products/search', [
+        'filters' => ['brand' => ['acme']],
+    ])
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+}
+```
+
+On the client, `fetch` accepts any method name:
+
+```js
+const res = await fetch('/api/products/search', {
+  method: 'QUERY',
+  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+  body: JSON.stringify({ filters: { brand: ['acme'], price_max: 120 } }),
+});
+```
+
+## Three things to check first
+
+### 1. CSRF still applies on web routes
+
+The Laravel PR made a deliberate choice: QUERY is still checked for a CSRF token. The PR explains that the spec calls QUERY safe, but your handler is app code, and nothing forces it to be free of side effects. So a QUERY route in the `web` group needs a token, just like POST. If you call it from your own frontend with the usual `X-XSRF-TOKEN` or `X-CSRF-TOKEN` header, nothing changes. If you want to skip the check for one route, the PR points to `preventRequestForgery(except: [...])`.
+
+I agree with this choice. It means moving from POST to QUERY on a `web` route does not open a new hole.
+
+### 2. `Route::any()` now matches QUERY
+
+Because `QUERY` was added to `Router::$verbs`, every `Route::any()` route and every `Route::redirect()` now also answers QUERY requests. The `route:list` command also reads `ANY` from the verbs list now. If you have an `any()` route that writes data, it now takes one more method. Search your routes for `any(` after you upgrade.
+
+### 3. Cross-origin calls need a preflight
+
+QUERY is not one of the methods a browser sends without asking first, so a cross-origin call triggers a CORS preflight. If your `config/cors.php` lists methods by hand, add `QUERY` to `allowed_methods`. The default `['*']` already covers it.
+
+<Figure
+  src="/blog/laravel-query-method-search-endpoints/inline-2.webp"
+  alt="Comic checklist panel with three boxes labeled CSRF, ANY routes, and CORS being ticked"
+  caption="Three checks before you switch: CSRF, any() routes, and CORS."
+/>
+
+## Why now, before caches support it
+
+This is the part you can argue with. Most CDNs and reverse proxies do not cache QUERY today, and some older proxies or WAF rules may reject a method they do not know. So why switch?
+
+Because the main gain is not caching. It is that the request tells the truth. For endpoints where you own the client and the server, like an admin search, an internal API, or a service to service call, you can test the whole path today. You get a method name that tells retry logic it is safe to retry, makes logs easier to read, and stops a reviewer from asking "does this POST write anything?".
+
+For public endpoints behind infrastructure you do not control, wait. Test that every hop passes QUERY through before you move.
+
+<Takeaway>
+- Laravel 13.35 adds `Route::query()`. Your controller code stays the same.
+- Use it for read only search endpoints where you control both ends.
+- Keep CSRF on, audit `Route::any()`, and allow `QUERY` in CORS.
+- Keep POST for public endpoints until every proxy in the path accepts QUERY.
+</Takeaway>
+
+How many of your POST routes only read?
+
+## Sources
+
+- [laravel/framework v13.35.0 release](https://github.com/laravel/framework/releases/tag/v13.35.0)
+- [PR #61797: Add QUERY route method support](https://github.com/laravel/framework/pull/61797)
+- [PR #60662: Add query and queryJson HTTP testing helpers](https://github.com/laravel/framework/pull/60662)
+- [IETF draft: The HTTP QUERY Method](https://datatracker.ietf.org/doc/draft-ietf-httpbis-safe-method-w-body/)
