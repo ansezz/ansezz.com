@@ -1,175 +1,202 @@
 ---
-title: "Grok Bot vs OpenAI dots: a team of bots or one agent"
-description: "OpenAI dots and Grok Bot both give an AI agent its own cloud computer. Here is how they differ on teams, control, routines and access, and which fits your work."
+title: "Claude Duet vs Grok Bot vs OpenAI Dots vs Meta Muse: pick by control and access"
+description: "Four personal agents each keep a cloud computer working after you close the laptop. Pick by who says yes before a send or a payment, and whether your plan and country can get in."
 publishDate: 2026-10-03
+updatedDate: 2026-10-29
 category: ai
 tags: [ai, agentic-ai, ai-engineering, security]
 featured: false
+draft: false
 heroImage:
-  url: "/blog/grok-bot-vs-openai-dots/hero-0cfc216e.webp"
-  alt: "Comic pop-art split scene: a team of four robots versus one bubbly blob agent, headline Team or one?"
+  url: "/blog/grok-bot-vs-openai-dots/hero-a6448443.webp"
+  alt: "Comic pop-art scene of four small figures at cloud computers, stopped by a gate and a stamp that reads YES/NO, under the words WHO SAYS YES?"
 ---
 
-One agent that does everything, or a team where each bot has one job? That is the real choice between OpenAI dots and Grok Bot.
+Updated 29 Oct 2026.
 
+Pick a personal AI agent by how it controls risky actions and whether you can get it today, not by the brand on the app.
+
+All four agents now have their own cloud computer and keep working after you close the laptop. What separates them is who says yes before a send or a payment, and whether your plan and country can get in.
+
+That is my claim. Prices and access below are as of 29 Oct 2026. Prices can change.
+
+The deeper posts are [Claude Duet](/blog/claude-duet-personal-ai-agent), [Grok Bot](/blog/grok-bot-solo-founders), [OpenAI Dots](/blog/openai-dots-solo-founders), and [Meta Muse](/blog/meta-muse-personal-ai-agent-solo-founders).
+
+{/* prettier-ignore */}
 <Summary>
-- Both products now give an agent its own cloud computer, background work and approvals.
-- Dots start as one personal agent. Grok Bot starts as a team of focused bots.
-- The best test is one real weekly task, run for a week.
+- All four give the agent a cloud computer and keep working after you close the laptop. Each one still needs a yes before a risky step, and that yes works differently on each product.
+- Claude Duet and OpenAI Dots start as one agent. Grok Bot starts as a team on one shared computer. Meta Muse is a consumer app with a guard outside the model.
+- As of 29 Oct 2026, access depends on the plan, the country, and sometimes an invite. Duet is a US waitlist on Pro or Max. Grok Bot is Premium, Super, or Ultra on The X Subscription. A dot comes with ChatGPT Pro or Business Premium. Muse has a free tier in four countries.
 </Summary>
 
-On 29 September, OpenAI launched dots at DevDay.
+## What all four share
 
-A day or two later, one founder posted that he had spent months building his business into a monorepo full of partitioned context, skills, automations and MCP connections. After 36 hours with dots, he thought most of it might not be needed anymore.
-
-That post hit home, because I run my own work the other way: a set of Grok Bot assistants, each with one job.
-
-So the honest question is not "which one is smarter." It is "which shape of agent fits the way you work." This post compares the two based on what each product has published, and where my own daily use backs it up.
-
-## At a glance
-
-| | Dots | Grok Bot |
-| --- | --- | --- |
-| Starting shape | One primary dot, named and personalized | A team of Bots, one per area of work |
-| Control | Custom Rules plus an Auto-review layer | Scopes, drafts and approvals |
-| Recurring work | Goals that keep going in the background | Named skills and routines |
-| Where you talk | ChatGPT, voice calls, Slack, Microsoft Teams | Desktop app, iPhone app, group chats |
-
-## What both products have in common
-
-The headline idea is now the same on both sides.
+The same three ideas now show up on all four products.
 
 <BeforeAfter beforeLabel="Then" afterLabel="Now">
-  <div slot="before">The agent is a chat box.</div>
-  <div slot="after">The agent is a worker with its own computer.</div>
+  <div slot="before">The agent is a chat box on your laptop.</div>
+  <div slot="after">The agent has a cloud computer and keeps working after you close the laptop.</div>
 </BeforeAfter>
 
-- **A cloud computer per agent.** Dots run on their own cloud computer with a browser, and you can open it to inspect the work. Grok Bot Bots work on a persistent cloud computer with a browser, filesystem and terminal.
-- **Always on.** Both keep working between conversations and while your laptop is closed.
-- **Connected apps.** Dots reach more than 4,000 apps through OpenAI's plugin ecosystem. Grok Bot uses connectors (MCP servers) where they exist and drives the browser for everything else.
-- **Approval for sensitive actions.** Both come back to you before risky steps instead of doing everything silently.
-- **Learning over time.** Both keep context about you and get better with feedback.
+- **A cloud computer.** [Claude Duet](https://claude.com/product/claude-duet) works on its own computer in the cloud. [Grok Bot](https://docs.x.ai/grok-bot/overview) Bots share one persistent cloud computer, with a browser, files, and a terminal. A [dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) has its own cloud computer and browser. [Muse](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/) runs on Muse Secure VM, an isolated Linux machine with a browser.
+- **Background work.** Duet keeps working while you are away. Grok Bot work continues when the laptop is closed. A dot keeps making progress between conversations. Muse can continue after you close the app.
+- **A yes before the risky step.** Duet waits before a send, a payment, a signature, or a delete. Grok Bot shows an approval card. A dot follows rules you write, and a draft is not a send. Muse asks you to confirm a step such as sending an email or making a purchase, and a separate Sentinel agent is the only one that can allow connector actions and traffic leaving the machine.
 
 <TryThis>
-Write down what you want an agent to do. If it is one capable agent that books, researches and drafts, either one will feel like a big step up from a chatbot.
+Write down the one action you will not let an agent finish alone. A send, a payment, or a delete is the usual line.
 </TryThis>
 
-## The real difference: one agent or a team
+## Shape: one agent, team, or consumer app
 
-This is the part that matters most.
+**Claude Duet is one proactive agent.** It sends a morning brief, then checks connected accounts every few hours. You message it. It comes back when a task is done or needs you. The [product page](https://claude.com/product/claude-duet) and the [help center](https://support.claude.com/en/articles/17631495-get-started-with-claude-duet) describe that rhythm.
 
-**Dots start with one.** At launch you get one primary dot, named and personalized.
+**OpenAI Dots start as one primary dot.** You name it. The [launch post](https://openai.com/index/introducing-dots/) describes more dots as later, and specialist dots (their own identity, credentials, and organization responsibilities) as a preview in focused enterprise pilots.
 
-OpenAI says you will be able to add more dots later, and it is piloting "specialist dots" for organizations with their own identity and access. But today, for most people, it is one agent doing everything.
+**Grok Bot is a team.** You create named Bots. They share one computer, run in parallel, and can pass a task to each other. The [overview](https://docs.x.ai/grok-bot/overview) and the [Cursor docs](https://cursor.com/docs/grok-bot) describe that.
 
-**Grok Bot starts with a team.** You create as many Bots as you have areas of work. Each one gets a name, one job and its own memory.
+**Meta Muse is a consumer agent.** It remembers what matters to you and can suggest something when you did not ask. The [launch post](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/) says that. The [safety post](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse) says it can run subagents, smaller agents it starts to help with the work.
 
-Bots can message each other, share context in group chats and hand work over, so you are not the router between them.
+<PullQuote>
+Pick a personal AI agent by how it controls risky actions and whether you can get it today, not by the brand on the app.
+</PullQuote>
+
+## Control and approvals
+
+Who says yes is the part that matters when money or a message can leave your account.
 
 <Figure
   src="/blog/grok-bot-vs-openai-dots/inline-1.webp"
-  alt="Comic pop-art panel: on the left one overloaded blob agent juggling a calendar, an inbox and a website; on the right a calm row of small robots, each holding a single folder"
-  caption="One agent doing everything, or a team where each bot owns one area."
+  alt="Comic pop-art panel of four machines in a row. The signs read WAIT FOR OK with a red X, ALLOW ONCE with a green check, YOUR RULES with a blue gear, and SENTINEL with a yellow shield"
+  caption="WAIT FOR OK, ALLOW ONCE, YOUR RULES, SENTINEL. Four ways to say yes."
 />
 
-### Why a team helps
+**Claude Duet: wait for your ok.** Before it sends a message, makes a payment, signs a document, or deletes anything, it shows you the action and waits. A separate checker runs outside the model that is doing the work. Some actions stay off limits even if you approve them. The [safety article](https://claude.com/resources/articles/claude-duet-safety-privacy-and-security) covers that gate.
 
-One agent that does everything slowly becomes a catch-all. Its memory mixes your sales notes with your health plan with your client work.
+**Grok Bot: allow once.** When an action needs approval, you see the operation and the inputs. The choices are Allow once, Always allow, or Deny. Auto Review is an independent review model. It can allow the action, ask you, or deny it. You can also tell a Bot to leave drafts for you to approve. The [security docs](https://cursor.com/docs/grok-bot/security) describe the cards and Auto Review. The [overview](https://docs.x.ai/grok-bot/overview) uses "leave me drafts to approve" as the pattern for outgoing copy.
 
-A team lets you keep each area small and focused. In a team setup, the bot that runs your website has no reason to see your finance inbox, and the bot that plans travel has no reason to touch your blog.
+**OpenAI Dots: your rules.** Custom Rules are optional. The four choices are: take action without asking, take action when you say so, ask before taking action, or hand the step back to you. An automatic review sits on top. It checks the action against your instructions, your rules, and the built-in safety requirements. Asking for a draft does not give permission to send. A rule does not grant access to an app or a computer, and it does not remove a confirmation the product still requires. The [controls docs](https://learn.chatgpt.com/codex/dots/controls) and the [getting started guide](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) both say so.
 
-<PullQuote>That separation is the whole point.</PullQuote>
-
-My own week runs like this: one bot for my site, one for social, one for my inbox, and none of them steps into the others' work.
-
-### The cost: setup
-
-With one dot, there is nothing to design. With a team, you have to decide your areas and write down who owns what.
-
-That takes an afternoon, not a weekend, but it is real work.
+**Meta Muse: Sentinel.** The [safety post](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse) says a separate Sentinel agent is the only permission authority for connector actions and for traffic leaving the machine, and that the model cannot override Sentinel. The [privacy help page](https://www.meta.com/help/superintelligence/1047255454427887/) says Muse asks you to confirm important actions, such as sending an email or making a purchase, and that many of those checks run outside the model.
 
 <TryThis>
-Spend one afternoon listing your areas of work and writing down which bot owns each one.
+Take the action you wrote down above. Find the control that stops it: Duet's wait, a Grok Bot card, a dot rule, or Sentinel.
 </TryThis>
 
-## Control: rules vs scopes
+## Where work runs
 
-Both products take safety seriously, but they put the control in different places.
-
-**Dots use Custom Rules.** Each rule describes an action and sets whether the dot can do it alone, must ask first, or must never do it.
-
-Under that, an Auto-review layer checks actions that could affect your accounts or share information. Some tasks, like changing a password, always stay with you no matter what.
-
-**Grok Bot uses scopes plus approvals.** You control what each Bot can reach by which connectors and logins you give it.
-
-Outgoing messages start as drafts you send yourself, and risky actions go through a safety check. Some steps, like a sign-in or a payment, are always handed back to you.
-
-<Figure
-  src="/blog/grok-bot-vs-openai-dots/inline-2.webp"
-  alt="Comic pop-art panel: a robot stopped at a gate by a rulebook on one side, and on the other side a robot holding only two keys on a ring while a person signs off on a draft"
-  caption="Two ways to keep control: rules on actions, or scopes on what each bot can reach."
-/>
-
-Either way, an agent can only reach what you connect to it. In Grok Bot, each bot gets only the connectors you give it.
-
-<TryThis>
-Before you connect anything, list the connectors and logins each agent really needs, and give it only those.
-</TryThis>
-
-## Recurring work: routines and skills
-
-This is where the "business in a monorepo" crowd will feel at home.
-
-Grok Bot has two named building blocks:
-
-- A **skill** is a saved recipe for a task, shared across your Bots.
-- A **routine** tells one Bot when to run it, on a schedule or after an event like a Slack message or a GitHub notification.
-
-You can also show a Bot a workflow once and let it save the steps.
-
-Dots work toward goals you set and keep going in the background, and they learn from your feedback. OpenAI's launch material talks more about goals and ongoing work than about named, schedulable recipes.
-
-If your work is a set of repeatable weekly tasks, explicit routines are easier to inspect and debug. If your work is more open-ended, a goal-driven agent may need less setup.
-
-<TryThis>
-Pick one repeatable weekly task, show a Bot the workflow once, and let it save the steps as a skill.
-</TryThis>
+- **Claude Duet** uses a cloud virtual machine with its own browser. You cannot watch that browser or take it over yet. The [launch article](https://claude.com/resources/articles/claude-duet) says Duet cannot show you the browser yet.
+- **Grok Bot** uses one persistent cloud computer per account, with a browser, files, and a terminal. Every Bot on that account can see the shared files, browser sessions, and app logins. The [overview](https://docs.x.ai/grok-bot/overview) says that. The [security docs](https://cursor.com/docs/grok-bot/security) say those computers run in the United States.
+- **OpenAI Dots** give the dot its own cloud computer and browser. You can inspect it and choose Take over, then Return control. A local computer is optional and starts turned off. The [computers and apps docs](https://learn.chatgpt.com/codex/dots/computers-and-apps) and the [getting started guide](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) describe that.
+- **Meta Muse** runs on Muse Secure VM, a dedicated computer in the cloud with its own browser. The [launch post](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/) names that VM. The [safety post](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse) says each VM is an isolated Linux machine, and that you can inspect the browser work and take over.
 
 ## Where you talk to them
 
-- **Dots:** ChatGPT on web, desktop and mobile, voice calls, plus Slack and Microsoft Teams. Texting is on a waitlist.
-- **Grok Bot:** a [desktop app on macOS, Windows and Linux plus an iPhone app](https://cursor.com/docs/grok-bot), and group chats where several Bots work together.
+- **Claude Duet:** an iOS app, an Android app, and claude.ai on the web. The [product page](https://claude.com/product/claude-duet) lists those.
+- **Grok Bot:** a desktop app on macOS, Windows, and Linux, plus iPhone and Android. The [overview](https://docs.x.ai/grok-bot/overview) lists those apps.
+- **OpenAI Dots:** ChatGPT on the web, in the desktop app, and in the mobile app, plus Slack and Microsoft Teams. Mobile web is not supported. The [channels docs](https://learn.chatgpt.com/codex/dots/channels) list texting as coming soon. The [getting started guide](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) describes a limited beta for Pro users in the US, through a third-party provider, and says that beta is not on Business or Enterprise.
+- **Meta Muse:** the Muse app on iOS and Android, muse.ai, and WhatsApp. The [launch post](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/) lists those. The [Singapore post](https://about.fb.com/news/2026/10/muse-is-now-available-in-singapore-the-worlds-first-personal-ai-agent-built-for-everyone/) also lists iOS, Android, and muse.ai.
 
-Dots also have an option to connect to your own laptop, which is off by default.
+## Access and price as of 29 Oct 2026
 
-## Access and availability
+Prices can change. Check the vendor page before you pay.
 
-Dots are rolling out to ChatGPT Pro and Business Premium in eligible markets, with the first dot included in the plan.
+<Figure
+  src="/blog/grok-bot-vs-openai-dots/inline-2.webp"
+  alt="Comic pop-art panel of chained double doors with four padlocks, and burst labels that read PLAN, COUNTRY, INVITE, and ACCESS"
+  caption="PLAN? COUNTRY? INVITE? ACCESS? Four locks on the same door."
+/>
 
-At launch, Pro in the EEA, Switzerland and the UK is not included, and Enterprise gets a beta that an admin must turn on. Pricing for extra dots has not been published yet.
+**Claude Duet** is a research preview in the US only, on a waitlist, by invitation. You need Claude Pro or Max. During the preview it is included with those plans. These pages do not list a separate Duet price. Team and Enterprise plans are not included yet. The [product page](https://claude.com/product/claude-duet) states that access.
 
-Grok Bot plans are listed on the [Grok Bot page](https://x.ai/bot).
+**Grok Bot** is included on The X Subscription at Premium ($30 a month), Super ($100 a month), and Ultra ($200 a month). Plus and Free do not include it. The free trial is a usage credit with a 7-day window. List prices are on [The X Subscription pricing](https://docs.x.ai/x-subscription/pricing) and [x.ai/pricing](https://x.ai/pricing). The [plans page](https://cursor.com/help/grok-bot/plans) describes the trial. Paid individual Cursor plans and Cursor Teams also include Grok Bot. That same plans page lists the full matrix.
+
+**OpenAI Dots.** The first dot is included on Pro and on Business Premium, at no extra cost. Pro is $100, $200, or $500 a month, for people 18 and older, outside the EEA, the UK, and Switzerland. These pages do not list a price for extra dots, and they do not list a separate Business Premium seat price. Enterprise, including Edu and Healthcare, is a beta that an admin turns on. It stays off until then. The [getting started guide](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot) states the access rules. [Codex pricing](https://learn.chatgpt.com/codex/pricing) lists the three Pro prices.
+
+**Meta Muse** has a free tier with a usage limit that refreshes. Power is $20 a month and includes 500 million Muse tokens a week. Maximum is $100 a month and includes 3 billion Muse tokens a week. These pages do not say what one Muse token maps to in a real task. Muse is in limited testing in the US, Canada, Japan, and Singapore. The [subscription help page](https://www.meta.com/help/subscriptions/1021145227643680/) lists the prices. Country pages: the [launch post](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/) (US and Canada), the [Japan post](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/), and the [Singapore post](https://about.fb.com/news/2026/10/muse-is-now-available-in-singapore-the-worlds-first-personal-ai-agent-built-for-everyone/) (27 October 2026).
 
 <TryThis>
-Check both pricing pages before you decide, because both products are moving fast.
+Before you pay, check three things on the vendor page: your plan, your country, and whether you need an invite.
 </TryThis>
+
+## Comparison table
+
+| Axis | Claude Duet | Grok Bot | OpenAI Dots | Meta Muse |
+| --- | --- | --- | --- | --- |
+| Shape | One proactive agent. Morning brief. Check-ins every few hours | Named Bots on one shared computer. They work in parallel and pass tasks | One primary dot. More dots later. Specialist dots in enterprise pilots | Consumer agent with memory. It can suggest something you did not ask for. It can run subagents |
+| Control | Waits for your ok before send, pay, sign, or delete. A checker runs outside the model. Some actions stay off limits even with your ok | Allow once, Always allow, or Deny. Independent Auto Review. You can ask it to leave drafts for you to approve | Custom Rules: act alone, act when you say so, ask first, or hand off. Auto-review on top. A draft is not permission to send | Sentinel is the only permission authority for connector actions and traffic leaving the machine. The model cannot override it |
+| Where work runs | Cloud VM with its own browser. You cannot watch or take over the browser yet | One cloud computer per account: browser, files, terminal. Runs in the US. Shared by every Bot | Own cloud computer and browser. You can take over. Optional local computer, off by default | Muse Secure VM: isolated Linux machine with a browser. You can inspect and take over |
+| Where you talk | iOS app, Android app, claude.ai on the web | Desktop (macOS, Windows, Linux), iPhone, Android | ChatGPT web, desktop, mobile app, Slack, Teams. Channels: texting coming soon. Getting started: limited US Pro beta | Muse app (iOS, Android), muse.ai, WhatsApp |
+| Access and price, 29 Oct 2026 | US only. Research preview. Waitlist by invite. Included with Pro or Max. No separate price | Premium $30, Super $100, Ultra $200 a month on The X Subscription. Not on Plus or Free. Trial credit with a 7-day window | Pro $100, $200, or $500 a month, or Business Premium. First dot included. Pro is outside the EEA, the UK, and Switzerland, ages 18 and older | Free tier, Power $20, Maximum $100 a month. US, Canada, Japan, Singapore. Limited testing |
+| Limits | Can miss things between checks. No phone calls. No texts to other people. No Team plans yet | Shared computer: every Bot can see shared files and logins. Some admin controls are Enterprise only | Rules do not grant access or remove required confirmations. Stopping does not undo sent work | Weekly token caps. Training on chats is on at first use (you can turn it off). Confidential VM is not live |
+
+## Limits and who each one fits
+
+A few boundaries are easy to miss.
+
+**Claude Duet** checks on a schedule, so it can miss something that arrives between checks. It does not make phone calls, and it does not send text messages to other people. Team and Enterprise plans are not included yet. It fits a person in the US who is already on Claude Pro or Max and wants one agent that briefs them and stops before send, pay, sign, or delete. The [launch article](https://claude.com/resources/articles/claude-duet) and the [product page](https://claude.com/product/claude-duet) state those limits.
+
+**Grok Bot** puts every Bot on one computer. Treat files, browser sessions, and logins on that computer as visible to every Bot. A network allowlist and enforced Auto Review are Enterprise only. It fits work that splits into clear areas, when you are willing to treat the computer as shared. The [overview](https://docs.x.ai/grok-bot/overview) and the [security docs](https://cursor.com/docs/grok-bot/security) state that.
+
+**OpenAI Dots.** A rule does not grant access to an app or a computer, and it does not remove a confirmation the product still requires. Stopping work does not undo a completed action. Deleting the dot does not recall a message already sent. It fits work that already lives in ChatGPT, Slack, or Teams, when you want to write the rules yourself. The [controls docs](https://learn.chatgpt.com/codex/dots/controls) state that.
+
+**Meta Muse** caps every plan with a weekly token allowance. These pages do not say what one Muse token maps to in a real task. Training on chats is on when you first use Muse. You can turn it off under Settings, Data controls. A Confidential VM, meant to keep the machine private even from Meta, is described as a future choice. It is not live, and these pages do not give a date. It fits someone in one of the four countries who wants a free starting tier, WhatsApp, and a guard that sits outside the model. The [privacy help page](https://www.meta.com/help/superintelligence/1047255454427887/) states the training default and the Confidential VM. The [subscription page](https://www.meta.com/help/subscriptions/1021145227643680/) states the weekly caps. The [safety post](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse) states the Sentinel limit.
 
 ## Which one should you pick?
 
-- **Pick dots** if you already live in ChatGPT, want one strong agent with almost no setup, and your tasks are varied rather than repeatable.
-- **Pick Grok Bot** if your work splits into clear areas, you want each area kept separate, and you like explicit routines you can read and change.
-- **Try both on the same task** if you are unsure.
+- **Pick Claude Duet** if you are in the US on Claude Pro or Max and want one agent that briefs you each morning and stops before send, pay, sign, or delete.
+- **Pick Grok Bot** if your work splits into clear areas and you want named teammates that run in parallel on one computer, with approval cards you can set per action.
+- **Pick OpenAI Dots** if your work lives in ChatGPT, Slack, or Teams and you want to write your own rules for what the agent does alone.
+- **Pick Meta Muse** if you are in one of its four countries, want a low entry price and WhatsApp access, and value a guard that sits outside the model.
 
-<TryThis>
-Give each one boring job you do every week and compare the results after seven days.
-</TryThis>
-
+{/* prettier-ignore */}
 <Takeaway>
-- Both products now give an agent its own cloud computer, background work and approvals.
-- Dots start as one personal agent; Grok Bot starts as a team of focused bots.
-- Dots control actions with Custom Rules; Grok Bot controls them with scopes, drafts and approvals.
-- Explicit routines and skills suit repeatable work; goal-driven agents suit open-ended work.
-- The best test is one real weekly task, run for a week.
+- All four keep a cloud computer working after you close the laptop. The split is who says yes, and whether you can get in today.
+- Duet waits before send, pay, sign, or delete. Grok Bot uses Allow once, Always allow, or Deny. Dots use rules you write. Muse uses Sentinel, outside the model.
+- As of 29 Oct 2026, Duet is a US invite on Pro or Max. Grok Bot on The X Subscription is $30, $100, or $200 a month. Dots on Pro are $100, $200, or $500 a month, outside the EEA, the UK, and Switzerland. Muse has a free tier in four countries.
+- Prices can change. Read the vendor page for your plan and your country before you pay.
 </Takeaway>
 
-Would you rather have one agent that knows everything about you, or a team where each one only knows its own job?
+Which action must wait for your yes, and which of these four can you open today?
+
+## Sources
+
+Facts in this post come from the vendor pages below. Pricing and access pages were checked on 28 October 2026. The other pages were read on 26 to 28 October 2026 for the four posts linked above. Prices can change.
+
+The Singapore page and the Japan page put "world's first" in the title. That is Meta's marketing line. This post does not use it as a fact.
+
+Anthropic:
+
+- [Introducing Claude Duet](https://claude.com/resources/articles/claude-duet), 21 October 2026
+- [Claude Duet product page](https://claude.com/product/claude-duet)
+- [Get started with Claude Duet](https://support.claude.com/en/articles/17631495-get-started-with-claude-duet)
+- [Claude Duet safety, privacy, and security](https://claude.com/resources/articles/claude-duet-safety-privacy-and-security), 23 October 2026
+
+Grok Bot:
+
+- [Grok Bot on Cursor](https://cursor.com/docs/grok-bot)
+- [Grok Bot security](https://cursor.com/docs/grok-bot/security)
+- [Grok Bot plans](https://cursor.com/help/grok-bot/plans)
+- [Grok Bot overview](https://docs.x.ai/grok-bot/overview)
+- [The X Subscription pricing](https://docs.x.ai/x-subscription/pricing)
+- [xAI pricing](https://x.ai/pricing)
+
+OpenAI:
+
+- [Introducing Dots](https://openai.com/index/introducing-dots/), 29 September 2026
+- [Getting started with your dot](https://help.openai.com/en/articles/20001530-getting-started-with-your-dot)
+- [Manage dots in ChatGPT workspaces](https://help.openai.com/en/articles/20001554-manage-dots-in-chatgpt-workspaces)
+- [Dots docs](https://learn.chatgpt.com/docs/dots)
+- [Channels](https://learn.chatgpt.com/codex/dots/channels)
+- [Controls](https://learn.chatgpt.com/codex/dots/controls)
+- [Computers and apps](https://learn.chatgpt.com/codex/dots/computers-and-apps)
+- [Codex pricing](https://learn.chatgpt.com/codex/pricing)
+- [ChatGPT pricing](https://chatgpt.com/pricing)
+
+Meta:
+
+- [Introducing Muse](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/), 8 September 2026
+- [How We Built Safety Into Muse](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse)
+- [How Muse handles your privacy, safety and security](https://www.meta.com/help/superintelligence/1047255454427887/)
+- [About Muse subscriptions](https://www.meta.com/help/subscriptions/1021145227643680/)
+- [Muse is now available in Singapore](https://about.fb.com/news/2026/10/muse-is-now-available-in-singapore-the-worlds-first-personal-ai-agent-built-for-everyone/), 27 October 2026
+- [Muse launches in Japan](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/), 23 October 2026
