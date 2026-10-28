@@ -1,0 +1,178 @@
+---
+title: "Meta Muse for Solo Founders: The Guard Outside the Agent Matters More Than the Agent"
+description: "Meta's personal agent takes action on its own cloud computer and keeps working after you close the app. Sentinel sits outside the model. Price as of 28 October 2026."
+publishDate: 2026-10-28
+category: ai
+tags: [ai, agentic-ai, security]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/meta-muse-personal-ai-agent-solo-founders/hero-5a2f8707.webp"
+  alt: "Comic pop-art scene of a founder with crossed arms beside a glowing shield labeled Sentinel, while a detective labeled Muse holds up a hand to stop, under the words Your rules"
+---
+
+Meta built a separate agent whose only job is to say no to the first agent.
+
+Muse's most important feature for a solo founder is not the model. It is the Sentinel and approval layer that sits outside the model, and that is the bar every personal agent should now be judged on.
+
+That is my claim. Everything after it comes from Meta's pages, read on 28 October 2026. Prices can change.
+
+The earlier posts in this series are [Claude Duet](/blog/claude-duet-personal-ai-agent), [Grok Bot](/blog/grok-bot-solo-founders), and [OpenAI Dots](/blog/openai-dots-solo-founders).
+
+{/* prettier-ignore */}
+<Summary>
+- Muse is Meta's personal AI agent. It takes action, not only answers. You talk to it in the Muse app, on muse.ai, or in WhatsApp. Meta calls the model, Muse Spark, its most capable model to date.
+- The work runs on Muse Secure VM and can continue after you close the app. A separate Sentinel agent is the only one that can allow connector actions and traffic leaving the machine. Muse cannot override it.
+- As of 28 October 2026, Muse is free with a usage limit. Power is $20 a month (500 million Muse tokens a week). Maximum is $100 a month (3 billion Muse tokens a week). It is in limited testing in the US, Canada, Japan, and Singapore. You need to be 18 or the age of majority.
+</Summary>
+
+## What it is
+
+On 8 September 2026, Meta announced Muse. The [launch post](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/) shows an update on 30 September 2026. Muse is a personal AI agent that takes action. It does not only answer questions.
+
+Meta says Muse is powered by Muse Spark, and calls that its most capable model to date.
+
+You talk to it in the Muse app, on muse.ai, or directly in WhatsApp.
+
+Muse remembers what matters to you. It can make a suggestion when you did not ask.
+
+Meta's [safety post](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse) says Muse launches swarms of subagents, builds its own tools, and edits itself.
+
+<BeforeAfter beforeLabel="A chatbot" afterLabel="Muse">
+  <div slot="before">You ask a question and get an answer.</div>
+  <div slot="after">
+    Muse takes the action, and it can keep working after you close the app.
+  </div>
+</BeforeAfter>
+
+<PullQuote>
+  Muse's most important feature for a solo founder is not the model. It is the
+  Sentinel and approval layer that sits outside the model, and that is the bar
+  every personal agent should now be judged on.
+</PullQuote>
+
+<TryThis>
+  Before you connect an account, write two lines. One action Muse may start.
+  One action it must bring back to you. Meta's examples of the second line are
+  sending an email and making a purchase.
+</TryThis>
+
+## How work runs
+
+Muse runs on Muse Secure VM, a dedicated cloud virtual machine with its own browser. The VM holds both the agent and your data. That is in the [launch post](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/).
+
+Each VM is an isolated Linux machine with a browser, storage, CPU, and memory. The [safety post](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse) says that machine is for real work: compiling code, custom skills, and concurrent sub-agents and scheduled jobs (crons).
+
+The launch post says Muse can open a browser, fill out forms, and negotiate on your behalf.
+
+For a longer task, it keeps working after you close the app. It comes back when something changes, or when it needs your approval.
+
+You give it a goal. It helps you build a plan. Then it advances the work on its own.
+
+The safety post says connectors link Muse to Meta or third-party apps. Muse can also write its own custom connectors when a service has an API or a CLI.
+
+The launch post says payments can go through Link by Stripe, using a one-time-use card. Meta describes Shop Pay and 1Password support as coming soon.
+
+The safety post says you can inspect Muse's browser work and take over at any time. The launch post describes a full audit trail of what Muse has done and what it plans to do.
+
+<Figure
+  src="/blog/meta-muse-personal-ai-agent-solo-founders/inline-1.webp"
+  alt="Comic pop-art panel of a founder at an open laptop, beside a server labeled Muse Secure VM under a cloud, under the words Keep working"
+  caption="Keep working."
+/>
+
+<TryThis>
+  Give Muse one goal, then close the app. When you come back, read the audit
+  trail before you approve the next step.
+</TryThis>
+
+## Approvals and safety
+
+The [safety post](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse) says a separate Sentinel agent is the sole permission authority for connector actions and for all network egress. Network egress means traffic leaving the machine. Muse proposes an action. Only Sentinel can grant it. The agent cannot override Sentinel.
+
+The [launch post](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/) says nothing Muse does reaches the internet unless Sentinel approves it.
+
+When Sentinel needs you, the approval dialog is shown in the client UI, not inside the Muse conversation. Your answer goes back to Sentinel. The safety post says that.
+
+The [privacy, safety and security help page](https://www.meta.com/help/superintelligence/1047255454427887/) says Muse asks you to confirm important actions, such as sending an email or making a purchase. Meta says many of those checks are enforced outside the AI model.
+
+The safety post and that help page say credentials sit in a Secure Credentials Store, called authd. The model never sees real passwords or tokens. Surrogate tokens are swapped for the real credentials only at the network boundary, and only after Sentinel authorizes that step. The launch post says Muse cannot see passwords you type into the browser yourself.
+
+The safety post lists these prompt-injection defenses: model training, a harness that labels untrusted input, separate classifiers, a person in the loop before anything leaves the machine, and deterministic boundaries under the agent. The email connector filters one-time tokens, password reset links, and login magic links.
+
+The safety post says every purchase through the wallet needs human approval, with the exact details. One-time cards are tied to a merchant, an amount, and a time limit.
+
+Muse does not share conversations or VM data with Meta's ad systems. Training on interactions is on by default. You can opt out under Settings. That is in the help page and the safety post.
+
+The safety post says Muse can and will still make mistakes, and that you should review its activity. The bug bounty pays up to $300,000, and up to $130,000 for a prompt injection that affects one user.
+
+The safety post says a Muse Confidential VM, meant to cryptographically prevent Meta access, is planned for later this year. It is not live.
+
+<Figure
+  src="/blog/meta-muse-personal-ai-agent-solo-founders/inline-2.webp"
+  alt="Comic pop-art panel of a founder pressing Approve on a dialog labeled Sentinel, while an agent is held behind the screen, under the words Ask first"
+  caption="Ask first."
+/>
+
+<TryThis>
+  Read the approval in the app, outside the Muse chat. That answer goes to
+  Sentinel, not into the thread.
+</TryThis>
+
+## Access and price
+
+As of 28 October 2026, from the [launch post](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/), the [Japan post](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/), the [Singapore post](https://about.fb.com/news/2026/10/muse-is-now-available-in-singapore-the-worlds-first-personal-ai-agent-built-for-everyone/), and [About Muse subscriptions](https://www.meta.com/help/subscriptions/1021145227643680/):
+
+- The United States and Canada, from the September launch.
+- Japan, from 23 October 2026.
+- Singapore, from 27 October 2026.
+- It is still in limited testing, and it is not available in every location.
+
+You can use Muse on iOS, on Android, and at muse.ai. Meta says AI glasses are coming soon.
+
+There is a free tier. It has a usage limit that refreshes. Power is $20 a month and includes 500 million Muse tokens a week. Maximum is $100 a month and includes 3 billion Muse tokens a week.
+
+You need a Meta account. You need to be 18 or the age of majority. You need to be in a supported country. The subscription renews automatically each month.
+
+The Singapore post lists early local connectors, including Shopee, Grab, Singapore Airlines, Agoda, ShopBack, Klook, Trip.com, and Lazada, plus Gmail, Google Calendar, and Instagram. These pages do not give a full connector list beyond examples like those.
+
+<TryThis>
+  Check the country on your Meta account before you pay. Limited testing means
+  the plan can still be unavailable where you are. The subscription renews
+  each month.
+</TryThis>
+
+## Limits
+
+A few boundaries are easy to miss:
+
+- Muse is not available in every location. Benefits may vary by region and by account.
+- A weekly token allowance caps usage on every plan. These pages do not say what one Muse token maps to in a real task.
+- These pages do not list taxes, an annual price, or a price outside the plans above.
+- Shop Pay, 1Password, and AI glasses are not live. Meta describes them as coming soon. A Confidential VM that would cryptographically prevent Meta access is planned for later this year. It is not live.
+- Meta says Muse is not immune to attack. Prompt injection is still an open problem. Muse can still make mistakes. Review the activity.
+- These pages do not say that WhatsApp has the same features, or the same countries, as the Muse app and muse.ai.
+- These pages do not describe a business plan or a team plan.
+
+{/* prettier-ignore */}
+<Takeaway>
+- Muse takes action on Muse Secure VM. It can keep working after you close the app. You can talk to it in the Muse app, on muse.ai, or in WhatsApp.
+- Sentinel sits outside the model. Only Sentinel can allow connector actions and traffic leaving the machine. Muse cannot override that. Sending an email or making a purchase is the kind of step Meta says it asks you to confirm.
+- As of 28 October 2026, Muse is free with a usage limit. Power is $20 a month (500 million Muse tokens a week). Maximum is $100 a month (3 billion Muse tokens a week). Limited testing in the US, Canada, Japan, and Singapore. You need to be 18 or the age of majority.
+- It can still make mistakes. These pages do not say what one Muse token maps to in a real task. Prices can change.
+</Takeaway>
+
+Which action would you let Muse start on its own, and which one should wait until Sentinel brings it back to you?
+
+## Sources
+
+Facts in this post come from these Meta pages, read on 28 October 2026. The launch post is dated 8 September 2026 and shows an update on 30 September 2026. The Japan post is dated 23 October 2026. The Singapore post is dated 27 October 2026.
+
+Two of those pages put "world's first" in the title. That is Meta's marketing line. This post does not use it as a fact.
+
+- [Introducing Muse](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/), 8 September 2026, page update 30 September 2026
+- [How We Built Safety Into Muse](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse)
+- [How Muse handles your privacy, safety and security](https://www.meta.com/help/superintelligence/1047255454427887/)
+- [About Muse subscriptions](https://www.meta.com/help/subscriptions/1021145227643680/)
+- [Muse is now available in Singapore](https://about.fb.com/news/2026/10/muse-is-now-available-in-singapore-the-worlds-first-personal-ai-agent-built-for-everyone/), 27 October 2026
+- [Muse launches in Japan](https://about.fb.com/ja/news/2026/10/muse-personal-ai-agent-launches-in-japan/), 23 October 2026
