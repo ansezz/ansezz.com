@@ -62,6 +62,11 @@ export const SOCIALS = [
     HREF: "https://linkedin.com/in/ansezz",
     ICON: "lucide:linkedin",
   },
+  {
+    NAME: "Upwork",
+    HREF: "https://www.upwork.com/freelancers/~011077fb7451836916",
+    ICON: "lucide:briefcase",
+  },
   { NAME: "X", HREF: "https://x.com/ansezz", ICON: "lucide:twitter" },
   {
     NAME: "Threads",

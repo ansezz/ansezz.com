@@ -19,6 +19,7 @@ Email: me@ansezz.com
 - [Now](https://ansezz.com/now/): What I'm focused on right now.
 - [Uses](https://ansezz.com/uses/): Tools, stack and hardware I use daily.
 - [Contact](https://ansezz.com/contact/): Email, phone, booking, contact form and socials.
+- [Hire on Upwork](https://www.upwork.com/freelancers/~011077fb7451836916): Freelancer profile.
 
 ## Blog
 

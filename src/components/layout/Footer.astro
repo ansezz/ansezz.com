@@ -6,9 +6,15 @@ import { externalLinkAttrs } from "@/lib/links";
 const year = new Date().getFullYear();
 
 const socialIcons = SOCIALS.filter((s) =>
-  ["GitHub", "LinkedIn", "X", "Threads", "Instagram", "Facebook"].includes(
-    s.NAME,
-  ),
+  [
+    "GitHub",
+    "LinkedIn",
+    "Upwork",
+    "X",
+    "Threads",
+    "Instagram",
+    "Facebook",
+  ].includes(s.NAME),
 );
 const directLinks = SOCIALS.filter((s) =>
   ["Email", "Phone", "Book a call", "Resume (PDF)"].includes(s.NAME),

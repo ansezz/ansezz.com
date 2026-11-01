@@ -7,7 +7,10 @@ import PanelDivider from "@/components/neobrutalist/PanelDivider.astro";
 import BurstBadge from "@/components/neobrutalist/BurstBadge.astro";
 import RobotMascot from "@/components/neobrutalist/RobotMascot.astro";
 import { Icon } from "astro-icon/components";
-import { SITE, AVAILABLE_FOR } from "@/consts";
+import { externalLinkAttrs } from "@/lib/links";
+import { SITE, AVAILABLE_FOR, SOCIALS } from "@/consts";
+
+const upwork = SOCIALS.find((s) => s.NAME === "Upwork");
 
 const tones = ["yellow", "pink", "cyan", "green", "red", "blue", "purple"] as const;
 ---
@@ -29,7 +32,7 @@ const tones = ["yellow", "pink", "cyan", "green", "red", "blue", "purple"] as co
     </div>
   </div>
 
-  <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     <li>
       <a
         href={`tel:${SITE.PHONE}`}
@@ -64,6 +67,25 @@ const tones = ["yellow", "pink", "cyan", "green", "red", "blue", "purple"] as co
         </div>
       </a>
     </li>
+    {
+      upwork && (
+        <li>
+          <a
+            href={upwork.HREF}
+            {...externalLinkAttrs(upwork.HREF)}
+            class="group border-ink bg-paper shadow-neo-sm hover:shadow-neo-md hover:bg-yellow flex items-start gap-3 rounded-[4px] border-[3px] p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
+          >
+            <Icon name={upwork.ICON} class="mt-0.5 h-5 w-5 shrink-0" />
+            <div class="min-w-0 flex-1">
+              <p class="mono text-[10px] font-bold tracking-widest uppercase opacity-70">
+                Hire on Upwork
+              </p>
+              <p class="truncate text-sm font-bold">~011077fb7451836916</p>
+            </div>
+          </a>
+        </li>
+      )
+    }
     <li>
       <a
         href="https://github.com/ansezz"
@@ -148,6 +170,19 @@ const tones = ["yellow", "pink", "cyan", "green", "red", "blue", "purple"] as co
             size="md"
           />
         </li>
+        {
+          upwork && (
+            <li>
+              <SocialButton
+                href={upwork.HREF}
+                icon={upwork.ICON}
+                label="Upwork"
+                tone="green"
+                size="md"
+              />
+            </li>
+          )
+        }
         <li>
           <SocialButton
             href={`mailto:${SITE.EMAIL}`}
