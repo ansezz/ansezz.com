@@ -25,8 +25,8 @@ const personLd = {
   image: new URL("/og.webp", SITE.URL).href,
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Meknes",
-    addressCountry: "MA",
+    addressLocality: SITE.CITY,
+    addressCountry: SITE.COUNTRY_CODE,
   },
   knowsAbout: [
     "Laravel",
@@ -68,7 +68,7 @@ const personLd = {
     name: "Senior Lead Backend Engineer",
     occupationLocation: {
       "@type": "Country",
-      name: "Morocco",
+      name: SITE.COUNTRY,
     },
     skills:
       "Laravel, Shopify Plus, AI Engineering, Anthropic Claude, MCP, RAG, PostgreSQL, pgvector, Multi-tenant SaaS, Clean Architecture, TDD",
