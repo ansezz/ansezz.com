@@ -4,7 +4,9 @@ import NeoButton from "@/components/neobrutalist/NeoButton.astro";
 import SocialButton from "@/components/neobrutalist/SocialButton.astro";
 import AvailabilityBadge from "@/components/neobrutalist/AvailabilityBadge.astro";
 import { Icon } from "astro-icon/components";
-import { OWNER, SITE } from "@/consts";
+import { OWNER, SITE, SOCIALS } from "@/consts";
+
+const upwork = SOCIALS.find((s) => s.NAME === "Upwork");
 
 interface Props {
   class?: string;
@@ -65,6 +67,17 @@ const { class: className = "" } = Astro.props;
             tone="cyan"
             size="sm"
           />
+          {
+            upwork && (
+              <SocialButton
+                href={upwork.HREF}
+                icon={upwork.ICON}
+                label="Upwork"
+                tone="green"
+                size="sm"
+              />
+            )
+          }
           <SocialButton
             href={`mailto:${SITE.EMAIL}`}
             icon="lucide:mail"

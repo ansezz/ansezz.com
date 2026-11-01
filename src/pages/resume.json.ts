@@ -13,6 +13,7 @@ const LEVEL: Record<string, string> = {
 const profileNetwork: Record<string, string> = {
   GitHub: "GitHub",
   LinkedIn: "LinkedIn",
+  Upwork: "Upwork",
   X: "X",
 };
 
