@@ -29,9 +29,9 @@ export const GET: APIRoute = async () => {
       url: SITE.URL,
       summary: SITE.DESCRIPTION,
       location: {
-        city: "Meknes",
-        countryCode: "MA",
-        region: "Morocco",
+        city: SITE.CITY,
+        countryCode: SITE.COUNTRY_CODE,
+        region: SITE.COUNTRY,
       },
       profiles: SOCIALS.filter((s) => s.NAME in profileNetwork).map((s) => ({
         network: profileNetwork[s.NAME],

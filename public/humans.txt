@@ -2,7 +2,7 @@
   Engineer & author: Anass Ez-zouaine
   Site: https://ansezz.com
   Contact: me [at] ansezz.com
-  Location: Meknes, Morocco
+  Location: Kuala Lumpur, Malaysia
 
 /* SITE */
   Standards: HTML5, CSS3, TypeScript

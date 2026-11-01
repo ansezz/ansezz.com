@@ -9,6 +9,7 @@ import type {
   ServiceLanderTone,
   ServicePackageId,
 } from "./05-service-landers";
+import { SITE } from "./01a-site";
 import { SERVICES_PAGE } from "./03-services-now";
 
 export interface TopicHubLink {
@@ -411,8 +412,7 @@ export const HOW_I_WORK = {
     },
     {
       question: "What time zones do you cover?",
-      answer:
-        "Based in Morocco (GMT+1). Overlap with EU mornings and US-East afternoons, async-first with replies within 24 hours.",
+      answer: `Based in ${SITE.LOCATION} (${SITE.TZ}). Overlap with EU mornings and US-East mornings, async-first with replies within 24 hours.`,
     },
     {
       question: "NDAs and contracts?",

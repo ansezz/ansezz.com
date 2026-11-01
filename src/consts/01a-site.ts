@@ -8,6 +8,9 @@ const currentYear = new Date().getFullYear();
 export const YEARS_EXPERIENCE = currentYear - CAREER_SINCE;
 export const YEARS_REMOTE = currentYear - REMOTE_SINCE;
 
+const SITE_CITY = "Kuala Lumpur";
+const SITE_COUNTRY = "Malaysia";
+
 export const SITE = {
   URL: "https://ansezz.com",
   TITLE: "Anass Ez-zouaine | Backend, AI & Shopify Engineer",
@@ -18,8 +21,11 @@ export const SITE = {
   PHONE_DISPLAY: "+212 679 40 58 63",
   BOOKING_URL: "https://calendar.app.google/x1eeuSb9UuMGF4pD9",
   RESUME_URL: "/Anass-Ez-zouaine-Resume.pdf",
-  LOCATION: "Meknes, Morocco",
-  TZ: "GMT+1",
+  CITY: SITE_CITY,
+  COUNTRY: SITE_COUNTRY,
+  COUNTRY_CODE: "MY",
+  LOCATION: `${SITE_CITY}, ${SITE_COUNTRY}`,
+  TZ: "GMT+8",
 };
 
 export const OWNER = {

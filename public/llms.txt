@@ -3,7 +3,7 @@
 > Personal site, portfolio and engineering blog of Anass Ez-zouaine. Shipping
 > production Laravel SaaS, Shopify Plus apps and AI features (Anthropic
 > Claude, MCP, RAG, agentic systems) since 2012. Remote-first since 2014, based
-> in Meknes, Morocco. Open to senior, lead, fractional CTO and advisory
+> in Kuala Lumpur, Malaysia. Open to senior, lead, fractional CTO and advisory
 > engagements, contract or employed.
 
 The blog has 88 posts on Laravel internals and Octane, AI engineering with

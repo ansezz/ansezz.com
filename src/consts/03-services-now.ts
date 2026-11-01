@@ -1,3 +1,5 @@
+import { SITE } from "./01a-site";
+
 export const WHAT_I_DO = [
   {
     icon: "lucide:server",
@@ -158,8 +160,7 @@ export const SERVICES_FAQ = [
   },
   {
     question: "What time zones do you cover?",
-    answer:
-      "Based in Morocco (GMT+1). I overlap EU mornings and US-East afternoons daily, and work async-first with replies within 24 hours.",
+    answer: `Based in ${SITE.LOCATION} (${SITE.TZ}). I overlap EU mornings and US-East mornings, and work async-first with replies within 24 hours.`,
   },
   {
     question: "Can you take over an existing / messy codebase?",
