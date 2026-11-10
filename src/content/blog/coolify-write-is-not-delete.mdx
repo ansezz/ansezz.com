@@ -1,0 +1,92 @@
+---
+title: "Write is not delete: Coolify just changed your API and MCP contract"
+description: "Coolify 4.6 and 4.7 changed the contract: a write token can no longer delete, and a newer git push cancels the older queued webhook deploy by default."
+publishDate: 2026-11-10
+category: devops
+tags: [coolify, deployment, devops, security, self-hosting]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/coolify-write-is-not-delete/hero-d3147e2c.webp"
+  alt: "Comic pop-art scene of a founder holding WRITE and DELETE cards at a Coolify-style control board, while a small robot reaches for DELETE and git-commit boxes move on a conveyor, under the words WRITE IS NOT DELETE"
+---
+
+If your Coolify token still has only `write`, it can no longer delete a backup, a variable or a resource. That is not a bug.
+
+{/* prettier-ignore */}
+<Summary>
+- In [Coolify 4.6](https://github.com/coollabsio/coolify/releases/tag/v4.6.0), every delete through the API or the MCP server needs the new `delete` ability, or `root`. A token with `write` alone can no longer delete resources, environment variables, storages, backups, scheduled tasks or tags, or detach a tag.
+- In [Coolify 4.7](https://github.com/coollabsio/coolify/releases/tag/v4.7.0), a newer git push cancels older queued webhook deployments of that application by default, so only the latest commit is built. Manual, API, restart and rollback deploys are never cancelled by that default.
+- Give a deploy bot `deploy`, not leftover `write`. Add `delete` only where the bot must delete. Then pause or roll the token if the secret has to change ([v4.6.0](https://github.com/coollabsio/coolify/releases/tag/v4.6.0)).
+</Summary>
+
+I run apps on Coolify, and I automate deploys. These two releases change the contract of that automation: [4.6.0](https://github.com/coollabsio/coolify/releases/tag/v4.6.0) on 2 November 2026, and [4.7.0](https://github.com/coollabsio/coolify/releases/tag/v4.7.0) on 9 November 2026. The later 4.7.1, 4.7.2 and [4.7.3](https://github.com/coollabsio/coolify/releases/tag/v4.7.3) patches, also on 9 November, do not change these defaults.
+
+This sits after the earlier posts in [Self-Hosting SaaS with Coolify](/blog/series/self-hosting-saas/). You already have the control plane. Now the API and the MCP tools have stricter abilities, and the webhook queue behaves differently.
+
+## Write used to mean "do anything." It does not anymore.
+
+Coolify 4.6 is a breaking change for tokens.
+
+The [4.6.0 release notes](https://github.com/coollabsio/coolify/releases/tag/v4.6.0) say it plainly: every delete through the API and the MCP server now requires the new `delete` ability, or `root`. A token with `write` alone can no longer delete resources, environment variables, storages, backups, scheduled tasks or tags, or detach a tag.
+
+That is the point. A deploy bot should not be able to erase a backup.
+
+The same release lets you limit a team member or an API token to selected projects, environments or resources. The access levels are `read`, `read sensitive`, `deploy`, `write`, `delete` and `root`. A higher level includes the lower ones. A token never gets more access than its owner, and it stops working when its owner loses that access.
+
+So the useful split is now real. Give CI and an MCP client `deploy` if that is all they should do. Keep `write` for bots that change settings. Add `delete` only where a bot must actually delete something.
+
+<BeforeAfter beforeLabel="Then" afterLabel="Now">
+  <div slot="before">A `write` token could delete a backup, a variable or a resource.</div>
+  <div slot="after">Delete needs `delete` or `root`. `write` is no longer enough.</div>
+</BeforeAfter>
+
+<TryThis>
+Open your Coolify API tokens. If a token that only deploys still has `write`, drop it to `deploy`. If a script still deletes with a `write` token, give that script `delete`, or stop deleting from it.
+</TryThis>
+
+## A newer push now cancels the older queued webhook deploy.
+
+Coolify 4.7 changes the queue.
+
+The [4.7.0 release notes](https://github.com/coollabsio/coolify/releases/tag/v4.7.0) say older queued webhook deployments of an application are cancelled by default when a newer push arrives, so only the latest commit is built. It works per application, pull request and server.
+
+This is the new default for webhook deploys. You can turn it off under `Advanced` > `Deployment`, or with `is_auto_cancel_queued_deployments_enabled` in the applications API.
+
+Manual, API, restart and rollback deployments are never cancelled by that default.
+
+On `/api/v1/deploy` and the MCP `deploy` tool, there is a separate `cancel_previous` argument: `none`, `queued` or `building`. The default is `none`. So an API or MCP deploy does not auto-cancel older work unless you ask it to.
+
+There is also an opt-in setting, `is_auto_cancel_building_deployments_enabled` in the API, that can stop an older webhook deploy that is still building. A deploy that has already started to replace containers always finishes.
+
+One more MCP fix in the same notes: two deploys of one application, started from the MCP `deploy` tool or the MCP `control` start action, used to run at once and could stop the application. They now queue behind a deployment in progress, the same way the API and the Deploy button already did. A deploy of the same commit is skipped, and the response gives the UUID of the deployment in progress ([issue 12442](https://github.com/coollabsio/coolify/issues/12442)).
+
+<PullQuote>A newer push cancels the older queued webhook deploy. An API deploy does not, unless you ask.</PullQuote>
+
+<TryThis>
+If you rely on every webhook build finishing, open `Advanced` > `Deployment` on the app and turn auto-cancel off. If you want the same cancel behavior from the API or MCP, set `cancel_previous` to `queued` or `building` yourself.
+</TryThis>
+
+## Scope the token, then roll it.
+
+Once the abilities are right, 4.6 also gives you a safer way to replace a secret.
+
+You can edit the description, permissions, access and expiry of an API token without changing its value. You can pause and resume a token: a paused token cannot authenticate to the API or the MCP server. You can roll a token to replace its secret and keep its description, permissions, access and expiry. A new or rolled token is shown in a modal until you close it. Expiry warnings now come 7 days ahead, or 1 day ahead if the token lives 7 days or less. All of that is in the [4.6.0 notes](https://github.com/coollabsio/coolify/releases/tag/v4.6.0).
+
+<Figure
+  src="/blog/coolify-write-is-not-delete/inline-1.webp"
+  alt="Comic pop-art scene of a founder hanging an old key on a safe labeled OLD and handing a new key to a small robot, under the words ROLL THE TOKEN"
+  caption="Pause the old token, roll a new secret, keep the same permissions."
+/>
+
+<TryThis>
+This week I would check three things: the abilities on every token that talks to Coolify, whether any script still deletes with only `write`, and whether I want auto-cancel on or off for each app.
+</TryThis>
+
+<Takeaway>
+- Write is not delete. After 4.6, a write token cannot delete through the API or MCP.
+- After 4.7, a newer git push cancels the older queued webhook deploy by default. API and MCP deploys do not, unless you set `cancel_previous`.
+- Give each bot the lowest ability it needs, then pause or roll the token if the secret has to change.
+</Takeaway>
+
+Which of your Coolify tokens still has `write` when all it does is deploy?
