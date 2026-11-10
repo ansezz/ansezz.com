@@ -36,6 +36,7 @@ export const BLOG_SERIES: BlogSeries[] = [
       "coolify-self-hosted-saas",
       "coolify-docker-saas-hosting",
       "scaling-with-coolify",
+      "coolify-write-is-not-delete",
     ],
   },
   {
