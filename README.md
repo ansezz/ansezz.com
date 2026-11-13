@@ -41,7 +41,7 @@ A static site for [**ansezz.com**](https://ansezz.com): shipped work, writing on
 | `/privacy/`     | Privacy notice                                                   |
 | `/styleguide/`  | Internal — every component & token (`Disallow`-ed in robots.txt) |
 
-Machine-readable endpoints: `/rss.xml`, `/rss/<category>.xml`, `/feed.json` (JSON Feed 1.1), `/resume.json` (JSON Resume), `/llms.txt`, `/sitemap-index.xml`.
+Machine-readable endpoints: `/rss.xml`, `/rss/<category>.xml`, `/feed.json` (JSON Feed 1.1), `/resume.json` (JSON Resume), `/llms.txt`, `/llms-full.txt`, Markdown twins (`/index.md`, `/about/index.md`, `/blog/<slug>/index.md`, negotiated with `Accept: text/markdown`), `/sitemap-index.xml`.
 
 ---
 
@@ -243,10 +243,10 @@ Domain wiring (already live):
 ✓ CollectionPage/ItemList on /blog, /work, /tools, /blog/series
 ✓ Generated 1200×630 OG cards per post / tag / series / static page
 ✓ /sitemap-index.xml with per-page priority, changefreq, and lastmod
-✓ RSS 2.0 (all + per category), JSON Feed 1.1, JSON Resume, llms.txt
+✓ RSS 2.0 (all + per category), JSON Feed 1.1, JSON Resume, llms.txt, llms-full.txt
 ✓ Canonical URLs, rel=prev/next on paginated blog pages, en lang
 ✓ Tag pages under 3 posts are noindex,follow and sitemap-excluded
-✓ /robots.txt — disallows /styleguide/
+✓ /robots.txt — disallows /styleguide/, Content-Signal search=yes, ai-input=yes, ai-train=no
 ```
 
 ---

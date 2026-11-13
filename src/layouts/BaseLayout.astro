@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from "astro:transitions";
 import { SITE, OWNER, SOCIALS, X_HANDLE } from "@/consts";
+import { markdownAlternatePath } from "@/lib/agent-markdown";
 import Header from "@/components/layout/Header.astro";
 import Footer from "@/components/layout/Footer.astro";
 import CommandPalette from "@/components/layout/CommandPalette.astro";
@@ -61,6 +62,12 @@ const nextHref = next ? new URL(next, Astro.site).href : undefined;
 const fullTitle =
   title === SITE.TITLE ? title : `${title} | ${SITE.SHORT_TITLE}`;
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
+// Markdown twin generated at build time. Only pages that actually get a
+// file (home, about, contact, blog index, each post) advertise it.
+const markdownPath = markdownAlternatePath(Astro.url.pathname);
+const markdownUrl = markdownPath
+  ? new URL(markdownPath, Astro.site).href
+  : undefined;
 const ogImage = new URL(image, Astro.site).href;
 const isDefaultOg = image === "/og.webp";
 // Generated per-post OG cards are 1200×630 too — advertise dimensions so
@@ -91,6 +98,11 @@ const ldList = structuredData
     <meta name="description" content={description} />
     <meta name="author" content={OWNER.NAME} />
     <link rel="canonical" href={canonicalUrl} />
+    {
+      markdownUrl && (
+        <link rel="alternate" type="text/markdown" href={markdownUrl} />
+      )
+    }
     {prevHref && <link rel="prev" href={prevHref} />}
     {nextHref && <link rel="next" href={nextHref} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
