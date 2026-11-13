@@ -22,7 +22,14 @@ export const REQUEST_TIMEOUT_MS = 8000;
 export const MAX_REDIRECTS = 3;
 export const MAX_FETCHES = 45;
 
-const DOH = "https://cloudflare-dns.com/dns-query";
+// Tried in order. A Worker on a Cloudflare zone often cannot complete a fetch
+// to cloudflare-dns.com (the request is counted, then the body is not JSON).
+// The next resolver is not on that network. If every one fails, the hostname
+// is not fetched.
+const DOH_ENDPOINTS = [
+  "https://cloudflare-dns.com/dns-query",
+  "https://dns.google/resolve",
+];
 
 const HEADER_KEEP = [
   "content-type",
@@ -46,6 +53,8 @@ export interface ResolveResult {
   ok: boolean;
   reason: string;
   addresses: string[];
+  /** dns: no resolver answered. blocked: a resolver answered with a non-public address. */
+  kind?: "dns" | "blocked";
 }
 
 export interface Budget {
@@ -114,13 +123,32 @@ export async function dohQuery(
   type: string,
   fetchImpl: Budget["fetch"],
 ): Promise<DohQuery & { statusCode: number | null }> {
-  const url = `${DOH}?name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`;
+  let last: DohQuery & { statusCode: number | null } = {
+    error: "resolver",
+    answers: [],
+    ad: false,
+    statusCode: null,
+  };
+  for (const base of DOH_ENDPOINTS) {
+    const result = await dohQueryOne(base, name, type, fetchImpl);
+    if (!result.error) return result;
+    last = result;
+  }
+  return last;
+}
+
+async function dohQueryOne(
+  base: string,
+  name: string,
+  type: string,
+  fetchImpl: Budget["fetch"],
+): Promise<DohQuery & { statusCode: number | null }> {
+  const url = `${base}?name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`;
   const timer = timeout();
   try {
-    const response = await fetchImpl(url, {
+    const response = await workerFetch(fetchImpl, url, {
       method: "GET",
       redirect: "manual",
-      cache: "no-store",
       signal: timer.signal,
       headers: { accept: "application/dns-json", "user-agent": USER_AGENT },
     });
@@ -135,7 +163,7 @@ export async function dohQuery(
     }
     const text = await readCapped(response, 64 * 1024);
     const parsed = parseDohJson(text.text);
-    if (!parsed) {
+    if (!parsed || response.status >= 400) {
       return {
         error: "resolver",
         answers: [],
@@ -162,12 +190,15 @@ export async function resolvePublicHost(
   if (v4.error || v6.error) {
     return {
       ok: false,
-      reason: `Could not verify the address of ${hostname}, so it was not fetched.`,
+      kind: "dns",
+      reason: `DNS lookup failed for ${hostname}, so it was not fetched.`,
       addresses: [],
     };
   }
   const judged = assessDnsAnswers(hostname, [...v4.answers, ...v6.answers]);
-  if (!judged.ok) return { ok: false, reason: judged.reason, addresses: [] };
+  if (!judged.ok) {
+    return { ok: false, kind: "blocked", reason: judged.reason, addresses: [] };
+  }
   return { ok: true, reason: "", addresses: judged.addresses };
 }
 
@@ -206,14 +237,20 @@ export async function safeGet(
       await assertPublic(host, resolve, budget.fetches);
     } catch (error) {
       if (error instanceof ScanError && !first) {
-        throw blocked(
+        throw refusal(
           `A redirect pointed at ${current}. That target was not fetched. ${error.message}`,
           budget.fetches,
           current,
+          error.code === "dns" ? "dns" : "blocked",
         );
       }
       if (error instanceof ScanError) {
-        throw blocked(error.message, budget.fetches, current);
+        throw refusal(
+          error.message,
+          budget.fetches,
+          current,
+          error.code === "dns" ? "dns" : "blocked",
+        );
       }
       throw error;
     }
@@ -225,10 +262,9 @@ export async function safeGet(
     const timer = timeout();
     let response: Response;
     try {
-      response = await budget.fetch(href, {
+      response = await workerFetch(budget.fetch.bind(budget), href, {
         method: "GET",
         redirect: "manual",
-        cache: "no-store",
         signal: timer.signal,
         headers: {
           accept: options.accept,
@@ -306,11 +342,46 @@ async function assertPublic(
     return;
   }
   const result = await resolve(hostname);
-  if (!result.ok) throw blocked(result.reason, fetches, hostname);
+  if (!result.ok) {
+    throw refusal(
+      result.reason,
+      fetches,
+      hostname,
+      result.kind === "dns" ? "dns" : "blocked",
+    );
+  }
 }
 
 function blocked(message: string, fetches: number, url: string): ScanError {
-  return new ScanError(message, 400, "blocked", fetches, url);
+  return refusal(message, fetches, url, "blocked");
+}
+
+function refusal(
+  message: string,
+  fetches: number,
+  url: string,
+  code: "blocked" | "dns",
+): ScanError {
+  return new ScanError(message, 400, code, fetches, url);
+}
+
+// Older Workers runtimes throw if Request.cache is set. Retry once without it.
+// redirect: "manual" stays. Following a redirect here would skip the SSRF check.
+async function workerFetch(
+  fetchImpl: Budget["fetch"],
+  url: string,
+  init: RequestInit,
+): Promise<Response> {
+  try {
+    return await fetchImpl(url, init);
+  } catch (error) {
+    if (!init.cache) throw error;
+    const message = error instanceof Error ? error.message : "";
+    if (!/cache/i.test(message)) throw error;
+    const next: RequestInit = { ...init };
+    delete next.cache;
+    return await fetchImpl(url, next);
+  }
 }
 
 function emptyDoc(options: GetOptions, url: string, error: string): Doc {

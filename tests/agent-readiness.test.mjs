@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { assemble } from "../src/lib/agent-readiness/assemble.ts";
-import { createBudget, safeGet } from "../src/lib/agent-readiness/fetch.ts";
+import {
+  createBudget,
+  resolvePublicHost,
+  safeGet,
+} from "../src/lib/agent-readiness/fetch.ts";
 import {
   resetRateLimit,
   takeRateLimit,
@@ -142,6 +146,99 @@ test("an IP literal is rejected with no request", async () => {
         maxBytes: 1000,
       }),
     /metadata/,
+  );
+  assert.deepEqual(calls, []);
+});
+
+function dnsJson(answers) {
+  return new Response(
+    JSON.stringify({ Status: 0, AD: false, Answer: answers }),
+    {
+      status: 200,
+      headers: { "content-type": "application/dns-json" },
+    },
+  );
+}
+
+test("a failed resolver falls through, and a dead chain is a DNS failure", async () => {
+  const calls = [];
+  const fallback = await resolvePublicHost("example.com", async (url) => {
+    calls.push(String(url));
+    if (String(url).includes("cloudflare-dns.com")) {
+      return new Response("nope", { status: 403 });
+    }
+    const type = new URL(url).searchParams.get("type");
+    const answers = type === "AAAA" ? [] : [{ type: 1, data: "1.1.1.1" }];
+    return dnsJson(answers);
+  });
+  assert.equal(fallback.ok, true);
+  assert.deepEqual(fallback.addresses, ["1.1.1.1"]);
+  assert.equal(fallback.kind, undefined);
+  assert.ok(calls.some((url) => url.includes("cloudflare-dns.com")));
+  assert.ok(calls.some((url) => url.includes("dns.google")));
+
+  const blockedCalls = [];
+  const blocked = await resolvePublicHost("localtest.me", async (url) => {
+    blockedCalls.push(String(url));
+    const type = new URL(url).searchParams.get("type");
+    const answers = type === "AAAA" ? [] : [{ type: 1, data: "127.0.0.1" }];
+    return dnsJson(answers);
+  });
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.kind, "blocked");
+  assert.match(blocked.reason, /resolves to a blocked address/);
+  assert.match(blocked.reason, /127\.0\.0\.1/);
+  assert.ok(blockedCalls.every((url) => url.includes("cloudflare-dns.com")));
+  assert.equal(
+    blockedCalls.some((url) => url.includes("dns.google")),
+    false,
+  );
+
+  const down = [];
+  const failed = await resolvePublicHost("example.com", async (url) => {
+    down.push(String(url));
+    return new Response("down", { status: 503 });
+  });
+  assert.equal(failed.ok, false);
+  assert.equal(failed.kind, "dns");
+  assert.match(failed.reason, /^DNS lookup failed for example\.com/);
+  assert.equal(
+    down.some((url) => url.startsWith("https://example.com")),
+    false,
+  );
+});
+
+test("a failed DNS lookup does not fetch the target", async () => {
+  const calls = [];
+  const budget = createBudget({
+    async fetch(url) {
+      calls.push(String(url));
+      return new Response("down", { status: 503 });
+    },
+  });
+  await assert.rejects(
+    () =>
+      safeGet(
+        budget,
+        async () => ({
+          ok: false,
+          kind: "dns",
+          reason: "DNS lookup failed for example.com, so it was not fetched.",
+          addresses: [],
+        }),
+        {
+          id: "home",
+          url: "https://example.com/",
+          accept: "*/*",
+          follow: true,
+          maxBytes: 1000,
+        },
+      ),
+    (error) => {
+      assert.equal(error.code, "dns");
+      assert.match(error.message, /DNS lookup failed/);
+      return true;
+    },
   );
   assert.deepEqual(calls, []);
 });
