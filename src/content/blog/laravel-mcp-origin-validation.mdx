@@ -1,0 +1,114 @@
+---
+title: "Your Laravel MCP server now checks Origin. APP_URL just became a security setting."
+description: "Laravel MCP 1.2.0 returns 403 to a browser request whose Origin is not your APP_URL. That makes APP_URL part of your MCP security, and the allow list is a config key that is not in the config file."
+publishDate: 2026-11-12
+category: laravel
+tags: [laravel, mcp, security, agentic-ai]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/laravel-mcp-origin-validation/hero-53e61fad.webp"
+  alt: "Comic pop-art scene of a gatekeeper robot stopping a disguised browser robot at an MCP door, while a desktop-app robot and a server robot walk through, under the words CHECK THE ORIGIN"
+---
+
+`APP_URL` used to decide what your emails link to. Now it decides which browsers can talk to your MCP server.
+
+{/* prettier-ignore */}
+<Summary>
+- In [Laravel MCP 1.2.0](https://github.com/laravel/mcp/releases/tag/v1.2.0), every `Mcp::web()` route returns HTTP 403 to a browser request whose `Origin` is not your `APP_URL` origin or a localhost address. A request with no `Origin` header still passes.
+- That is what the [MCP transports spec](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports) requires, to stop DNS rebinding. Origin checking is not authentication.
+- The setting that allows other origins, `mcp.allowed_origins`, is in neither the published config file nor the Laravel 13.x docs. You add it yourself, and never as `*`. The same release also makes the HTTP client refuse redirects.
+</Summary>
+
+I ship MCP servers from Laravel, and I also call remote ones from Laravel. [1.2.0](https://github.com/laravel/mcp/releases/tag/v1.2.0), published 11 November 2026, changes the contract on both sides.
+
+This sits with the earlier Laravel MCP posts in [Laravel at Scale](/blog/series/laravel-at-scale/): [auth and audit logging](/blog/mcp-auth-audit-logging-laravel/), [idempotency](/blog/mcp-idempotency-laravel-mutations/), and [tool errors agents can recover from](/blog/mcp-structured-tool-errors-laravel/). Those posts are about what a tool is allowed to do. This one is about which browsers are allowed to call the server at all.
+
+## What changed in 1.2.0
+
+The [1.2.0 release notes](https://github.com/laravel/mcp/releases/tag/v1.2.0) list two changes that matter here: "Validate the Origin header on MCP web routes" ([PR #394](https://github.com/laravel/mcp/pull/394)) and "Stop following redirects in the MCP HTTP client transport" ([PR #392](https://github.com/laravel/mcp/pull/392)).
+
+PR #394 adds `ValidateOrigin` middleware to the POST route that `Mcp::web()` registers, and to the GET and DELETE routes that answer 405.
+
+A request with no `Origin` header passes. The PR says SDKs, desktop clients and server-side connectors do not change.
+
+A request whose `Origin` is not allowed gets HTTP 403, with a JSON-RPC body: code `-32600`, and the message `Forbidden: The request origin is not allowed.`
+
+<BeforeAfter beforeLabel="Then" afterLabel="Now">
+  <div slot="before">A browser page could POST to your `Mcp::web()` route from any origin.</div>
+  <div slot="after">If `Origin` is present and is not allowed, the route returns 403. No `Origin` still passes.</div>
+</BeforeAfter>
+
+<TryThis>
+Hit your MCP web route from a browser on a different origin, or with a curl `Origin` header that is not your `APP_URL`. You should get 403 and that JSON-RPC message.
+</TryThis>
+
+## Why this is the spec, not a Laravel opinion
+
+The [MCP transports spec (2025-11-25)](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports) says servers MUST validate the `Origin` header on all incoming connections to prevent DNS rebinding, and MUST respond 403 when the header is present and invalid. It also says servers SHOULD implement proper authentication for all connections.
+
+DNS rebinding is the hole this closes. A page you never wrote can use the visitor's browser to call an MCP server on localhost or a private network. The PR spells that out, and the `dns-rebinding-protection` conformance scenario was removed from the package's known-failures baseline in the same PR.
+
+Origin checking is not authentication. It stops one browser-borne attack. Auth is still your job, and the [auth and audit post](/blog/mcp-auth-audit-logging-laravel/) is still the place to start.
+
+<PullQuote>Origin checking is not authentication. It closes one browser-borne hole.</PullQuote>
+
+## The exact allow rule, and where it bites
+
+The [middleware in 1.2.0](https://github.com/laravel/mcp/blob/v1.2.0/src/Server/Middleware/ValidateOrigin.php) allows: no `Origin`; any `localhost`, `127.0.0.1` or `[::1]` origin on any port; the origin of `config('app.url')`; and entries in `config('mcp.allowed_origins')`, which can be a string or an array. A `*` entry allows all origins.
+
+Matching is scheme, host and port. Default ports are normalized away, and case is ignored. The [package tests](https://github.com/laravel/mcp/blob/v1.2.0/tests/Feature/Server/Middleware/ValidateOriginTest.php) reject a subdomain of the app (`https://evil.app.test`), a different scheme (`http://app.test` when `APP_URL` is `https://app.test`), a different port, the opaque origin `null`, and `file://`.
+
+The check compares against `APP_URL`, not the request `Host`. The test named "rejects a rebinding request whose host matches its origin" covers this.
+
+So a wrong or stale `APP_URL` (http instead of https, an old domain, a staging host) will 403 any browser client on the real domain. A browser client on a sibling subdomain needs an explicit entry.
+
+`mcp.allowed_origins` is read by the middleware, but the published [`config/mcp.php` in v1.2.0](https://github.com/laravel/mcp/blob/v1.2.0/config/mcp.php) does not contain the key, and the [Laravel 13.x MCP docs](https://github.com/laravel/docs/blob/13.x/mcp.md) do not mention it. You add it yourself.
+
+Do not set it to `*` just to make a client work. That turns the check off.
+
+<TryThis>
+Confirm `APP_URL` matches the scheme and host browsers actually see. Then add only the extra browser origins you intend, as `mcp.allowed_origins`, in your own config:
+
+```php
+'allowed_origins' => [
+    'https://studio.example.com',
+],
+```
+</TryThis>
+
+## The client side changed too: redirects are now errors
+
+[PR #392](https://github.com/laravel/mcp/pull/392) (merged 5 November 2026) sets `allow_redirects` to false on the HTTP client transport. A redirect from the MCP server now throws a `TransportException` with the message that the server "responded with a redirect ... which is not followed", instead of being followed.
+
+If your Laravel app calls a remote MCP URL that redirects, for example an http to https hop, that call now fails. Store the final URL.
+
+The same release, [PR #395](https://github.com/laravel/mcp/pull/395), returns JSON-RPC errors instead of 500s for malformed requests and params, so junk traffic stops showing up as server errors.
+
+<Figure
+  src="/blog/laravel-mcp-origin-validation/inline-1.webp"
+  alt="Comic pop-art scene of a robot at a split signpost refusing to follow a curling redirect arrow, under the words NO REDIRECTS"
+  caption="The HTTP client in 1.2.0 treats a redirect as an error. Store the final MCP URL."
+/>
+
+<TryThis>
+Grep your app for remote MCP base URLs. If any of them still use http, or sit behind a redirect, replace them with the final https URL and call it once.
+</TryThis>
+
+## Who gets it, and what I would check this week
+
+v1.2.0 requires `illuminate/*` at `^12.41.1` or `^13.0`. v1.1.2 also allowed `^11.45.3`. A Laravel 11 app will not resolve 1.2.0, so it does not get the Origin check from a `composer update`.
+
+If you are on Laravel 12.41.1 or 13 and you run `composer update`, you get this default.
+
+<TryThis>
+This week, confirm `APP_URL` matches what browsers see, list every browser MCP client's origin, grep for remote MCP URLs that redirect, and add a feature test that a foreign `Origin` gets 403.
+</TryThis>
+
+<Takeaway>
+- After 1.2.0, a browser request to `Mcp::web()` whose `Origin` is not your `APP_URL` or localhost gets 403. That is the MCP spec.
+- `APP_URL` is now part of your MCP security. Fix it first. Add `mcp.allowed_origins` yourself, and never as `*`.
+- The HTTP client now refuses redirects. Laravel 11 apps do not get this release at all.
+</Takeaway>
+
+If a browser client started getting 403 this week, what does your `APP_URL` actually say?
