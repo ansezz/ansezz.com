@@ -11,6 +11,12 @@ Claude and MCP, RAG pipelines on pgvector, Shopify Plus and agentic commerce,
 DevOps and self-hosting with Coolify, and software architecture trade-offs.
 Email: me@ansezz.com
 
+Markdown copies of the home page, about, contact, the blog index, and every
+post sit next to the HTML (`/index.md`, `/about/index.md`, `/contact/index.md`,
+`/blog/index.md`, and `/blog/<slug>/index.md`). A request for the HTML URL
+with `Accept: text/markdown` returns that copy. The same pages, in full, are
+collected in llms-full.txt (linked below).
+
 ## About
 
 - [About](https://ansezz.com/about/): Background, experience, principles and how I work.
@@ -39,6 +45,7 @@ Email: me@ansezz.com
 
 ## Reference
 
+- [Full text (llms-full.txt)](https://ansezz.com/llms-full.txt): Complete Markdown of the home page, about, contact, the blog index, and every blog post.
 - [Library](https://ansezz.com/library/): Books, docs and tools I recommend.
 - [Feed hub](https://ansezz.com/feed/): Every subscription option and social profile.
 - [RSS](https://ansezz.com/rss.xml): Full blog feed.

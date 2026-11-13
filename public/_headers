@@ -33,5 +33,32 @@
 /llms.txt
   Cache-Control: public, max-age=3600
 
+/llms-full.txt
+  Content-Type: text/markdown; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+# Markdown twins. `*` is one path segment, so the blog index and each post
+# need their own rule. Direct requests get text/markdown even without Accept
+# negotiation; the Pages middleware does the same when it serves these files.
+/index.md
+  Content-Type: text/markdown; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+/about/index.md
+  Content-Type: text/markdown; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+/contact/index.md
+  Content-Type: text/markdown; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+/blog/index.md
+  Content-Type: text/markdown; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+/blog/*/index.md
+  Content-Type: text/markdown; charset=utf-8
+  Cache-Control: public, max-age=3600
+
 /sitemap-index.xml
   Cache-Control: public, max-age=3600
