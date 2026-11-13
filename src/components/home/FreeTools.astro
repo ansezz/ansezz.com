@@ -17,6 +17,7 @@ const PICKS = [
 ];
 
 const live = TOOL_LIST.filter((t) => t.status === "live");
+const serverTools = live.filter((t) => t.runtime === "server");
 const picks = PICKS.map((href) => live.find((t) => t.href === href)).filter(
   (t): t is (typeof live)[number] => Boolean(t),
 );
@@ -32,8 +33,9 @@ const picks = PICKS.map((href) => live.find((t) => t.href === href)).filter(
         >.
       </h2>
       <p class="text-ink-soft mt-4 text-base leading-snug md:text-lg">
-        {live.length} small tools I built because I needed them. They run in your
-        browser, with no signup and nothing uploaded.
+        {live.length} small tools I built because I needed them. No signup. They run
+        in your browser, except {serverTools.map((t) => t.title).join(" and ")},
+        which fetches the public URL you enter and stores nothing.
       </p>
     </div>
     <NeoButton href="/tools/" variant="secondary" size="lg">

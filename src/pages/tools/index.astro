@@ -11,6 +11,7 @@ const breadcrumbLd = breadcrumbList([
 ]);
 
 const live = TOOL_LIST.filter((t) => t.status === "live");
+const browserTools = live.filter((t) => t.runtime !== "server").length;
 
 const collectionLd = collectionPage({
   url: new URL("/tools/", SITE.URL).href,
@@ -45,10 +46,10 @@ const groups = TOOL_GROUPS.map((g) => ({
         ▸ {live.length} tools · free · no signup
       </p>
       <p class="mono text-[11px] font-bold tracking-widest uppercase">
-        ▸ 100% client-side
+        ▸ {browserTools} run in your browser
       </p>
       <p class="mono text-[11px] font-bold tracking-widest uppercase">
-        ▸ Nothing uploaded, nothing logged
+        ▸ Agent readiness fetches the URL you enter and stores nothing
       </p>
     </NeoCard>
   </section>

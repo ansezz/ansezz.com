@@ -17,7 +17,7 @@ const privacyBreadcrumbLd = breadcrumbList([
 // Bump this by hand when the substance of the notice changes. Do NOT derive
 // it from the file's mtime. A clean CI checkout stamps every file with the
 // build time, which made the page claim it was updated today, every day.
-const UPDATED = "2026-09-14";
+const UPDATED = "2026-11-14";
 
 const updatedAt = new Date(UPDATED);
 const updatedLabel = updatedAt.toLocaleDateString("en-US", {
@@ -154,13 +154,18 @@ const sections = [
         </div>
         <p class="text-sm leading-relaxed">
           This site is a static blog and portfolio. It does <strong>not</strong>
-          store any personal information on its own. No login, no server, no database.
-          Two features are <strong>opt-in</strong>: blog comments (powered by
-          GitHub Discussions via giscus) and the contact form (delivered by
-          Web3Forms). You only share data if you choose to use them. Otherwise,
-          reach me via email, phone, LinkedIn, or my Google Calendar booking
-          link. Data shared that way is handled by those services under their
-          own privacy terms.
+          store any personal information on its own. No login and no database. One
+          tool is different: the Agent Readiness Checker sends the public URL you
+          type to a Pages Function on this site. That function fetches the URL and
+          a short list of paths on the same host, then returns the report to your
+          browser. The report is not stored. The function keeps a short rate limit
+          counter in memory, keyed by IP address. Two features are <strong
+            >opt-in</strong
+          >: blog comments (powered by GitHub Discussions via giscus) and the
+          contact form (delivered by Web3Forms). You only share data if you
+          choose to use them. Otherwise, reach me via email, phone, LinkedIn, or
+          my Google Calendar booking link. Data shared that way is handled by
+          those services under their own privacy terms.
         </p>
       </NeoCard>
 

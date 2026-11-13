@@ -101,9 +101,12 @@ export const onRequest = async (
   context: MiddlewareContext,
 ): Promise<Response> => {
   const { request } = context;
+  const path = new URL(request.url).pathname;
+  // The agent readiness scan lives under /api/. Do not negotiate Markdown
+  // for it, and do not add Link headers to its JSON.
+  if (path === "/api" || path.startsWith("/api/")) return context.next();
   if (request.method !== "GET" && request.method !== "HEAD")
     return context.next();
-  const path = new URL(request.url).pathname;
   if (isStaticAssetPath(path)) return context.next();
 
   if (prefersMarkdown(request.headers.get("accept"))) {

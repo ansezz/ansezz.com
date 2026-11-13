@@ -169,6 +169,12 @@ export const PAGE_OG: PageOg[] = [
     title: "Give agents a map of your site.",
   },
   {
+    slug: "tool-agent-readiness-checker",
+    path: "/tools/agent-readiness-checker/",
+    label: "Free tool",
+    title: "Can agents find and read your site?",
+  },
+  {
     slug: "tool-shopify-rate-limit-planner",
     path: "/tools/shopify-rate-limit-planner/",
     label: "Free tool",
