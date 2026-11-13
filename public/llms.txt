@@ -40,8 +40,9 @@ collected in llms-full.txt (linked below).
 
 ## Tools
 
-- [Free engineering tools](https://ansezz.com/tools/): 33 no-signup utilities that run in the browser: LLM token, cost and context math, RAG chunking and pgvector sizing, MCP config and llms.txt generators, encoding and hashing, JSON, URL and PHP payload tooling, infrastructure sizing, Shopify helpers, and filterable HTTP status, header and port references. Nothing is uploaded.
+- [Free engineering tools](https://ansezz.com/tools/): 34 no-signup utilities. 33 run in the browser: LLM token, cost and context math, RAG chunking and pgvector sizing, MCP config and llms.txt generators, encoding and hashing, JSON, URL and PHP payload tooling, infrastructure sizing, Shopify helpers, and filterable HTTP status, header and port references. The agent readiness checker fetches the public URL you submit and does not store the report.
 - [llms.txt generator and validator](https://ansezz.com/tools/llms-txt-generator/): Build or check an llms.txt file like this one.
+- [Agent readiness checker](https://ansezz.com/tools/agent-readiness-checker/): Paste a URL and a site type. See whether agents can find, read, and respect the site, with copy-paste fixes for the gaps that apply.
 
 ## Reference
 

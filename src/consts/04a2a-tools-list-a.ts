@@ -121,6 +121,22 @@ export const TOOL_LIST_A: ToolEntry[] = [
     group: "ai",
     tags: ["agentic-ai", "agentic-commerce", "mcp"],
   },
+  {
+    title: "Agent Readiness Checker",
+    blurb:
+      "Paste a URL and a site type. See if agents can find, read, and respect the site, with copy-paste fixes for the gaps that apply.",
+    href: "/tools/agent-readiness-checker/",
+    seoTitle: "Agent Readiness Checker: robots, llms.txt",
+    updated: "2026-11-14",
+    verifiedLabel: "November 14, 2026 (check list)",
+    services: ["ai"],
+    icon: "lucide:bot",
+    tone: "cyan",
+    status: "live",
+    group: "ai",
+    tags: ["agentic-ai", "mcp", "ai-engineering"],
+    runtime: "server",
+  },
 
   // ── Encoding & secrets ──
   {

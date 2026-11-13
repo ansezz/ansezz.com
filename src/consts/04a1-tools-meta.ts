@@ -4,7 +4,7 @@ import type { BlogTag } from "./02b-blog-tags-types";
 export const TOOLS = {
   TITLE: "Tools",
   DESCRIPTION:
-    "Free, no-signup engineering tools that run entirely in your browser — LLM token and cost math, encoding, hashing, JSON tooling, infra sizing, Shopify helpers.",
+    "Free, no-signup engineering tools for LLM math, encoding, JSON, infra, and Shopify. They run in your browser, except the agent readiness checker, which fetches a public URL and stores nothing.",
 };
 
 export type ToolGroupId =
@@ -71,6 +71,11 @@ export interface ToolEntry {
   group: ToolGroupId;
   /** Join key to the blog. Posts surface tools sharing at least one tag. */
   tags: BlogTag[];
+  /**
+   * Where the tool does its work. Omitted tools run in the browser.
+   * "server" means a Pages Function fetches a URL the visitor typed.
+   */
+  runtime?: "browser" | "server";
   /**
    * Search-facing page title, without the brand suffix BaseLayout adds.
    * Keep it at 47 characters or less so the full title stays near 55.

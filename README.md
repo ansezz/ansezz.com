@@ -32,7 +32,7 @@ A static site for [**ansezz.com**](https://ansezz.com): shipped work, writing on
 | `/services/`    | Packages, how the engagement runs, FAQ (canonical `FAQPage`)     |
 | `/blog/`        | 71 posts — search, start-here, categories, tag cloud, pagination |
 | `/blog/series/` | 13 ordered reading paths                                         |
-| `/tools/`       | 23 client-side tools, grouped into 6 sections                    |
+| `/tools/`       | Free tools in 6 groups. Browser tools, plus one public URL scan  |
 | `/library/`     | Books, docs, and tools worth the time                            |
 | `/now/`         | What has my attention this season                                |
 | `/uses/`        | Daily drivers, stack lanes, what I dropped                       |

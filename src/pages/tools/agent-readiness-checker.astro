@@ -1,0 +1,326 @@
+---
+import Page from "@/layouts/Page.astro";
+import ToolMeta from "@/components/tools/ToolMeta.astro";
+import RelatedLinks from "@/components/RelatedLinks.astro";
+import NeoCard from "@/components/neobrutalist/NeoCard.astro";
+import StickyNote from "@/components/neobrutalist/StickyNote.astro";
+import { Icon } from "astro-icon/components";
+import { SITE, getTool } from "@/consts";
+import { externalLinkAttrs } from "@/lib/links";
+import { breadcrumbList, faqPage, toolScreenshot } from "@/lib/seo";
+
+const TOOL_PATH = "/tools/agent-readiness-checker/";
+const TOOL_NAME = "Agent Readiness Checker";
+const tool = getTool(TOOL_PATH);
+
+const DESCRIPTION =
+  "Free agent readiness checker. Paste a URL, pick a site type, and see whether AI agents can find, read, and respect the site. The score only counts checks that apply.";
+
+const breadcrumbLd = breadcrumbList([
+  { name: "Home", url: SITE.URL },
+  { name: "Tools", url: "/tools/" },
+  { name: TOOL_NAME, url: TOOL_PATH },
+]);
+
+const faq = [
+  {
+    q: "Does this run in my browser?",
+    a: "No. A browser cannot fetch someone else's site. The scan runs on a Pages Function on this site. It requests the URL you enter, plus robots.txt, the sitemap, llms.txt, a Markdown copy, and a short list of well-known paths on that same host. The report is not stored.",
+  },
+  {
+    q: "What does the score mean?",
+    a: "It is 0 to 100, from the checks that apply to the site type you picked. A pass earns full weight, a warn earns half, and a fail earns zero. High impact checks weigh more than low ones. A skipped check is not a failure. 90 and above is excellent, 75 is good, 50 needs work, and below 50 means the basics are blocked. The number is not a certification and it does not predict traffic.",
+  },
+  {
+    q: "Will a missing MCP file fail my blog?",
+    a: "Not on the Content site type, which is the default. Protocol files (MCP, A2A, OAuth, API catalogs, Poppy, DNS-AID) and store payment files are shown, and they are scored only when you pick SaaS, Store, or Everything. Do not publish a file for a service you do not run.",
+  },
+  {
+    q: "What is not checked?",
+    a: "This version does not run JavaScript, so it cannot see a page that is drawn in the browser, and it cannot test WebMCP. It does not crawl the whole site. It fetches the one URL you entered and a fixed list of paths on that host.",
+  },
+  {
+    q: "Can I share a result?",
+    a: "Yes. The share link puts the URL and the site type in the query string. Opening it runs the scan again. Nothing is saved on the server.",
+  },
+];
+
+const appLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: TOOL_NAME,
+  url: new URL(TOOL_PATH, SITE.URL).href,
+  description: DESCRIPTION,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Any (browser)",
+  browserRequirements: "Requires JavaScript. The scan runs on this site.",
+  inLanguage: "en",
+  dateModified: tool.updated,
+  screenshot: toolScreenshot(new URL(TOOL_PATH, SITE.URL).href),
+  featureList: [
+    "Score for the site type you pick",
+    "robots.txt, AI crawlers, and Content-Signal",
+    "llms.txt, Markdown negotiation, and a stable .md URL",
+    "Protocol and commerce checks shown, scored only when they apply",
+    "Evidence, copy-paste fixes, JSON download, and a share link",
+  ],
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  isAccessibleForFree: true,
+  author: { "@id": `${SITE.URL}#person` },
+  creator: { "@id": `${SITE.URL}#person` },
+};
+
+const faqLd = faqPage(
+  faq.map((item) => ({ question: item.q, answer: item.a })),
+);
+
+const labelClass =
+  "mono mb-2 block text-[11px] font-bold tracking-widest uppercase";
+const inputClass =
+  "border-ink bg-paper shadow-neo-sm min-h-11 w-full min-w-0 rounded-[4px] border-[3px] px-3 py-2 text-sm focus:outline-none";
+const btnClass =
+  "mono border-ink bg-yellow text-on-accent shadow-neo-sm hover:bg-pink inline-flex min-h-11 items-center justify-center gap-2 rounded-full border-[3px] px-5 text-[11px] font-bold tracking-widest uppercase disabled:opacity-50";
+
+const relatedLinks = [
+  {
+    href: "/tools/llms-txt-generator/",
+    note: "Draft or check the llms.txt file this scan looks for.",
+  },
+  {
+    href: "/tools/mcp-config-generator/",
+    note: "If you do run an MCP server, build the client config for it.",
+  },
+  {
+    href: "/blog/mcp-first-is-the-new-mobile-first/",
+    label: "MCP first is the new mobile first",
+    note: "What a site needs before an agent can do anything useful.",
+    kind: "Post" as const,
+  },
+];
+
+const spec = (href: string, text: string) => ({ href, text });
+const specs = [
+  spec("https://www.rfc-editor.org/rfc/rfc9309", "RFC 9309 (robots.txt)"),
+  spec("https://www.sitemaps.org/protocol.html", "Sitemap protocol"),
+  spec("https://contentsignals.org/", "Content Signals"),
+  spec("https://llmstxt.org/", "llmstxt.org"),
+  spec("https://www.rfc-editor.org/rfc/rfc8288", "RFC 8288 (Link headers)"),
+  spec("https://www.rfc-editor.org/rfc/rfc9727", "RFC 9727 (API catalog)"),
+  spec("https://www.rfc-editor.org/rfc/rfc9728", "RFC 9728 (OAuth resource)"),
+  spec("https://www.rfc-editor.org/rfc/rfc8414", "RFC 8414 (OAuth server)"),
+  spec(
+    "https://a2a-protocol.org/latest/topics/agent-discovery/",
+    "A2A discovery",
+  ),
+  spec(
+    "https://modelcontextprotocol.io/seps/2127-mcp-server-cards",
+    "MCP server cards",
+  ),
+  spec(
+    "https://personalagentprotocol.org/docs/1.0/spec",
+    "Personal Agent Protocol",
+  ),
+  spec(
+    "https://datatracker.ietf.org/doc/html/draft-mozleywilliams-dawn-dnsaid-00",
+    "DNS-AID draft",
+  ),
+];
+---
+
+<Page
+  title={tool.seoTitle}
+  dateModified={tool.updated}
+  description={DESCRIPTION}
+  eyebrow="Free tool"
+  heading="Can agents find and read this site?"
+  intro="Paste a URL, pick the kind of site, and get a score for the checks that apply. Each row has the evidence and a fix you can hand to a coding agent."
+  structuredData={[breadcrumbLd, appLd, faqLd]}
+>
+  <section class="mx-auto max-w-5xl px-5 pb-6">
+    <StickyNote tone="cyan" tilt={-1} class="max-w-xl">
+      <p class="text-sm leading-snug font-bold">
+        This is the one tool here that leaves your browser. A Pages Function on
+        this site fetches the public URL you enter. The report is not stored. A
+        share link reruns the scan.
+      </p>
+    </StickyNote>
+  </section>
+
+  <section class="mx-auto max-w-5xl px-5 pb-14" id="arc-root">
+    <form id="arc-form" class="mb-8">
+      <NeoCard tone="paper" shadow="md" class="space-y-5">
+        <div>
+          <label for="arc-url" class={labelClass}>Site URL</label>
+          <input
+            id="arc-url"
+            name="url"
+            type="text"
+            inputmode="url"
+            autocomplete="url"
+            required
+            placeholder="https://example.com/"
+            class={inputClass}
+          />
+        </div>
+        <fieldset>
+          <legend class={labelClass}>Site type</legend>
+          <div class="grid gap-3 sm:grid-cols-2">
+            {
+              [
+                [
+                  "content",
+                  "Content",
+                  "Blog, docs, or a personal site. Protocol files are shown and not scored.",
+                ],
+                [
+                  "saas",
+                  "SaaS",
+                  "You have an API or an agent. Those checks count.",
+                ],
+                [
+                  "store",
+                  "Store",
+                  "You sell online. Commerce checks count. This is never guessed from the page.",
+                ],
+                [
+                  "everything",
+                  "Everything",
+                  "Every scored check counts. Pick this on purpose.",
+                ],
+              ].map(([value, label, hint]) => (
+                <label class="border-ink bg-bg-alt flex min-w-0 cursor-pointer gap-3 rounded-[4px] border-[2px] p-3">
+                  <input
+                    type="radio"
+                    name="type"
+                    value={value}
+                    checked={value === "content"}
+                    class="mt-1"
+                  />
+                  <span class="min-w-0">
+                    <span class="block font-bold">{label}</span>
+                    <span class="mt-1 block text-sm leading-snug opacity-80">
+                      {hint}
+                    </span>
+                  </span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+        <div class="flex flex-wrap items-center gap-4">
+          <button id="arc-submit" type="submit" class={btnClass}>
+            Scan
+            <Icon name="lucide:arrow-right" class="h-3.5 w-3.5" />
+          </button>
+          <p id="arc-status" class="text-sm" aria-live="polite"></p>
+        </div>
+      </NeoCard>
+    </form>
+
+    <p
+      id="arc-error"
+      class="border-ink bg-red text-on-accent mb-6 hidden rounded-[4px] border-[3px] p-4 text-sm font-bold"
+      role="alert"
+    >
+    </p>
+    <div id="arc-results" hidden></div>
+    <noscript>
+      <p
+        class="border-ink bg-yellow text-on-accent rounded-[4px] border-[3px] p-4 text-sm font-bold"
+      >
+        Turn on JavaScript to run a scan.
+      </p>
+    </noscript>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <div class="text-ink/90 space-y-4 text-base leading-relaxed">
+      <h2 class="display text-2xl uppercase">How the score works</h2>
+      <p>
+        The default site type is Content. A missing MCP card, A2A card, API
+        catalog, OAuth file, Poppy file, or DNS-AID record does not lower that
+        score. Those checks are still listed, with a line that says not to
+        publish a file for a service you do not have. SaaS scores the API and
+        agent checks. Store scores the commerce checks. Everything scores all of
+        them. The tool does not decide you are a store because the page mentions
+        one.
+      </p>
+      <p>
+        High impact, always scored: HTTPS, a real robots.txt, an XML sitemap,
+        access for search and user-triggered AI crawlers, a Content-Signal line,
+        and main text that is already in the HTML. Blocking a training crawler,
+        or setting ai-train to no, is a preference, not a failure.
+      </p>
+      <p>
+        Medium impact, always scored: llms.txt against the llmstxt.org v2 shape,
+        the optional llms-full.txt companion (missing is a warning, not a
+        failure), Markdown on <code>Accept: text/markdown</code> with no redirect,
+        a stable .md URL, HTTP Link headers, and sane JSON-LD.
+      </p>
+      <p>
+        Low impact: protocol files and, for a store, UCP, x402, ACP, MPP, and
+        AP2. Agent Skills, Web Bot Auth, WebMCP, and security headers are shown
+        and never scored. WebMCP needs a browser, so this scan marks it as not
+        verified.
+      </p>
+      <p>
+        Each row is labeled stable, emerging, or experimental, with a link to
+        the spec when there is one. DNS-AID and several commerce files are
+        drafts. A pass there is not a claim that the standard is finished.
+      </p>
+      <h2 class="display pt-4 text-2xl uppercase">Limits</h2>
+      <p>
+        The function accepts only http and https, on ports 80 and 443. It
+        resolves the host with DNS-over-HTTPS and refuses private, loopback,
+        link-local, and metadata addresses, including after a redirect. It does
+        not forward cookies or a request body. There is a small per-IP limit so
+        it cannot be used as an open proxy.
+      </p>
+      <p class="text-sm">
+        Specs:
+        {
+          specs.map((item, index) => (
+            <>
+              {index > 0 ? ", " : ""}
+              <a
+                class="font-bold break-words underline"
+                href={item.href}
+                {...externalLinkAttrs(item.href)}
+              >
+                {item.text}
+              </a>
+            </>
+          ))
+        }.
+      </p>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 pb-16">
+    <h2 class="display mb-6 text-2xl uppercase">Questions, answered</h2>
+    <div class="space-y-4">
+      {
+        faq.map((item) => (
+          <details class="group border-ink bg-paper shadow-neo-sm rounded-[4px] border-[3px]">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-bold">
+              <span>{item.q}</span>
+              <Icon
+                name="lucide:plus"
+                class="h-5 w-5 shrink-0 transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              />
+            </summary>
+            <p class="px-4 pb-4 text-sm leading-relaxed opacity-90">{item.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </section>
+
+  <ToolMeta tool={tool} />
+  <RelatedLinks items={relatedLinks} />
+</Page>
+
+<script>
+  import "@/scripts/agent-readiness-checker";
+</script>
