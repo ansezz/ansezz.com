@@ -1,0 +1,172 @@
+---
+title: "Cloudflare will convert your pages to Markdown for agents. The default signal says they can train on them."
+description: "Markdown for Agents is generally available. If your origin sends no Content-Signal, Cloudflare adds ai-train=yes. I ship my own Markdown and state ai-train=no in robots.txt and on the response."
+publishDate: 2026-11-14
+category: ai
+tags: [ai, agentic-ai, architecture]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/ship-your-own-markdown-for-agents/hero-8a506a86.webp"
+  alt: "Comic pop-art scene of a typist robot holding a Markdown page stamped AI-TRAIN=NO, while a CDN conveyor stamps converted HTML copies AI-TRAIN=YES, under the words SHIP YOUR MARKDOWN"
+---
+
+If you turn on Cloudflare's Markdown for Agents and never set a Content-Signal at the origin, the converted response says `ai-train=yes`.
+
+{/* prettier-ignore */}
+<Summary>
+- On [9 November 2026](https://developers.cloudflare.com/changelog/post/2026-11-09-markdown-for-agents-observability/), Cloudflare marked [Markdown for Agents](https://developers.cloudflare.com/fundamentals/reference/markdown-for-agents/) generally available, with analytics, logs, a playground, GraphQL, and a trace span. An agent that sends `Accept: text/markdown` can get a converted copy of your HTML.
+- If the origin does not send a `content-signal` header, Cloudflare adds `Content-Signal: ai-train=yes, search=yes, ai-input=yes`. That is Cloudflare's default, not the [Content Signals](https://contentsignals.org/) default. A missing key there is an unstated preference, not a yes.
+- I ship authored Markdown from the origin, publish [llms.txt](https://ansezz.com/llms.txt), and state `search=yes, ai-input=yes, ai-train=no` in [robots.txt](https://ansezz.com/robots.txt) and on the response header. The [Agent Readiness Checker](/tools/agent-readiness-checker/) reads the robots.txt line. It does not check the response header.
+</Summary>
+
+I run this site on Cloudflare Pages. I want agents to read the posts I wrote, and I do not grant training rights. A converter is useful when all you have is HTML. It is not a substitute for a file you published and a policy you stated.
+
+## What became generally available
+
+The [9 November 2026 changelog](https://developers.cloudflare.com/changelog/post/2026-11-09-markdown-for-agents-observability/) says Markdown for Agents is generally available. The same entry adds tools to watch conversions: Analytics and Logs in the dashboard, a Playground that requests Markdown for a path on your zone, the GraphQL dataset `markdownForAgentsAdaptiveGroups`, and a `markdown_conversion` span in Cloudflare Traces.
+
+The [feature documentation](https://developers.cloudflare.com/fundamentals/reference/markdown-for-agents/) (updated the same day) describes the contract. On an enabled zone, a client that sends `Accept: text/markdown` can get a Markdown body. Cloudflare fetches the HTML from the origin and converts it. The response uses `Content-Type: text/markdown; charset=utf-8`, and `Vary` includes `Accept`.
+
+The same page lists the limits that matter in production. Conversion is capped at 6 MiB (6,291,456 bytes) of decompressed HTML. Analytics cover at most seven days. Token savings are estimated from bytes divided by four, and only from full conversions, not from a real tokenizer.
+
+The docs say the feature is available on Pro, Business, and Enterprise plans, and to SSL for SaaS customers, at no cost. I am not guessing whether a given Pages project is on one of those plans. If your zone has the toggle, this is the contract behind it.
+
+<TryThis>
+  If you have access to the dashboard path Agent Readiness, Markdown for Agents,
+  try the Playground on one URL you care about. Then run the same URL with curl
+  and `Accept: text/markdown`, and compare `Content-Type` and the body to the
+  HTML.
+</TryThis>
+
+## The default signal is the part that bites
+
+Markdown for Agents does more than change the body. It also sends a Content-Signal.
+
+The current docs are clear. If your origin already sets a `content-signal` header, the converted response keeps that value. If the origin does not send one, Cloudflare adds `Content-Signal: ai-train=yes, search=yes, ai-input=yes`.
+
+That default is not new. The [12 February 2026 announcement](https://blog.cloudflare.com/markdown-for-agents/), when the feature was in beta, already showed the all-yes header on the example response. The [13 July 2026 changelog](https://developers.cloudflare.com/changelog/post/2026-07-13-markdown-for-agents-header-preservation/) made the origin header authoritative. Silence at the origin still becomes all yes.
+
+<BeforeAfter beforeLabel="Content Signals" afterLabel="Cloudflare's converter">
+  <div slot="before">
+    If you omit a key, you neither grant nor restrict that use. A missing signal
+    is not a yes, and it is not a no.
+  </div>
+  <div slot="after">
+    If the origin sends no `content-signal` header, the converted Markdown gets
+    `ai-train=yes, search=yes, ai-input=yes`.
+  </div>
+</BeforeAfter>
+
+[Content Signals](https://contentsignals.org/) is Cloudflare's implementation of a way to declare how automated systems should use your content after they have accessed it. The three keys are specific:
+
+- `search` is building a search index and providing search results, such as hyperlinks and short excerpts. It does not include AI-generated search summaries.
+- `ai-input` is feeding the content into a model, including RAG, grounding, or other real-time use as input.
+- `ai-train` is training or fine-tuning a model.
+
+The same page says this is a preference. robots.txt cannot technically prevent a crawler from taking the content, and some operators ignore it. State the preference anyway. If you leave the header off and then enable the converter, Cloudflare fills the silence with yes.
+
+<PullQuote>
+  A missing Content-Signal is not a yes. Cloudflare's converter still adds one.
+</PullQuote>
+
+<TryThis>
+  Open your live homepage headers and your `/robots.txt`. Look for
+  `Content-Signal`. If it is only in robots.txt, or it is missing entirely,
+  write down what you want `search`, `ai-input`, and `ai-train` to be before you
+  flip any CDN toggle.
+</TryThis>
+
+## What I ship at the origin
+
+I did not want a converted guess at a post. I wanted the Markdown I wrote, at a stable URL, with a policy I chose.
+
+[robots.txt](https://ansezz.com/robots.txt) on this site is:
+
+```
+User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
+Disallow: /styleguide/
+
+Sitemap: https://ansezz.com/sitemap-index.xml
+```
+
+Agents may use the pages for search and as input. They may not use them to train. That is the preference I am willing to put in public.
+
+The Markdown is a pre-built twin, not an HTML conversion at request time. A Cloudflare Pages Function in `functions/_middleware.ts` looks at `Accept`. When the client prefers `text/markdown`, it serves the file written into the build.
+
+`/` maps to `/index.md`, and `/about/`, `/contact/`, and `/blog/` each have an `index.md`. Each post lives at `/blog/<slug>/index.md`. Direct `.md` URLs stay files. If a twin is missing, the HTML page is served instead of a 404.
+
+That layout follows the [llms.txt proposal](https://llmstxt.org/) (v2, updated 10 August 2026): a Markdown version of a page at `index.md`, advertised with `rel=alternate` and `type=text/markdown`, and an llms.txt file advertised with `rel=describedby`.
+
+The HTML responses add a Link header for those relations, plus `rel=canonical`. `/llms.txt` is the short map. `/llms-full.txt` is the longer companion, with the full Markdown of the home page, about, contact, the blog index, and every post.
+
+I checked the live site on 14 November 2026, at 9:25pm Asia/Kuala_Lumpur. A `HEAD` to `https://ansezz.com/` with `Accept: text/markdown` returned `content-type: text/markdown; charset=utf-8` and `vary: Accept`.
+
+The body starts with the page title, then Canonical and Markdown links. It is not the YAML frontmatter that Cloudflare's converter builds from meta tags, and it is not a JSON-LD fence appended at the end.
+
+<Figure
+  src="/blog/ship-your-own-markdown-for-agents/inline-1.webp"
+  alt="Comic pop-art scene of a robots.txt envelope with an ai-train=no line next to a blank response-header envelope, with a CDN robot about to stamp YES on the blank one, under the words SET THE HEADER"
+  caption="A robots.txt line states the policy. A missing HTTP header is still silence to the converter."
+/>
+
+<TryThis>
+  Request your own homepage two ways: as HTML, and with `Accept: text/markdown`.
+  If the second response is still HTML, publish an `/index.md` twin and honor
+  the Accept header, with `Vary: Accept` on both responses. Do not redirect the
+  negotiated request to the `.md` URL.
+</TryThis>
+
+## The response header matches robots.txt
+
+The same live check, on 14 November 2026, showed no `Content-Signal` HTTP header on the HTML or the Markdown responses. The policy was in robots.txt only.
+
+That was a real gap. The [Agent Readiness Checker](/tools/agent-readiness-checker/) reads the Content-Signal line from robots.txt. A pass there does not mean the response header is set.
+
+If the converter ran on a path that still returns HTML, and the origin sent no header, the converted body would get `ai-train=yes`. That would contradict the robots.txt line.
+
+The origin now sends the same policy on HTML and Markdown responses:
+
+```
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+```
+
+A client that asks for `text/markdown`, and a client that opens the `.md` URL, both get that header. It matches robots.txt.
+
+<TryThis>
+  Add the `Content-Signal` header on your origin (or in the Pages Function that
+  already sets `Link` and `Vary`) to match robots.txt. Then request the page
+  again and confirm the header is present on both the HTML and the Markdown
+  responses.
+</TryThis>
+
+## Check the live site, not the dashboard toggle
+
+A toggle in a dashboard does not tell you what an agent actually receives. The headers do.
+
+```bash
+curl -sI -H "Accept: text/markdown" https://example.com/
+curl -s https://example.com/robots.txt
+curl -s https://example.com/llms.txt
+```
+
+Read `Content-Type`, `Vary`, `Content-Signal`, and the Link header. Then open the body and see whether it looks like a file you wrote, or like a conversion of the HTML.
+
+You can also paste the URL into the [Agent Readiness Checker](/tools/agent-readiness-checker/). It fetches the public URL you submit, does not store the report, and checks Markdown negotiation, the stable `.md` URL, Link headers, llms.txt, llms-full.txt, and the robots.txt Content-Signal, along with the usual access checks.
+
+Use the Content site type unless you really have an API or a store. MCP, OpenAPI, and commerce discovery are shown either way. They only count toward the score when they apply. Do not publish a fake catalog to close a gap.
+
+<Takeaway>
+  - Markdown for Agents is generally available. It converts HTML when a client
+  asks for `text/markdown`. If the origin sends no `Content-Signal`, the
+  converted response says `ai-train=yes`. - That all-yes default is
+  Cloudflare's, not the Content Signals default. A missing key is an unstated
+  preference. State `search`, `ai-input`, and `ai-train` in robots.txt and on
+  the response header. - I ship authored Markdown twins, Link headers, and
+  llms.txt from the origin. robots.txt and the response header both say
+  `ai-train=no`. The checker reads the robots.txt line.
+</Takeaway>
+
+If an agent asked your homepage for Markdown tomorrow, would it get a file you wrote, and would the signal say it may train on it?

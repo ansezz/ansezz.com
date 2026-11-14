@@ -11,7 +11,15 @@ import {
   isStaticAssetPath,
   markdownAlternatePath,
   prefersMarkdown,
-} from "../src/lib/agent-markdown";
+} from "../src/lib/agent-markdown.ts";
+
+// Same line as public/robots.txt. Markdown for Agents keeps an origin
+// Content-Signal. If the origin is silent, Cloudflare writes ai-train=yes.
+const CONTENT_SIGNAL = "search=yes, ai-input=yes, ai-train=no";
+
+function applyContentSignal(headers: Headers): void {
+  headers.set("Content-Signal", CONTENT_SIGNAL);
+}
 
 interface AssetBinding {
   fetch(input: Request | string): Promise<Response>;
@@ -30,6 +38,7 @@ function withMarkdownType(
   const next = new Headers(headers);
   next.set("Content-Type", "text/markdown; charset=utf-8");
   next.set("X-Content-Type-Options", "nosniff");
+  applyContentSignal(next);
   next.set("Vary", appendVary(next.get("Vary"), "Accept"));
   if (canonicalPath) {
     next.append(
@@ -66,23 +75,27 @@ function decorate(request: Request, response: Response): Response {
   if (response.status >= 300 && response.status < 400) return response;
 
   if (path.endsWith(".md")) {
-    if (!response.ok) return response;
     const type = response.headers.get("content-type") ?? "";
-    if (type.includes("text/html")) return response;
-    const headers = withMarkdownType(
-      response.headers,
-      canonicalPathForMarkdown(path),
-    );
-    return new Response(request.method === "HEAD" ? null : response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    });
+    // A missing twin can come back as the HTML 404 page. Treat that as HTML
+    // so it still gets the signal. A real Markdown file is rewritten below.
+    if (response.ok && !type.includes("text/html")) {
+      const headers = withMarkdownType(
+        response.headers,
+        canonicalPathForMarkdown(path),
+      );
+      return new Response(request.method === "HEAD" ? null : response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    }
+    if (!type.includes("text/html")) return response;
   }
 
   const type = response.headers.get("content-type") ?? "";
   if (!type.includes("text/html")) return response;
   const headers = new Headers(response.headers);
+  applyContentSignal(headers);
   headers.set("Vary", appendVary(headers.get("Vary"), "Accept"));
   if (response.status === 200) {
     headers.append(

@@ -35,29 +35,38 @@
 
 /llms-full.txt
   Content-Type: text/markdown; charset=utf-8
+  Content-Signal: search=yes, ai-input=yes, ai-train=no
   Cache-Control: public, max-age=3600
 
 # Markdown twins. `*` is one path segment, so the blog index and each post
 # need their own rule. Direct requests get text/markdown even without Accept
 # negotiation; the Pages middleware does the same when it serves these files.
+# Content-Signal matches robots.txt. The middleware sets the same header on
+# HTML and on negotiated Markdown. These rules cover the .txt companion and
+# a direct .md fetch if the function does not rewrite the response.
 /index.md
   Content-Type: text/markdown; charset=utf-8
+  Content-Signal: search=yes, ai-input=yes, ai-train=no
   Cache-Control: public, max-age=3600
 
 /about/index.md
   Content-Type: text/markdown; charset=utf-8
+  Content-Signal: search=yes, ai-input=yes, ai-train=no
   Cache-Control: public, max-age=3600
 
 /contact/index.md
   Content-Type: text/markdown; charset=utf-8
+  Content-Signal: search=yes, ai-input=yes, ai-train=no
   Cache-Control: public, max-age=3600
 
 /blog/index.md
   Content-Type: text/markdown; charset=utf-8
+  Content-Signal: search=yes, ai-input=yes, ai-train=no
   Cache-Control: public, max-age=3600
 
 /blog/*/index.md
   Content-Type: text/markdown; charset=utf-8
+  Content-Signal: search=yes, ai-input=yes, ai-train=no
   Cache-Control: public, max-age=3600
 
 /sitemap-index.xml
