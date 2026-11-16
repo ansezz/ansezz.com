@@ -1,0 +1,194 @@
+---
+title: "A throwing Laravel AI tool no longer ends the run. The exception message now goes to the model."
+description: "Laravel AI SDK 1.4.0 keeps the agent running when a tool throws, and sends the exception message to the model. Review that text before you upgrade, or rethrow from ToolFailed to keep a hard stop."
+publishDate: 2026-11-16
+category: laravel
+tags: [laravel, ai, agentic-ai, security]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/laravel-ai-tool-exceptions-reach-the-model/hero-019e3564.webp"
+  alt: "Comic pop-art scene of a tool robot throwing a sparking wrench, a model robot catching it as an envelope stamped THE TOOL CALL FAILED, and the agent run walking on, under the words THE RUN CONTINUES"
+---
+
+A throwing Laravel AI tool no longer ends the run. The exception message now goes to the model.
+
+{/* prettier-ignore */}
+<Summary>
+- [`laravel/ai` 1.4.0](https://github.com/laravel/ai/releases/tag/v1.4.0), published 10 November 2026, 19:25 UTC (11 November 2026, 3:25am Asia/Kuala_Lumpur), catches a tool exception and returns it as a failed tool result. The model receives `The tool call failed: ` plus the exception message, and the run continues ([PR #1191](https://github.com/laravel/ai/pull/1191)).
+- `ToolFailed` still fires. `report()` runs on the original exception. A streamed run emits a `ToolResult` event with `successful` set to `false`. The SDK does not sanitize that message. SQL, a filesystem path, or an internal URL in the exception reaches the model, and the same string is on the stream event.
+- If you still need the old hard stop, rethrow from a `ToolFailed` listener. That still fails a normal `prompt()`. The same release also changes `Agent::fake()` approval tests, maps five OpenAI billing 429 codes to `InsufficientCreditsException`, and broadcasts provider stream errors under the name `error`.
+</Summary>
+
+I already wrote that [MCP tools should return a sentence the model can use](/blog/mcp-structured-tool-errors-laravel/), not a crashed server.
+
+The first-party AI SDK now does the first half of that when a tool throws. It will not write the sentence for you, and it will not hide a messy one.
+
+## What 1.4.0 changed
+
+The [v1.4.0 release](https://github.com/laravel/ai/releases/tag/v1.4.0) landed on 10 November 2026, 19:25 UTC (11 November 2026, 3:25am Asia/Kuala_Lumpur). The change that matters first is [PR #1191](https://github.com/laravel/ai/pull/1191), "Let agents recover from tool failures," merged 29 October 2026, 15:28 UTC (11:28pm Asia/Kuala_Lumpur).
+
+Before 1.4.0, an exception thrown inside a tool ended the agent run and fired `AgentFailed`. The old package test asserted both. After 1.4.0, that test asserts `AgentFailed` is not dispatched, and the run continues.
+
+The path is specific. `InvokesTools` catches the tool handler's exception, fires `ToolFailed`, and wraps it in `ToolExecutionException`. `TextGenerationLoop::executedToolResult()` then calls `report()` on the original exception and returns a failed tool result whose text is:
+
+```text
+The tool call failed: Order 1234 can no longer be refunded.
+```
+
+That example string is from the PR. The [official test](https://github.com/laravel/ai/blob/v1.4.0/tests/Feature/ToolFailureRecoveryTest.php) uses `Forced to throw exception.`, then asserts the prompt still returns the model's next reply, the tool result's `successful()` method is false, and a streamed run emits a `ToolResult` event with the same error string.
+
+Tools that already required approval returned a failure string like this. The PR's point is that every tool now does the same: the model gets the failure as a tool result, and the run continues.
+
+### Listeners and approved tools
+
+Only the handler's exception is recovered on the normal loop. The source comment says a listener that throws is never reported as a tool failure. The test throws from an `InvokingTool` listener during `prompt()`, and the run fails. `report()` is not called.
+
+Resuming an approved tool is the older catch. `resolveApprovalResults()` catches every throwable from that call, including a listener, and returns `The tool call failed: ` plus the message. That path does not call `report()`, and it does not end the run.
+
+<TryThis>
+  On a staging app, throw a domain exception from one tool and prompt the agent.
+  Confirm the model replies instead of the run dying, then read the failed tool
+  result and the stream event.
+</TryThis>
+
+## The message you throw is now model input
+
+This is the part that bites.
+
+The model can only act on the string you put in the exception. A domain message such as "Order 1234 can no longer be refunded." is useful. The model can tell the user, or it can try another tool.
+
+A `QueryException` or an HTTP client exception is a different case. Those messages often include SQL, a filesystem path, or an internal URL. That text now goes to the model as a tool result.
+
+The same string is on the stream event. If your frontend renders tool-result errors, the user can see it too.
+
+<BeforeAfter beforeLabel="Before 1.4.0" afterLabel="After 1.4.0">
+  <div slot="before">A throw inside a tool ends the run and fires `AgentFailed`. The model never sees the exception message.</div>
+  <div slot="after">The run continues. The model and the stream event get `The tool call failed: ` plus `$exception->getMessage()`.</div>
+</BeforeAfter>
+
+This is the inverse of the [MCP tool-errors](/blog/mcp-structured-tool-errors-laravel/) rule I already use: return a sentence the model can act on, and never put stack traces, SQL, or secrets in that sentence.
+
+The SDK now does the first half when you throw. It will not sanitize the second half.
+
+### Validation still returns a normal result
+
+Validation is a separate path, and it predates this release. `InvokesTools` catches `ValidationException` and returns the validator's error messages as a normal tool result, so the model can fix the arguments and call again.
+
+That result is not marked failed. The [docs](https://laravel.com/framework/docs/ai-sdk) already describe it. PR #1191 did not change that catch.
+
+<Figure
+  src="/blog/laravel-ai-tool-exceptions-reach-the-model/inline-1.webp"
+  alt="Comic pop-art scene of a log book leaking a SQL error into a speech bubble that reaches a model robot and a chat window, under the words WRITE SAFE ERRORS"
+  caption="The exception message is now model input. If it has SQL, the model gets the SQL."
+/>
+
+<PullQuote>
+  The SDK will not sanitize your exception text. If the message has SQL, the
+  model gets the SQL.
+</PullQuote>
+
+<TryThis>
+  Grep your `app/Ai/Tools` directory for `throw`, `firstOrFail()`, and raw HTTP
+  or query calls. For each hit, read the exception message as if you were going
+  to show it to the model and to the user.
+</TryThis>
+
+## How to keep a hard stop, and how to throw safely
+
+Most tools should keep running this way. A refund that cannot proceed is a sentence, not a crashed agent.
+
+Some tools should still stop the run. If you depended on `AgentFailed` for that, rethrow from a `ToolFailed` listener. The package test covers the contract: the run fails with the original exception, not `ToolExecutionException`, and `report()` is not called for that path.
+
+```php
+use Illuminate\Support\Facades\Event;
+use Laravel\Ai\Events\ToolFailed;
+
+// RefundOrder is your tool class, not a class in the SDK.
+Event::listen(ToolFailed::class, function (ToolFailed $event): void {
+    if ($event->tool instanceof RefundOrder) {
+        throw $event->exception;
+    }
+});
+```
+
+Register that where your other listeners live, for example in a service provider `boot` method.
+
+For everything else, throw a message written for the model, or catch inside the tool and return a safe sentence. Keep the internal detail for your exception handler and your logs.
+
+The loop is not open-ended if you forget `MaxSteps`. `TextGenerationLoop::resolveMaxSteps()` uses an explicit `maxSteps` when you set one. Otherwise the budget is 1.5 times the tool count, capped at 25, or 5 when the agent has no tools.
+
+`RepairToolCalls` adds one step to that derived budget only.
+
+An explicit `#[MaxSteps(10)]` replaces the derived budget. The [docs](https://laravel.com/framework/docs/ai-sdk) say that explicit limit is not increased for a repaired call. Set it lower than 25 if a broken tool should not keep spending steps.
+
+<TryThis>
+  Pick the tools that must still kill the run, such as money movement or an
+  irreversible delete. Add a `ToolFailed` listener that rethrows only for those.
+  Leave the rest to recover, and set `MaxSteps` if 25 is too many.
+</TryThis>
+
+## The rest of 1.4.0 that can break an upgrade
+
+Three other changes in the same tag will show up in tests and in production if you ignore them.
+
+[PR #1190](https://github.com/laravel/ai/pull/1190), merged 29 October 2026, 12:34 UTC (8:34pm Asia/Kuala_Lumpur), fixes `Agent::fake()` approval flows. Before, resuming a paused approval under a fake skipped the tool. The approved tool never ran, and no result was streamed or stored.
+
+Now the approved tool runs, and its result is streamed and stored, the same way a real provider does it.
+
+A rejection without a reason now ends the turn, as it does against a real provider. A test that expects a reply after a reject should pass one:
+
+```php
+Decision::reject('Not now.')
+```
+
+### OpenAI billing 429s are not rate limits
+
+[PR #1174](https://github.com/laravel/ai/pull/1174), merged 27 October 2026, 17:41 UTC (28 October 2026, 1:41am Asia/Kuala_Lumpur), splits OpenAI billing errors out of the rate-limit path. OpenAI uses HTTP 429 for both.
+
+A 429 whose `error.code` or `error.type` is one of these codes now throws `InsufficientCreditsException` and is not retried, even with a short `Retry-After`:
+
+- `insufficient_quota`
+- `credit_balance_exhausted`
+- `organization_spend_limit_exceeded`
+- `project_spend_limit_exceeded`
+- `organization_usage_limit_exceeded`
+
+Those names are the list in `insufficientCreditCodes()` at v1.4.0. Other 429s still throw `RateLimitedException`. Failover is unchanged, because both exceptions implement `FailoverableException`. Code that caught `RateLimitedException` to detect a dead OpenAI bill will miss it.
+
+### Provider stream errors use one name
+
+[PR #1208](https://github.com/laravel/ai/pull/1208), merged 6 November 2026, 05:19 UTC (1:19pm Asia/Kuala_Lumpur), broadcasts provider stream errors under the fixed name `error`. The payload's `type` still holds the provider's code (`403`, `PERMISSION_DENIED`, and so on).
+
+If your Echo listener used the code as the event name, point it at `.error`.
+
+A job failure still broadcasts as `stream_failed`. `Error::broadcastAs()` keeps that name when the type is `stream_failed`, and returns `error` otherwise. Leave an existing `stream_failed` listener where it is.
+
+The same release also exposes the raw HTTP response on classification, embeddings, transcription, image, and reranking responses. Text responses already had it in 1.3.0.
+
+<TryThis>
+  Before you upgrade, search tests for `Agent::fake(` and `Decision::reject()`,
+  search application code for `RateLimitedException`, and search the frontend
+  for stream listeners named after provider error codes.
+</TryThis>
+
+## What I would check this week
+
+Run this against the app that already has `laravel/ai` agents, then upgrade.
+
+1. Inventory every tool `handle()` method. Replace thrown infrastructure exceptions with a safe, actionable sentence, or catch and return that sentence yourself.
+2. Decide which tools must still kill the run. Add a `ToolFailed` listener only for those.
+3. Set `MaxSteps` where the derived budget (up to 25) is more retries than you want to pay for.
+4. Fix faked approval tests so an approve actually runs the tool, and a reject that should continue has a reason.
+5. Catch `InsufficientCreditsException` next to `RateLimitedException`. Point Echo at `.error`, and leave `stream_failed` alone.
+6. Then run `composer update laravel/ai` and repeat the staging prompt from the first section.
+
+{/* prettier-ignore */}
+<Takeaway>
+- `laravel/ai` 1.4.0 keeps the agent running when a tool throws. The model gets `The tool call failed: ` plus the exception message.
+- That message is now model input, and it is on the stream event. Write it for the model, or catch and return a safe sentence. The SDK will not sanitize it.
+- Rethrow from `ToolFailed` if you still need a hard stop on a normal prompt. A listener exception still fails that run.
+- The same tag also changes faked approvals, OpenAI billing exceptions, and the broadcast name for provider stream errors. Check those before you upgrade.
+</Takeaway>
+
+If a tool threw a database exception in your agent tomorrow, would you be comfortable with the model, and the stream, seeing that message?
