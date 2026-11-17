@@ -1,7 +1,6 @@
 // Copy-link button inside every ShareBar. Document-level delegation so a
 // single listener survives Astro view-transition swaps and covers every
-// ShareBar instance on the page (posts render one at the top and one at
-// the bottom).
+// ShareBar on the page. Post pages keep one bar, at the end of the article.
 
 const RESET_MS = 1400;
 

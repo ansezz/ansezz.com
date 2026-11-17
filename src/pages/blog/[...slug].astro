@@ -21,6 +21,7 @@ import { tagSlug } from "@/lib/links";
 import {
   OWNER,
   SITE,
+  BLOG_CATEGORIES,
   CATEGORY_LABEL,
   CATEGORY_TONE,
   TOOL_LIST,
@@ -87,6 +88,12 @@ const titleScale =
       : "text-[clamp(1.85rem,5.5vw+0.5rem,4.25rem)] leading-[0.95]";
 
 const canonicalUrl = new URL(`/blog/${post.id}/`, SITE.URL).href;
+const categoryLabel = CATEGORY_LABEL[post.data.category];
+// Every value in BLOG_CATEGORIES has a /blog/category/<slug>/ page. Anything
+// outside that set renders as plain text instead of a dead link.
+const categoryPageHref = BLOG_CATEGORIES.includes(post.data.category)
+  ? `/blog/category/${post.data.category}/`
+  : null;
 // Real hero photo wins for social cards; otherwise use the per-post
 // generated OG card (branded title card) instead of the generic og.webp.
 const ogImagePath = post.data.heroImage?.url ?? `/og/blog/${post.id}.png`;
@@ -143,6 +150,8 @@ const articleLd = {
   },
 };
 
+// One BreadcrumbList, the same Home / Blog / category trail shown in the hero.
+// webPageLd already points at this @id, so do not emit a second list.
 const breadcrumbLd = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -158,8 +167,10 @@ const breadcrumbLd = {
     {
       "@type": "ListItem",
       position: 3,
-      name: post.data.title,
-      item: canonicalUrl,
+      name: categoryLabel,
+      ...(categoryPageHref
+        ? { item: new URL(categoryPageHref, SITE.URL).href }
+        : {}),
     },
   ],
 };
@@ -206,9 +217,33 @@ const structured = relatedLd
     <div
       class="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2"
     >
-      <NeoButton href="/blog/" variant="secondary" size="sm" class="shrink-0">
-        ← Back to blog
-      </NeoButton>
+      <nav aria-label="Breadcrumb" class="min-w-0">
+        <ol
+          class="mono flex flex-wrap items-center text-xs font-bold tracking-widest uppercase"
+        >
+          <li class="inline-flex items-center">
+            <a href="/" class="opacity-70 hover:opacity-100">Home</a>
+          </li>
+          <li
+            class="inline-flex items-center before:mx-1.5 before:opacity-40 before:content-['/']"
+          >
+            <a href="/blog/" class="opacity-70 hover:opacity-100">Blog</a>
+          </li>
+          <li
+            class="inline-flex items-center before:mx-1.5 before:opacity-40 before:content-['/']"
+          >
+            {
+              categoryPageHref ? (
+                <a href={categoryPageHref} class="opacity-70 hover:opacity-100">
+                  {categoryLabel}
+                </a>
+              ) : (
+                <span class="opacity-70">{categoryLabel}</span>
+              )
+            }
+          </li>
+        </ol>
+      </nav>
       <div class="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1.5">
         <TagPill
           tone={CATEGORY_TONE[post.data.category]}
@@ -256,8 +291,8 @@ const structured = relatedLd
       {post.data.description}
     </p>
 
-    <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-      <div class="inline-flex items-center gap-3">
+    <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div class="inline-flex shrink-0 items-center gap-3">
         <span
           class="border-ink bg-yellow text-on-accent shadow-neo-xs inline-flex h-10 w-10 items-center justify-center rounded-full border-[2.5px]"
           aria-hidden="true"
@@ -273,22 +308,24 @@ const structured = relatedLd
           </p>
         </div>
       </div>
-      <ShareBar title={post.data.title} url={canonicalUrl} label="Share" />
+      {
+        post.data.tags.length > 0 && (
+          <ul class="flex w-full min-w-0 flex-wrap items-center justify-start gap-2 sm:w-auto sm:flex-1 sm:justify-end">
+            {post.data.tags.map((t) => (
+              <li>
+                <TagPill
+                  tone="paper"
+                  size="sm"
+                  href={`/blog/tag/${tagSlug(t)}/`}
+                >
+                  #{t}
+                </TagPill>
+              </li>
+            ))}
+          </ul>
+        )
+      }
     </div>
-
-    {
-      post.data.tags.length > 0 && (
-        <ul class="mt-3 flex flex-wrap gap-2">
-          {post.data.tags.map((t) => (
-            <li>
-              <TagPill tone="paper" size="sm" href={`/blog/tag/${tagSlug(t)}/`}>
-                #{t}
-              </TagPill>
-            </li>
-          ))}
-        </ul>
-      )
-    }
   </section>
 
   {
