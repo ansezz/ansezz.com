@@ -162,6 +162,12 @@ iframe {
   text-transform: uppercase;
 }
 
+/* Unlayered, so this beats the .display line-height above. Long post
+   headlines only. Short titles stay on the 0.95 poster leading. */
+.display.post-title-step {
+  line-height: 0.92;
+}
+
 .heading {
   font-family: var(--font-display);
   letter-spacing: -0.02em;
@@ -256,15 +262,15 @@ article.prose a:hover {
 article.prose h2 {
   font-size: clamp(1.6rem, 2.6vw, 2.1rem);
   line-height: 1.05;
-  margin-top: 3.5rem;
-  margin-bottom: 1.25rem;
+  margin-top: 2.25rem;
+  margin-bottom: 0.85rem;
 }
 article.prose h2::before {
   content: "";
   display: block;
   width: 3.25rem;
   height: 0.6rem;
-  margin-bottom: 0.85rem;
+  margin-bottom: 0.55rem;
   background: var(--color-pink);
   border: 2.5px solid var(--color-ink);
   box-shadow: 3px 3px 0 var(--color-ink);
@@ -274,8 +280,18 @@ article.prose > h2:first-child {
   margin-top: 0;
 }
 article.prose h3 {
-  margin-top: 2.25rem;
-  margin-bottom: 0.75rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+article.prose > p,
+article.prose > ul,
+article.prose > ol {
+  margin-top: 0.85em;
+  margin-bottom: 0.85em;
+}
+article.prose > pre {
+  margin-top: 1.15rem;
+  margin-bottom: 1.15rem;
 }
 
 /* ── article house-style components (src/components/mdx) ───
@@ -429,7 +445,12 @@ article.prose img {
   border-radius: 4px;
   width: 100%;
   height: auto;
-  margin: 2rem auto;
+  margin: 1.25rem auto;
+}
+
+/* Post pages only. The footer keeps mt-24 everywhere else. */
+main:has(article.prose) + footer {
+  margin-top: 2rem;
 }
 
 /* focus rings */
