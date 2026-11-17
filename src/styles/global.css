@@ -162,6 +162,12 @@ iframe {
   text-transform: uppercase;
 }
 
+/* Unlayered, so this beats the .display line-height above. Long post
+   headlines only. Short titles stay on the 0.95 poster leading. */
+.display.post-title-step {
+  line-height: 0.92;
+}
+
 .heading {
   font-family: var(--font-display);
   letter-spacing: -0.02em;
