@@ -1,0 +1,276 @@
+---
+title: "Your Laravel exists rule let 0 through on MySQL"
+description: "Upgrade, then keep the type rule. Before laravel/framework 13.43.0 and 12.73.0, a JSON 0, false, or [0] passed exists on a MySQL string column, and a scoped where() could widen to every tenant."
+publishDate: 2026-11-20
+category: laravel
+tags: [laravel, security, databases]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/laravel-exists-rule-json-bypass/hero-361e1f17.webp"
+  alt: "Comic pop-art scene of a robot bouncer waving a tiny robot through a velvet rope because its ticket shows only a big 0, while a queue of robots with proper tickets looks shocked, under the words ZERO GETS IN"
+---
+
+Your Laravel `exists` rule let `0` through on MySQL. Upgrade, then keep the type rule.
+
+{/* prettier-ignore */}
+<Summary>
+- Before laravel/framework [13.43.0](https://github.com/laravel/framework/releases/tag/v13.43.0) and [12.73.0](https://github.com/laravel/framework/releases/tag/v12.73.0), a JSON `0`, `false`, or `[0]` passed `required|exists:invites,code` on a MySQL or MariaDB string column. A string `"0"` failed. PostgreSQL and SQLite are not affected.
+- A fluent `Rule::exists()->where('team_id', $value)` treated the strings `NULL`, `NOT_NULL`, and a leading `!` as operators. If a user controls `$value`, the check can accept another tenant's row.
+- Upgrade to 13.43.0 or 12.73.0. Put `string` before `exists` on a string column. `integer` does not reject a JSON `0`. Keep the tenant scope in a closure `where()` and a policy.
+</Summary>
+
+Laravel published [13.43.0](https://github.com/laravel/framework/releases/tag/v13.43.0) on 17 November 2026 at 15:00 UTC (23:00 Asia/Kuala_Lumpur) and [12.73.0](https://github.com/laravel/framework/releases/tag/v12.73.0) the same day at 14:56 UTC (22:56 Asia/Kuala_Lumpur).
+
+On 18 November the framework repository published 17 security advisories. I counted that list on 20 November 2026. Ten of them name both 13.43.0 and 12.73.0 as patched versions. Two of those ten are the `exists` and `unique` bugs in this post.
+
+## What Laravel shipped on 17 and 18 November
+
+The two that matter here are [GHSA-wwq3-m3j5-wv66](https://github.com/laravel/framework/security/advisories/GHSA-wwq3-m3j5-wv66) and [GHSA-ch34-gjmh-c4hp](https://github.com/laravel/framework/security/advisories/GHSA-ch34-gjmh-c4hp).
+
+The first was published on 18 November 2026 at 12:44 UTC (20:44 Asia/Kuala_Lumpur). Its title is "Validation exists rule can be bypassed with integer or boolean input on MySQL/MariaDB."
+
+The second was published at 12:47 UTC (20:47 Asia/Kuala_Lumpur). It covers fluent `where()` values read as predicates. Both are rated medium. Neither has a CVE.
+
+Both list patched versions 13.43.0 and 12.73.0. The recorded ranges are `<13.43.0` and `<12.73.0`. Read those as the 13.x line and the 12.x line.
+
+No 11.x release is in the patched versions. If you stay on 11.x, the workaround below is the fix you can ship without a framework upgrade.
+
+The same two releases also fix other advisories from that day. Two worth the same pass over your code are the mass-assignment guard bypass ([GHSA-6pxv-c29g-cc5h](https://github.com/laravel/framework/security/advisories/GHSA-6pxv-c29g-cc5h)) and the file-validation bypass ([GHSA-hxc4-wvjf-r59p](https://github.com/laravel/framework/security/advisories/GHSA-hxc4-wvjf-r59p)). The decimal-rule denial of service is in both versions too.
+
+The email-rule denial of service ([GHSA-cvfq-f547-rv2g](https://github.com/laravel/framework/security/advisories/GHSA-cvfq-f547-rv2g)) is patched in 13.43.0 and, on 12.x, in 12.72.0. If you are already on 12.72.0, that one is done. The `exists` bug is not.
+
+Some of the 17 are older issues published the same day, already patched in earlier releases. This post does not walk through them.
+
+<TryThis>
+  Run `composer show laravel/framework` in every Laravel app you deploy.
+  Anything below 13.43.0 on 13.x, or below 12.73.0 on 12.x, goes on today's
+  list.
+</TryThis>
+
+## How a JSON 0 passed exists on MySQL
+
+Before the fix, `DatabasePresenceVerifier::getCount()` ran `where($column, '=', $value)` with the request value unchanged. `getMultiCount()` did the same for an array, through `whereIn()`.
+
+A form always sends strings. JSON does not. A JSON body can carry `0`, `false`, or `[0]`. Those reached the query as an integer, a boolean, or an array of integers. `[0]` is the array path.
+
+MySQL then follows its [type conversion rules](https://dev.mysql.com/doc/refman/8.4/en/type-conversion.html). A comparison of a string and a number is a floating-point comparison.
+
+The manual's own example is `0 = 'x6'`, which is true. `WHERE c3 = 0` on a varchar column returns every non-numeric string in the sample table.
+
+So a code of `alpha` matches integer `0`. A code of `007` matches integer `7`, because the string starts with a number.
+
+### The rows I measured
+
+[PR #62447](https://github.com/laravel/framework/pull/62447) shows that on a varchar column holding `alpha` and `007`. It was merged on 12 November 2026. The 12.x copy is [PR #62448](https://github.com/laravel/framework/pull/62448). I ran the same check on 20 November 2026, on MariaDB 11.8.6, with illuminate/validation and illuminate/database 13.42.0 and 13.43.0:
+
+| Input          | Rule                          | 13.42.0                | 13.43.0 |
+| -------------- | ----------------------------- | ---------------------- | ------- |
+| `0` (JSON)     | `exists:invites,code`         | passes                 | fails   |
+| `false` (JSON) | same                          | passes                 | fails   |
+| `[0]` (JSON)   | same                          | passes                 | fails   |
+| `7` (JSON)     | same                          | passes (matches `007`) | fails   |
+| `"0"` (string) | same                          | fails                  | fails   |
+| `0` (JSON)     | `string\|exists:invites,code` | fails                  | fails   |
+| `0` (JSON)     | `unique:invites,code`         | fails                  | passes  |
+
+The MariaDB run used `required` in front of `exists`. `required` does not reject `0`, `false`, or `[0]`, so the table shows the `exists` rule from the PR. The PR table has the same pass or fail for `0`, `false`, `7`, the string `"0"`, and `unique`.
+
+The `[0]` row and the `string` row are from the MariaDB run. The advisory names `[0]` as one of the inputs that could pass.
+
+The advisory is blunt about who is exposed: an unauthenticated attacker who can submit JSON. PostgreSQL and SQLite are not affected. Form-encoded input is always a string and is not affected. A JSON string `"0"` is the same PHP string, so it fails too.
+
+### What the patch changes
+
+The patch casts before the query. This is `prepareValue()` in `DatabasePresenceVerifier.php` at v13.43.0. The 12.73.0 method does the same cast:
+
+```php
+protected function prepareValue($value)
+{
+    return match (true) {
+        is_bool($value) => (string) (int) $value,
+        is_int($value) => (string) $value,
+        default => $value,
+    };
+}
+```
+
+Booleans become `'1'` and `'0'`. The PR says integer, boolean, and decimal columns still match, so `exists:users,id` with `1` keeps passing on MySQL, MariaDB, PostgreSQL, and SQLite.
+
+A JSON `0.0` is a float in PHP. `prepareValue()` does not cast floats, so that value is still bound as a number. The cast also lives only in `DatabasePresenceVerifier`. A custom presence verifier still receives the original integer or boolean.
+
+One side effect is the `unique` row. A JSON `0` used to fail `unique:invites,code` and now passes. If a test asserted that failure, it was asserting the bug.
+
+<TryThis>
+  Search your rules for `exists:` and `unique:` on string columns such as codes,
+  slugs, emails, and external ids. Note which ones can receive a JSON body.
+</TryThis>
+
+## The scoped where() that widened to every tenant
+
+The second advisory is the one I would worry about in a multi-tenant app.
+
+`Rule::exists()` and `Rule::unique()` have a fluent `where()`. Before the fix, that condition was written into the string rule and parsed again. `addWhere()` still treats three strings as operators: `NULL` becomes IS NULL, `NOT_NULL` becomes IS NOT NULL, and a leading `!` becomes not-equal.
+
+A PHP `null` is a different call. `where($column, null)` already goes to `whereNull()`. The bug is the strings.
+
+So this rule, which looks like an ownership check, was not one if the scope value came from the request:
+
+```php
+'project_id' => [
+    'required',
+    Rule::exists('projects', 'id')->where('team_id', $request->input('team_id')),
+],
+```
+
+On 20 November 2026 I ran it on 13.42.0 against two projects: project 10 in team 1, and project 20 in team 2. With `team_id` set to `NOT_NULL` or `!1`, the rule accepted project 20. With `team_id` set to `1`, it rejected it.
+
+<BeforeAfter beforeLabel="13.42.0" afterLabel="13.43.0">
+  <div slot="before">
+
+`where('team_id', 'NOT_NULL')` runs `team_id IS NOT NULL`. Project 20 passes.
+
+`where('team_id', '!1')` runs `team_id != 1`. Project 20 passes.
+
+  </div>
+  <div slot="after">
+
+`where('team_id', 'NOT_NULL')` runs `team_id = 'NOT_NULL'`. Project 20 fails.
+
+`where('team_id', '!1')` runs `team_id = '!1'`. Project 20 fails.
+
+  </div>
+</BeforeAfter>
+
+### What the validator reads now
+
+[PR #62425](https://github.com/laravel/framework/pull/62425) was merged on 11 November 2026. The 12.x copy is [PR #62426](https://github.com/laravel/framework/pull/62426). The advisory text still says the fix is "proposed" in those pull requests. It is already in the 17 November tags.
+
+When the current rule is an `Exists` or `Unique` object, the validator reads `queryConditions()` from the object. A literal `NOT_NULL` or `!1` is compared with `=`. `whereNull()`, `whereNotNull()`, and `whereNot()` store their own operator. `(string) $rule` still emits the old tokens.
+
+The string rule format still treats those tokens as operators. A hand-built `exists:projects,id,team_id,"NOT_NULL"` still means IS NOT NULL.
+
+### Closures are a different path
+
+The closure form does not go through that parser. In the same run, `where(fn (Builder $query) => $query->where('team_id', 'NOT_NULL'))` rejected project 20 on both versions. The advisory says closure conditions are not affected in the same way.
+
+That is not a type check. On an integer column, MySQL still casts the string `NOT_NULL` to `0`. Team 2 fails because `2` is not `0`. A row whose `team_id` is `0` would match the equality.
+
+The PR also notes a change for custom verifiers. A `where()` value of `NULL`, `NOT_NULL`, or a leading `!` now arrives in `$extra` as a closure. Other values arrive as before.
+
+<TryThis>
+  Grep for `->where(` inside `Rule::exists(` and `Rule::unique(`. Any scope
+  value that comes from `$request` is a finding, even after the upgrade.
+</TryThis>
+
+## Upgrade, then keep the type rule
+
+<Figure
+  src="/blog/laravel-exists-rule-json-bypass/inline-1.webp"
+  alt="Comic pop-art panel of a robot at a conveyor belt stamping STRING on each ticket before the tickets reach a gate, under the words TYPE IT FIRST"
+  caption="Decide the type before the value reaches a query. The database will not decide it for you."
+/>
+
+Step one is the upgrade. On 13.x:
+
+```bash
+composer update laravel/framework --with-all-dependencies
+php artisan --version   # expect Laravel Framework 13.43.0 or later
+```
+
+On 12.x, the same command should land on 12.73.0 or later.
+
+Step two is the part I would keep after every future upgrade. The advisory's workaround is to add `string` (or `integer`, as appropriate) before `exists` and `unique`, or to cast the input in `prepareForValidation()`.
+
+`string` is the rule for a code, a slug, an email, or an external id. It rejects a JSON `0`, `false`, and `[0]` before any query runs, on every database and on 13.42.0.
+
+`integer` is the rule for an id column. At v13.43.0, `integer` without `strict` is `filter_var($value, FILTER_VALIDATE_INT) !== false`.
+
+That check accepts a JSON `0`. The filter returns `0`, and `0` is not `false`. On 13.42.0, `integer|exists:invites,code` would still let that `0` through on MySQL. `integer` does reject `false` and `[0]`.
+
+```php
+'code' => ['required', 'string', 'exists:invites,code'],
+'user_id' => ['required', 'integer', 'exists:users,id'],
+```
+
+<PullQuote>
+  `exists` checks presence. It does not check type, and it does not check
+  ownership.
+</PullQuote>
+
+### Keep ownership out of the request
+
+Step three is ownership. The [validation docs](https://laravel.com/docs/validation#rule-exists) show a closure. Their example is `Rule::exists('staff')->where(...)` setting `account_id` to `1`.
+
+Take the scope from the authenticated user, not from the request body:
+
+```php
+use Illuminate\Database\Query\Builder;
+use Illuminate\Validation\Rule;
+
+'project_id' => [
+    'required',
+    'integer',
+    Rule::exists('projects', 'id')->where(
+        fn (Builder $query) => $query->where('team_id', $request->user()->team_id)
+    ),
+],
+```
+
+Then authorize the record again in a policy before you act on it. The advisory says apps with an independent authorization check were not affected in the same way. Validation tells you a row exists. The policy tells you this user may touch it.
+
+This is also not the first time this year. On 19 October 2026, [GHSA-f9x3-7vq9-cph6](https://github.com/laravel/framework/security/advisories/GHSA-f9x3-7vq9-cph6) was a TokenGuard bypass from a non-string credential on MySQL and MariaDB. Same shape, different door.
+
+<TryThis>
+  Add `string` in front of every `exists` and `unique` on a string column, in
+  one pull request, separate from the framework upgrade. Use `integer` on id
+  columns in that same pull request.
+</TryThis>
+
+## Composer audit did not flag it when I checked
+
+I expected `composer audit` to catch this. It did not.
+
+On 20 November 2026, a lock resolved to laravel/framework 13.42.0 and `composer audit --locked` printed "No security vulnerability advisories found."
+
+The same day, the Packagist security-advisories API for laravel/framework listed 31 entries. The newest was reported on 13 November 2026. No listed range includes 13.42.0, and none of the 18 November advisories are in that list. `GET /advisories/GHSA-wwq3-m3j5-wv66` on the global GitHub advisory API returned 404.
+
+The advisories are real. They are published on the [framework repository](https://github.com/laravel/framework/security/advisories). They had not reached the databases `composer audit` reads, at least on 20 November 2026. That may change. Do not wait for it.
+
+<Callout type="warning">
+  A clean `composer audit` on 20 November 2026 did not mean you were on a fixed
+  version. Check the version number against 13.43.0 or 12.73.0 yourself.
+</Callout>
+
+<TryThis>
+  Add a CI step that fails when `composer show laravel/framework` reports a
+  version below your minimum, so an empty audit is not your only signal.
+</TryThis>
+
+## What I would check this week
+
+### Version and the exists rules
+
+1. Every Laravel app on 13.x is on 13.43.0 or later. Every app on 12.x is on 12.73.0 or later.
+2. Apps on 11.x or older get the workaround. No patched release is listed for those lines.
+3. Which apps run on MySQL or MariaDB. PostgreSQL and SQLite are not affected by the `exists` bug.
+4. Every `exists` and `unique` on a string column that can receive JSON has `string` before it. Id columns use `integer`, and you know `integer` still accepts a JSON `0`.
+5. No scalar `Rule::exists()->where()` or `Rule::unique()->where()` takes a value from the request.
+6. Ownership is enforced in a policy, not only in validation.
+7. Tests that expected `unique` to fail for a JSON `0` are updated.
+
+### The other fixes in these releases
+
+8. Models that mass-assign request data, use `$guarded`, and define a set-mutator on a guarded attribute are on the patched version. The bypass is an alternate spelling of that name, such as a hyphen or whitespace variant ([GHSA-6pxv-c29g-cc5h](https://github.com/laravel/framework/security/advisories/GHSA-6pxv-c29g-cc5h)).
+9. Optional uploads validated with `nullable`, `image`, `mimes`, or `max` are on the patched version. The file advisory says an empty field with the same name could hide the upload from validation in Laravel 13.x, and it lists 13.43.0 and 12.73.0 as patched ([GHSA-hxc4-wvjf-r59p](https://github.com/laravel/framework/security/advisories/GHSA-hxc4-wvjf-r59p)).
+
+{/* prettier-ignore */}
+<Takeaway>
+- laravel/framework 13.43.0 and 12.73.0 (17 November 2026) fix an `exists` and `unique` bypass with JSON integers and booleans on MySQL and MariaDB, and fluent `where()` values read as `NULL`, `NOT_NULL`, or `!=`.
+- Before the fix, a JSON `0`, `false`, or `[0]` passed `required|exists:invites,code` on a string column. `7` matched `007`.
+- Put `string` in front of `exists` on a string column. That blocked the JSON `0` even on 13.42.0. `integer` does not.
+- Scope tenant checks with a closure and the authenticated user, then authorize in a policy.
+- On 20 November 2026, `composer audit` and the Packagist advisory list did not report these advisories. Check the version yourself.
+</Takeaway>
+
+Which of your `exists` rules would have accepted a JSON `0` last week, and would any test have noticed?
