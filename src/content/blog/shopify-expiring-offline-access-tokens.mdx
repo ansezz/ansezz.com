@@ -1,0 +1,211 @@
+---
+title: "A new Shopify custom app's offline token lasts one hour. Store the refresh token too."
+description: "From 1 December 2026, new custom and merchant-created apps must use expiring offline Admin API tokens. The access token lasts one hour. If your OAuth code only saves access_token, webhooks and queue jobs fail when it expires."
+publishDate: 2026-11-25
+category: shopify
+tags: [shopify, security, laravel]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/shopify-expiring-offline-access-tokens/hero-2f0d6538.webp"
+  alt: "Comic pop-art scene of a yellow robot stamping an hourglass onto a ticket on a conveyor, while a second ticket slides into a blue bin and two small robots wait at a closed blue gate, under the words ONE HOUR LEFT"
+---
+
+From 1 December 2026, a new Shopify custom app's offline token lasts one hour. If the callback only saves `access_token`, the first webhook after that hour has nothing to send.
+
+{/* prettier-ignore */}
+<Summary>
+- From 1 December 2026, [new custom apps and new merchant-created apps](https://shopify.dev/changelog/posts/expiring-offline-access-tokens-required-for-new-custom-apps-as-of-december-1-2026) must use expiring offline access tokens for the GraphQL Admin API and the REST Admin API. Public apps already had this rule for new apps since 1 April 2026.
+- The access token's `expires_in` is [3600 seconds](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens). Shopify also returns a `refresh_token`. If you only save `access_token`, webhooks and queue jobs have nothing to refresh with when that hour ends.
+- Existing custom apps created before 1 December can keep their non-expiring tokens. The 1 January 2027 delist and 1 April 2027 `403` apply to [public apps](https://shopify.dev/docs/apps/build/authentication-authorization/migrate-to-expiring-offline-access-tokens) that still use non-expiring tokens, not to those older custom apps.
+</Summary>
+
+This is a different 1 December deadline from the [network access declaration](/blog/shopify-network-access-allowed-sources/). That one is about `shopify.app.toml`. This one is about the token your background jobs send to the Admin API.
+
+## What Shopify required on 19 November
+
+The [19 November 2026 changelog](https://shopify.dev/changelog/posts/expiring-offline-access-tokens-required-for-new-custom-apps-as-of-december-1-2026) is narrow, and that narrowness matters.
+
+It applies to custom apps, and to apps merchants create, when the app itself is created on or after 1 December 2026. Those apps must request and use expiring offline tokens for Admin API calls.
+
+Public apps already had the same rule for new apps since 1 April 2026. This changelog extends it to new partner-created custom apps and new merchant-created apps.
+
+It does not force a migration of a custom app you created last year. The changelog and the [migration guide](https://shopify.dev/docs/apps/build/authentication-authorization/migrate-to-expiring-offline-access-tokens) both say those apps can keep their existing offline tokens.
+
+The January and April 2027 dates are for public apps that still use non-expiring tokens. Shopify delists them and blocks new installs on 1 January. Merchants see a warning on 15 January. Admin API requests return `403` on 1 April.
+
+Existing public-app installs keep working until that April date. Those dates do not apply to custom apps or merchant-created apps. A custom app created before 1 December can keep the offline token it already has.
+
+If your app already uses the client credentials grant, or application-only access, those tokens already expire. The changelog says those flows already meet the requirement.
+
+The sources name calendar dates. They do not state a time of day or a time zone.
+
+<TryThis>
+  If you plan to create a custom app on or after 1 December, inspect the code
+  that exchanges the OAuth code or the ID token. If that request has no
+  `expiring=1`, it is still on the old default.
+</TryThis>
+
+## The access token lasts one hour
+
+An expiring offline access token is not a slightly shorter non-expiring token. The [lifetimes table](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens) lists `expires_in` as `3600`. It lists `refresh_token_expires_in` as `7776000` when the refresh token is issued, which is 90 days.
+
+Using that refresh token can shorten the life of the one you presented. The replacement Shopify returns starts its own 90 days.
+
+Read `expires_in` from the response. The same page says not to hard-code that duration, so a later change does not break your app. Read `refresh_token_expires_in` the same way.
+
+You request the expiring pair by adding `expiring=1` to the authorization code grant or to token exchange:
+
+```bash
+curl -X POST \
+  "https://{shop}.myshopify.com/admin/oauth/access_token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id={client_id}" \
+  -d "client_secret={client_secret}" \
+  -d "code={authorization_code}" \
+  -d "expiring=1"
+```
+
+Store `access_token`, `refresh_token`, `expires_in`, and `refresh_token_expires_in`. When no merchant is in the app, such as a webhook or a scheduled job, you refresh with `grant_type=refresh_token` and the stored refresh token.
+
+Every refresh returns a new access token and a new refresh token. Save both. Use the new refresh token next time.
+
+You do not need to refresh a dormant store every hour. You do need to refresh at least once before the refresh token's 90-day expiry, or the merchant has to reopen the app.
+
+<TryThis>
+  Look at the row or session record you write in the OAuth callback. If it has
+  no column for `refresh_token` and no expiry, there is nowhere to store the
+  token you will need after that hour.
+</TryThis>
+
+## The defaults do not agree
+
+The raw HTTP default is the one that catches a custom OAuth helper.
+
+On the [access tokens](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens) reference, `expiring` on token exchange and on the authorization code grant is `0` when you omit it. That requests a non-expiring token.
+
+A new custom app that uses either grant has to send `expiring=1` on that request. Client credentials and application-only access do not use this parameter. Those tokens already expire.
+
+The official libraries do not all share that default.
+
+[shopify/shopify-app-php](https://github.com/Shopify/shopify-app-php/blob/v1.1.0/README.md) defaults `expiring` to `true` on `exchangeUsingTokenExchange`. You pass `expiring: false` only if you still want a non-expiring token.
+
+`@shopify/shopify-app-remix` and `@shopify/shopify-app-express` keep `future.expiringOfflineAccessTokens` defaulting to `false`. Newly scaffolded apps turn the flag on. An older Node app must set it, and its session storage must persist `refreshToken` and `refreshTokenExpires`.
+
+```ts
+const shopify = shopifyApp({
+  // ...
+  future: {
+    expiringOfflineAccessTokens: true,
+  },
+});
+```
+
+Turning the flag on does not rewrite tokens you already stored. The [migration guide](https://shopify.dev/docs/apps/build/authentication-authorization/migrate-to-expiring-offline-access-tokens) says each install moves the next time your app gets a new token for that store, such as when a merchant opens an embedded app.
+
+Installs that never get a new token stay on the old one until you run the one-time exchange, `shopify.auth.migrateToExpiringToken` in `@shopify/shopify-api` 12.2.0 and later.
+
+On `@shopify/shopify-app-express`, a normal page load does not mint that token. The OAuth callback does, the next time the app goes through OAuth again.
+
+<BeforeAfter beforeLabel="Raw request or old helper" afterLabel="What a new custom app needs">
+  <div slot="before">
+
+Omit `expiring`, or leave the Remix and Express flag at `false`. You get a non-expiring token, or you never start refresh at all.
+
+  </div>
+  <div slot="after">
+
+Send `expiring=1`, or use a library path that already does. Persist the refresh token, and refresh it from background work.
+
+  </div>
+</BeforeAfter>
+
+<TryThis>
+  In a Node app, search for `expiringOfflineAccessTokens`. If the flag is
+  missing, it is still off. In a PHP app on `shopify/shopify-app-php`, confirm
+  you save the array the package returns, not only `token`.
+</TryThis>
+
+## A shops table that only stores access_token cannot refresh
+
+A typical custom Laravel callback writes `shop` and `access_token` and stops there. That was enough when the token did not expire.
+
+It is not enough now. I ran a local check on 25 November 2026, at 11:22 Asia/Kuala_Lumpur, against the documented token-response shape (`expires_in` 3600, `refresh_token_expires_in` 7776000). A row that only stores `access_token` drops `refresh_token`, `expires_in`, and `refresh_token_expires_in`.
+
+After one hour, a webhook or a queue job has nothing to present to the refresh endpoint. If you only store `access_token`, the token is already running out when you save it.
+
+<PullQuote>
+  If you only store access_token, the token is already running out when you save
+  it.
+</PullQuote>
+
+The official PHP library many existing apps still depend on cannot fix that. [shopify/shopify-api-php](https://github.com/Shopify/shopify-api-php) is deprecated. Shopify tells you to move to [shopify/shopify-app-php](https://github.com/Shopify/shopify-app-php).
+
+Its last release, v6.1.1, has a [`Session`](https://github.com/Shopify/shopify-api-php/blob/v6.1.1/src/Auth/Session.php) with `accessToken` and `expires`, and no `refreshToken` or `refreshTokenExpires` field.
+
+[shopify/shopify-app-php](https://github.com/Shopify/shopify-app-php/blob/v1.1.0/README.md) already knows the shape you must persist: `token`, `refreshToken`, `expires`, and `refreshTokenExpires`, plus shop, access mode, and scope.
+
+You call `refreshTokenExchangedAccessToken` and save the token when one is returned. The README says not to wrap that call with your own pre-checks.
+
+<Callout type="note">
+  The local check did not call Shopify's token endpoint. The lifetimes come from
+  the docs. The missing PHP fields come from `Session.php` at v6.1.1.
+</Callout>
+
+<TryThis>
+  If your app is still on `shopify/shopify-api-php`, plan the move to
+  `shopify/shopify-app-php` before you create a new custom app, or add the
+  refresh fields and the refresh grant yourself and test them.
+</TryThis>
+
+## Two queue workers, one shop
+
+Refresh is not an update in place. Every successful refresh issues a new refresh token. The token you just presented stays usable until your app uses the new one, so a lost response does not strand the store.
+
+That grace period is capped at 30 days from the token's first use, and it never runs past the original 90-day expiry. The moment you use the new refresh token, Shopify retires the previous one.
+
+The [token exchange docs](https://shopify.dev/docs/apps/build/authentication-authorization/implement-token-exchange) say to refresh one store at a time. Two workers refreshing the same store can leave one of them holding a token the other has already replaced.
+
+When a refresh token can no longer be used, Shopify returns `401 Unauthorized` with `{"error": "invalid_request"}` and the description `This request requires an active refresh_token`.
+
+The same body covers an unknown token, a token your app has already replaced, an expired token, and a revoked or uninstalled app. Do not branch on which one it was. Treat the `401` as final. Stop retrying.
+
+Re-authenticate when the merchant opens the app, or request a new token through application-only access if you have that set up. Network errors, timeouts, `5xx`, and `429` are the cases you may retry with the same refresh token.
+
+A token exchange or an authorization code grant also retires every other refresh token for that app on that store right away. Do not acquire a new token and refresh one for the same shop at the same time.
+
+I ran a demo of those published rules, not a live API call. Two workers load `RT1`. Worker A refreshes, saves `RT2`, then uses `RT2`. Worker B, still holding `RT1`, gets the `401`.
+
+<Figure
+  src="/blog/shopify-expiring-offline-access-tokens/inline-1.webp"
+  alt="Comic pop-art panel of two robots pulling apart one ticket, the yellow robot holding a fresh stub and the blue robot holding a cancelled stub beside a red 401 stamp, under the words ONE SHOP AT A TIME"
+  caption="Refresh one shop at a time. The worker that still holds the old refresh token will get a 401."
+/>
+
+<TryThis>
+  If Laravel queue workers refresh tokens, lock on the shop before you refresh,
+  and write the new `refresh_token` before you release the lock. Two jobs for
+  the same shop should not present the same refresh token after one of them has
+  already used the replacement.
+</TryThis>
+
+## What I would check this week
+
+If you will create a custom app on or after 1 December, do the token work first. Send `expiring=1` on the authorization code grant or on token exchange, or use a library that already does.
+
+Persist the refresh token and both expiries. Refresh from webhooks and queued jobs, one shop at a time.
+
+If you already request expiring offline tokens, the [changelog](https://shopify.dev/changelog/posts/expiring-offline-access-tokens-required-for-new-custom-apps-as-of-december-1-2026) says you likely do not need to change the app. That still means you store and use the refresh token those requests return.
+
+If you have a public app that still sends non-expiring offline tokens, that is a separate clock. 1 January 2027 covers the App Store listing and new installs. 15 January 2027 is the merchant warning. 1 April 2027 is the Admin API `403`.
+
+The [migration guide](https://shopify.dev/docs/apps/build/authentication-authorization/migrate-to-expiring-offline-access-tokens) covers a gradual switch, a one-time exchange of every stored token, and application-only access tokens if you would rather request a short-lived token than rotate a refresh token.
+
+{/* prettier-ignore */}
+<Takeaway>
+- New custom and merchant-created apps, from 1 December 2026, must use expiring offline Admin API tokens. The access token lasts one hour.
+- Save the refresh token, and the expiry values, not only `access_token`. The deprecated `shopify/shopify-api-php` Session object cannot do this.
+- Refresh from background work, one shop at a time. A `401 invalid_request` on refresh is final.
+</Takeaway>
+
+When you create the next custom app, does its OAuth callback store a refresh token?
