@@ -1,0 +1,226 @@
+---
+title: "Script tags stop on 1 March. Turn the embed on first."
+description: "Shopify stops injecting script tags into storefronts on 1 March 2027. An app embed block is off until the merchant turns it on, so delete a script tag only after the embed is confirmed active."
+publishDate: 2026-11-26
+category: shopify
+tags: [shopify, security, api-design]
+featured: false
+draft: false
+heroImage:
+  url: "/blog/shopify-script-tags-stop-1-march-2027/hero-1eeca32d.webp"
+  alt: "Comic pop-art scene of a yellow robot flipping one switch on while three other switches stay off, a calendar page reading MAR 1 above them, and a cardboard tag pulled from a wall socket, under the words TURN IT ON FIRST"
+---
+
+Script tags stop on 1 March. Delete one before the embed is on, and that store loads nothing. Shopify will not warn the merchant.
+
+{/* prettier-ignore */}
+<Summary>
+- On [1 March 2027](https://shopify.dev/changelog/posts/online-store-script-tags-deprecation) Shopify stops injecting script tags into storefronts. Since 1 October 2026, `scriptTagCreate` and `scriptTagUpdate` fail on every API version, and the ScriptTag REST resource rejects `POST` and `PUT`.
+- The storefront replacement is an [app embed block](https://shopify.dev/docs/apps/build/online-store/script-tag-deprecation/storefront). It stays off until the merchant turns it on, and it is active only on the theme where they enabled it.
+- Do not call `scriptTagDelete` until that embed is active on the published theme. Shopify chose not to show an install warning banner for now, so the only list of stores at risk is the one your app keeps.
+</Summary>
+
+The [network access declaration](/blog/shopify-network-access-allowed-sources/) is a different deadline. That one is a deploy rule on 1 December. This one is a runtime change on 1 March, and it can break a store that looks fine today.
+
+## What Shopify decided on 24 August
+
+The [24 August 2026 changelog](https://shopify.dev/changelog/posts/online-store-script-tags-deprecation) has two dates.
+
+On 1 October 2026, `scriptTagCreate` and `scriptTagUpdate` stop working, and the `ScriptTag` REST resource rejects `POST` and `PUT`. It applies to every API version. Pinning an older version still fails. Existing script tags keep running.
+
+The changelog says those mutations "return an user error". The [storefront doc](https://shopify.dev/docs/apps/build/online-store/script-tag-deprecation/storefront) says they return a "permission error", and that REST `POST` and `PUT` fail the same way. Neither page shows the response body.
+
+On 1 March 2027, Shopify stops injecting script tags into storefronts. Storefronts are the last place they still run.
+
+### Order status, and a tag scoped to all
+
+Order status tags already stopped, on a [separate schedule](https://shopify.dev/docs/apps/build/online-store/script-tag-deprecation/order-status): 28 August 2025 for Plus stores, and 26 August 2026 for every other store. A tag whose `displayScope` is only `ORDER_STATUS` is already inert.
+
+A tag with `displayScope` `ALL` still loads on the storefront until 1 March 2027. The order status page says so.
+
+The changelog's affected list names `online_store`. Treat `ALL` like `ONLINE_STORE` for this date. The [GraphQL enum](https://shopify.dev/docs/api/admin-graphql/latest/enums/ScriptTagDisplayScope) marks `ALL` and `ORDER_STATUS` as deprecated. Old tags can still return them.
+
+The `scriptTags` query and the `scriptTagDelete` mutation keep working, so you can audit and clean up. After 1 March, a leftover record has no effect, so you do not have to delete it.
+
+The deadlines table on the [app security page](https://shopify.dev/docs/apps/build/security) lists this row for "All apps". The sources name calendar dates. They do not name a time of day or a time zone.
+
+Today is 26 November. By calendar days, 1 March is 95 days away.
+
+<TryThis>
+  Run the `scriptTags` query with a token your app already holds. If a tag
+  comes back with `displayScope` of `ONLINE_STORE` or `ALL`, that script stops
+  loading on that store's storefront on 1 March.
+</TryThis>
+
+## The embed is off until the merchant turns it on
+
+A script tag ran as soon as your app created it. An app embed block does not.
+
+By default, app embed blocks are [deactivated after an app is installed](https://shopify.dev/docs/apps/build/online-store/theme-app-extensions/configuration). The merchant turns one on in the theme editor, under Theme settings, then App embeds. Your app cannot turn it on for them.
+
+Your app can send a deep link. It opens the editor with the embed ready. The merchant previews it, then saves.
+
+```text
+https://<myshopifyDomain>/admin/themes/current/editor?context=apps&template={template}&activateAppId={api_key}/{handle}
+```
+
+`{api_key}` is the same value as `client_id` in the app's `app.toml`. `{handle}` is the embed's Liquid filename, so `theme-app-extension/blocks/app-embed.liquid` is `app-embed`.
+
+`{template}` is optional. Leave it out and Shopify uses the index template. The documented values are `product`, `collection`, `article`, and `blog`. Take the myshopify domain from the `Shop` object.
+
+The embed is also per theme. The [storefront doc](https://shopify.dev/docs/apps/build/online-store/script-tag-deprecation/storefront) says it is only active on the theme it was enabled on. If the store publishes a different theme, your block is not on there. Check again.
+
+### Confirm it is on, then delete
+
+The migration steps follow that. Build the extension. Send the deep link. Confirm the embed is active on the published theme. Only then call `scriptTagDelete`.
+
+Delete first, and neither one is running. Skip the delete, and both run. That can double-count analytics events or render your UI twice.
+
+<BeforeAfter beforeLabel="Delete first" afterLabel="Confirm, then delete">
+  <div slot="before">
+
+Ship the extension, delete every script tag, and wait. Every store where the merchant never opened the editor now loads nothing.
+
+  </div>
+  <div slot="after">
+
+Ship the extension, send the deep link, record which stores have the embed active, and delete the tag only for those. Keep the tag on the rest until they do.
+
+  </div>
+</BeforeAfter>
+
+<Figure
+  src="/blog/shopify-script-tags-stop-1-march-2027/inline-1.webp"
+  alt="Comic pop-art scene of a yellow robot putting two stickers on one window while a blue robot peels the same sticker off a second window, under the words TWICE OR NEVER"
+  caption="Delete too early and the window is blank. Leave both running and the sticker goes on twice."
+/>
+
+<PullQuote>Delete the script tag first and the widget disappears. Keep it forever and it loads twice.</PullQuote>
+
+<TryThis>
+  Open the deep link for one store before you delete anything. The editor
+  should show your embed, and the merchant still has to save.
+</TryThis>
+
+## There will be no storefront banner
+
+An earlier plan showed a banner when a merchant installed an app that still uses a storefront script tag. The [storefront doc](https://shopify.dev/docs/apps/build/online-store/script-tag-deprecation/storefront) now says Shopify has decided not to show that banner, "for now".
+
+The order status page still has its own install banner. This dropped banner is the storefront one.
+
+Do not wait for the merchant to notice. They get no Shopify warning at install for a storefront script tag, and a tag that loads today gives no sign it will stop.
+
+The list is yours to keep. For each store, record the script tag's scope, whether your embed is on, and when you last checked.
+
+<TryThis>
+  Add two columns next to your shops table: `embed_state` (`never`, `active`,
+  `disabled`) and `embed_checked_at`. A cleanup job needs those before it
+  deletes a tag.
+</TryThis>
+
+## How to tell if the embed is on
+
+The docs give two ways to [detect an app embed](https://shopify.dev/docs/apps/build/online-store/theme-app-extensions/configuration).
+
+From the Shopify admin, call `shopify.app.extensions()`. The configuration page writes the same call as `app.extensions()`. It needs no extra access scope.
+
+It reports your blocks on the published theme. In the [migrate guide](https://shopify.dev/docs/apps/build/online-store/theme-app-extensions/migrate), a status of `active` means the embed is on. A status of `available` means your app ships the block and the merchant has not enabled it.
+
+From your backend, read the published theme's `config/settings_data.json` through the Asset REST Admin API. That needs the `read_themes` scope. It works without the merchant opening your app.
+
+An embed is an entry under `current.blocks`. Its `type` starts with `shopify://apps/<app>/blocks/<block>/`.
+
+The configuration docs use this block as the example:
+
+```json
+"17878678986028907411": {
+  "type": "shopify:\/\/apps\/faceforms-better-pop-ups\/blocks\/app-embed\/f2173231-e611-461d-884b-bd8e6cc2ded4",
+  "disabled": false
+}
+```
+
+The same entry also has a `settings` object. The field that tells you on or off is `disabled`.
+
+Two details matter. Shopify adds the embed to that file only after the first time it is enabled. If the merchant switches it off later, the entry stays, with `"disabled": true`. An entry in the file is not the same as an embed that is on.
+
+<TryThis>
+  Match the whole prefix, including the block handle. A different block from
+  the same app is not this embed.
+</TryThis>
+
+## A local check on five fake stores
+
+I wrote a small script that applies those rules. It reads a `scriptTags` response and a `settings_data.json` for each fake store, then picks delete, keep, or ignore.
+
+I ran it on 26 November 2026, at 20:13 Asia/Kuala_Lumpur. The fixtures are synthetic. It did not call Shopify.
+
+| Store | Script tag scope | Embed state | Action |
+| -- | -- | -- | -- |
+| store-a | `ONLINE_STORE` | enabled | delete the tag |
+| store-b | `ALL` | never enabled | keep it, send the deep link |
+| store-c | `ONLINE_STORE` | present, `disabled: true` | keep it, ask to re-enable |
+| store-d | `ORDER_STATUS` | none | ignore, it is already inert |
+| store-e | `ONLINE_STORE` | a different block, plus another app's embed | keep it, send the deep link |
+
+Three of the five go dark on 1 March if nothing changes. Only store-a is safe to delete today.
+
+A cleanup that deletes every tag gets store-a right and breaks store-b, store-c, and store-e. store-d was already inert on the order status page.
+
+<Callout type="note">
+  The check is not a live Shopify capture. The shapes follow the docs. It looks
+  at one published theme only. Run it again when the store publishes a new
+  theme.
+</Callout>
+
+<TryThis>
+  On one real store, read `displayScope` and the published theme's block entry
+  before you delete. If the embed is missing, or `disabled` is true, keep the
+  tag.
+</TryThis>
+
+## New installs, and the error you will read
+
+Since 1 October, a new install cannot get a script tag. The storefront doc says to release the replacement before that date. After it, a store that installs without a working replacement loses what the tag did.
+
+That date has passed. Read the install job. The [changelog](https://shopify.dev/changelog/posts/online-store-script-tags-deprecation) says the mutations "return an user error". The [storefront doc](https://shopify.dev/docs/apps/build/online-store/script-tag-deprecation/storefront) says "permission error". I could not find a response sample, so I do not know which shape you get.
+
+Read both fields. Look at `userErrors` on the mutation, and look for a top-level `errors` array. The docs do not show the HTTP status, so a status code on its own is not the check.
+
+The same script has a second mode that scans an app folder. On a small synthetic Laravel and Node app, it found `scriptTagCreate` call sites, a REST `script_tags` path, and the `write_script_tags` scope in `shopify.app.toml`.
+
+It also flagged a PHP file that calls the mutation and never reads an error field. A clean config file was not flagged.
+
+When the replacement is live, [remove the `write_script_tags` scope](https://shopify.dev/docs/apps/build/security/storefront/use-theme-app-extensions-instead-of-script-tags) and the code that creates script tags.
+
+<TryThis>
+  Search your code for `scriptTagCreate`, `script_tags`, and
+  `write_script_tags`. For each hit, see what the install flow does now that
+  the call fails.
+</TryThis>
+
+## What I would check this week
+
+If your app injects JavaScript on a storefront, ship the app embed block first. Send the deep link from the app and from the install flow.
+
+Keep a per-store record of the embed state. Check the published theme again on a schedule. An embed lives only on the theme where it was turned on. Delete the script tag only where that embed is active.
+
+### If the script only collects analytics
+
+If the script only collects analytics or conversion data, use a [web pixel](https://shopify.dev/docs/apps/build/online-store/script-tag-deprecation/storefront) instead. Your app creates it with `webPixelCreate`. The merchant approves `write_pixels` and `read_customer_events` when they install or update the app.
+
+The changelog says a web pixel needs no action from the app user. The storefront doc is more specific: the pixel does not have to be turned on in the theme editor. Approving those two scopes is still part of install or update.
+
+### If the app was created in the admin
+
+If you maintain an app created in the Shopify admin, it cannot use app extensions or web pixels. Move the script into the theme. Use a custom Liquid block where you can, or the theme code editor if you need to.
+
+A script left in the theme stays after the app is gone. Editing theme code also takes the theme off its automatic upgrade path. Do that only when the app cannot use an extension.
+
+{/* prettier-ignore */}
+<Takeaway>
+- On 1 March 2027 Shopify stops injecting script tags. Since 1 October 2026 you cannot create or update one, on any API version.
+- An app embed block stays off until the merchant turns it on, per theme. There is no storefront install banner for now, so your app has to track which stores are on.
+- Delete a script tag only after the embed is active on the published theme. Where you still create one, read both `userErrors` and `errors`.
+</Takeaway>
+
+Do you know, store by store, which of your installs have the replacement switched on?
